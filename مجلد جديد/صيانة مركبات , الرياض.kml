@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Folder id="results">
+	<name>صيانة مركبات , الرياض</name>
+	<Placemark id="1.2.1">
+		<name>مركز الفحص الشامل لصيانة السيارات الاوربية والالمانية مرسيدس،بي ام دبليو، بورش ، اودي، بنتلي ،</name>
+		<address>MMX3+RW9، أم الحمام الشرقي، الرياض 12326</address>
+		<phoneNumber>050 707 0447</phoneNumber>
+		<snippet>MMX3+RW9، أم الحمام الشرقي، الرياض 12326</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2f1d90e1a1f7e5:0x88bd1915ad94c5b9&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_A</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2f1d90e1a1f7e5:0x88bd1915ad94c5b9&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.65461719999999,24.6994736,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="1.3.1">
+		<name>ورشة المركبات الجديدة</name>
+		<address>شارع أحمد بن محمد السبتي، القيروان، الرياض 13542</address>
+		<phoneNumber>053 383 4748</phoneNumber>
+		<snippet>شارع أحمد بن محمد السبتي، القيروان، الرياض 13542</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2ee710720bbead:0x7befe357965d0aad&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_B</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2ee710720bbead:0x7befe357965d0aad&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.5775497,24.8533321,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="1.4.1">
+		<name>مركز سماء المركبات لصيانة السيارات</name>
+		<address>الصناعية القديمة، 3490 بلقيس حي الصناعية، الرياض 12872</address>
+		<phoneNumber>058 114 2550</phoneNumber>
+		<snippet>الصناعية القديمة، 3490 بلقيس حي الصناعية، الرياض 12872</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2f07d3408235d1:0x7e9dc109cedaedd2&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_C</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2f07d3408235d1:0x7e9dc109cedaedd2&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.7510842,24.6359761,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="1.5.1">
+		<name>مركز السيارة الآمنة لصيانة السيارات الألمانية والأوربية</name>
+		<address>king Abdul aziz street، المروج، الرياض 12282</address>
+		<phoneNumber>050 454 1228</phoneNumber>
+		<snippet>king Abdul aziz street، المروج، الرياض 12282</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2efd4c379c89d3:0xfda5d084a0d09223&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_D</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2efd4c379c89d3:0xfda5d084a0d09223&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.67434490000001,24.7565904,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="1.6.1">
+		<name>AWS مركز صيانة السيارات</name>
+		<address>شارع عمر جان، الرمال، الرياض 13263</address>
+		<phoneNumber>055 865 0055</phoneNumber>
+		<snippet>شارع عمر جان، الرمال، الرياض 13263</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2eff5776b136d3:0x2901d3ef80d57f66&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_E</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2eff5776b136d3:0x2901d3ef80d57f66&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.82120619999999,24.8388966,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="1.7.1">
+		<name>مجتمع المركبات - CarsHub</name>
+		<address>مقبوله، الفيصلية، الرياض 12626</address>
+		<phoneNumber>059 107 7413</phoneNumber>
+		<snippet>مقبوله، الفيصلية، الرياض 12626</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2f09ae848ea995:0x63039d8ebb80d2b8&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_F</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2f09ae848ea995:0x63039d8ebb80d2b8&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.7949239,24.63197629999999,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="1.8.1">
+		<name>شركة القحطاني لصيانة السيارات</name>
+		<address>900 طريق الأمير تركي بن عبدالعزيز الأول، أم الحمام 12326 4506، الرياض 12326</address>
+		<phoneNumber>050 425 6040</phoneNumber>
+		<snippet>900 طريق الأمير تركي بن عبدالعزيز الأول، أم الحمام 12326 4506، الرياض 12326</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2f1d20e0e582cb:0x36e522a4d60b7186&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_G</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2f1d20e0e582cb:0x36e522a4d60b7186&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.6546873,24.701142,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="1.9.1">
+		<name>مركز براج لصيانة السيارات</name>
+		<address>3150 شارع أحمد بن محمد الرومي، حي القيروان, 6649, الرياض 13542</address>
+		<phoneNumber>055 688 8231</phoneNumber>
+		<snippet>3150 شارع أحمد بن محمد الرومي، حي القيروان, 6649, الرياض 13542</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2ee7547ba26a2d:0x5937fe8ed83cce71&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_H</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2ee7547ba26a2d:0x5937fe8ed83cce71&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.57715899999999,24.8530758,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="1.10.1">
+		<name>ورشة موتر ستار لصيانة السيارات</name>
+		<address>الرياض_ صناعية السعادة _ شارع الصلح، مقابل مسجد الضحيان، الرياض 14257</address>
+		<phoneNumber>055 054 6296</phoneNumber>
+		<snippet>الرياض_ صناعية السعادة _ شارع الصلح، مقابل مسجد الضحيان، الرياض 14257</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2fa9b7cb10bb81:0x7709682cd0aad702&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_I</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2fa9b7cb10bb81:0x7709682cd0aad702&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.84923,24.7113131,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="1.11.1">
+		<name>مركز كام -سمكره -بوية-مكانيك-فحص-برمجة-كهرباء-لصيانة السيارات</name>
+		<address>6644 3185 شارع أحمد بن محمد السبتي، القيروان، الرياض 13542</address>
+		<phoneNumber>058 222 2745</phoneNumber>
+		<snippet>6644 3185 شارع أحمد بن محمد السبتي، القيروان، الرياض 13542</snippet>
+		<description><![CDATA[<!DOCTYPE html><html><head></head><body><script type="text/javascript">window.location.href="https://www.google.com/earth/rpc/entity?lat=24.8187&lng=46.839000000000006&fid=0x3e2ee7f7f72c8d6d:0x3625702f1bc4097b&hl=ar&gl=sa&client=earth-client&cv=7.3.6.10201&useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)";</script></body></html>]]></description>
+		<styleUrl>#listing_J</styleUrl>
+		<ExtendedData>
+			<Data name="placepageUri">
+				<value>https://www.google.com/earth/rpc/entity?lat=24.8187&amp;lng=46.839000000000006&amp;fid=0x3e2ee7f7f72c8d6d:0x3625702f1bc4097b&amp;hl=ar&amp;gl=sa&amp;client=earth-client&amp;cv=7.3.6.10201&amp;useragent=GoogleEarth/7.3.6.10201(Windows;Microsoft Windows (6.2.9200.0);ar;kml:2.2;client:Pro;type:default)</value>
+			</Data>
+		</ExtendedData>
+		<Point>
+			<coordinates>46.5777361,24.8529536,0</coordinates>
+		</Point>
+	</Placemark>
+	<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.6.10201"></atom:link>
+</Folder>
+</kml>

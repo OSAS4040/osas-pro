@@ -1,0 +1,27 @@
+:root { 
+  --brand-color-primary: #14a0ee;
+  --brand-color-primary-light: #24b0fe;
+  --hr-color: rgba(0,0,0,0.05);
+  --mark-btn-bg-hover:  #24b0fe1c;
+  --toggle-bg:  #14a0ee57;
+  --toggle-bg-2: #14a0ee79;
+  --primary-red: #fe4256;
+  --footer-color:  #243752;
+  --primary-red-hover-1: #c1394726;
+  --dark-black: #220e27;
+  --white: #fff;
+  --black: #000;
+  --swap-hr-color: #14a0ee93;
+  --edit-field-bg: #14a0ee49;
+  --edit-field-bg-hover: #14a0ee6b;
+  --card-gradient-bg: #14a0ee12;
+  --primary-grad : linear-gradient(120deg,rgba(20,160,238,1) 0%, rgba(36,176,254,1) 100%);
+  --background-primary : rgba(20,160,238,0.11);
+  --background-primary-1 : rgba(20,160,238,0);
+  --outline-btn-bg: rgba(20,160,238,0.064);
+  --outline-btn-bg-2: rgba(20,160,238,0.064);
+  --footer-gradient: rgba(36,55,82,0.22);
+  --primary-color-gradient: rgba(20,160,238,5%);
+  --primary-color-gradient-2: rgb(20 160 238/15%);
+  --primary-color-gradient-3: rgb(20 160 238/5%);
+}
