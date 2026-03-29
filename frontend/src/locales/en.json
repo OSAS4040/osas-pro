@@ -1,0 +1,8 @@
+{
+  "app": { "name": "OSAS", "tagline": "Integrated Management System" },
+  "nav": { "dashboard": "Dashboard", "pos": "Point of Sale", "invoices": "Invoices", "work_orders": "Work Orders", "customers": "Customers", "vehicles": "Vehicles", "inventory": "Inventory", "reports": "Reports", "settings": "Settings", "logout": "Logout" },
+  "auth": { "email": "Email", "password": "Password", "login": "Login", "staff_portal": "Staff Portal", "fleet_portal": "Fleet Portal", "customer_portal": "Customer Portal" },
+  "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit", "create": "Create", "search": "Search", "loading": "Loading", "no_data": "No data", "confirm": "Confirm", "back": "Back", "print": "Print", "export": "Export", "import": "Import" },
+  "greetings": { "morning": "Good Morning", "evening": "Good Evening", "night": "Good Night", "welcome": "Welcome" },
+  "motivational": [ "Success is the sum of small efforts repeated daily", "Every day is a new opportunity", "Achievement starts with one step", "Your work today is your future tomorrow", "Quality is not an act, it is a habit" ]
+}

@@ -1,0 +1,20 @@
+<?php
+require '/var/www/vendor/autoload.php';
+$app = require '/var/www/bootstrap/app.php';
+$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
+
+$plugins = [
+    ['plugin_key'=>'ai_advanced_diagnostics','name'=>'AI Advanced Diagnostics','name_ar'=>'التشخيص الذكي المتقدم','description'=>'AI-powered vehicle fault analysis','description_ar'=>'تحليل أعطال المركبات بالذكاء الاصطناعي واقتراح الحلول','version'=>'2.1.0','category'=>'ai','icon'=>'cpu-chip','module_scope'=>['vehicles','work_orders'],'hooks'=>['onVehicleView','onWorkOrderCreated'],'supported_plans'=>['professional','enterprise'],'is_premium'=>false,'price_monthly'=>0,'rating'=>4.8],
+    ['plugin_key'=>'ai_pricing_engine','name'=>'Dynamic Pricing AI','name_ar'=>'محرك التسعير الذكي','description'=>'AI-powered dynamic pricing recommendations','description_ar'=>'توصيات تسعير ديناميكية تعتمد على الطلب وبيانات السوق','version'=>'1.3.0','category'=>'ai','icon'=>'currency-dollar','module_scope'=>['services','invoices'],'hooks'=>['onInvoiceGenerated'],'supported_plans'=>['professional','enterprise'],'is_premium'=>true,'price_monthly'=>49,'rating'=>4.6],
+    ['plugin_key'=>'ai_fraud_detection','name'=>'Fraud Detection AI','name_ar'=>'كشف الاحتيال الذكي','description'=>'Real-time transaction fraud detection','description_ar'=>'كشف الاحتيال في المعاملات المالية بشكل فوري','version'=>'1.0.0','category'=>'ai','icon'=>'shield-check','module_scope'=>['invoices','wallet'],'hooks'=>['onInvoiceGenerated','onPaymentProcessed'],'supported_plans'=>['enterprise'],'is_premium'=>true,'price_monthly'=>99,'rating'=>4.9],
+    ['plugin_key'=>'ai_customer_support','name'=>'AI Customer Support Bot','name_ar'=>'بوت الدعم الذكي','description'=>'Automated customer support with AI','description_ar'=>'دعم العملاء الآلي بالذكاء الاصطناعي على مدار الساعة','version'=>'1.5.0','category'=>'ai','icon'=>'chat-bubble-left-right','module_scope'=>['support'],'hooks'=>['onSupportTicketCreated'],'supported_plans'=>['professional','enterprise'],'is_premium'=>false,'price_monthly'=>0,'rating'=>4.5],
+    ['plugin_key'=>'ai_inventory_optimizer','name'=>'Inventory Optimization AI','name_ar'=>'تحسين المخزون الذكي','description'=>'AI-driven inventory management and reorder predictions','description_ar'=>'إدارة المخزون الذكية مع تنبؤات إعادة الطلب','version'=>'1.2.0','category'=>'ai','icon'=>'cube','module_scope'=>['inventory','products'],'hooks'=>['onInventoryLow'],'supported_plans'=>['professional','enterprise'],'is_premium'=>false,'price_monthly'=>0,'rating'=>4.7],
+    ['plugin_key'=>'whatsapp_ai_bot','name'=>'WhatsApp AI Bot','name_ar'=>'بوت واتساب الذكي','description'=>'Automated WhatsApp responses and notifications','description_ar'=>'ردود ورسائل واتساب آلية بالذكاء الاصطناعي','version'=>'2.0.0','category'=>'integration','icon'=>'chat-bubble-oval-left','module_scope'=>['notifications','customers'],'hooks'=>['onWorkOrderStatusChange','onInvoiceGenerated'],'supported_plans'=>['professional','enterprise'],'is_premium'=>true,'price_monthly'=>29,'rating'=>4.6],
+    ['plugin_key'=>'revenue_intelligence','name'=>'Revenue Intelligence','name_ar'=>'ذكاء الإيرادات','description'=>'Deep revenue analysis and predictions','description_ar'=>'تحليل عميق للإيرادات مع تنبؤات مستقبلية','version'=>'1.0.0','category'=>'analytics','icon'=>'chart-bar','module_scope'=>['reports'],'hooks'=>['onDashboardLoad'],'supported_plans'=>['enterprise'],'is_premium'=>true,'price_monthly'=>79,'rating'=>4.9],
+    ['plugin_key'=>'customer_emotion_ai','name'=>'Customer Emotion AI','name_ar'=>'تحليل مشاعر العملاء','description'=>'Analyze customer sentiment from interactions','description_ar'=>'تحليل مشاعر العملاء من خلال التفاعلات لتحسين الخدمة','version'=>'1.0.0','category'=>'ai','icon'=>'face-smile','module_scope'=>['support','crm'],'hooks'=>['onNpsReceived'],'supported_plans'=>['enterprise'],'is_premium'=>true,'price_monthly'=>59,'rating'=>4.4],
+];
+
+foreach ($plugins as $p) {
+    App\Models\Plugin::updateOrCreate(['plugin_key' => $p['plugin_key']], $p);
+}
+echo "✅ Seeded " . count($plugins) . " plugins\n";

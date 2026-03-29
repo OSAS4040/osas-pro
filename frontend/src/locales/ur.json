@@ -1,0 +1,8 @@
+{
+  "app": { "name": "OSAS", "tagline": "مربوط انتظامی نظام" },
+  "nav": { "dashboard": "ڈیش بورڈ", "pos": "فروخت کا مقام", "invoices": "انوائسز", "work_orders": "کام کے آرڈر", "customers": "گاہک", "vehicles": "گاڑیاں", "inventory": "انوینٹری", "reports": "رپورٹیں", "settings": "ترتیبات", "logout": "لاگ آوٹ" },
+  "auth": { "email": "ای میل", "password": "پاس ورڈ", "login": "لاگ ان", "staff_portal": "اسٹاف پورٹل", "fleet_portal": "فلیٹ پورٹل", "customer_portal": "کسٹمر پورٹل" },
+  "common": { "save": "محفوظ کریں", "cancel": "منسوخ", "delete": "حذف", "edit": "ترمیم", "create": "بنائیں", "search": "تلاش", "loading": "لوڈ ہو رہا ہے", "no_data": "کوئی ڈیٹا نہیں", "confirm": "تصدیق", "back": "واپس" },
+  "greetings": { "morning": "صبح بخیر", "evening": "شام بخیر", "night": "شب بخیر", "welcome": "خوش آمدید" },
+  "motivational": [ "کامیابی روزانہ کی چھوٹی کوششوں کا مجموعہ ہے", "ہر دن ایک نیا موقع ہے", "محنت کا پھل ضرور ملتا ہے" ]
+}

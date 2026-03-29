@@ -1,0 +1,48 @@
+# ── Environment & secrets ─────────────────────────────────
+.env
+.env.*
+!.env.example
+**/.env
+!**/.env.example
+test_credentials.json
+*.pem
+auth.json
+
+# ── Logs ────────────────────────────────────────────────────
+*.log
+laravel.log
+
+# ── Laravel (backend) ───────────────────────────────────────
+backend/vendor/
+backend/node_modules/
+backend/public/build
+backend/public/hot
+backend/public/storage
+backend/storage/logs/
+backend/storage/framework/
+backend/storage/app/
+backend/bootstrap/cache/
+backend/.phpunit.result.cache
+backend/Homestead.json
+backend/Homestead.yaml
+backend/npm-debug.log*
+backend/yarn-error.log*
+
+# ── Frontend (Vue/Vite) ─────────────────────────────────────
+frontend/node_modules/
+frontend/dist
+frontend/.vite
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# ── IDE & OS ────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Misc ────────────────────────────────────────────────────
+*.local

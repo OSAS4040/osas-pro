@@ -1,0 +1,8 @@
+{
+  "app": { "name": "OSAS", "tagline": "সমন্বিত ব্যবস্থাপনা সিস্টেম" },
+  "nav": { "dashboard": "ড্যাশবোর্ড", "pos": "বিক্রয় কেন্দ্র", "invoices": "চালান", "work_orders": "কাজের অর্ডার", "customers": "গ্রাহক", "vehicles": "যানবাহন", "inventory": "মজুদ", "reports": "প্রতিবেদন", "settings": "সেটিংস", "logout": "লগআউট" },
+  "auth": { "email": "ইমেইল", "password": "পাসওয়ার্ড", "login": "লগইন", "staff_portal": "স্টাফ পোর্টাল", "fleet_portal": "ফ্লিট পোর্টাল", "customer_portal": "গ্রাহক পোর্টাল" },
+  "common": { "save": "সংরক্ষণ", "cancel": "বাতিল", "delete": "মুছুন", "edit": "সম্পাদনা", "create": "তৈরি করুন", "search": "অনুসন্ধান", "loading": "লোড হচ্ছে", "no_data": "কোন ডেটা নেই", "confirm": "নিশ্চিত করুন", "back": "পিছনে" },
+  "greetings": { "morning": "শুভ সকাল", "evening": "শুভ সন্ধ্যা", "night": "শুভ রাত্রি", "welcome": "স্বাগতম" },
+  "motivational": [ "সাফল্য হল প্রতিদিনের ছোট ছোট প্রচেষ্টার সমষ্টি", "প্রতিটি দিন একটি নতুন সুযোগ" ]
+}

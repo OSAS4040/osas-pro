@@ -1,0 +1,8 @@
+{
+  "app": { "name": "OSAS", "tagline": "Integrated Management System" },
+  "nav": { "dashboard": "Dashboard", "pos": "Point of Sale", "invoices": "Mga Invoice", "work_orders": "Mga Work Order", "customers": "Mga Customer", "vehicles": "Mga Sasakyan", "inventory": "Imbentaryo", "reports": "Mga Ulat", "settings": "Mga Setting", "logout": "Mag-logout" },
+  "auth": { "email": "Email", "password": "Password", "login": "Mag-login", "staff_portal": "Staff Portal", "fleet_portal": "Fleet Portal", "customer_portal": "Customer Portal" },
+  "common": { "save": "I-save", "cancel": "Kanselahin", "delete": "Tanggalin", "edit": "I-edit", "create": "Lumikha", "search": "Maghanap", "loading": "Naglo-load", "no_data": "Walang data", "confirm": "Kumpirmahin", "back": "Bumalik" },
+  "greetings": { "morning": "Magandang umaga", "evening": "Magandang gabi", "night": "Magandang gabi", "welcome": "Maligayang pagdating" },
+  "motivational": [ "Ang tagumpay ay kabuuan ng maliliit na pagsisikap", "Bawat araw ay bagong pagkakataon" ]
+}

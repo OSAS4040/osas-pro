@@ -1,0 +1,8 @@
+{
+  "app": { "name": "OSAS", "tagline": "एकीकृत प्रबंधन प्रणाली" },
+  "nav": { "dashboard": "डैशबोर्ड", "pos": "बिक्री केंद्र", "invoices": "चालान", "work_orders": "कार्य आदेश", "customers": "ग्राहक", "vehicles": "वाहन", "inventory": "सूची", "reports": "रिपोर्ट", "settings": "सेटिंग्स", "logout": "लॉगआउट" },
+  "auth": { "email": "ईमेल", "password": "पासवर्ड", "login": "लॉगिन", "staff_portal": "स्टाफ पोर्टल", "fleet_portal": "फ्लीट पोर्टल", "customer_portal": "ग्राहक पोर्टल" },
+  "common": { "save": "सहेजें", "cancel": "रद्द करें", "delete": "हटाएं", "edit": "संपादित करें", "create": "बनाएं", "search": "खोजें", "loading": "लोड हो रहा है", "no_data": "कोई डेटा नहीं", "confirm": "पुष्टि करें", "back": "वापस" },
+  "greetings": { "morning": "सुप्रभात", "evening": "शुभ संध्या", "night": "शुभ रात्रि", "welcome": "स्वागत है" },
+  "motivational": [ "सफलता छोटे-छोटे प्रयासों का योग है", "हर दिन एक नया अवसर है", "कड़ी मेहनत का फल जरूर मिलता है" ]
+}

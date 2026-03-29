@@ -1,0 +1,8 @@
+ composer.json/scripts
+"scripts": {
+  "post-autoload-dump": [
+    "@php artisan package:discover --ansi"
+  ]
+}"scripts": {
+  "post-autoload-dump": []
+}
