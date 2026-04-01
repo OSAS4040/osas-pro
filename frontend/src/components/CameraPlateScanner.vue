@@ -2,8 +2,8 @@
   <div>
     <!-- Trigger Button -->
     <button
-      @click="open"
       class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-xl text-sm font-medium hover:from-teal-700 hover:to-emerald-700 transition-all shadow-sm"
+      @click="open"
     >
       <CameraIcon class="w-4 h-4" />
       مسح اللوحة بالكاميرا
@@ -13,18 +13,16 @@
     <Teleport to="body">
       <Transition name="modal-fade">
         <div v-if="visible" class="fixed inset-0 bg-black/80 z-[60] flex flex-col items-center justify-center p-4" dir="rtl">
-
           <!-- Header -->
           <div class="w-full max-w-md flex items-center justify-between mb-3">
             <h3 class="text-white font-semibold text-lg">مسح لوحة المركبة</h3>
-            <button @click="close" class="text-white/70 hover:text-white">
+            <button class="text-white/70 hover:text-white" @click="close">
               <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
 
           <!-- Camera / Preview -->
           <div class="relative w-full max-w-md aspect-[4/3] bg-black rounded-2xl overflow-hidden border-2 border-teal-400/50">
-
             <!-- Live Video -->
             <video
               v-if="!captured"
@@ -59,20 +57,44 @@
 
           <!-- Extracted Plate Result -->
           <div v-if="extracted" class="mt-4 w-full max-w-md bg-white rounded-2xl p-4 space-y-3">
-            <p class="text-sm text-gray-500 text-center">تم استخراج رقم اللوحة:</p>
+            <p class="text-sm text-gray-500 text-center">تم استخراج رقم اللوحة (راجع قبل الاعتماد):</p>
             <input
               v-model="editedPlate"
               class="w-full text-center font-mono text-2xl font-bold tracking-widest border-2 border-teal-500 rounded-xl py-3 focus:outline-none focus:ring-2 focus:ring-teal-400 uppercase"
               placeholder="تحقق وعدّل إذا لزم"
               @input="editedPlate = editedPlate.toUpperCase()"
             />
-            <p class="text-xs text-gray-400 text-center">راجع الرقم وعدّله إذا لزم الأمر ثم اضغط تأكيد</p>
+            <p v-if="ocrMethod" class="text-[10px] text-center text-gray-400">طريقة الاستخراج: {{ ocrMethod }}</p>
+
+            <!-- حلّ ذكي: مسجّل في النظام أم لا -->
+            <div v-if="resolveInfo?.registered" class="rounded-xl bg-teal-50 border border-teal-200 p-3 text-xs text-right space-y-1">
+              <p class="font-bold text-teal-800">مركبة مسجّلة</p>
+              <p v-if="resolveInfo.vehicle?.customer" class="text-teal-900">
+                العميل: {{ resolveInfo.vehicle.customer.name }}
+              </p>
+              <p v-if="resolveInfo.recent_work_orders?.length" class="text-teal-800">
+                آخر أوامر عمل: {{ resolveInfo.recent_work_orders.length }} في المعاينة
+              </p>
+              <RouterLink
+                v-if="resolveInfo.vehicle?.id"
+                :to="`/vehicles/${resolveInfo.vehicle.id}`"
+                class="inline-block mt-1 text-teal-700 font-medium hover:underline"
+              >
+                فتح ملف المركبة ←
+              </RouterLink>
+            </div>
+            <div v-else-if="resolveInfo && editedPlate" class="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 text-right">
+              غير مسجّلة في النظام — يمكنك إنشاء مركبة جديدة مع تعبئة اللوحة تلقائياً من التأكيد.
+            </div>
+
+            <p class="text-xs text-gray-400 text-center">راجع الرقم ثم اضغط تأكيد — لا يُحفَظ شيء قبل ذلك</p>
             <div class="flex gap-2">
-              <button @click="confirm" :disabled="!editedPlate.trim()"
-                class="flex-1 bg-teal-600 disabled:opacity-50 hover:bg-teal-700 text-white rounded-xl py-2.5 text-sm font-medium transition-colors">
+              <button :disabled="!editedPlate.trim()" class="flex-1 bg-teal-600 disabled:opacity-50 hover:bg-teal-700 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+                      @click="confirm"
+              >
                 ✓ تأكيد واستخدام اللوحة
               </button>
-              <button @click="retake" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl py-2.5 text-sm transition-colors">
+              <button class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl py-2.5 text-sm transition-colors" @click="retake">
                 ↩ إعادة المسح
               </button>
             </div>
@@ -85,8 +107,9 @@
 
           <!-- Capture Button (when no capture yet) -->
           <div v-if="!captured && !processing" class="mt-4 flex gap-3">
-            <button @click="capture"
-              class="w-16 h-16 rounded-full bg-white border-4 border-teal-400 hover:bg-teal-50 transition-colors flex items-center justify-center shadow-lg">
+            <button class="w-16 h-16 rounded-full bg-white border-4 border-teal-400 hover:bg-teal-50 transition-colors flex items-center justify-center shadow-lg"
+                    @click="capture"
+            >
               <CameraIcon class="w-7 h-7 text-teal-600" />
             </button>
           </div>
@@ -99,7 +122,6 @@
               <input type="file" accept="image/*" class="hidden" @change="onFileUpload" />
             </label>
           </div>
-
         </div>
       </Transition>
     </Teleport>
@@ -110,10 +132,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted, nextTick } from 'vue'
+import { RouterLink } from 'vue-router'
 import { CameraIcon, XMarkIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
+import apiClient from '@/lib/apiClient'
 
-const emit = defineEmits<{ (e: 'plate', value: string): void }>()
+const emit = defineEmits<{
+  (e: 'plate', value: string): void
+  (e: 'resolved', payload: { plate: string; registered: boolean; vehicleId?: number }): void
+}>()
 
 const visible     = ref(false)
 const captured    = ref(false)
@@ -121,6 +148,12 @@ const processing  = ref(false)
 const extracted   = ref(false)
 const editedPlate = ref('')
 const error       = ref('')
+const ocrMethod = ref('')
+const resolveInfo = ref<{
+  registered: boolean
+  vehicle?: { id: number; customer?: { name: string }; plate_number?: string }
+  recent_work_orders?: unknown[]
+} | null>(null)
 
 const videoRef      = ref<HTMLVideoElement | null>(null)
 const canvasRef     = ref<HTMLCanvasElement | null>(null)
@@ -132,6 +165,8 @@ async function open() {
   captured.value  = false
   extracted.value = false
   editedPlate.value = ''
+  ocrMethod.value = ''
+  resolveInfo.value = null
   visible.value   = true
 
   // Start camera after DOM
@@ -158,31 +193,71 @@ function stopCamera() {
   stream = null
 }
 
-function capture() {
-  if (!videoRef.value || !canvasRef.value) return
+async function capture() {
   const v = videoRef.value
-  const c = canvasRef.value
-  c.width  = v.videoWidth
-  c.height = v.videoHeight
-  c.getContext('2d')!.drawImage(v, 0, 0)
+  const proc = processCanvas.value
+  if (!v || !proc) return
+  if (v.videoWidth === 0 || v.videoHeight === 0) {
+    error.value = 'الكاميرا لم تجهّز بعد — انتظر لحظة ثم أعد المحاولة'
+    return
+  }
+  proc.width = v.videoWidth
+  proc.height = v.videoHeight
+  proc.getContext('2d')!.drawImage(v, 0, 0)
   stopCamera()
   captured.value = true
-  processImage(c)
+  await nextTick()
+  const preview = canvasRef.value
+  if (preview) {
+    preview.width = proc.width
+    preview.height = proc.height
+    preview.getContext('2d')!.drawImage(proc, 0, 0)
+  }
+  await processImage(proc)
 }
 
 async function onFileUpload(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
   if (!file) return
+  input.value = ''
+  error.value = ''
   captured.value = true
+  processing.value = true
+  const url = URL.createObjectURL(file)
   const img = new Image()
-  const url  = URL.createObjectURL(file)
   img.onload = async () => {
-    const c = processCanvas.value!
-    c.width  = img.width
-    c.height = img.height
-    c.getContext('2d')!.drawImage(img, 0, 0)
+    try {
+      const proc = processCanvas.value
+      if (!proc) {
+        error.value = 'تعذّر تهيئة المعاينة'
+        processing.value = false
+        captured.value = false
+        return
+      }
+      proc.width = img.width
+      proc.height = img.height
+      proc.getContext('2d')!.drawImage(img, 0, 0)
+      await nextTick()
+      const preview = canvasRef.value
+      if (preview) {
+        preview.width = img.width
+        preview.height = img.height
+        preview.getContext('2d')!.drawImage(img, 0, 0)
+      }
+      URL.revokeObjectURL(url)
+      await processImage(proc)
+    } catch {
+      error.value = 'تعذّر معالجة الصورة'
+      processing.value = false
+      extracted.value = true
+    }
+  }
+  img.onerror = () => {
     URL.revokeObjectURL(url)
-    processImage(c)
+    error.value = 'تعذّر فتح ملف الصورة'
+    processing.value = false
+    captured.value = false
   }
   img.src = url
 }
@@ -190,22 +265,32 @@ async function onFileUpload(e: Event) {
 async function processImage(canvas: HTMLCanvasElement) {
   processing.value = true
   error.value = ''
+  ocrMethod.value = ''
+  resolveInfo.value = null
   try {
     const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
-    const token  = localStorage.getItem('auth_token') ?? ''
-    const res    = await fetch('/api/v1/ocr/plate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ image: base64 }),
+    const { data: json } = await apiClient.post('/governance/ocr/plate', {
+      image: base64,
+      resolve_vehicle: true,
     })
-    if (res.ok) {
-      const json = await res.json()
-      editedPlate.value = (json.plate ?? '').toUpperCase()
-    } else {
-      editedPlate.value = ''
+    const pn = json.plate_normalized as { display?: string } | null | undefined
+    const normalized = pn?.display ?? (json.plate as string) ?? ''
+    editedPlate.value = String(normalized).toUpperCase().trim()
+    ocrMethod.value =
+      json.method === 'ocr'
+        ? 'OCR'
+        : json.method === 'unavailable'
+          ? 'غير متاح — أدخل يدوياً'
+          : 'استخراج جزئي'
+    if (!json.success && json.error) {
+      error.value = String(json.error)
+    }
+    if (json.vehicle) {
+      resolveInfo.value = json.vehicle as NonNullable<typeof resolveInfo.value>
     }
   } catch {
     editedPlate.value = ''
+    error.value = 'تعذّر الاتصال بالخادم — أدخل اللوحة يدوياً'
   } finally {
     processing.value = false
     extracted.value  = true
@@ -216,6 +301,11 @@ function confirm() {
   const p = editedPlate.value.trim().toUpperCase()
   if (!p) return
   emit('plate', p)
+  emit('resolved', {
+    plate: p,
+    registered: !!resolveInfo.value?.registered,
+    vehicleId: resolveInfo.value?.vehicle?.id,
+  })
   close()
 }
 
@@ -224,6 +314,8 @@ function retake() {
   extracted.value = false
   editedPlate.value = ''
   error.value = ''
+  resolveInfo.value = null
+  ocrMethod.value = ''
   startCamera()
 }
 
