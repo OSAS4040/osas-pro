@@ -6,8 +6,11 @@
         <h2 class="text-lg font-bold text-gray-900">مركبات الأسطول</h2>
         <p class="text-xs text-gray-400">إدارة وتتبع مركبات شركتك</p>
       </div>
-      <button @click="showAddModal = true"
-        class="flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">
+      <button
+        type="button"
+        class="flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
+        @click="openAdd"
+      >
         <PlusIcon class="w-4 h-4" /> إضافة مركبة
       </button>
     </div>
@@ -57,7 +60,8 @@
               <td class="px-4 py-3 text-gray-500">{{ v.year }}</td>
               <td class="px-4 py-3">
                 <span class="px-2 py-0.5 rounded-full text-xs font-medium"
-                  :class="v.maintenance_status === 'good' ? 'bg-green-100 text-green-700' : v.maintenance_status === 'needs_service' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'">
+                      :class="v.maintenance_status === 'good' ? 'bg-green-100 text-green-700' : v.maintenance_status === 'needs_service' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'"
+                >
                   {{ v.maintenance_status === 'good' ? 'سليمة' : v.maintenance_status === 'needs_service' ? 'تحتاج صيانة' : 'في الصيانة' }}
                 </span>
               </td>
@@ -66,8 +70,9 @@
                 {{ v.wallet_balance != null ? Number(v.wallet_balance).toLocaleString('ar-SA', {minimumFractionDigits:2}) + ' ر.س' : '—' }}
               </td>
               <td class="px-4 py-3">
-                <button @click="requestService(v)"
-                  class="px-3 py-1.5 bg-teal-600 text-white text-xs rounded-lg hover:bg-teal-700 transition-colors">
+                <button class="px-3 py-1.5 bg-teal-600 text-white text-xs rounded-lg hover:bg-teal-700 transition-colors"
+                        @click="requestService(v)"
+                >
                   طلب خدمة
                 </button>
               </td>
@@ -76,20 +81,128 @@
         </table>
       </div>
     </div>
+
+    <!-- إضافة مركبة (كان الزر يضبط showAddModal دون واجهة — هذا يفعّل التدفق فعلياً) -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="showAddModal"
+          class="fixed inset-0 bg-black/40 z-[100] flex items-end sm:items-center justify-center p-4"
+          dir="rtl"
+          @click.self="showAddModal = false"
+        >
+          <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+              <h3 class="font-bold text-gray-900">إضافة مركبة للأسطول</h3>
+              <button type="button" class="p-1.5 rounded-lg hover:bg-gray-100" @click="showAddModal = false">
+                <XMarkIcon class="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+            <div class="p-5 space-y-4 overflow-y-auto">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">رقم اللوحة <span class="text-red-500">*</span></label>
+                <input v-model="form.plate_number" class="field" placeholder="مثل ABC 1234" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">الماركة <span class="text-red-500">*</span></label>
+                  <input v-model="form.make" class="field" placeholder="Toyota" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">الموديل <span class="text-red-500">*</span></label>
+                  <input v-model="form.model" class="field" placeholder="Camry" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">سنة الصنع</label>
+                  <input v-model="form.year" type="number" min="1990" :max="new Date().getFullYear() + 1" class="field" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">اللون</label>
+                  <input v-model="form.color" class="field" placeholder="أبيض" />
+                </div>
+              </div>
+              <div v-if="formErr" class="text-sm text-red-600 bg-red-50 rounded-lg p-3">{{ formErr }}</div>
+            </div>
+            <div class="flex gap-2 px-5 py-4 border-t border-gray-100 shrink-0">
+              <button type="button" class="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm" @click="showAddModal = false">
+                إلغاء
+              </button>
+              <button
+                type="button"
+                :disabled="saving"
+                class="flex-1 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+                @click="submitAdd"
+              >
+                {{ saving ? 'جارٍ الحفظ...' : 'إضافة' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { PlusIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
+import { useToast } from '@/composables/useToast'
 
-const router       = useRouter()
-const loading      = ref(true)
-const vehicles     = ref<any[]>([])
-const search       = ref('')
+const router = useRouter()
+const toast = useToast()
+const loading = ref(true)
+const vehicles = ref<any[]>([])
+const search = ref('')
 const showAddModal = ref(false)
+const saving = ref(false)
+const formErr = ref('')
+const form = reactive({
+  plate_number: '',
+  make: '',
+  model: '',
+  year: '' as string | number | '',
+  color: '',
+})
+
+function openAdd() {
+  Object.assign(form, { plate_number: '', make: '', model: '', year: '', color: '' })
+  formErr.value = ''
+  showAddModal.value = true
+}
+
+async function submitAdd() {
+  if (!form.plate_number?.trim() || !form.make?.trim() || !form.model?.trim()) {
+    formErr.value = 'اللوحة والماركة والموديل مطلوبة'
+    return
+  }
+  const compact = form.plate_number.trim().toUpperCase().replace(/\s+/g, '')
+  const m = compact.match(/^([A-Z]{3})(\d{3,4})$/)
+  if (!m) {
+    formErr.value = 'اللوحة: 3 حروف لاتينية ثم 3 أو 4 أرقام (مثل ABC123 أو ABC1234).'
+    return
+  }
+  const plate_number = `${m[1]} ${m[2]}`
+  saving.value = true
+  formErr.value = ''
+  try {
+    await apiClient.post('/vehicles', {
+      plate_number,
+      make: form.make.trim(),
+      model: form.model.trim(),
+      year: form.year === '' ? null : Number(form.year),
+      color: form.color?.trim() || null,
+    })
+    toast.success('تم إضافة المركبة')
+    showAddModal.value = false
+    await load()
+  } catch (e: any) {
+    formErr.value = e?.response?.data?.message ?? 'تعذّر الحفظ'
+  } finally {
+    saving.value = false
+  }
+}
 
 const filtered = computed(() =>
   vehicles.value.filter(v => !search.value || v.plate_number?.toLowerCase().includes(search.value.toLowerCase())
@@ -99,7 +212,8 @@ async function load() {
   loading.value = true
   try {
     const { data } = await apiClient.get('/vehicles', { params: { per_page: 100 } })
-    vehicles.value = data.data ?? []
+    const raw = data.data
+    vehicles.value = Array.isArray(raw) ? raw : raw?.data ?? []
   } catch { /* silent */ } finally { loading.value = false }
 }
 
@@ -109,3 +223,17 @@ function requestService(v: any) {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.field {
+  @apply w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent;
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

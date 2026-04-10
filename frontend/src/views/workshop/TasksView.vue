@@ -1,16 +1,55 @@
 <template>
   <div class="space-y-6" dir="rtl">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-      <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+    <div class="sticky top-0 z-10 -mx-1 px-1 py-2 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 flex items-center justify-between gap-3 rounded-b-xl">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
         <ClipboardDocumentCheckIcon class="w-6 h-6 text-primary-600" />
         إدارة المهام
       </h2>
-      <button @click="openAddModal"
-        class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+      <button class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+              @click="openAddModal"
+      >
         <PlusIcon class="w-4 h-4" />
         مهمة جديدة
       </button>
+    </div>
+
+    <div
+      v-if="!loading && (overdueCount > 0 || highPriorityOpen > 0)"
+      class="rounded-xl border border-amber-200/90 bg-amber-50/95 dark:bg-amber-950/35 dark:border-amber-900/50 px-4 py-3 text-sm text-amber-950 dark:text-amber-100 flex flex-wrap items-center gap-2"
+    >
+      <span class="font-semibold">تنبيه ذكي:</span>
+      <span v-if="overdueCount > 0" class="text-red-700 dark:text-red-300">{{ overdueCount }} مهمة متأخرة</span>
+      <span v-if="highPriorityOpen > 0" class="text-orange-800 dark:text-orange-200">{{ highPriorityOpen }} بأولوية عالية قيد التنفيذ</span>
+    </div>
+
+    <div v-if="smartSummary?.summary" class="table-shell p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-semibold text-gray-800 dark:text-white">لوحة المهام الذكية</h3>
+        <button class="btn btn-outline btn-sm" :disabled="smartLoading" @click="refreshAssigneeSuggestions()">
+          {{ smartLoading ? 'جارٍ التحديث...' : 'تحديث الاقتراحات' }}
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+        <div class="panel p-3">
+          <p class="text-xs text-gray-500">المهام المفتوحة</p>
+          <p class="text-xl font-bold text-primary-700">{{ smartSummary.summary.open_tasks ?? 0 }}</p>
+        </div>
+        <div class="panel p-3">
+          <p class="text-xs text-gray-500">المهام المتأخرة</p>
+          <p class="text-xl font-bold text-red-600">{{ smartSummary.summary.overdue_tasks ?? 0 }}</p>
+        </div>
+        <div class="panel p-3">
+          <p class="text-xs text-gray-500">مخاطر SLA خلال 24 ساعة</p>
+          <p class="text-xl font-bold text-amber-600">{{ smartSummary.summary.sla_risk_24h ?? 0 }}</p>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <p class="text-xs font-semibold text-gray-600">توصيات تنفيذية</p>
+        <p v-for="(rec, idx) in smartSummary.recommendations ?? []" :key="`smart-rec-${idx}`" class="text-sm text-gray-700 bg-gray-50 rounded-lg px-3 py-2">
+          - {{ rec.message ?? rec }}
+        </p>
+      </div>
     </div>
 
     <!-- Stats Bar -->
@@ -32,7 +71,7 @@
         <FunnelIcon class="w-4 h-4 text-gray-400 flex-shrink-0" />
         <select v-model="filterEmployee" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
           <option value="">كل الموظفين</option>
-          <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name }}</option>
+          <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name || e.name }}</option>
         </select>
       </div>
       <div class="flex items-center gap-2 flex-1 min-w-[160px]">
@@ -45,8 +84,8 @@
       </div>
       <button
         v-if="filterEmployee || filterPriority || filterStatus"
-        @click="filterEmployee = ''; filterPriority = ''; filterStatus = ''"
         class="text-xs text-gray-500 hover:text-red-500 flex items-center gap-1 transition-colors"
+        @click="filterEmployee = ''; filterPriority = ''; filterStatus = ''"
       >
         <XMarkIcon class="w-4 h-4" /> مسح الفلاتر
       </button>
@@ -54,16 +93,16 @@
       <!-- View Toggle -->
       <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1 mr-auto">
         <button
-          @click="viewMode = 'kanban'"
           class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
           :class="viewMode === 'kanban' ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+          @click="viewMode = 'kanban'"
         >
           <ViewColumnsIcon class="w-4 h-4 inline-block ml-1" />كانبان
         </button>
         <button
-          @click="viewMode = 'list'"
           class="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
           :class="viewMode === 'list' ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+          @click="viewMode = 'list'"
         >
           <ListBulletIcon class="w-4 h-4 inline-block ml-1" />قائمة
         </button>
@@ -122,7 +161,8 @@
               <!-- Assignee Avatar -->
               <div class="flex items-center gap-1.5 min-w-0">
                 <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
-                  :class="avatarColor(task.assignee_name)">
+                     :class="avatarColor(task.assignee_name)"
+                >
                   {{ avatarInitial(task.assignee_name) }}
                 </div>
                 <span class="text-xs text-gray-500 truncate">{{ task.assignee_name ?? 'غير محدد' }}</span>
@@ -131,19 +171,19 @@
               <div class="flex gap-1 flex-shrink-0">
                 <button
                   v-if="col.nextStatus"
-                  @click="advance(task, col.nextStatus)"
                   :disabled="advancing === task.id"
                   class="text-xs px-2 py-1 rounded-md font-medium transition-colors bg-primary-50 text-primary-700 hover:bg-primary-100 disabled:opacity-50"
                   :title="'تقديم إلى: ' + col.nextLabel"
+                  @click="advance(task, col.nextStatus)"
                 >
                   {{ col.nextLabel }}
                 </button>
                 <button
                   v-if="task.status !== 'cancelled' && task.status !== 'completed'"
-                  @click="cancelTask(task)"
                   :disabled="advancing === task.id"
                   class="text-xs px-2 py-1 rounded-md font-medium transition-colors bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50"
                   title="إلغاء المهمة"
+                  @click="cancelTask(task)"
                 >
                   إلغاء
                 </button>
@@ -186,7 +226,8 @@
             <td class="px-4 py-3">
               <div class="flex items-center gap-2">
                 <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                  :class="avatarColor(task.assignee_name)">
+                     :class="avatarColor(task.assignee_name)"
+                >
                   {{ avatarInitial(task.assignee_name) }}
                 </div>
                 <span class="text-sm text-gray-700">{{ task.assignee_name ?? 'غير محدد' }}</span>
@@ -213,17 +254,17 @@
               <div class="flex items-center gap-1.5">
                 <button
                   v-if="nextStatus(task.status)"
-                  @click="advance(task, nextStatus(task.status)!)"
                   :disabled="advancing === task.id"
                   class="text-xs px-2 py-1 rounded-md bg-primary-50 text-primary-700 hover:bg-primary-100 font-medium disabled:opacity-50 transition-colors"
+                  @click="advance(task, nextStatus(task.status)!)"
                 >
                   {{ nextLabel(task.status) }}
                 </button>
                 <button
                   v-if="task.status !== 'cancelled' && task.status !== 'completed'"
-                  @click="cancelTask(task)"
                   :disabled="advancing === task.id"
                   class="text-xs px-2 py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100 font-medium disabled:opacity-50 transition-colors"
+                  @click="cancelTask(task)"
                 >
                   إلغاء
                 </button>
@@ -239,11 +280,11 @@
       <div class="bg-white rounded-2xl w-full max-w-lg shadow-xl" dir="rtl">
         <div class="flex items-center justify-between px-6 py-4 border-b">
           <h3 class="font-bold text-lg text-gray-900">مهمة جديدة</h3>
-          <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <button class="text-gray-400 hover:text-gray-600 transition-colors" @click="showModal = false">
             <XMarkIcon class="w-5 h-5" />
           </button>
         </div>
-        <form @submit.prevent="save" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+        <form class="p-6 space-y-4 max-h-[75vh] overflow-y-auto" @submit.prevent="save">
           <!-- Title -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">العنوان <span class="text-red-500">*</span></label>
@@ -278,18 +319,25 @@
               <label class="block text-sm font-medium text-gray-700 mb-1">المسؤول</label>
               <select v-model="form.assignee_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
                 <option value="">اختر موظفاً</option>
-                <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name }}</option>
+                <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name || e.name }}</option>
               </select>
+              <div v-if="suggestedAssignees.length" class="mt-2 flex flex-wrap gap-1.5">
+                <button
+                  v-for="cand in suggestedAssignees.slice(0, 3)"
+                  :key="`suggest-${cand.employee_id}`"
+                  type="button"
+                  class="px-2 py-1 rounded-md text-xs border border-primary-200 bg-primary-50 text-primary-700 hover:bg-primary-100"
+                  @click="form.assignee_id = String(cand.employee_id ?? '')"
+                >
+                  اقتراح: {{ cand.employee_name }} ({{ cand.score }})
+                </button>
+              </div>
             </div>
           </div>
           <!-- Due Date -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">تاريخ الاستحقاق</label>
-            <input
-              v-model="form.due_date"
-              type="date"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+            <SmartDatePicker :model-value="form.due_date" mode="single" @change="onDueDateChange" />
           </div>
           <!-- Notes -->
           <div>
@@ -318,8 +366,8 @@
           <div class="flex gap-3 justify-end pt-1">
             <button
               type="button"
-              @click="showModal = false"
               class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              @click="showModal = false"
             >
               إلغاء
             </button>
@@ -351,6 +399,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useApi } from '@/composables/useApi'
 import apiClient from '@/lib/apiClient'
+import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
 
 const api = useApi()
 
@@ -359,6 +408,9 @@ const tasks = ref<any[]>([])
 const employees = ref<any[]>([])
 const loading = ref(true)
 const advancing = ref<number | null>(null)
+const smartSummary = ref<any>(null)
+const suggestedAssignees = ref<any[]>([])
+const smartLoading = ref(false)
 
 const viewMode = ref<'kanban' | 'list'>('kanban')
 const filterStatus = ref('')
@@ -483,6 +535,7 @@ function priorityClass(p: string): string {
   )
 }
 
+/** حالة المهمة الورشية (ليست WorkOrderStatus — لا تُربَط بـ workOrderStatusLabels). */
 function statusLabel(s: string): string {
   return (
     { pending: 'للتنفيذ', in_progress: 'جاري', review: 'مراجعة', completed: 'مكتمل', cancelled: 'ملغى' }[s] ?? s
@@ -513,6 +566,11 @@ function isOverdue(task: any): boolean {
   return new Date(task.due_date) < new Date()
 }
 
+const overdueCount = computed(() => tasks.value.filter((t) => isOverdue(t)).length)
+const highPriorityOpen = computed(() =>
+  tasks.value.filter((t) => t.priority === 'high' && t.status !== 'completed' && t.status !== 'cancelled').length,
+)
+
 const avatarColors = [
   'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500',
   'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500', 'bg-teal-500',
@@ -534,17 +592,35 @@ function avatarInitial(name?: string): string {
 async function load() {
   loading.value = true
   try {
-    const [tasksRes, empsRes] = await Promise.all([
+    const [tasksRes, empsRes, smartRes, suggestRes] = await Promise.all([
       api.get('/workshop/tasks'),
       api.get('/workshop/employees'),
+      api.get('/workshop/tasks/smart-summary'),
+      api.get('/workshop/tasks/suggested-assignees'),
     ])
     tasks.value = tasksRes?.data ?? tasksRes ?? []
     employees.value = empsRes?.data ?? empsRes ?? []
+    smartSummary.value = smartRes?.data ?? null
+    suggestedAssignees.value = Array.isArray(suggestRes?.data) ? suggestRes.data : []
   } catch {
     tasks.value = []
     employees.value = []
+    smartSummary.value = null
+    suggestedAssignees.value = []
   } finally {
     loading.value = false
+  }
+}
+
+async function refreshAssigneeSuggestions(skill = '') {
+  smartLoading.value = true
+  try {
+    const r = await api.get('/workshop/tasks/suggested-assignees', skill ? { skill } : {})
+    suggestedAssignees.value = Array.isArray(r?.data) ? r.data : []
+  } catch {
+    suggestedAssignees.value = []
+  } finally {
+    smartLoading.value = false
   }
 }
 
@@ -576,6 +652,10 @@ function openAddModal() {
   form.value = defaultForm()
   modalError.value = ''
   showModal.value = true
+}
+
+function onDueDateChange(val: { from: string; to: string }) {
+  form.value.due_date = val.from || val.to
 }
 
 async function save() {

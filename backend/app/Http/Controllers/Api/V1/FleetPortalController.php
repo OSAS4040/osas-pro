@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contract;
+use App\Models\ContractServiceItem;
 use App\Models\Customer;
+use App\Models\Service;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use App\Services\WalletService;
+use App\Services\WorkOrderPricingResolverService;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +21,7 @@ use Illuminate\Support\Str;
  * Fleet Portal Controller — واجهة الجهة العميلة
  *
  * هذه الـ Controller خاصة بمستخدمي fleet_contact و fleet_manager فقط.
- * موظفو الورشة لا يملكون صلاحية الوصول إليها.
+ * موظفو مركز الخدمة لا يملكون صلاحية الوصول إليها.
  *
  * الأدوار المسموح بها:
  *   fleet_contact  → إنشاء طلبات خدمة + شحن رصيد + عرض
@@ -107,6 +112,115 @@ class FleetPortalController extends Controller
         return response()->json($vehicles);
     }
 
+    /**
+     * كتالوج الخدمات النشطة (بدون الاعتماد على سعر يدوي من العميل).
+     */
+    public function serviceCatalog(Request $request): JsonResponse
+    {
+        $this->assertFleetSide();
+        $companyId = $this->companyId();
+        $user      = $this->fleetUser();
+
+        $vehicleId = $request->filled('vehicle_id') ? $request->integer('vehicle_id') : null;
+
+        $q = Service::query()
+            ->where('company_id', $companyId)
+            ->where('is_active', true);
+
+        $customerId = $user->customer_id;
+        if ($customerId) {
+            $customer = Customer::query()
+                ->where('company_id', $companyId)
+                ->where('id', $customerId)
+                ->first();
+            if ($customer && $customer->pricing_contract_id) {
+                $contract = Contract::query()
+                    ->where('company_id', $companyId)
+                    ->where('id', $customer->pricing_contract_id)
+                    ->first();
+                if ($contract !== null && $this->fleetContractIsEffectiveToday($contract)) {
+                    $ids = $this->fleetContractAllowedServiceIds(
+                        $companyId,
+                        (int) $contract->id,
+                        $user->branch_id ? (int) $user->branch_id : null,
+                        $vehicleId,
+                    );
+                    if ($ids === []) {
+                        $q->whereRaw('1 = 0');
+                    } else {
+                        $q->whereIn('id', $ids);
+                    }
+                }
+            }
+        }
+
+        $rows = $q->orderBy('name')
+            ->get(['id', 'name', 'name_ar', 'code', 'estimated_minutes']);
+
+        return response()->json(['data' => $rows, 'trace_id' => app('trace_id')]);
+    }
+
+    /**
+     * معاينة السعر المحسوم من الخادم فقط (مصدر التسعير ووضوحه).
+     */
+    public function previewWorkOrderLinePrice(Request $request): JsonResponse
+    {
+        $this->assertFleetSide();
+        $user       = $this->fleetUser();
+        $companyId  = $this->companyId();
+        $customerId = $user->customer_id;
+
+        if (! $customerId) {
+            return response()->json(['message' => 'حسابك غير مرتبط بجهة عميلة.'], 422);
+        }
+
+        $data = $request->validate([
+            'service_id' => [
+                'required',
+                'integer',
+                Rule::exists('services', 'id')->where(fn ($q) => $q->where('company_id', $companyId)->where('is_active', true)),
+            ],
+            'vehicle_id' => ['nullable', 'integer'],
+        ]);
+
+        $vehicleId = isset($data['vehicle_id']) ? (int) $data['vehicle_id'] : null;
+        if ($vehicleId !== null) {
+            Vehicle::where('company_id', $companyId)
+                ->where('id', $vehicleId)
+                ->where('customer_id', $customerId)
+                ->firstOrFail();
+        }
+
+        try {
+            $resolved = app(WorkOrderPricingResolverService::class)->resolve(
+                $companyId,
+                (int) $customerId,
+                (int) $data['service_id'],
+                $user->branch_id ? (int) $user->branch_id : null,
+                null,
+                $vehicleId,
+                true,
+                1.0,
+            );
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
+        }
+
+        return response()->json([
+            'data' => [
+                'unit_price' => $resolved->unitPrice,
+                'tax_rate' => $resolved->taxRate,
+                'pricing_source' => $resolved->source->value,
+                'pricing_source_label_ar' => $resolved->source->labelAr(),
+                'pricing_policy_id' => $resolved->policyId,
+                'pricing_contract_service_item_id' => $resolved->contractServiceItemId,
+                'resolution_level' => $resolved->resolutionLevel,
+                'note' => 'تم تسعير هذا البند تلقائيًا حسب سياسة التسعير المعتمدة للشركة — لا يُقبل تمرير سعر من الواجهة.',
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
     // ────────────────────────────────────────────────────────────
     // 3. إنشاء طلب خدمة من قِبل الجهة العميلة
     // POST /fleet-portal/work-orders
@@ -119,8 +233,16 @@ class FleetPortalController extends Controller
         $customerId = $user->customer_id;
 
         $data = $request->validate([
-            'vehicle_id'         => 'required|integer',
-            'customer_complaint' => 'required|string|max:1000',
+            'vehicle_id' => [
+                'required',
+                'integer',
+            ],
+            'service_id' => [
+                'required',
+                'integer',
+                Rule::exists('services', 'id')->where(fn ($q) => $q->where('company_id', $companyId)->where('is_active', true)),
+            ],
+            'customer_complaint' => 'nullable|string|max:1000',
             'mileage'            => 'nullable|integer|min:0',
             'driver_name'        => 'nullable|string|max:255',
             'driver_phone'       => 'nullable|string|max:30',
@@ -138,18 +260,30 @@ class FleetPortalController extends Controller
         $approvalStatus = $useCredit ? 'pending' : 'not_required';
 
         $workOrderService = app(\App\Services\WorkOrderService::class);
-        $workOrder = $workOrderService->create([
-            'customer_id'        => $customerId,
-            'vehicle_id'         => $vehicle->id,
-            'customer_complaint' => $data['customer_complaint'],
-            'odometer_reading'   => $data['mileage'] ?? null,
-            'driver_name'        => $data['driver_name'] ?? null,
-            'driver_phone'       => $data['driver_phone'] ?? null,
-            'notes'              => $data['notes'] ?? null,
-            'created_by_side'    => 'fleet',
-            'approval_status'    => $approvalStatus,
-            'items'              => [],
-        ], $companyId, $user->branch_id, $user->id);
+
+        try {
+            $workOrder = $workOrderService->create([
+                'customer_id'        => $customerId,
+                'vehicle_id'         => $vehicle->id,
+                'customer_complaint' => $data['customer_complaint'] ?? null,
+                'odometer_reading'   => $data['mileage'] ?? null,
+                'driver_name'        => $data['driver_name'] ?? null,
+                'driver_phone'       => $data['driver_phone'] ?? null,
+                'notes'              => $data['notes'] ?? null,
+                'created_by_side'    => 'fleet',
+                'approval_status'    => $approvalStatus,
+                'items'              => [
+                    [
+                        'item_type' => 'service',
+                        'service_id' => (int) $data['service_id'],
+                        'quantity' => 1,
+                        'product_id' => null,
+                    ],
+                ],
+            ], $companyId, $user->branch_id, $user->id);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
+        }
 
         $workOrder->update([
             'created_by_side' => 'fleet',
@@ -184,7 +318,17 @@ class FleetPortalController extends Controller
             return response()->json([
                 'data'    => $workOrder,
                 'message' => 'هذا الطلب معتمد مسبقاً.',
+                'trace_id' => app('trace_id'),
             ]);
+        }
+
+        if (! in_array((string) $workOrder->approval_status, ['pending', 'rejected', 'not_required'], true)) {
+            return response()->json([
+                'message' => "Work order approval transition {$workOrder->approval_status} -> approved is not allowed.",
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
         }
 
         $workOrder->update([
@@ -197,6 +341,7 @@ class FleetPortalController extends Controller
         return response()->json([
             'data'    => $workOrder->fresh(),
             'message' => 'تم اعتماد طلب الائتمان. يمكن للمركبة الآن الدخول.',
+            'trace_id' => app('trace_id'),
         ]);
     }
 
@@ -217,6 +362,23 @@ class FleetPortalController extends Controller
             ->whereHas('vehicle', fn ($q) => $q->where('customer_id', $customerId))
             ->firstOrFail();
 
+        if ($workOrder->approval_status === 'rejected') {
+            return response()->json([
+                'data'    => $workOrder,
+                'message' => 'تم رفض طلب الائتمان مسبقاً.',
+                'trace_id' => app('trace_id'),
+            ]);
+        }
+
+        if (! in_array((string) $workOrder->approval_status, ['pending', 'approved'], true)) {
+            return response()->json([
+                'message' => "Work order approval transition {$workOrder->approval_status} -> rejected is not allowed.",
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
         $workOrder->update([
             'approval_status'   => 'rejected',
             'credit_authorized' => false,
@@ -225,6 +387,7 @@ class FleetPortalController extends Controller
         return response()->json([
             'data'    => $workOrder->fresh(),
             'message' => 'تم رفض طلب الائتمان.',
+            'trace_id' => app('trace_id'),
         ]);
     }
 
@@ -350,5 +513,58 @@ class FleetPortalController extends Controller
             ->paginate(20);
 
         return response()->json($orders);
+    }
+
+    private function fleetContractIsEffectiveToday(Contract $contract): bool
+    {
+        if (($contract->status ?? '') !== 'active') {
+            return false;
+        }
+        $today = now()->toDateString();
+
+        return $contract->start_date->format('Y-m-d') <= $today
+            && $contract->end_date->format('Y-m-d') >= $today;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function fleetContractAllowedServiceIds(int $companyId, int $contractId, ?int $branchId, ?int $vehicleId): array
+    {
+        $lines = ContractServiceItem::query()
+            ->where('company_id', $companyId)
+            ->where('contract_id', $contractId)
+            ->where('status', 'active')
+            ->where(function ($q) use ($branchId) {
+                $q->whereNull('branch_id');
+                if ($branchId !== null) {
+                    $q->orWhere('branch_id', $branchId);
+                }
+            })
+            ->orderByDesc('priority')
+            ->orderByDesc('id')
+            ->get();
+
+        $out = [];
+        foreach ($lines as $line) {
+            if ($this->fleetLineMatchesVehicle($line, $vehicleId)) {
+                $out[] = (int) $line->service_id;
+            }
+        }
+
+        return array_values(array_unique($out));
+    }
+
+    private function fleetLineMatchesVehicle(ContractServiceItem $line, ?int $vehicleId): bool
+    {
+        if ($line->applies_to_all_vehicles) {
+            return true;
+        }
+        $ids = array_map('intval', $line->vehicle_ids ?? []);
+        if ($vehicleId === null) {
+            return $ids === [];
+        }
+
+        return in_array($vehicleId, $ids, true);
     }
 }

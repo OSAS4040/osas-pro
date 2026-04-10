@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Intelligence\Events\VehicleCreated;
 use App\Models\Vehicle;
 use App\Services\IntelligentEventEmitter;
+use App\Services\IntelligentReading\VehiclePlateResolver;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
 /**
@@ -68,9 +71,21 @@ class VehicleController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $data = $request->validate([
-            'customer_id'   => 'nullable|integer',
-            'plate_number'  => 'required|string|max:20',
+            'customer_id'   => [
+                'required',
+                'integer',
+                Rule::exists('customers', 'id')->where(fn($q) => $q->where('company_id', $user->company_id)),
+            ],
+            'plate_number'  => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('vehicles', 'plate_number')
+                    ->where(fn($q) => $q->where('company_id', $user->company_id)),
+            ],
             'vin'           => 'nullable|string|max:17',
             'make'          => 'required|string|max:100',
             'model'         => 'required|string|max:100',
@@ -83,14 +98,19 @@ class VehicleController extends Controller
             'notes'         => 'nullable|string',
         ]);
 
-        $user = $request->user();
-
-        $vehicle = Vehicle::create(array_merge($data, [
-            'uuid'                => Str::uuid(),
-            'company_id'          => $user->company_id,
-            'branch_id'           => $user->branch_id,
-            'created_by_user_id'  => $user->id,
-        ]));
+        try {
+            $vehicle = Vehicle::create(array_merge($data, [
+                'uuid'                => Str::uuid(),
+                'company_id'          => $user->company_id,
+                'branch_id'           => $user->branch_id,
+                'created_by_user_id'  => $user->id,
+            ]));
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Unable to create vehicle with provided data.',
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
 
         $this->intelligentEvents->emit(new VehicleCreated(
             companyId: (int) $user->company_id,
@@ -113,6 +133,21 @@ class VehicleController extends Controller
         $vehicle = Vehicle::with(['customer', 'branch', 'workOrders' => fn($q) => $q->latest()->limit(5)])->findOrFail($id);
 
         return response()->json(['data' => $vehicle, 'trace_id' => app('trace_id')]);
+    }
+
+    /**
+     * حلّ رقم اللوحة ضمن الشركة: مسجّل أم لا + بيانات معاينة (بدون إنشاء سجلات).
+     */
+    public function resolvePlate(Request $request): JsonResponse
+    {
+        $request->validate(['plate' => 'required|string|max:32']);
+
+        $data = VehiclePlateResolver::resolve(
+            (int) $request->user()->company_id,
+            $request->string('plate')->toString(),
+        );
+
+        return response()->json(['data' => $data, 'trace_id' => app('trace_id')]);
     }
 
     /**

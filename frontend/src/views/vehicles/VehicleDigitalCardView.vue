@@ -1,89 +1,257 @@
 <template>
-  <div class="max-w-2xl mx-auto space-y-4">
+  <div class="max-w-2xl mx-auto space-y-5 px-1 sm:px-0">
+    <!-- شريط علوي: عودة + مشاركة (أيقونات صغيرة وواضحة) -->
+    <div class="no-print space-y-1.5">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <RouterLink :to="`/vehicles/${vehicleId}`" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 text-sm flex items-center gap-1 transition-colors shrink-0">
+          <ArrowRightIcon class="w-4 h-4" /> عودة لملف المركبة
+        </RouterLink>
 
-    <!-- Back -->
-    <div class="flex items-center gap-3">
-      <RouterLink :to="`/vehicles/${vehicleId}`" class="text-gray-400 hover:text-gray-600 text-sm flex items-center gap-1">
-        <ArrowRightIcon class="w-4 h-4" /> عودة لملف المركبة
-      </RouterLink>
+        <div v-if="vehicle" class="flex flex-col items-end gap-1.5 min-w-0 max-w-full">
+          <span class="text-[10px] font-semibold text-gray-500 dark:text-slate-400">مشاركة البطاقة</span>
+          <div class="flex flex-wrap items-center justify-end gap-1" role="toolbar" aria-label="مشاركة البطاقة الرقمية">
+            <button
+              type="button"
+              class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-200 bg-white p-2.5 text-teal-700 shadow-sm transition hover:bg-teal-50 dark:border-slate-600 dark:bg-slate-800 dark:text-teal-300 dark:hover:bg-slate-700"
+              title="مشاركة سريعة (التطبيقات / نسخ الرابط)"
+              aria-label="مشاركة سريعة"
+              @click="shareCardQuick"
+            >
+              <DevicePhoneMobileIcon class="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-200 bg-white p-2.5 text-violet-700 shadow-sm transition hover:bg-violet-50 disabled:opacity-45 dark:border-slate-600 dark:bg-slate-800 dark:text-violet-300 dark:hover:bg-slate-700"
+              title="مشاركة البطاقة كصورة"
+              aria-label="مشاركة كصورة"
+              :disabled="shareImageBusy"
+              @click="shareCardAsImage"
+            >
+              <PhotoIcon class="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-200 bg-white p-2.5 text-primary-700 shadow-sm transition hover:bg-primary-50 dark:border-slate-600 dark:bg-slate-800 dark:text-primary-300 dark:hover:bg-slate-700"
+              title="تحميل صورة PNG"
+              aria-label="تحميل صورة PNG"
+              @click="downloadCard"
+            >
+              <ArrowDownTrayIcon class="h-4 w-4" />
+            </button>
+            <ShareModal
+              ref="shareModalRef"
+              :url="qrUrl"
+              :title="`${vehicle?.make} ${vehicle?.model} — ${vehicle?.plate_number}`"
+              label="البطاقة الرقمية"
+              :phone="vehicle?.customer?.phone"
+              :email="vehicle?.customer?.email"
+              :message="`بطاقة مركبتك ${vehicle?.plate_number} — يمكنك متابعة أوامر العمل والرصيد:`"
+              entity-type="vehicle_card"
+              :entity-id="vehicleId"
+            >
+              <template #default="{ open }">
+                <button
+                  type="button"
+                  class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-200 bg-white p-2.5 text-indigo-700 shadow-sm transition hover:bg-indigo-50 dark:border-slate-600 dark:bg-slate-800 dark:text-indigo-300 dark:hover:bg-slate-700"
+                  title="خيارات متقدمة (رابط، واتساب، بريد)"
+                  aria-label="خيارات مشاركة متقدمة"
+                  @click="open"
+                >
+                  <ShareIcon class="h-4 w-4" />
+                </button>
+              </template>
+            </ShareModal>
+          </div>
+          <p class="text-[10px] leading-relaxed text-gray-400 dark:text-slate-500 text-right max-w-[16rem] sm:max-w-xs">
+            سريعة: رابط من الجهاز. الصورة: حفظ أو إرسال البطاقة كملف. المزيد: واتساب وبريد.
+          </p>
+        </div>
+      </div>
     </div>
 
-    <div v-if="loading" class="text-center py-16 text-gray-400 text-sm">جارٍ التحميل...</div>
+    <div v-if="loading" class="text-center py-16 text-sm text-gray-400 dark:text-slate-400">جارٍ التحميل...</div>
+
+    <div
+      v-else-if="loadError"
+      class="rounded-2xl border border-red-200 bg-red-50/80 px-5 py-10 text-center dark:border-red-900/50 dark:bg-red-950/20"
+      role="alert"
+    >
+      <p class="text-sm font-medium text-red-800 dark:text-red-200">{{ loadError }}</p>
+      <button
+        type="button"
+        class="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700"
+        @click="fetchDigitalCard"
+      >
+        إعادة المحاولة
+      </button>
+    </div>
 
     <template v-else-if="vehicle">
-      <!-- ═══ Digital Card ═══ -->
-      <div ref="cardRef" class="relative rounded-2xl overflow-hidden shadow-2xl"
-        :style="{ background: cardGradient }">
+      <!-- ═══ محفظة رقمية (مظهر مقارب لـ Apple Wallet) ═══ -->
+      <div class="wallet-phone-surface mx-auto max-w-[400px] rounded-[2rem] bg-[#f2f2f7] dark:bg-slate-900/80 px-4 pt-6 pb-5 shadow-inner border border-black/[0.06] dark:border-white/10">
+        <div
+          ref="cardRef"
+          class="vehicle-wallet-card group relative flex w-full min-h-[272px] flex-col rounded-[1.65rem] sm:min-h-[296px] sm:rounded-[1.85rem] shadow-[0_28px_56px_-16px_rgba(49,17,89,0.55),0_0_0_1px_rgba(255,255,255,0.1)_inset] overflow-hidden select-none"
+        >
+          <div class="absolute inset-0 rounded-[inherit]" :style="{ background: cardGradientCss }" aria-hidden="true" />
+          <div class="wallet-card-shine absolute inset-0 rounded-[inherit] pointer-events-none opacity-60" aria-hidden="true" />
+          <div class="absolute -top-8 -right-8 w-[60%] h-[55%] rounded-full bg-white/[0.09] blur-3xl pointer-events-none" aria-hidden="true" />
 
-        <!-- Plate Badge top-right -->
-        <div class="absolute top-4 left-4 bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-white/30">
-          <p class="text-xs text-white/70 text-center leading-none mb-0.5">لوحة</p>
-          <p class="text-xl font-black text-white font-mono tracking-widest">{{ vehicle.plate_number }}</p>
-        </div>
-
-        <!-- Status Dot top-left -->
-        <div class="absolute top-4 right-4 flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full animate-pulse" :class="statusDot"></span>
-          <span class="text-xs text-white/80 font-medium">{{ statusLabel }}</span>
-        </div>
-
-        <!-- Main Content -->
-        <div class="pt-16 pb-6 px-6">
-          <!-- Vehicle Icon + Name -->
-          <div class="flex items-end gap-4 mb-5">
-            <div class="w-20 h-20 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center flex-shrink-0">
-              <TruckIcon class="w-10 h-10 text-white" />
-            </div>
-            <div>
-              <p class="text-2xl font-black text-white">{{ vehicle.make }} {{ vehicle.model }}</p>
-              <p class="text-white/70 text-sm">{{ vehicle.year }} · {{ vehicle.color }}</p>
-              <p class="text-white/50 text-xs font-mono mt-0.5">VIN: {{ vehicle.vin || '—' }}</p>
-            </div>
-          </div>
-
-          <!-- Stats Row -->
-          <div class="grid grid-cols-3 gap-3 mb-5">
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10 text-center">
-              <p class="text-xl font-black text-white">{{ vehicle.work_orders_count || 0 }}</p>
-              <p class="text-xs text-white/60">زيارة</p>
-            </div>
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10 text-center"
-              :class="walletBalance < 0 ? 'ring-1 ring-red-400' : ''">
-              <p class="text-xl font-black" :class="walletBalance < 0 ? 'text-red-300' : 'text-white'">{{ fmtMoney(walletBalance) }}</p>
-              <p class="text-xs text-white/60">الرصيد</p>
-            </div>
-            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10 text-center">
-              <p class="text-xl font-black text-white">{{ loyaltyPoints }}</p>
-              <p class="text-xs text-white/60">نقاط ولاء</p>
-            </div>
-          </div>
-
-          <!-- Customer -->
-          <div class="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
-            <div class="flex items-center gap-3">
-              <UserCircleIcon class="w-8 h-8 text-white/60" />
-              <div>
-                <p class="text-xs text-white/50">مالك المركبة</p>
-                <p class="text-sm font-semibold text-white">{{ vehicle.customer?.name || '—' }}</p>
+          <!-- اتجاه RTL مع ترتيب عناصر يحافظ على مظهر محفظة رقمية متوازن -->
+          <div dir="rtl" class="relative z-10 flex min-h-0 flex-1 flex-col p-5 sm:p-6 text-right text-white">
+            <!-- شريط حالة + كبسولة الحالة -->
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <div
+                dir="ltr"
+                class="wallet-status-bar flex h-[5px] w-[7.25rem] overflow-hidden rounded-full bg-white/20 shadow-inner"
+                role="presentation"
+              >
+                <div class="h-full rounded-l-full bg-white/85" :style="{ width: statusBarLightPct + '%' }" />
+                <div class="h-full min-w-[18%] flex-1 bg-emerald-400" />
+              </div>
+              <div class="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/25 px-2.5 py-1">
+                <span class="max-w-[5.5rem] truncate text-[10px] font-semibold text-white/95 sm:max-w-[7rem] sm:text-[11px]">{{ statusLabel }}</span>
+                <span class="relative flex h-2 w-2">
+                  <span class="absolute inline-flex h-full w-full rounded-full opacity-35 animate-ping" :class="statusDot" />
+                  <span class="relative inline-flex h-2 w-2 rounded-full" :class="statusDot" />
+                </span>
               </div>
             </div>
-            <div class="text-left">
-              <p class="text-xs text-white/50">آخر زيارة</p>
-              <p class="text-xs text-white/80">{{ lastVisit }}</p>
+
+            <!-- شارة اللوحة + العلامة -->
+            <div class="mb-5 flex items-start justify-between gap-2">
+              <div
+                class="wallet-chip shrink-0 rounded-xl border border-white/30 bg-gradient-to-br from-white/22 to-white/[0.06] px-2.5 py-1.5 text-center shadow-inner backdrop-blur-md"
+              >
+                <span class="mb-0.5 block text-[8px] font-semibold text-white/55">لوحة</span>
+                <span class="block max-w-[6.5rem] truncate font-mono text-base font-black tracking-[0.08em] text-white sm:text-lg" dir="ltr">{{ vehicle.plate_number }}</span>
+              </div>
+              <div class="min-w-0 text-right">
+                <p class="text-[11px] font-bold leading-tight text-white drop-shadow-sm sm:text-xs">
+                  {{ walletBrandLine1 }}
+                </p>
+                <p class="text-[9px] font-semibold tracking-wide text-white/55">
+                  {{ walletBrandLine2 }}
+                </p>
+              </div>
             </div>
+
+            <!-- هوية المركبة -->
+            <div class="mb-4 py-0.5">
+              <div class="flex items-center gap-3">
+                <div class="min-w-0 flex-1 text-right">
+                  <p class="text-[10px] font-medium text-white/50">مركبة مسجّلة</p>
+                  <h1 class="text-xl font-black leading-tight tracking-tight text-white sm:text-2xl">
+                    {{ vehicle.make }} {{ vehicle.model }}
+                  </h1>
+                  <p class="mt-0.5 text-xs text-white/60">
+                    <span v-if="vehicle.year">{{ vehicle.year }}</span>
+                    <span v-if="vehicle.year && vehicle.color"> · </span>
+                    <span v-if="vehicle.color">{{ vehicle.color }}</span>
+                  </p>
+                  <p class="mt-1 font-mono text-[10px] text-white/40 dir-ltr text-left" dir="ltr">VIN · {{ vehicle.vin || '—' }}</p>
+                </div>
+                <div
+                  class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/25 bg-black/20 shadow-lg backdrop-blur-md sm:h-[3.75rem] sm:w-[3.75rem]"
+                >
+                  <TruckIcon class="h-7 w-7 text-white/95 sm:h-8 sm:w-8" />
+                </div>
+              </div>
+            </div>
+
+            <!-- إحصائيات -->
+            <div class="mb-3 grid grid-cols-3 gap-1.5 sm:gap-2">
+              <div class="wallet-stat-cell rounded-xl border border-white/10 bg-black/18 px-1 py-2 text-center backdrop-blur-sm sm:py-2.5">
+                <p class="text-base font-black tabular-nums sm:text-lg">{{ vehicle.work_orders_count || 0 }}</p>
+                <p class="mt-0.5 text-[8px] font-medium text-white/50 sm:text-[9px]">زيارات</p>
+              </div>
+              <div
+                class="wallet-stat-cell rounded-xl border border-white/10 bg-black/18 px-1 py-2 text-center backdrop-blur-sm sm:py-2.5"
+                :class="walletBalance < 0 ? 'ring-1 ring-red-400/55' : ''"
+              >
+                <p class="text-sm font-black tabular-nums sm:text-base" :class="walletBalance < 0 ? 'text-red-200' : ''">
+                  {{ fmtMoney(walletBalance) }}
+                </p>
+                <p class="mt-0.5 text-[8px] font-medium text-white/50 sm:text-[9px]">ر.س</p>
+              </div>
+              <div class="wallet-stat-cell rounded-xl border border-white/10 bg-black/18 px-1 py-2 text-center backdrop-blur-sm sm:py-2.5">
+                <p class="text-base font-black tabular-nums sm:text-lg">{{ loyaltyPoints }}</p>
+                <p class="mt-0.5 text-[8px] font-medium text-white/50 sm:text-[9px]">ولاء</p>
+              </div>
+            </div>
+
+            <!-- مالك + آخر زيارة -->
+            <div class="mb-3 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/22 px-3 py-2 backdrop-blur-md">
+              <div class="flex min-w-0 flex-1 items-center gap-2">
+                <UserCircleIcon class="h-8 w-8 shrink-0 text-white/45" />
+                <div class="min-w-0 text-right">
+                  <p class="text-[9px] text-white/45">مالك المركبة</p>
+                  <p class="truncate text-xs font-bold text-white">{{ vehicle.customer?.name || '—' }}</p>
+                </div>
+              </div>
+              <div class="shrink-0 text-left">
+                <p class="text-[9px] text-white/45">آخر زيارة</p>
+                <p class="whitespace-nowrap text-[11px] font-semibold text-white/90">{{ lastVisit }}</p>
+              </div>
+            </div>
+
+            <!-- QR + شارة -->
+            <div class="mt-auto flex items-end justify-between gap-2 border-t border-white/10 pt-3">
+              <div class="flex shrink-0 items-end gap-2">
+                <div class="flex flex-col items-start pb-0.5 pl-0.5">
+                  <span class="text-[11px] font-black tracking-wide text-white/95">معتمد</span>
+                  <span class="text-[8px] font-semibold text-white/45">رقمياً</span>
+                </div>
+                <div class="rounded-2xl bg-white p-1.5 shadow-lg shadow-black/30 ring-2 ring-white/25 sm:p-2">
+                  <img
+                    v-if="qrImageUrl"
+                    :src="qrImageUrl"
+                    width="88"
+                    height="88"
+                    class="block h-[4.5rem] w-[4.5rem] rounded-md sm:h-24 sm:w-24"
+                    alt="رمز الاستجابة السريعة"
+                  />
+                  <div
+                    v-else
+                    class="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-md bg-gray-100 text-[9px] text-gray-400 sm:h-24 sm:w-24"
+                  >
+                    QR
+                  </div>
+                </div>
+              </div>
+              <div class="min-w-0 space-y-0.5 pb-0.5 text-right">
+                <p class="text-[10px] font-semibold text-white/88">امسح للفتح السريع</p>
+                <p class="max-w-[11rem] truncate font-mono text-[9px] text-white/35 dir-ltr text-left" dir="ltr" :title="qrUrl">{{ qrUrlDisplay }}</p>
+              </div>
+            </div>
+
+            <p class="mt-2 text-center text-[8px] font-medium tracking-wide text-white/35">بطاقة خاصة — لا تشاركها مع غير المخوّلين</p>
           </div>
         </div>
 
-        <!-- Bottom QR strip -->
-        <div class="bg-black/30 backdrop-blur-sm px-6 py-4 flex items-center justify-between border-t border-white/10">
-          <div>
-            <p class="text-xs text-white/40 mb-1">امسح للوصول السريع</p>
-            <p class="text-[10px] text-white/30 font-mono truncate max-w-[160px]">{{ qrUrl }}</p>
+        <!-- زخرفة بصرية فقط — لا يوجد تحقق بيومتري -->
+        <div class="no-print mt-7 flex flex-col items-center justify-center text-gray-800 dark:text-slate-200">
+          <div
+            class="wallet-face-id-icon flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-dashed border-gray-300/90 bg-white/80 shadow-sm dark:border-slate-600 dark:bg-slate-800/90"
+            aria-hidden="true"
+          >
+            <svg class="h-8 w-8 text-gray-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25">
+              <path stroke-linecap="round" d="M9 10V9a3 3 0 0 1 6 0v1" />
+              <rect x="6" y="7" width="12" height="11" rx="4" />
+              <path stroke-linecap="round" d="M9 14h.01M12 14h.01M15 14h.01" />
+            </svg>
           </div>
-          <div class="bg-white p-2 rounded-xl">
-            <img v-if="qrImageUrl" :src="qrImageUrl" class="w-16 h-16" alt="QR Code" />
-            <div v-else class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center text-[9px] text-gray-400">QR</div>
-          </div>
+          <p class="mt-2.5 text-[15px] font-medium tracking-tight text-gray-900 dark:text-white">مظهر المحفظة الرقمية</p>
+          <p class="mt-1 max-w-[17rem] text-center text-xs leading-relaxed text-gray-500 dark:text-slate-400">
+            عنصر زخرفي فقط — لا يطلب بصمة وجه ولا Touch ID ولا أي تحقق حقيقي.
+          </p>
+        </div>
+
+        <!-- طبقات بطاقات أسفل (مكدس) -->
+        <div class="no-print relative mx-auto mt-5 h-12 w-[92%] max-w-[22rem]">
+          <div class="wallet-stack-layer wallet-stack-layer--3 absolute bottom-0 left-[6%] right-[6%] h-3 rounded-t-xl bg-amber-200/95 shadow-md dark:bg-amber-900/50" />
+          <div class="wallet-stack-layer wallet-stack-layer--2 absolute bottom-1 left-[10%] right-[10%] h-3 rounded-t-xl bg-sky-300/95 shadow-md dark:bg-sky-800/60" />
+          <div class="wallet-stack-layer wallet-stack-layer--1 absolute bottom-2 left-[14%] right-[14%] h-3.5 rounded-t-xl bg-violet-300/90 shadow-md dark:bg-violet-900/55" />
         </div>
       </div>
 
@@ -97,10 +265,12 @@
         </div>
         <div v-if="workOrders.length" class="divide-y divide-gray-50 dark:divide-slate-700">
           <div v-for="wo in workOrders" :key="wo.id"
-            class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+               class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          >
             <div class="flex items-center gap-3">
               <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                :class="woIconBg(wo.status)">
+                   :class="woIconBg(wo.status)"
+              >
                 <component :is="woIcon(wo.status)" class="w-4 h-4" :class="woIconColor(wo.status)" />
               </div>
               <div>
@@ -111,7 +281,7 @@
               </div>
             </div>
             <div class="text-left">
-              <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="woStatusClass(wo.status)">{{ woStatusLabel(wo.status) }}</span>
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="workOrderStatusBadgeClass(wo.status)">{{ workOrderStatusLabel(wo.status) }}</span>
               <p class="text-xs text-gray-400 mt-0.5">{{ formatDate(wo.created_at) }}</p>
             </div>
           </div>
@@ -133,10 +303,12 @@
         </div>
         <div v-if="transactions.length" class="divide-y divide-gray-50 dark:divide-slate-700">
           <div v-for="tx in transactions.slice(0, 5)" :key="tx.id"
-            class="flex items-center justify-between px-5 py-3">
+               class="flex items-center justify-between px-5 py-3"
+          >
             <div class="flex items-center gap-3">
               <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                :class="tx.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'">
+                   :class="tx.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'"
+              >
                 <ArrowUpIcon v-if="tx.type === 'credit'" class="w-3.5 h-3.5" />
                 <ArrowDownIcon v-else class="w-3.5 h-3.5" />
               </div>
@@ -179,8 +351,9 @@
             </div>
             <div class="h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
               <div class="h-full rounded-full transition-all duration-700"
-                :style="{ width: `${Math.min((loyaltyPoints / loyaltyNextTier) * 100, 100)}%` }"
-                :class="loyaltyBarClass"></div>
+                   :style="{ width: `${Math.min((loyaltyPoints / loyaltyNextTier) * 100, 100)}%` }"
+                   :class="loyaltyBarClass"
+              ></div>
             </div>
           </div>
           <div class="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -241,35 +414,11 @@
           </div>
         </div>
       </div>
-
-      <!-- Share Actions -->
-      <div class="flex gap-3">
-        <button @click="downloadCard"
-          class="flex-1 flex items-center justify-center gap-2 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-medium transition-colors">
-          <ArrowDownTrayIcon class="w-4 h-4" /> تحميل البطاقة
-        </button>
-
-        <ShareModal
-          :url="qrUrl"
-          :title="`${vehicle?.make} ${vehicle?.model} — ${vehicle?.plate_number}`"
-          label="البطاقة الرقمية"
-          :phone="vehicle?.customer?.phone"
-          :email="vehicle?.customer?.email"
-          :message="`بطاقة مركبتك ${vehicle?.plate_number} — يمكنك متابعة أوامر العمل والرصيد:`"
-          entity-type="vehicle_card"
-          :entity-id="vehicleId"
-          ref="shareModalRef"
-        >
-          <template #default="{ open }">
-            <button @click="open"
-              class="flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors">
-              <ShareIcon class="w-4 h-4" />
-              مشاركة
-            </button>
-          </template>
-        </ShareModal>
-      </div>
     </template>
+
+    <div v-else class="rounded-2xl border border-gray-200 bg-gray-50/80 px-5 py-12 text-center text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300" role="status">
+      لا تتوفر بيانات للعرض. ارجع لملف المركبة أو أعد المحاولة.
+    </div>
   </div>
 </template>
 
@@ -279,24 +428,37 @@ import { useRoute, RouterLink } from 'vue-router'
 import {
   TruckIcon, UserCircleIcon, ClipboardDocumentIcon, CreditCardIcon, StarIcon,
   MapPinIcon, VideoCameraIcon, ArrowUpIcon, ArrowDownIcon, ArrowRightIcon,
-  ArrowDownTrayIcon, ShareIcon,
+  ArrowDownTrayIcon, ShareIcon, DevicePhoneMobileIcon, PhotoIcon,
   ClockIcon, CheckCircleIcon, WrenchScrewdriverIcon, ExclamationCircleIcon,
 } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
+import { useToast } from '@/composables/useToast'
+import { ensurePrintFontsReady } from '@/composables/useAppPrint'
 import ShareModal from '@/components/ShareModal.vue'
 import { getQRImageUrl } from '@/utils/zatca'
+import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 
 const route = useRoute()
+const toast = useToast()
 const vehicleId = Number(route.params.id)
 const loading = ref(true)
+const loadError = ref<string | null>(null)
 const vehicle = ref<any>(null)
 const workOrders = ref<any[]>([])
 const transactions = ref<any[]>([])
 const cardRef = ref<HTMLElement | null>(null)
-const qrContainer = ref<HTMLElement | null>(null)
+const shareImageBusy = ref(false)
 
 const qrUrl = computed(() => `${window.location.origin}/v/${vehicleId}`)
-const qrImageUrl = computed(() => getQRImageUrl(qrUrl.value, 128))
+const qrUrlDisplay = computed(() => {
+  try {
+    const u = new URL(qrUrl.value)
+    return u.host + u.pathname
+  } catch {
+    return qrUrl.value
+  }
+})
+const qrImageUrl = computed(() => getQRImageUrl(qrUrl.value, 200))
 const trackingUrl = computed(() => vehicle.value?.tracking_url || '#')
 const dashcamUrl = computed(() => vehicle.value?.dashcam_url || '#')
 const lastDashcamEvent = computed(() => vehicle.value?.last_dashcam_event || 'غير معروف')
@@ -311,14 +473,33 @@ const lastVisit = computed(() => {
   return new Date(wo.created_at).toLocaleDateString('ar-SA-u-ca-gregory', { day: 'numeric', month: 'short', year: 'numeric' })
 })
 
-const cardGradient = computed(() => {
+/** بنفسجي عميق مقارب لبطاقات المحفظة (مع اختلاف خفيف حسب الحالة) */
+const cardGradientCss = computed(() => {
   const b = walletBalance.value
   const wo = workOrders.value.find(w => ['in_progress', 'assigned'].includes(w.status))
-  if (wo) return 'linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%)'
-  if (b < 0) return 'linear-gradient(135deg, #dc2626 0%, #9f1239 100%)'
-  if (b === 0) return 'linear-gradient(135deg, #374151 0%, #111827 100%)'
-  return 'linear-gradient(135deg, #059669 0%, #0369a1 100%)'
+  if (wo) {
+    return 'linear-gradient(168deg, #312e81 0%, #4c1d95 45%, #5b21b6 100%)'
+  }
+  if (b < 0) {
+    return 'linear-gradient(168deg, #4a1942 0%, #7f1d5c 42%, #4c0519 100%)'
+  }
+  if (b === 0) {
+    return 'linear-gradient(168deg, #3b2f52 0%, #4a1d6e 50%, #3d1f5c 100%)'
+  }
+  return 'linear-gradient(168deg, #3d1f6b 0%, #5b21b6 38%, #4c1d95 88%)'
 })
+
+/** شريط الحالة العلوي: طول الجزء الفاتح (الباقي أخضر) */
+const statusBarLightPct = computed(() => {
+  if (walletBalance.value < 0) return 42
+  const wo = workOrders.value.find(w => ['in_progress', 'assigned'].includes(w.status))
+  if (wo) return 78
+  return 68
+})
+
+const walletBrandLine1 = computed(() => vehicle.value?.make || 'مركبة')
+
+const walletBrandLine2 = computed(() => 'بطاقة رقمية')
 
 const statusDot = computed(() => {
   const wo = workOrders.value.find(w => ['in_progress', 'assigned'].includes(w.status))
@@ -329,7 +510,7 @@ const statusDot = computed(() => {
 
 const statusLabel = computed(() => {
   const wo = workOrders.value.find(w => w.status === 'in_progress')
-  if (wo) return 'في الورشة'
+  if (wo) return 'في مركز الخدمة'
   const wo2 = workOrders.value.find(w => w.status === 'assigned')
   if (wo2) return 'موعد مجدول'
   if (walletBalance.value < 0) return 'رصيد سالب'
@@ -378,7 +559,6 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString('ar-SA-u-ca-gregory', { day: 'numeric', month: 'short' })
 }
 
-function woStatus(s: string) { return s }
 function woIcon(s: string) {
   if (s === 'completed') return CheckCircleIcon
   if (s === 'in_progress') return WrenchScrewdriverIcon
@@ -395,61 +575,162 @@ function woIconColor(s: string) {
   if (s === 'in_progress') return 'text-blue-600'
   return 'text-gray-500'
 }
-function woStatusClass(s: string) {
-  if (s === 'completed') return 'bg-green-100 text-green-700'
-  if (s === 'in_progress') return 'bg-blue-100 text-blue-700'
-  if (s === 'invoiced') return 'bg-purple-100 text-purple-700'
-  if (s === 'cancelled') return 'bg-red-100 text-red-500'
-  return 'bg-gray-100 text-gray-600'
-}
-function woStatusLabel(s: string) {
-  const m: Record<string, string> = {
-    new: 'جديد', pending: 'في الانتظار', assigned: 'مكلّف',
-    in_progress: 'جارٍ', completed: 'مكتمل', invoiced: 'مُفوتر', cancelled: 'ملغي',
-  }
-  return m[s] ?? s
-}
-
-function generateQR() {
-  if (!qrContainer.value) return
-  const url = qrUrl.value
-  const size = 64
-  qrContainer.value.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg"><rect width="${size}" height="${size}" fill="white"/><text x="50%" y="50%" font-size="8" fill="#6366f1" text-anchor="middle" dominant-baseline="middle" font-family="monospace">QR</text><text x="50%" y="65%" font-size="5" fill="#94a3b8" text-anchor="middle" dominant-baseline="middle" font-family="monospace">#{vehicleId}</text></svg>`
-}
-
 async function downloadCard() {
   if (!cardRef.value) return
   try {
+    await ensurePrintFontsReady()
     const { default: html2canvas } = await import('html2canvas')
-    const canvas = await html2canvas(cardRef.value, { scale: 3, useCORS: true })
+    const canvas = await html2canvas(cardRef.value, {
+      scale: 3,
+      useCORS: true,
+      logging: false,
+      backgroundColor: null,
+    })
     const a = document.createElement('a')
     a.download = `vehicle-card-${vehicle.value?.plate_number}.png`
-    a.href = canvas.toDataURL()
+    a.href = canvas.toDataURL('image/png')
     a.click()
+    toast.success('تم التنزيل', 'تم حفظ صورة البطاقة.')
   } catch {
-    navigator.clipboard.writeText(qrUrl.value)
-    alert('تم نسخ الرابط — html2canvas غير متاح')
+    try {
+      await navigator.clipboard.writeText(qrUrl.value)
+      toast.info('نسخ الرابط', 'تعذّر إنشاء الصورة — تم نسخ رابط البطاقة للحافظة.')
+    } catch {
+      toast.warning('تعذّر التصدير', 'جرّب لقطة شاشة يدوية أو افتح الرابط من المتصفح.')
+    }
   }
 }
 
-function shareCard() {
-  if (navigator.share) {
-    navigator.share({ title: `مركبة ${vehicle.value?.plate_number}`, url: qrUrl.value })
-  } else {
-    navigator.clipboard.writeText(qrUrl.value)
+async function shareCardQuick() {
+  const v = vehicle.value
+  const url = qrUrl.value
+  const title = v ? `${v.make} ${v.model} — ${v.plate_number}` : 'بطاقة مركبة'
+  const text = v ? `بطاقتي الرقمية: ${v.plate_number}\n${url}` : url
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({ title, text, url })
+      return
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && (e as Error).name === 'AbortError') return
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(`${text}\n${url}`)
+    toast.success('تم النسخ', 'رابط البطاقة في الحافظة — الصقه في واتساب أو البريد.')
+  } catch {
+    toast.error('تعذّرت المشاركة', 'جرّب «خيارات متقدمة» أو التحميل كصورة.')
   }
 }
 
-onMounted(async () => {
+async function shareCardAsImage() {
+  if (!cardRef.value) return
+  shareImageBusy.value = true
+  try {
+    await ensurePrintFontsReady()
+    const { default: html2canvas } = await import('html2canvas')
+    const canvas = await html2canvas(cardRef.value, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: null,
+    })
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 0.92))
+    if (!blob) {
+      throw new Error('no blob')
+    }
+    const name = `vehicle-card-${vehicle.value?.plate_number ?? vehicleId}.png`
+    const file = new File([blob], name, { type: 'image/png' })
+    const title = vehicle.value ? `${vehicle.value.make} ${vehicle.value.model}` : 'بطاقة مركبة'
+    const text = vehicle.value ? `بطاقة رقمية — ${vehicle.value.plate_number}` : 'بطاقة رقمية'
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ title, text, url: qrUrl.value, files: [file] })
+      toast.success('تمت المشاركة', 'يمكن حفظ الصورة في الألبوم أو إرسالها.')
+      return
+    }
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = name
+    a.click()
+    URL.revokeObjectURL(a.href)
+    toast.info('تنزيل تلقائي', 'المتصفّح لا يدعم مشاركة الصورة — تم تنزيل الملف.')
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && (e as Error).name === 'AbortError') return
+    await downloadCard()
+  } finally {
+    shareImageBusy.value = false
+  }
+}
+
+async function fetchDigitalCard() {
+  loading.value = true
+  loadError.value = null
+  vehicle.value = null
+  workOrders.value = []
+  transactions.value = []
   try {
     const res = await apiClient.get(`/vehicles/${vehicleId}/digital-card`)
-    vehicle.value = res.data.data
+    const data = res.data?.data
+    if (!data) {
+      loadError.value = 'لا توجد بيانات لهذه البطاقة الرقمية.'
+      return
+    }
+    vehicle.value = data
     workOrders.value = res.data.work_orders || []
     transactions.value = res.data.transactions || []
-  } catch { /* */ }
-  finally {
+  } catch (e: unknown) {
+    const msg =
+      (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+    loadError.value =
+      typeof msg === 'string' && msg.trim() !== ''
+        ? msg
+        : 'تعذّر تحميل البطاقة الرقمية. تحقق من الاتصال أو الصلاحيات ثم أعد المحاولة.'
+  } finally {
     loading.value = false
-    setTimeout(generateQR, 100)
   }
+}
+
+onMounted(() => {
+  void fetchDigitalCard()
 })
 </script>
+
+<style scoped>
+.wallet-card-shine {
+  background: linear-gradient(
+    125deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 40%,
+    transparent 55%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  mix-blend-mode: overlay;
+}
+
+.wallet-stat-cell {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+.vehicle-wallet-card {
+  transform: translateZ(0);
+}
+
+/* أخدود علوي خفيف على طبقات المكدس (مشابه لبطاقات المحفظة) */
+.wallet-stack-layer {
+  position: relative;
+}
+.wallet-stack-layer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 22px;
+  height: 4px;
+  transform: translate(-50%, -25%);
+  border-radius: 0 0 10px 10px;
+  background: rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+.dark .wallet-stack-layer::after {
+  background: rgba(255, 255, 255, 0.12);
+}
+</style>

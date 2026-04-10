@@ -156,18 +156,16 @@ class StockMovementTest extends TestCase
 
     public function test_stock_movement_is_append_only(): void
     {
-        $movement = StockMovement::create([
-            'company_id'         => $this->company->id,
-            'branch_id'          => $this->branch->id,
-            'product_id'         => $this->product->id,
-            'created_by_user_id' => $this->user->id,
-            'type'               => 'manual_add',
-            'quantity'           => 5,
-            'unit_id'            => $this->unit->id,
-            'reference_type'     => 'test',
-            'reference_id'       => 0,
-            'trace_id'           => 'trace-006',
-        ]);
+        $service = app(InventoryService::class);
+        $movement = $service->addStock(
+            companyId: $this->company->id,
+            branchId:  $this->branch->id,
+            productId: $this->product->id,
+            quantity:  5,
+            userId:    $this->user->id,
+            type:      'manual_add',
+            traceId:   'trace-006',
+        );
 
         $this->expectException(\RuntimeException::class);
         $movement->update(['quantity' => 99]);
@@ -175,18 +173,16 @@ class StockMovementTest extends TestCase
 
     public function test_stock_movement_delete_is_blocked(): void
     {
-        $movement = StockMovement::create([
-            'company_id'         => $this->company->id,
-            'branch_id'          => $this->branch->id,
-            'product_id'         => $this->product->id,
-            'created_by_user_id' => $this->user->id,
-            'type'               => 'manual_add',
-            'quantity'           => 5,
-            'unit_id'            => $this->unit->id,
-            'reference_type'     => 'test',
-            'reference_id'       => 0,
-            'trace_id'           => 'trace-007',
-        ]);
+        $service = app(InventoryService::class);
+        $movement = $service->addStock(
+            companyId: $this->company->id,
+            branchId:  $this->branch->id,
+            productId: $this->product->id,
+            quantity:  5,
+            userId:    $this->user->id,
+            type:      'manual_add',
+            traceId:   'trace-007',
+        );
 
         $this->expectException(\RuntimeException::class);
         $movement->delete();

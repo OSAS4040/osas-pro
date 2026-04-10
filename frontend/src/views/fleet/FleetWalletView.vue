@@ -1,10 +1,19 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
       <div>
         <h2 class="text-xl font-bold text-gray-900">محافظ الأسطول</h2>
         <p class="text-sm text-gray-500 mt-0.5">إدارة محافظ عملاء الأسطول وتوزيع الرصيد على المركبات</p>
+        <p class="text-xs text-gray-400 mt-1 max-w-2xl text-right">
+          تظهر القائمة بعد إنشاء محفظة الأسطول الرئيسية (شحن أسطول من صفحة المحافظ). التحويل إلى مركبة ينشئ محفظة المركبة عند الحاجة.
+        </p>
       </div>
+      <RouterLink
+        to="/wallet"
+        class="text-sm text-primary-600 hover:text-primary-700 font-medium whitespace-nowrap"
+      >
+        ← المحافظ العامة / شحن أسطول
+      </RouterLink>
     </div>
 
     <!-- Loading -->
@@ -15,10 +24,28 @@
     <!-- Error -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{{ error }}</div>
 
-    <!-- Empty -->
-    <div v-else-if="!customers.length" class="bg-white rounded-xl border border-gray-200 p-12 text-center">
-      <div class="text-4xl mb-3">🚛</div>
-      <p class="text-gray-500">لا توجد محافظ أسطول مسجلة بعد.</p>
+    <!-- Empty: القائمة تعتمد على وجود محفظة fleet_main — انظر التوضيح أدناه -->
+    <div v-else-if="!customers.length" class="bg-white rounded-xl border border-gray-200 p-8 text-center space-y-4 max-w-xl mx-auto">
+      <div class="text-4xl">🚛</div>
+      <p class="text-gray-700 font-medium">لا توجد محافظ أسطول تظهر هنا بعد</p>
+      <p class="text-sm text-gray-500 text-right leading-relaxed">
+        هذه الصفحة تعرض فقط العملاء الذين لديهم
+        <strong class="text-gray-700">محفظة أسطول رئيسية</strong>
+        (تُنشأ عند أول شحن بخيار «أسطول» وليس الشحن الفردي العادي). إضافة مركبة لعميل لا تُنشئ المحفظة تلقائياً؛
+        محفظة المركبة تظهر بعد
+        <strong class="text-gray-700">التحويل من المحفظة الرئيسية للأسطول</strong>
+        إلى تلك المركبة (نفس عميل الأسطول).
+      </p>
+      <ul class="text-xs text-gray-500 text-right list-disc list-inside space-y-1">
+        <li>أوامر العمل تُنشأ من قائمة «أوامر العمل» — وليست من هذه الصفحة.</li>
+        <li>التحقق من اللوحة يتطلب عادة أمر عمل نشط للمركبة.</li>
+      </ul>
+      <RouterLink
+        to="/wallet"
+        class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-5 py-2.5 transition-colors"
+      >
+        فتح المحافظ العامة — شحن محفظة أسطول لأول مرة
+      </RouterLink>
     </div>
 
     <!-- Fleet Customers List -->
@@ -57,8 +84,8 @@
             </div>
             <div class="mt-2 flex gap-2">
               <button
-                @click="openTopUp(item)"
                 class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg transition-colors"
+                @click="openTopUp(item)"
               >
                 شحن رصيد
               </button>
@@ -90,8 +117,8 @@
                     {{ formatAmount(vw.balance) }}
                   </span>
                   <button
-                    @click="openTransfer(item, vw)"
                     class="text-xs text-primary-600 hover:underline"
+                    @click="openTransfer(item, vw)"
                   >
                     تحويل
                   </button>
@@ -108,7 +135,7 @@
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
         <div class="flex items-center justify-between p-4 border-b border-gray-100">
           <h3 class="font-semibold text-gray-900">شحن المحفظة الرئيسية</h3>
-          <button @click="topUpModal.open = false" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+          <button class="text-gray-400 hover:text-gray-600 text-xl" @click="topUpModal.open = false">✕</button>
         </div>
         <div class="p-4 space-y-3">
           <div class="text-sm text-gray-500">العميل: <span class="font-medium text-gray-800">{{ topUpModal.customerName }}</span></div>
@@ -131,9 +158,9 @@
           </div>
           <div v-if="topUpModal.error" class="text-xs text-red-600 bg-red-50 rounded-lg p-2">{{ topUpModal.error }}</div>
           <button
-            @click="submitTopUp"
             :disabled="topUpModal.loading || !topUpModal.amount"
             class="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white rounded-lg py-2.5 text-sm font-medium transition-colors"
+            @click="submitTopUp"
           >
             {{ topUpModal.loading ? 'جارٍ الشحن...' : 'تأكيد الشحن' }}
           </button>
@@ -146,7 +173,7 @@
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
         <div class="flex items-center justify-between p-4 border-b border-gray-100">
           <h3 class="font-semibold text-gray-900">تحويل لمحفظة مركبة</h3>
-          <button @click="transferModal.open = false" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+          <button class="text-gray-400 hover:text-gray-600 text-xl" @click="transferModal.open = false">✕</button>
         </div>
         <div class="p-4 space-y-3">
           <div class="text-sm text-gray-500">
@@ -167,13 +194,14 @@
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">ملاحظات</label>
             <input v-model="transferModal.notes" type="text"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
           </div>
           <div v-if="transferModal.error" class="text-xs text-red-600 bg-red-50 rounded-lg p-2">{{ transferModal.error }}</div>
           <button
-            @click="submitTransfer"
             :disabled="transferModal.loading || !transferModal.amount"
             class="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg py-2.5 text-sm font-medium transition-colors"
+            @click="submitTransfer"
           >
             {{ transferModal.loading ? 'جارٍ التحويل...' : 'تأكيد التحويل' }}
           </button>

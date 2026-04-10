@@ -9,13 +9,14 @@
         </p>
         <div class="flex flex-wrap gap-2 mt-3">
           <RouterLink
-            v-if="featureFlags.intelligenceCommandCenter"
+            v-if="showBiToolbarLink"
             to="/business-intelligence"
             class="inline-flex items-center gap-1 rounded-lg border border-indigo-200/80 dark:border-indigo-800/60 bg-indigo-50/80 dark:bg-indigo-950/40 px-2.5 py-1 text-[11px] font-medium text-indigo-800 dark:text-indigo-200 hover:bg-indigo-100/90 dark:hover:bg-indigo-900/35"
           >
             {{ l('ذكاء الأعمال', 'Business Intelligence') }}
           </RouterLink>
           <RouterLink
+            v-if="showHeatmapToolbarLink"
             to="/bays/heatmap"
             class="inline-flex items-center gap-1 rounded-lg border border-orange-200/80 dark:border-orange-900/50 bg-orange-50/80 dark:bg-orange-950/35 px-2.5 py-1 text-[11px] font-medium text-orange-900 dark:text-orange-200 hover:bg-orange-100/80 dark:hover:bg-orange-900/30"
           >
@@ -87,7 +88,7 @@
       </div>
     </div>
 
-    <div id="reports-print-root" class="space-y-6">
+    <div id="reports-print-root" class="print-container space-y-6">
       <p class="hidden print:block text-center text-sm text-gray-600 mb-2">
         {{ l('تقارير الأداء', 'Performance reports') }} — {{ from }} — {{ to }}
       </p>
@@ -760,10 +761,14 @@ import { Line, Bar } from 'vue-chartjs'
 import { useApi } from '@/composables/useApi'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
+import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { featureFlags } from '@/config/featureFlags'
+import { canAccessStaffBusinessIntelligence, tenantSectionOpen } from '@/config/staffFeatureGate'
 import KpiCard from '@/components/KpiCard.vue'
 import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
 import { useLocale } from '@/composables/useLocale'
+import { printDocument, ensurePrintFontsReady } from '@/composables/useAppPrint'
+import { PDF_EXPORT_FAIL_AR } from '@/constants/pdfExportMessages'
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, BarElement, LinearScale, CategoryScale, PointElement, Filler)
 
@@ -772,7 +777,23 @@ const route = useRoute()
 const router = useRouter()
 const api = useApi()
 const auth = useAuthStore()
+const biz = useBusinessProfileStore()
 const locale = useLocale()
+
+const showBiToolbarLink = computed(() => {
+  void biz.loaded
+  void biz.effectiveFeatureMatrix
+  return canAccessStaffBusinessIntelligence({
+    buildFlagOn: featureFlags.intelligenceCommandCenter,
+    isOwner: auth.isOwner,
+    isEnabled: (k) => biz.isEnabled(k),
+  })
+})
+const showHeatmapToolbarLink = computed(() => {
+  void biz.loaded
+  void biz.effectiveFeatureMatrix
+  return tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
+})
 const l = (ar: string, en: string) => (locale.lang.value === 'ar' ? ar : en)
 const REPORTS_FILTERS_KEY = 'reports_filters_v1'
 let filterDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -1391,45 +1412,78 @@ function exportCSV() {
 
 async function exportExcel() {
   try {
-    const { utils, writeFile } = await import('xlsx')
     const rows = tabRows()
     if (!rows.length) {
       toast.warning('تنبيه', 'لا توجد بيانات للتصدير')
       return
     }
-    const ws = utils.json_to_sheet(rows)
-    const wb = utils.book_new()
-    utils.book_append_sheet(wb, ws, 'تقرير')
-    writeFile(wb, `report_${activeTab.value}_${from.value}.xlsx`)
+    const { downloadExcelFromRows } = await import('@/utils/exportExcel')
+    await downloadExcelFromRows(rows, 'تقرير', `report_${activeTab.value}_${from.value}.xlsx`)
   } catch {
     toast.error('خطأ', 'تعذّر تصدير Excel')
   }
 }
 
 async function exportPDF() {
+  let captureNode: HTMLElement | null = null
   try {
-    const { jsPDF } = await import('jspdf')
-    const at = await import('jspdf-autotable')
-    const autoTable = at.default ?? at
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-    doc.setFontSize(14)
-    doc.text(`${l('تقرير', 'Report')} / ` + (visibleTabs.value.find((t: any) => t.key === activeTab.value)?.label ?? ''), 105, 15, { align: 'center' })
-    doc.setFontSize(9)
-    doc.text(`${from.value} — ${to.value}`, 105, 22, { align: 'center' })
-    const rows = tabRows()
-    if (rows.length) {
-      const keys = Object.keys(rows[0])
-      autoTable(doc, {
-        head: [keys],
-        body: rows.map((r: any) => keys.map((k) => String(r[k] ?? ''))),
-        startY: 28,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [59, 130, 246] },
-      })
+    const source = document.getElementById('reports-print-root')
+    if (!source) {
+      toast.error('تصدير PDF', PDF_EXPORT_FAIL_AR)
+      return
     }
-    doc.save(`report_${activeTab.value}_${from.value}.pdf`)
+
+    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf'),
+    ])
+
+    // Use rendered DOM snapshot to preserve Arabic text.
+    captureNode = source.cloneNode(true) as HTMLElement
+    captureNode.style.display = 'block'
+    captureNode.style.position = 'fixed'
+    captureNode.style.left = '-12000px'
+    captureNode.style.top = '0'
+    captureNode.style.zIndex = '-1'
+    captureNode.style.width = `${source.getBoundingClientRect().width || 1024}px`
+    document.body.appendChild(captureNode)
+
+    await ensurePrintFontsReady()
+
+    const canvas = await html2canvas(captureNode, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#ffffff',
+      logging: false,
+    })
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const pageW = pdf.internal.pageSize.getWidth()
+    const pageH = pdf.internal.pageSize.getHeight()
+    const imgW = pageW
+    const imgH = (canvas.height * imgW) / canvas.width
+    const imgData = canvas.toDataURL('image/png')
+
+    let remaining = imgH
+    let y = 0
+    pdf.addImage(imgData, 'PNG', 0, y, imgW, imgH)
+    remaining -= pageH
+    while (remaining > 0) {
+      y = remaining - imgH
+      pdf.addPage()
+      pdf.addImage(imgData, 'PNG', 0, y, imgW, imgH)
+      remaining -= pageH
+    }
+
+    pdf.save(`report_${activeTab.value}_${from.value}.pdf`)
+    toast.success('تم التصدير', 'تم تنزيل ملف PDF.')
   } catch {
-    printReport()
+    toast.error('تصدير PDF', PDF_EXPORT_FAIL_AR)
+  } finally {
+    if (captureNode && captureNode.parentNode) {
+      captureNode.parentNode.removeChild(captureNode)
+    }
   }
 }
 
@@ -1455,13 +1509,14 @@ function exportJSON() {
   a.href = URL.createObjectURL(blob)
   a.download = `reports_snapshot_${from.value}_${to.value}.json`
   a.click()
-  toast.success('تم', 'تصدير JSON')
+  toast.success('تم', 'تم تصدير ملف JSON.')
 }
 
 async function exportPNG() {
   try {
     const el = document.getElementById('reports-print-root')
     if (!el) return
+    await ensurePrintFontsReady()
     const { default: html2canvas } = await import('html2canvas')
     const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' })
     canvas.toBlob((blob) => {
@@ -1470,15 +1525,15 @@ async function exportPNG() {
       a.href = URL.createObjectURL(blob)
       a.download = `reports_${activeTab.value}_${from.value}.png`
       a.click()
-      toast.success('تم', 'صورة PNG')
+      toast.success('تم', 'تم تصدير صورة PNG.')
     })
   } catch {
     toast.error('خطأ', 'تعذّر إنشاء PNG')
   }
 }
 
-function printReport() {
-  window.print()
+async function printReport() {
+  await printDocument({ rootSelector: '#reports-print-root' })
 }
 
 function shareReport() {
@@ -1526,6 +1581,9 @@ function applyQueryFromRoute(): boolean {
 }
 
 onMounted(() => {
+  if (auth.isStaff && auth.user?.company_id) {
+    biz.load().catch(() => {})
+  }
   if (!visibleTabs.value.some((t: any) => t.key === activeTab.value)) {
     activeTab.value = visibleTabs.value[0]?.key ?? 'kpi'
   }
@@ -1578,11 +1636,3 @@ watch([branchId, supplierId], () => {
   scheduleAutoApply()
 })
 </script>
-
-<style scoped>
-@media print {
-  .no-print {
-    display: none !important;
-  }
-}
-</style>

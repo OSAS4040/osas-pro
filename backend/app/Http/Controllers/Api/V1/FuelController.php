@@ -7,6 +7,7 @@ use App\Models\FuelLog;
 use App\Models\Vehicle;
 use App\Models\VehicleSetting;
 use App\Models\VehicleDocument;
+use App\Support\Media\TenantUploadDisk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -167,7 +168,7 @@ class FuelController extends Controller
         ]);
 
         $file = $request->file('file');
-        $path = $file->store("companies/{$this->cid()}/vehicle-docs/{$vehicleId}", 'public');
+        $path = $file->store("companies/{$this->cid()}/vehicle-docs/{$vehicleId}", TenantUploadDisk::name());
 
         $doc = VehicleDocument::create([
             'company_id'       => $this->cid(),
@@ -190,7 +191,7 @@ class FuelController extends Controller
     {
         $doc = VehicleDocument::where('company_id', $this->cid())
             ->where('vehicle_id', $vehicleId)->findOrFail($docId);
-        Storage::disk('public')->delete($doc->file_path);
+        Storage::disk(TenantUploadDisk::name())->delete($doc->file_path);
         $doc->delete();
         return response()->json(null, 204);
     }

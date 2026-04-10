@@ -61,6 +61,11 @@ class Invoice extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by_user_id');

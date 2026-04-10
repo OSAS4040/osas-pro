@@ -1,7 +1,8 @@
 <template>
   <div>
-    <button @click="visible = true"
-      class="flex items-center gap-2 px-4 py-2 border border-green-300 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors">
+    <button class="flex items-center gap-2 px-4 py-2 border border-green-300 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors"
+            @click="visible = true"
+    >
       <ArrowUpTrayIcon class="w-4 h-4" />
       {{ label }}
     </button>
@@ -10,7 +11,6 @@
       <Transition name="modal-fade">
         <div v-if="visible" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" dir="rtl">
           <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl">
-
             <!-- Header -->
             <div class="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
               <div>
@@ -21,15 +21,15 @@
             </div>
 
             <div class="p-6 space-y-5">
-
               <!-- Download Template -->
               <div class="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
                 <div>
                   <p class="text-sm font-medium text-blue-800">نموذج Excel</p>
                   <p class="text-xs text-blue-500 mt-0.5">حمّل النموذج واملأه ثم ارفعه</p>
                 </div>
-                <button @click="downloadTemplate"
-                  class="flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                <button class="flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        @click="downloadTemplate"
+                >
                   <ArrowDownTrayIcon class="w-3.5 h-3.5" />
                   تحميل النموذج
                 </button>
@@ -94,15 +94,15 @@
 
               <!-- Actions -->
               <div class="flex gap-3 pt-1">
-                <button @click="close" class="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm hover:bg-gray-50 transition-colors">إلغاء</button>
-                <button @click="upload" :disabled="!file || uploading || !preview.length"
-                  class="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                <button class="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm hover:bg-gray-50 transition-colors" @click="close">إلغاء</button>
+                <button :disabled="!file || uploading || !preview.length" class="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                        @click="upload"
+                >
                   <span v-if="uploading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   {{ uploading ? 'جاري الاستيراد...' : `استيراد ${totalRows} سجل` }}
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       </Transition>

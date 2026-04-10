@@ -19,7 +19,7 @@
               {{ categoryLabel(ticket.category) }} · {{ ticket.channel }} · {{ formatDate(ticket.created_at) }}
             </p>
           </div>
-          <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mr-4">
+          <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mr-4" @click="$emit('close')">
             <XMarkIcon class="w-5 h-5" />
           </button>
         </div>
@@ -34,16 +34,16 @@
 
         <!-- Tabs -->
         <div class="flex border-b border-gray-200 dark:border-gray-700 px-5">
-          <button v-for="t in tabs" :key="t.key" @click="tab = t.key"
-            :class="tab === t.key ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500'"
-            class="px-4 py-3 text-sm font-medium transition-all">
+          <button v-for="t in tabs" :key="t.key" :class="tab === t.key ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500'"
+                  class="px-4 py-3 text-sm font-medium transition-all"
+                  @click="tab = t.key"
+          >
             {{ t.label }}
           </button>
         </div>
 
         <!-- Content -->
         <div class="flex-1 overflow-y-auto p-5">
-
           <!-- Details Tab -->
           <div v-if="tab === 'details'">
             <div class="prose dark:prose-invert prose-sm max-w-none mb-6">
@@ -84,11 +84,12 @@
               <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">تغيير الحالة</h4>
               <div class="flex flex-wrap gap-2">
                 <button v-for="s in statusOptions" :key="s.value"
-                  @click="changeStatus(s.value)"
-                  :disabled="detail?.status === s.value"
-                  :class="detail?.status === s.value ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm'"
-                  class="px-3 py-1.5 text-xs rounded-lg border font-medium transition-all"
-                  :style="{ borderColor: s.color, color: s.color }">
+                        :disabled="detail?.status === s.value"
+                        :class="detail?.status === s.value ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-sm'"
+                        class="px-3 py-1.5 text-xs rounded-lg border font-medium transition-all"
+                        :style="{ borderColor: s.color, color: s.color }"
+                        @click="changeStatus(s.value)"
+                >
                   {{ s.label }}
                 </button>
               </div>
@@ -99,8 +100,9 @@
           <div v-if="tab === 'replies'">
             <div class="space-y-4 mb-6">
               <div v-for="r in detail?.replies" :key="r.id"
-                :class="r.is_internal ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'"
-                class="rounded-xl border p-4">
+                   :class="r.is_internal ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'"
+                   class="rounded-xl border p-4"
+              >
                 <div class="flex items-center justify-between mb-2">
                   <div class="flex items-center gap-2">
                     <div class="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-xs font-bold text-blue-700 dark:text-blue-300">
@@ -120,14 +122,16 @@
             <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
               <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">إضافة رد</h4>
               <textarea v-model="replyBody" rows="3" placeholder="اكتب ردك هنا..."
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white resize-none outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white resize-none outline-none focus:ring-2 focus:ring-blue-500"
+              ></textarea>
               <div class="flex items-center justify-between mt-3">
                 <label class="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
-                  <input type="checkbox" v-model="replyInternal" class="rounded" />
+                  <input v-model="replyInternal" type="checkbox" class="rounded" />
                   ملاحظة داخلية (غير مرئية للعميل)
                 </label>
-                <button @click="sendReply" :disabled="!replyBody || sendingReply"
-                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+                <button :disabled="!replyBody || sendingReply" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+                        @click="sendReply"
+                >
                   <ArrowPathIcon v-if="sendingReply" class="w-4 h-4 animate-spin" />
                   إرسال
                 </button>
@@ -142,14 +146,19 @@
             <p class="text-gray-500 mb-6 text-sm">كيف تقيّم تجربتك مع فريق الدعم؟</p>
             <div class="flex justify-center gap-3 mb-6">
               <button v-for="s in [1,2,3,4,5]" :key="s"
-                @click="satScore = s"
-                :class="satScore >= s ? 'text-amber-400 scale-110' : 'text-gray-300'"
-                class="text-4xl transition-all hover:scale-110">★</button>
+                      :class="satScore >= s ? 'text-amber-400 scale-110' : 'text-gray-300'"
+                      class="text-4xl transition-all hover:scale-110"
+                      @click="satScore = s"
+              >
+                ★
+              </button>
             </div>
             <textarea v-model="satComment" rows="3" placeholder="تعليق إضافي..."
-              class="w-full max-w-md mx-auto block border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-amber-400 resize-none mb-4"></textarea>
-            <button @click="submitRating" :disabled="!satScore"
-              class="px-6 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all">
+                      class="w-full max-w-md mx-auto block border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-amber-400 resize-none mb-4"
+            ></textarea>
+            <button :disabled="!satScore" class="px-6 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all"
+                    @click="submitRating"
+            >
               إرسال التقييم
             </button>
           </div>
@@ -160,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { XMarkIcon, ArrowPathIcon, StarIcon } from '@heroicons/vue/24/outline'
 import PriorityBadge from './PriorityBadge.vue'

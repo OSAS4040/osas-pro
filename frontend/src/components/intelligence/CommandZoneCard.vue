@@ -3,7 +3,7 @@ import type { CommandZoneItem } from '@/composables/useIntelligenceCommandCenter
 import CommandItemCard from './CommandItemCard.vue'
 import EmptySignalState from './EmptySignalState.vue'
 
-const props = defineProps<{
+defineProps<{
   title: string
   subtitle: string
   accentClass: string
@@ -34,9 +34,32 @@ const props = defineProps<{
 
     <div class="p-4 flex-1 flex flex-col gap-3">
       <template v-if="items.length">
-        <CommandItemCard v-for="it in items" :key="`${it.source}-${it.id}`" :item="it" />
+        <CommandItemCard
+          v-for="(it, idx) in items"
+          :key="`${it.source}-${it.id}`"
+          :item="it"
+          class="intel-stagger"
+          :style="{ animationDelay: `${Math.min(idx * 55, 400)}ms` }"
+        />
       </template>
       <EmptySignalState v-else :title="emptyTitle" :hint="emptyHint" />
     </div>
   </section>
 </template>
+
+<style scoped>
+.intel-stagger {
+  opacity: 0;
+  animation: intelCardIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes intelCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

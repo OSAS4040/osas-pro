@@ -36,7 +36,58 @@ abstract class TestCase extends BaseTestCase
             'timezone'  => 'Asia/Riyadh',
             'status'    => 'active',
             'is_active' => true,
+            // Default test tenants as platform-approved prepaid (billing gates).
+            'financial_model' => 'prepaid',
+            'financial_model_status' => 'approved_prepaid',
         ], $overrides));
+    }
+
+    /**
+     * @param  list<int>  $workOrderIds
+     * @param  list<array<string, mixed>>|null  $lines
+     */
+    protected function obtainSensitivePreviewToken(
+        \Illuminate\Contracts\Auth\Authenticatable $user,
+        string $operation,
+        array $workOrderIds = [],
+        ?array $lines = null,
+    ): string {
+        $payload = ['operation' => $operation];
+        if ($workOrderIds !== []) {
+            $payload['work_order_ids'] = $workOrderIds;
+        }
+        if ($lines !== null) {
+            $payload['lines'] = $lines;
+        }
+
+        $res = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/sensitive-operations/preview', $payload);
+
+        $res->assertOk();
+        $token = $res->json('data.sensitive_preview_token');
+        if ($token === null || $token === '') {
+            $this->fail('sensitive preview did not return sensitive_preview_token');
+        }
+
+        return (string) $token;
+    }
+
+    /**
+     * سطر بند واحد صالح لإنشاء أمر عمل (الخدمات تفرض بنداً واحداً على الأقل).
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    protected function minimalWorkOrderLineItem(array $overrides = []): array
+    {
+        return array_merge([
+            'item_type' => 'service',
+            'name' => 'Test line',
+            'quantity' => 1,
+            'unit_price' => 100,
+            'tax_rate' => 15,
+            'product_id' => null,
+        ], $overrides);
     }
 
     protected function createBranch(Company $company, array $overrides = []): Branch

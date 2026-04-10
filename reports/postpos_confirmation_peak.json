@@ -1,0 +1,338 @@
+{
+  "scenario": "realistic_mix_10000_200",
+  "captured_at": "2026-03-31T19:46:09.867Z",
+  "config": {
+    "total_ops": 300,
+    "concurrency": 40,
+    "duration_sec": 120,
+    "think_time": "1-3s"
+  },
+  "overall": {
+    "total_requests": 313,
+    "success": 313,
+    "fail": 0,
+    "http_5xx": 0,
+    "network_failures": 0,
+    "avg_ms": 211.95,
+    "p50_ms": 165.78,
+    "p95_ms": 494.95,
+    "p99_ms": 575.66,
+    "max_ms": 690.06,
+    "throughput_rps": 3.3,
+    "duration_sec": 94.9
+  },
+  "scenario_distribution": {
+    "customers_vehicles": {
+      "count": 22,
+      "errors": 0
+    },
+    "work_orders": {
+      "count": 24,
+      "errors": 0
+    },
+    "billing_payments": {
+      "count": 15,
+      "errors": 0
+    },
+    "inventory": {
+      "count": 10,
+      "errors": 0
+    },
+    "purchases": {
+      "count": 10,
+      "errors": 0
+    },
+    "subscription": {
+      "count": 3,
+      "errors": 0
+    },
+    "reports_dashboard": {
+      "count": 8,
+      "errors": 0
+    }
+  },
+  "per_endpoint": [
+    {
+      "endpoint": "/purchases?per_page=20",
+      "count": 10,
+      "avg_ms": 331.92,
+      "p95_ms": 666.45,
+      "p99_ms": 666.45,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/inventory?per_page=20",
+      "count": 10,
+      "avg_ms": 296.95,
+      "p95_ms": 662.93,
+      "p99_ms": 662.93,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/customers?per_page=20",
+      "count": 33,
+      "avg_ms": 266.38,
+      "p95_ms": 575.66,
+      "p99_ms": 690.06,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/invoices?per_page=20",
+      "count": 15,
+      "avg_ms": 349.47,
+      "p95_ms": 575.08,
+      "p99_ms": 575.08,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/work-orders?per_page=10",
+      "count": 24,
+      "avg_ms": 262.21,
+      "p95_ms": 500.93,
+      "p99_ms": 502.19,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/subscription",
+      "count": 3,
+      "avg_ms": 428.58,
+      "p95_ms": 494.95,
+      "p99_ms": 494.95,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/dashboard/kpi",
+      "count": 26,
+      "avg_ms": 233.06,
+      "p95_ms": 489.5,
+      "p99_ms": 519.18,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/customers",
+      "count": 18,
+      "avg_ms": 181.54,
+      "p95_ms": 379.5,
+      "p99_ms": 379.5,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/work-orders",
+      "count": 19,
+      "avg_ms": 176.93,
+      "p95_ms": 371.87,
+      "p99_ms": 371.87,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/purchases",
+      "count": 10,
+      "avg_ms": 190.92,
+      "p95_ms": 315.86,
+      "p99_ms": 315.86,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/vehicles",
+      "count": 18,
+      "avg_ms": 188.65,
+      "p95_ms": 313.28,
+      "p99_ms": 313.28,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/reports/kpi",
+      "count": 8,
+      "avg_ms": 156.63,
+      "p95_ms": 305.8,
+      "p99_ms": 305.8,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/wallet",
+      "count": 10,
+      "avg_ms": 174,
+      "p95_ms": 297.27,
+      "p99_ms": 297.27,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/vehicles?per_page=20",
+      "count": 18,
+      "avg_ms": 163.44,
+      "p95_ms": 289.94,
+      "p99_ms": 289.94,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/inventory/movements",
+      "count": 10,
+      "avg_ms": 177.02,
+      "p95_ms": 276.1,
+      "p99_ms": 276.1,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/plans",
+      "count": 3,
+      "avg_ms": 205.81,
+      "p95_ms": 258.35,
+      "p99_ms": 258.35,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/wallet/transactions",
+      "count": 10,
+      "avg_ms": 158.61,
+      "p95_ms": 256.38,
+      "p99_ms": 256.38,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/pos/sale",
+      "count": 20,
+      "avg_ms": 152.92,
+      "p95_ms": 231.69,
+      "p99_ms": 244.89,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/work-orders/1/status",
+      "count": 38,
+      "avg_ms": 158.83,
+      "p95_ms": 211.56,
+      "p99_ms": 292.7,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/inventory/adjustments",
+      "count": 10,
+      "avg_ms": 144.4,
+      "p95_ms": 209.73,
+      "p99_ms": 209.73,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    }
+  ],
+  "slowest_endpoints_by_p95": [
+    {
+      "endpoint": "/purchases?per_page=20",
+      "count": 10,
+      "avg_ms": 331.92,
+      "p95_ms": 666.45,
+      "p99_ms": 666.45,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/inventory?per_page=20",
+      "count": 10,
+      "avg_ms": 296.95,
+      "p95_ms": 662.93,
+      "p99_ms": 662.93,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/customers?per_page=20",
+      "count": 33,
+      "avg_ms": 266.38,
+      "p95_ms": 575.66,
+      "p99_ms": 690.06,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/invoices?per_page=20",
+      "count": 15,
+      "avg_ms": 349.47,
+      "p95_ms": 575.08,
+      "p99_ms": 575.08,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/work-orders?per_page=10",
+      "count": 24,
+      "avg_ms": 262.21,
+      "p95_ms": 500.93,
+      "p99_ms": 502.19,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/subscription",
+      "count": 3,
+      "avg_ms": 428.58,
+      "p95_ms": 494.95,
+      "p99_ms": 494.95,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/dashboard/kpi",
+      "count": 26,
+      "avg_ms": 233.06,
+      "p95_ms": 489.5,
+      "p99_ms": 519.18,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/customers",
+      "count": 18,
+      "avg_ms": 181.54,
+      "p95_ms": 379.5,
+      "p99_ms": 379.5,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    }
+  ]
+}

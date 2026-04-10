@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Bay;
 use App\Models\Booking;
+use App\Models\Branch;
+use App\Support\BranchOpeningHours;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -50,8 +52,16 @@ class BookingService
             $start = Carbon::parse($data['starts_at']);
             $end   = Carbon::parse($data['ends_at']);
 
+            $branchId = (int) ($data['branch_id'] ?? 0);
+            if ($branchId > 0) {
+                $branch = Branch::query()->where('company_id', $data['company_id'])->where('id', $branchId)->first();
+                if ($branch && ! BranchOpeningHours::slotAllowed($branch->opening_hours, $start, $end)) {
+                    throw new \DomainException('الموعد خارج ساعات عمل الفرع.');
+                }
+            }
+
             if (!$this->isSlotAvailable($data['bay_id'], $start, $end)) {
-                throw new \DomainException('الرافعة محجوزة في هذا الوقت.');
+                throw new \DomainException('منطقة العمل محجوزة في هذا الوقت.');
             }
 
             $booking = Booking::create($data);
@@ -105,15 +115,19 @@ class BookingService
 
         foreach ($bays as $bay) {
             $hourly = [];
+            $occupiedHours = 0;
             for ($h = 7; $h <= 21; $h++) {
                 $slotStart = Carbon::parse("{$date} {$h}:00:00");
                 $slotEnd   = $slotStart->copy()->addHour();
-                $busy = Booking::where('bay_id', $bay->id)
-                    ->whereIn('status', ['confirmed','in_progress','completed'])
+                $count = (int) Booking::where('bay_id', $bay->id)
+                    ->whereIn('status', ['confirmed', 'in_progress', 'completed'])
                     ->where('starts_at', '<', $slotEnd)
                     ->where('ends_at', '>', $slotStart)
-                    ->exists();
-                $hourly[$h] = $busy ? 1 : 0;
+                    ->count();
+                $hourly[$h] = $count;
+                if ($count > 0) {
+                    $occupiedHours++;
+                }
             }
             $result[] = [
                 'bay_id'       => $bay->id,
@@ -121,7 +135,7 @@ class BookingService
                 'name'         => $bay->name,
                 'status'       => $bay->status,
                 'hourly'       => $hourly,
-                'utilization'  => round(array_sum($hourly) / 15 * 100, 1), // 15 working hours
+                'utilization'  => round($occupiedHours / 15 * 100, 1),
             ];
         }
 

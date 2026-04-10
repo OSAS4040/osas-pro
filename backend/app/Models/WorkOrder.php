@@ -53,6 +53,11 @@ class WorkOrder extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function assignedTechnician()
     {
         return $this->belongsTo(User::class, 'assigned_technician_id');
@@ -86,15 +91,35 @@ class WorkOrder extends Model
     public function canTransitionTo(WorkOrderStatus $new): bool
     {
         $allowed = [
-            WorkOrderStatus::Draft->value       => [WorkOrderStatus::Pending],
-            WorkOrderStatus::Pending->value     => [WorkOrderStatus::InProgress, WorkOrderStatus::Cancelled],
-            WorkOrderStatus::InProgress->value  => [WorkOrderStatus::OnHold, WorkOrderStatus::Completed, WorkOrderStatus::Cancelled],
-            WorkOrderStatus::OnHold->value      => [WorkOrderStatus::InProgress, WorkOrderStatus::Cancelled],
-            WorkOrderStatus::Completed->value   => [WorkOrderStatus::Delivered],
-            WorkOrderStatus::Delivered->value   => [],
-            WorkOrderStatus::Cancelled->value   => [],
+            WorkOrderStatus::Draft->value => [
+                WorkOrderStatus::PendingManagerApproval,
+                WorkOrderStatus::Cancelled,
+            ],
+            WorkOrderStatus::PendingManagerApproval->value => [
+                WorkOrderStatus::Approved,
+                WorkOrderStatus::Cancelled,
+            ],
+            WorkOrderStatus::Approved->value => [
+                WorkOrderStatus::InProgress,
+            ],
+            WorkOrderStatus::CancellationRequested->value => [],
+            WorkOrderStatus::InProgress->value => [
+                WorkOrderStatus::OnHold,
+                WorkOrderStatus::Completed,
+            ],
+            WorkOrderStatus::OnHold->value => [
+                WorkOrderStatus::InProgress,
+            ],
+            WorkOrderStatus::Completed->value => [WorkOrderStatus::Delivered],
+            WorkOrderStatus::Delivered->value => [],
+            WorkOrderStatus::Cancelled->value => [],
         ];
 
-        return in_array($new, $allowed[$this->status->value] ?? []);
+        return in_array($new, $allowed[$this->status->value] ?? [], true);
+    }
+
+    public function cancellationRequests()
+    {
+        return $this->hasMany(WorkOrderCancellationRequest::class, 'work_order_id');
     }
 }

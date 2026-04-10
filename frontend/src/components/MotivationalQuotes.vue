@@ -1,8 +1,9 @@
 <template>
-  <div class="overflow-hidden rounded-xl bg-gradient-to-l from-primary-700 to-primary-500 dark:from-slate-800 dark:to-slate-700 p-4 relative min-h-[72px]">
+  <div class="overflow-hidden rounded-xl bg-gradient-to-l from-primary-700 to-primary-500 dark:from-slate-800 dark:to-slate-700 p-4 relative min-h-[96px] sm:min-h-[88px]">
     <TransitionGroup name="quote">
-      <div v-for="(q, i) in [quotes[current]]" :key="current"
-        class="absolute inset-0 flex items-center gap-3 px-5">
+      <div v-for="q in [quotes[current]]" :key="`${current}-${q.text}`"
+           class="absolute inset-0 flex items-center gap-3 px-5"
+      >
         <span class="text-3xl flex-shrink-0 select-none">{{ q.emoji }}</span>
         <div>
           <p class="text-white font-semibold text-sm leading-snug">{{ q.text }}</p>
@@ -12,9 +13,10 @@
     </TransitionGroup>
     <!-- Dots -->
     <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-      <button v-for="(_, i) in quotes" :key="i" @click="current = i"
-        class="w-1.5 h-1.5 rounded-full transition-all"
-        :class="i === current ? 'bg-white w-4' : 'bg-white/40'" />
+      <button v-for="(_, i) in quotes" :key="i" class="w-1.5 h-1.5 rounded-full transition-all"
+              :class="i === current ? 'bg-white w-4' : 'bg-white/40'"
+              @click="current = i"
+      />
     </div>
   </div>
 </template>
@@ -32,9 +34,23 @@ const allQuotes: Record<string, { text: string; author: string; emoji: string }[
     { text: 'النجاح ليس نهاية المطاف، والفشل ليس قاتلاً — الشجاعة في الاستمرار هي ما يهم.', author: 'ونستون تشرشل', emoji: '🔥' },
     { text: 'العمل الجيد يُكلّم نفسه بنفسه.', author: 'مثل عربي', emoji: '⭐' },
     { text: 'كل يوم فرصة جديدة لتكون أفضل مما كنت عليه أمس.', author: 'مجهول', emoji: '🌅' },
-    { text: 'الخدمة المتميزة تصنع عملاء مدى الحياة.', author: 'WorkshopOS', emoji: '🤝' },
+    { text: 'الخدمة المتميزة تصنع عملاء مدى الحياة.', author: 'أسس برو', emoji: '🤝' },
     { text: 'دقيقة واحدة من التخطيط توفر ساعة من التنفيذ.', author: 'بنجامين فرانكلين', emoji: '📋' },
     { text: 'التفاصيل الصغيرة هي التي تصنع الفارق الكبير.', author: 'مجهول', emoji: '🎯' },
+    { text: 'من يزرع الجودة يحصد الثقة.', author: 'حكمة ورش', emoji: '🌱' },
+    { text: 'العميل ليس رقماً في تقرير — إنسان يختارك كل يوم.', author: 'أسس برو', emoji: '💎' },
+    { text: 'الانضباط في المواعيد رسالة احترام للعميل وللفريق.', author: 'مجهول', emoji: '⏱️' },
+    { text: 'لا تؤجل صيانة اليوم إلى غدٍ قد يكلفك أكثر.', author: 'نصيحة فنية', emoji: '🔧' },
+    { text: 'الفريق المتعاون يحوّل الضغط إلى إنجاز.', author: 'أسس برو', emoji: '🤲' },
+    { text: 'ابدأ بابتسامة — أول انطباع يبقى.', author: 'أسلوب خدمة', emoji: '😊' },
+    { text: 'الشفافية في السعر والوقت تبني سمعة طويلة.', author: 'مجهول', emoji: '📣' },
+    { text: 'كل سيارة تدخل مركز الخدمة أمانة في عنقك.', author: 'فني صيانة', emoji: '🚗' },
+    { text: 'التعلم المستمر يجعلك الأفضل في حرفتك.', author: 'مجهول', emoji: '📚' },
+    { text: 'الترتيب في المكان يسرّع العمل ويقلّل الأخطاء.', author: '5S', emoji: '🧹' },
+    { text: 'احتفل بالإنجازات الصغيرة — الطريق طويل.', author: 'أسس برو', emoji: '🎉' },
+    { text: 'الابتكار لا يعني التعقيد — أحياناً يعني تبسيطاً ذكياً.', author: 'مجهول', emoji: '💡' },
+    { text: 'الثقة تُبنى بالوفاء بالوعد مرة بعد مرة.', author: 'مثل سعودي', emoji: '🤝' },
+    { text: 'اليوم الذي تخدم فيه عميلاً بإخلاص هو استثمار في غدٍ أفضل.', author: 'أسس برو', emoji: '✨' },
   ],
   en: [
     { text: "Success is not final, failure is not fatal — it's the courage to continue that counts.", author: 'Churchill', emoji: '🔥' },
@@ -42,7 +58,7 @@ const allQuotes: Record<string, { text: string; author: string; emoji: string }[
     { text: 'Every morning brings new potential, but only if you make the most of it.', author: 'Unknown', emoji: '🌅' },
     { text: 'Customer service is not a department, it\'s an attitude.', author: 'Unknown', emoji: '🤝' },
     { text: 'An hour of planning saves ten hours of doing.', author: 'Unknown', emoji: '📋' },
-    { text: 'Attention to detail is what separates the good from the great.', author: 'WorkshopOS', emoji: '🎯' },
+    { text: 'Attention to detail is what separates the good from the great.', author: 'Osas Pro', emoji: '🎯' },
   ],
   ur: [
     { text: 'کامیابی ایک سفر ہے، منزل نہیں۔', author: 'مجہول', emoji: '🔥' },

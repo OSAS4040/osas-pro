@@ -7,12 +7,12 @@
             <PlusCircleIcon class="w-5 h-5 text-blue-500" />
             تذكرة دعم جديدة
           </h2>
-          <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" @click="$emit('close')">
             <XMarkIcon class="w-5 h-5" />
           </button>
         </div>
 
-        <form @submit.prevent="submit" class="p-5 space-y-4">
+        <form class="p-5 space-y-4" @submit.prevent="submit">
           <!-- AI Analysis Banner -->
           <div v-if="aiSuggestion" class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-sm">
             <p class="text-blue-700 dark:text-blue-300 font-medium mb-1">🤖 اقتراح الذكاء الاصطناعي</p>
@@ -25,14 +25,16 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">الموضوع *</label>
-            <input v-model="form.subject" @blur="analyzeText" required placeholder="وصف مختصر للمشكلة..."
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+            <input v-model="form.subject" required placeholder="وصف مختصر للمشكلة..." class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                   @blur="analyzeText"
+            />
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">التفاصيل *</label>
-            <textarea v-model="form.description" @blur="analyzeText" required rows="4" placeholder="اشرح المشكلة بالتفصيل..."
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+            <textarea v-model="form.description" required rows="4" placeholder="اشرح المشكلة بالتفصيل..." class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                      @blur="analyzeText"
+            ></textarea>
           </div>
 
           <!-- Suggested KB Articles -->
@@ -83,17 +85,20 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">العميل (اختياري)</label>
               <input v-model="form.customer_search" placeholder="اسم العميل..."
-                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white" />
+                     class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+              />
             </div>
           </div>
 
           <div class="flex justify-end gap-3 pt-2">
-            <button type="button" @click="$emit('close')"
-              class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all">
+            <button type="button" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all"
+                    @click="$emit('close')"
+            >
               إلغاء
             </button>
             <button type="submit" :disabled="submitting"
-              class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+                    class="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+            >
               <ArrowPathIcon v-if="submitting" class="w-4 h-4 animate-spin" />
               <span>{{ submitting ? 'جارٍ الإنشاء...' : 'إنشاء التذكرة' }}</span>
             </button>
@@ -105,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, watchEffect } from 'vue'
+import { ref, watchEffect } from 'vue'
 import axios from 'axios'
 import { PlusCircleIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 

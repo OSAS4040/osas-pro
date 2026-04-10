@@ -9,9 +9,9 @@
         <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">نظام الإحالات ونقاط الولاء للعملاء</p>
       </div>
       <div class="flex gap-2">
-        <button @click="activeTab = 'referrals'" :class="activeTab==='referrals' ? 'bg-pink-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">الإحالات</button>
-        <button @click="activeTab = 'loyalty'" :class="activeTab==='loyalty' ? 'bg-purple-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">النقاط</button>
-        <button @click="activeTab = 'policy'" :class="activeTab==='policy' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">السياسات</button>
+        <button :class="activeTab==='referrals' ? 'bg-pink-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" @click="activeTab = 'referrals'">الإحالات</button>
+        <button :class="activeTab==='loyalty' ? 'bg-purple-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" @click="activeTab = 'loyalty'">النقاط</button>
+        <button :class="activeTab==='policy' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" @click="activeTab = 'policy'">السياسات</button>
       </div>
     </div>
 
@@ -41,14 +41,14 @@
         </h3>
         <div v-if="myCode" class="flex gap-2">
           <input :value="referralUrl" readonly class="flex-1 px-3 py-2.5 bg-white dark:bg-slate-700 border border-pink-200 dark:border-pink-700 rounded-xl text-sm text-gray-700 dark:text-white" />
-          <button @click="copyLink" class="px-4 py-2 bg-pink-500 text-white rounded-xl text-sm font-semibold hover:bg-pink-600 transition-colors flex items-center gap-2">
+          <button class="px-4 py-2 bg-pink-500 text-white rounded-xl text-sm font-semibold hover:bg-pink-600 transition-colors flex items-center gap-2" @click="copyLink">
             <ClipboardDocumentIcon class="w-4 h-4" /> نسخ
           </button>
-          <button @click="shareWhatsApp" class="px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-semibold hover:bg-green-600 transition-colors">
+          <button class="px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-semibold hover:bg-green-600 transition-colors" @click="shareWhatsApp">
             واتساب
           </button>
         </div>
-        <button v-else @click="generateCode" :disabled="generating" class="px-4 py-2 bg-pink-500 text-white rounded-xl text-sm font-semibold hover:bg-pink-600 disabled:opacity-50 transition-colors">
+        <button v-else :disabled="generating" class="px-4 py-2 bg-pink-500 text-white rounded-xl text-sm font-semibold hover:bg-pink-600 disabled:opacity-50 transition-colors" @click="generateCode">
           {{ generating ? 'جارٍ الإنشاء...' : 'إنشاء رابط إحالة' }}
         </button>
         <p v-if="myCode" class="text-xs text-gray-500 dark:text-slate-400 mt-2">
@@ -99,7 +99,8 @@
         <div v-else class="divide-y divide-gray-100 dark:divide-slate-700">
           <div v-for="(lp, i) in leaderboard" :key="lp.id" class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
             <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
-              :class="i===0?'bg-yellow-400 text-white':i===1?'bg-gray-300 text-gray-700':i===2?'bg-orange-300 text-white':'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-300'">
+                 :class="i===0?'bg-yellow-400 text-white':i===1?'bg-gray-300 text-gray-700':i===2?'bg-orange-300 text-white':'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-300'"
+            >
               {{ i + 1 }}
             </div>
             <div class="flex-1">
@@ -126,7 +127,7 @@
           <div class="flex items-center gap-4">
             <label class="flex items-center gap-3 cursor-pointer">
               <div class="relative">
-                <input type="checkbox" v-model="policyForm.enabled" class="sr-only" />
+                <input v-model="policyForm.enabled" type="checkbox" class="sr-only" />
                 <div class="w-11 h-6 rounded-full transition-colors" :class="policyForm.enabled ? 'bg-green-500' : 'bg-gray-300'"></div>
                 <div class="absolute top-0.5 right-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="policyForm.enabled ? 'translate-x-0' : 'translate-x-5'"></div>
               </div>
@@ -144,30 +145,30 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">نقطة لكل ريال</label>
-              <input type="number" v-model.number="policyForm.points_per_sar" min="0" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
+              <input v-model.number="policyForm.points_per_sar" type="number" min="0" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">مكافأة المُحيل (ريال)</label>
-              <input type="number" v-model.number="policyForm.referrer_reward" min="0" step="0.01" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
+              <input v-model.number="policyForm.referrer_reward" type="number" min="0" step="0.01" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">مكافأة المُحال (ريال)</label>
-              <input type="number" v-model.number="policyForm.referred_reward" min="0" step="0.01" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
+              <input v-model.number="policyForm.referred_reward" type="number" min="0" step="0.01" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">الحد الأدنى للشراء</label>
-              <input type="number" v-model.number="policyForm.min_purchase_to_earn" min="0" step="0.01" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
+              <input v-model.number="policyForm.min_purchase_to_earn" type="number" min="0" step="0.01" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">انتهاء النقاط (يوم)</label>
-              <input type="number" v-model.number="policyForm.points_expiry_days" min="0" placeholder="0 = بلا انتهاء" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
+              <input v-model.number="policyForm.points_expiry_days" type="number" min="0" placeholder="0 = بلا انتهاء" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" />
             </div>
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">الشروط والأحكام</label>
             <textarea v-model="policyForm.terms" rows="3" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-blue-400" placeholder="تُطبق الشروط والأحكام..." />
           </div>
-          <button @click="savePolicy" :disabled="savingPolicy" class="px-6 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-semibold hover:bg-blue-600 disabled:opacity-50 transition-colors">
+          <button :disabled="savingPolicy" class="px-6 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-semibold hover:bg-blue-600 disabled:opacity-50 transition-colors" @click="savePolicy">
             {{ savingPolicy ? 'جارٍ الحفظ...' : 'حفظ الإعدادات' }}
           </button>
         </div>

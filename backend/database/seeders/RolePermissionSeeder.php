@@ -59,6 +59,12 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'work_orders.update', 'description' => 'Update work orders'],
             ['name' => 'work_orders.delete', 'description' => 'Delete work orders'],
         ],
+        'pricing' => [
+            ['name' => 'pricing_policies.view',   'description' => 'View service pricing policies'],
+            ['name' => 'pricing_policies.manage', 'description' => 'Manage service pricing policies'],
+            ['name' => 'customer_groups.view',   'description' => 'View customer groups for pricing'],
+            ['name' => 'customer_groups.manage', 'description' => 'Manage customer groups'],
+        ],
         'suppliers' => [
             ['name' => 'suppliers.view',   'description' => 'View suppliers'],
             ['name' => 'suppliers.create', 'description' => 'Create suppliers'],
@@ -99,6 +105,8 @@ class RolePermissionSeeder extends Seeder
                 'inventory.view', 'inventory.adjust',
                 'invoices.view', 'invoices.create', 'invoices.update',
                 'work_orders.view', 'work_orders.create', 'work_orders.update',
+                'pricing_policies.view', 'pricing_policies.manage',
+                'customer_groups.view', 'customer_groups.manage',
                 'suppliers.view', 'suppliers.create', 'suppliers.update',
                 'purchases.view', 'purchases.create',
                 'reports.view',

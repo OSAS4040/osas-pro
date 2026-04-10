@@ -74,6 +74,9 @@
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import apiClient from '@/lib/apiClient'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
 
 interface Reservation {
   id: number
@@ -111,7 +114,7 @@ async function action(id: number, type: 'consume' | 'release' | 'cancel') {
     await apiClient.patch(`/inventory/reservations/${id}/${type}`)
     await load()
   } catch (e: any) {
-    alert(e.response?.data?.message ?? 'فشل تنفيذ الإجراء.')
+    toast.error('تعذّر تنفيذ الإجراء', e.response?.data?.message ?? 'فشل تنفيذ الإجراء.')
   }
 }
 

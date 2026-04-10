@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
+use App\Enums\UserRole;
+use App\Support\SubscriptionQuota;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * @OA\Tag(name="Users", description="User management")
@@ -30,14 +33,38 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $users = User::with('branch')
-            ->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))
-            ->when($request->role, fn($q) => $q->where('role', $request->role))
-            ->when($request->is_active !== null, fn($q) => $q->where('is_active', $request->boolean('is_active')))
-            ->orderBy('name')
-            ->paginate(25);
+        $request->validate([
+            'branch_id'  => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'role'       => ['sometimes', 'nullable', 'string', Rule::in(UserRole::values())],
+            'is_active'  => ['sometimes', 'nullable', 'boolean'],
+            'search'     => ['sometimes', 'nullable', 'string', 'max:120'],
+            'page'       => ['sometimes', 'integer', 'min:1', 'max:10000'],
+            'per_page'   => ['sometimes', 'integer', 'min:1', 'max:100'],
+        ]);
 
-        return response()->json(['data' => $users->makeHidden(['password']), 'trace_id' => app('trace_id')]);
+        $users = User::with(['branch', 'orgUnit'])
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->branch_id))
+            ->when($request->filled('role'), fn ($q) => $q->where('role', $request->string('role')->toString()))
+            ->when($request->has('is_active'), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $raw = trim($request->string('search')->toString());
+                if ($raw === '') {
+                    return;
+                }
+                $like = '%'.addcslashes($raw, '%_\\').'%';
+                $q->where(function ($qq) use ($like) {
+                    $qq->where('name', 'ilike', $like)
+                        ->orWhere('email', 'ilike', $like);
+                });
+            })
+            ->orderBy('name')
+            ->paginate(min(100, max(1, (int) $request->query('per_page', 25))));
+
+        $users->setCollection(
+            $users->getCollection()->map(fn (User $u) => $u->makeHidden(['password']))
+        );
+
+        return response()->json(['data' => $users, 'trace_id' => app('trace_id')]);
     }
 
     /**
@@ -51,6 +78,8 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
+        SubscriptionQuota::assertCanCreateUser((int) $request->user()->company_id);
+
         $user = User::create(array_merge(
             $request->validated(),
             [
@@ -58,6 +87,7 @@ class UserController extends Controller
                 'company_id' => $request->user()->company_id,
             ]
         ));
+        $user->load(['branch', 'orgUnit']);
 
         return response()->json([
             'data'     => $user->makeHidden(['password']),
@@ -77,7 +107,7 @@ class UserController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $user = User::with('branch')->findOrFail($id);
+        $user = User::with(['branch', 'orgUnit'])->findOrFail($id);
 
         $this->authorize('view', $user);
 
@@ -108,7 +138,10 @@ class UserController extends Controller
 
         $user->update($data);
 
-        return response()->json(['data' => $user->fresh()->makeHidden(['password']), 'trace_id' => app('trace_id')]);
+        return response()->json([
+            'data'     => $user->fresh(['branch', 'orgUnit'])->makeHidden(['password']),
+            'trace_id' => app('trace_id'),
+        ]);
     }
 
     /**

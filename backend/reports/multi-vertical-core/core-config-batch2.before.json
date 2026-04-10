@@ -1,0 +1,15 @@
+{
+    "config_settings_total": 0,
+    "active_use_cases_wired": 0,
+    "companies_with_vertical_profile": 0,
+    "branches_with_vertical_profile": 0,
+    "config_resolution_samples": {
+        "quotes.enabled": null,
+        "wallet.enabled": null,
+        "work_orders.require_bay_assignment": null,
+        "bookings.enabled": null,
+        "fleet.approval_required": null,
+        "pos.quick_sale_enabled": null
+    },
+    "behavior_changed_routes_total": 0
+}

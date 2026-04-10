@@ -1,19 +1,19 @@
 <template>
   <div class="p-6 max-w-lg mx-auto">
     <div class="flex items-center gap-3 mb-6">
-      <button @click="$router.back()" class="text-gray-400 hover:text-gray-600">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      <button class="text-gray-400 hover:text-gray-600" @click="$router.back()">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
       </button>
       <h1 class="text-xl font-bold text-gray-900">شحن رصيد المحفظة</h1>
     </div>
 
-    <form @submit.prevent="submit" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5">
-
+    <form class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5" @submit.prevent="submit">
       <!-- نوع المحفظة -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">نوع المحفظة</label>
         <select v-model="form.wallet_type"
-          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+        >
           <option value="fleet_main">المحفظة الرئيسية للأسطول</option>
         </select>
         <p class="text-xs text-gray-400 mt-1">يمكن لاحقاً تحويل الرصيد لمحافظ المركبات الفردية</p>
@@ -23,15 +23,17 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">المبلغ (ر.س) <span class="text-red-500">*</span></label>
         <input v-model.number="form.amount" type="number" min="1" step="0.01" required
-          placeholder="أدخل المبلغ"
-          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 text-lg font-semibold" />
+               placeholder="أدخل المبلغ"
+               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 text-lg font-semibold"
+        />
       </div>
 
       <!-- ملاحظات -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
         <input v-model="form.notes" type="text" placeholder="مثال: دفعة شهر مارس"
-          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
+               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
       <!-- Info Box -->
@@ -51,18 +53,20 @@
       <div v-if="success" class="bg-green-50 border border-green-200 text-green-700 rounded-lg p-4 text-sm">
         <p class="font-medium">✅ تم شحن الرصيد بنجاح</p>
         <p class="mt-1">تم إضافة {{ formatMoney(form.amount) }} ر.س للمحفظة الرئيسية</p>
-        <button @click="$router.push('/fleet-portal')" class="mt-3 px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+        <button class="mt-3 px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700" @click="$router.push('/fleet-portal')">
           العودة للوحة التحكم
         </button>
       </div>
 
       <div v-if="!success" class="flex gap-3 pt-2">
         <button type="submit" :disabled="submitting || !form.amount"
-          class="flex-1 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm disabled:opacity-60">
+                class="flex-1 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm disabled:opacity-60"
+        >
           {{ submitting ? 'جارٍ الشحن...' : `شحن ${form.amount ? formatMoney(form.amount) + ' ر.س' : ''}` }}
         </button>
-        <button type="button" @click="$router.back()"
-          class="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm">
+        <button type="button" class="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
+                @click="$router.back()"
+        >
           إلغاء
         </button>
       </div>

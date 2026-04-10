@@ -1,0 +1,62 @@
+{
+    "generated_at": "2026-04-08T03:54:54+00:00",
+    "checks": {
+        "invoice_without_ledger": {
+            "detected": 0,
+            "total_examined": 1,
+            "healthy": 1,
+            "sample": []
+        },
+        "unbalanced_journal_entries": {
+            "detected": 0,
+            "total_examined": 1,
+            "healthy": 1,
+            "sample": []
+        },
+        "anomalous_reversal_settlement": {
+            "detected": 1,
+            "total_examined": 1,
+            "healthy": 0,
+            "sample": {
+                "journal_entries": [],
+                "payments": [
+                    {
+                        "id": 102,
+                        "uuid": "f63a89b7-ea24-44e6-90f7-c05afbc8b619",
+                        "company_id": 48,
+                        "invoice_id": 104,
+                        "status": "refunded",
+                        "original_payment_id": null,
+                        "reversal_payment_id": null,
+                        "trace_id": "4c3214e2-70de-471a-959b-c79b818bcf83"
+                    }
+                ]
+            }
+        }
+    },
+    "summary": {
+        "detected_cases": 1,
+        "healthy_cases": 2
+    },
+    "findings": {
+        "invoice_without_ledger": [],
+        "unbalanced_journal_entry": [],
+        "anomalous_reversal_settlement": [
+            {
+                "finding_type": "anomalous_reversal_settlement",
+                "company_id": 48,
+                "invoice_id": 104,
+                "journal_entry_id": null,
+                "payment_id": 102,
+                "reference_type": "payment",
+                "reference_id": 102,
+                "trace_reference": "4c3214e2-70de-471a-959b-c79b818bcf83",
+                "details": {
+                    "payment_status": "refunded",
+                    "original_payment_id": null,
+                    "reversal_payment_id": null
+                }
+            }
+        ]
+    }
+}

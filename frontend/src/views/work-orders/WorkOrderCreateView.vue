@@ -5,6 +5,8 @@
       <RouterLink to="/work-orders" class="text-sm text-primary-600 hover:underline">← أوامر العمل</RouterLink>
     </div>
 
+    <p v-if="bootError" class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ bootError }}</p>
+
     <form class="space-y-6" @submit.prevent="submit">
       <!-- العميل والمركبة -->
       <div class="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
@@ -47,8 +49,8 @@
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">شكوى العميل</label>
-          <textarea v-model="form.customer_complaint" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="وصف المشكلة أو الطلب..."></textarea>
+          <label class="block text-sm font-medium text-gray-700 mb-1">وصف الطلب</label>
+          <textarea v-model="form.customer_complaint" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="وصف العمل المطلوب أو الملاحظات…"></textarea>
         </div>
       </div>
 
@@ -112,14 +114,16 @@
           </table>
         </div>
 
-        <p v-if="!form.items.length" class="text-center text-gray-400 py-4 text-sm">لم يُضف أي بند بعد. اضغط "+ إضافة بند"</p>
+        <p v-if="!form.items.length" class="text-center text-amber-800 bg-amber-50 border border-amber-200 rounded-lg py-3 px-2 text-sm">
+          يجب إضافة بند خدمة أو منتج واحد على الأقل قبل إنشاء أمر العمل.
+        </p>
       </div>
 
       <p v-if="error" class="text-red-600 text-sm bg-red-50 rounded-lg p-3">{{ error }}</p>
 
       <div class="flex justify-end gap-3">
         <RouterLink to="/work-orders" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">إلغاء</RouterLink>
-        <button type="submit" :disabled="saving" class="px-6 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50">
+        <button type="submit" :disabled="saving || !canSubmitWorkOrder" class="px-6 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50">
           {{ saving ? 'جارٍ الحفظ...' : 'إنشاء أمر العمل' }}
         </button>
       </div>
@@ -131,6 +135,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import apiClient from '@/lib/apiClient'
+import { summarizeAxiosError } from '@/utils/apiErrorSummary'
 
 const router = useRouter()
 
@@ -138,6 +143,7 @@ const customers = ref<any[]>([])
 const vehicles  = ref<any[]>([])
 const saving    = ref(false)
 const error     = ref('')
+const bootError   = ref('')
 
 const form = ref({
   customer_id: '',
@@ -183,29 +189,63 @@ const totalAmount = computed(() =>
   }, 0).toFixed(2)
 )
 
+/** بند صالح: اسم غير فارغ وكمية وحد سعر رقمية مقبولة */
+const canSubmitWorkOrder = computed(() => {
+  const rows = form.value.items
+  if (!rows.length) return false
+  return rows.every((item) => {
+    const nameOk = typeof item.name === 'string' && item.name.trim().length > 0
+    const q = Number(item.quantity)
+    const p = Number(item.unit_price)
+    const tax = Number(item.tax_rate)
+    return nameOk && Number.isFinite(q) && q > 0 && Number.isFinite(p) && p >= 0 && Number.isFinite(tax) && tax >= 0 && tax <= 100
+  })
+})
+
 async function submit() {
+  if (saving.value) return
+  if (!canSubmitWorkOrder.value) {
+    error.value = 'أضف بنداً واحداً على الأقل مع اسم البند وكمية صحيحة.'
+    return
+  }
   saving.value = true
   error.value = ''
   try {
-    const { data } = await apiClient.post('/work-orders', {
-      ...form.value,
-      customer_id: Number(form.value.customer_id),
-      vehicle_id: Number(form.value.vehicle_id),
-    })
+    const { data } = await apiClient.post(
+      '/work-orders',
+      {
+        ...form.value,
+        customer_id: Number(form.value.customer_id),
+        vehicle_id: Number(form.value.vehicle_id),
+        items: form.value.items.map((i) => ({
+          ...i,
+          quantity: Number(i.quantity),
+          unit_price: Number(i.unit_price),
+          tax_rate: Number(i.tax_rate),
+          product_id: i.product_id,
+        })),
+      },
+      { skipGlobalErrorToast: true },
+    )
     router.push(`/work-orders/${data.data.id}`)
-  } catch (e: any) {
-    error.value = e.response?.data?.message ?? 'حدث خطأ أثناء إنشاء أمر العمل.'
+  } catch (e: unknown) {
+    error.value = summarizeAxiosError(e)
   } finally {
     saving.value = false
   }
 }
 
 onMounted(async () => {
-  const [c, v] = await Promise.all([
-    apiClient.get('/customers', { params: { per_page: 500 } }),
-    apiClient.get('/vehicles', { params: { per_page: 500 } }),
-  ])
-  customers.value = c.data.data.data ?? c.data.data
-  vehicles.value  = v.data.data.data ?? v.data.data
+  bootError.value = ''
+  try {
+    const [c, v] = await Promise.all([
+      apiClient.get('/customers', { params: { per_page: 500 }, skipGlobalErrorToast: true }),
+      apiClient.get('/vehicles', { params: { per_page: 500 }, skipGlobalErrorToast: true }),
+    ])
+    customers.value = c.data.data.data ?? c.data.data
+    vehicles.value = v.data.data.data ?? v.data.data
+  } catch (e: unknown) {
+    bootError.value = summarizeAxiosError(e)
+  }
 })
 </script>

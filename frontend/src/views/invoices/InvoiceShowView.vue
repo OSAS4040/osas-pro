@@ -1,35 +1,52 @@
 <template>
   <div class="space-y-6">
-    <NavigationSourceHint />
-    <div class="flex items-center justify-between">
+    <NavigationSourceHint class="no-print" />
+    <div class="no-print flex items-center justify-between">
       <div>
         <RouterLink to="/invoices" class="text-sm text-primary-600 hover:underline">← الفواتير</RouterLink>
         <h2 class="text-xl font-bold text-gray-900 dark:text-slate-100 mt-1 font-mono">{{ invoice?.invoice_number ?? '…' }}</h2>
       </div>
-      <div class="flex items-center gap-2">
-        <span v-if="invoice" :class="invoiceStatusClass(invoice.status)" class="text-xs px-3 py-1 rounded-full font-medium">
-          {{ invoiceStatusLabel(invoice.status) }}
-        </span>
-        <button v-if="invoice" @click="printInvoice" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-          <PrinterIcon class="w-4 h-4" />
-          <span class="hidden sm:inline">طباعة</span>
-        </button>
-        <button v-if="invoice" @click="exportPDF" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors">
-          <ArrowDownTrayIcon class="w-4 h-4" />
-          <span class="hidden sm:inline">PDF</span>
-        </button>
-        <button
-          v-if="invoice && canRecordPayment"
-          type="button"
-          @click="openPayModal"
-          class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors"
-        >
-          دفع الفاتورة
-        </button>
+      <div class="flex flex-col items-end gap-1">
+        <div class="flex items-center gap-2">
+          <span v-if="invoice" :class="invoiceStatusClass(invoice.status)" class="text-xs px-3 py-1 rounded-full font-medium">
+            {{ invoiceStatusLabel(invoice.status) }}
+          </span>
+          <button v-if="invoice" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" @click="printInvoice">
+            <PrinterIcon class="w-4 h-4" />
+            <span class="hidden sm:inline">طباعة</span>
+          </button>
+          <button
+            v-if="invoice"
+            type="button"
+            class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-60"
+            :disabled="pdfExporting"
+            @click="exportPDF"
+          >
+            <span
+              v-if="pdfExporting"
+              class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+              aria-hidden="true"
+            />
+            <ArrowDownTrayIcon v-else class="w-4 h-4" />
+            <span class="hidden sm:inline">{{ pdfExporting ? 'جاري التصدير…' : 'PDF' }}</span>
+            <span class="sm:hidden">{{ pdfExporting ? '…' : 'PDF' }}</span>
+          </button>
+          <button
+            v-if="invoice && canRecordPayment"
+            type="button"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors"
+            @click="openPayModal"
+          >
+            دفع الفاتورة
+          </button>
+        </div>
+        <p v-if="invoice" class="text-[10px] text-gray-500 dark:text-slate-400 max-w-[18rem] text-right leading-snug">
+          يُنشأ ملف PDF من الخادم. إن احتجت نسخة مطابقة لما تراه على الشاشة، استخدم «طباعة» ثم «حفظ كـ PDF».
+        </p>
       </div>
     </div>
 
-    <div v-if="loading && !invoice" class="space-y-4 animate-pulse">
+    <div v-if="loading && !invoice" class="no-print space-y-4 animate-pulse">
       <div class="h-24 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700" />
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div v-for="i in 3" :key="i" class="h-40 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700" />
@@ -38,7 +55,6 @@
     </div>
 
     <template v-else-if="invoice">
-
       <!-- Financial snapshot -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 shadow-sm">
@@ -56,7 +72,8 @@
           <p class="mt-1 text-lg font-bold text-emerald-600 tabular-nums">{{ Number(invoice.paid_amount).toFixed(2) }} <span class="text-xs font-normal text-gray-500">ر.س</span></p>
         </div>
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 shadow-sm ring-1 ring-amber-200/60 dark:ring-amber-900/40"
-          :class="Number(invoice.due_amount) > 0 ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''">
+             :class="Number(invoice.due_amount) > 0 ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''"
+        >
           <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">المتبقي</p>
           <p class="mt-1 text-lg font-bold tabular-nums" :class="Number(invoice.due_amount) > 0 ? 'text-amber-800 dark:text-amber-200' : 'text-gray-400'">
             {{ Number(invoice.due_amount).toFixed(2) }} <span class="text-xs font-normal text-gray-500">ر.س</span>
@@ -87,7 +104,6 @@
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
         <!-- معلومات الفاتورة -->
         <div class="bg-white rounded-xl border border-gray-200 p-5">
           <h3 class="text-xs font-semibold text-gray-400 uppercase mb-3">الفاتورة</h3>
@@ -298,8 +314,9 @@
               <p class="text-xs text-gray-400">صور قبل/بعد + فيديو شرح + توقيع الفني</p>
             </div>
           </div>
-          <button @click="talkingInvoice.open = !talkingInvoice.open"
-            class="text-xs text-primary-600 hover:underline">
+          <button class="text-xs text-primary-600 hover:underline"
+                  @click="talkingInvoice.open = !talkingInvoice.open"
+          >
             {{ talkingInvoice.open ? 'إخفاء' : 'إدارة الوسائط' }}
           </button>
         </div>
@@ -328,6 +345,13 @@
               <img v-if="experienceQRUrl" :src="experienceQRUrl" class="w-16 h-16" alt="Experience QR" />
               <div v-else class="w-16 h-16 bg-gray-100 rounded flex items-center justify-center text-[9px] text-gray-400">جاري...</div>
             </div>
+            <button type="button"
+                    class="flex items-center gap-1.5 text-xs border border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors font-medium"
+                    title="نسخ رابط الفاتورة العام"
+                    @click="copyInvoiceUrl"
+            >
+              نسخ الرابط
+            </button>
             <ShareModal
               :url="invoicePublicUrl"
               :title="`فاتورة رقم ${invoice?.invoice_number || invoice?.id}`"
@@ -339,8 +363,9 @@
               :entity-id="invoice?.id"
             >
               <template #default="{ open }">
-                <button @click="open"
-                  class="flex items-center gap-1.5 text-xs bg-indigo-600 text-white px-3 py-2 rounded-xl hover:bg-indigo-700 transition-colors font-medium">
+                <button class="flex items-center gap-1.5 text-xs bg-indigo-600 text-white px-3 py-2 rounded-xl hover:bg-indigo-700 transition-colors font-medium"
+                        @click="open"
+                >
                   <ShareIcon class="w-3.5 h-3.5" />
                   مشاركة
                 </button>
@@ -351,7 +376,6 @@
 
         <!-- Media Management Panel -->
         <div v-if="talkingInvoice.open" class="p-5 space-y-5">
-
           <!-- Before / After Photos -->
           <div>
             <p class="text-sm font-medium text-gray-700 mb-3">صور قبل / بعد الخدمة</p>
@@ -363,9 +387,10 @@
                 </p>
                 <div class="grid grid-cols-2 gap-1.5">
                   <div v-for="(img, i) in talkingInvoice.beforePhotos" :key="i"
-                    class="aspect-square rounded-lg overflow-hidden bg-gray-100 relative group">
+                       class="aspect-square rounded-lg overflow-hidden bg-gray-100 relative group"
+                  >
                     <img :src="img.url" class="w-full h-full object-cover" />
-                    <button @click="removePhoto('before', i)" class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" @click="removePhoto('before', i)">
                       <XMarkIcon class="w-5 h-5 text-white" />
                     </button>
                   </div>
@@ -382,9 +407,10 @@
                 </p>
                 <div class="grid grid-cols-2 gap-1.5">
                   <div v-for="(img, i) in talkingInvoice.afterPhotos" :key="i"
-                    class="aspect-square rounded-lg overflow-hidden bg-gray-100 relative group">
+                       class="aspect-square rounded-lg overflow-hidden bg-gray-100 relative group"
+                  >
                     <img :src="img.url" class="w-full h-full object-cover" />
-                    <button @click="removePhoto('after', i)" class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" @click="removePhoto('after', i)">
                       <XMarkIcon class="w-5 h-5 text-white" />
                     </button>
                   </div>
@@ -419,9 +445,10 @@
           <div>
             <p class="text-sm font-medium text-gray-700 mb-2">ملاحظة صوتية من الفني</p>
             <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-              <button @click="toggleRecording"
-                class="w-10 h-10 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
-                :class="talkingInvoice.recording ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'">
+              <button class="w-10 h-10 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+                      :class="talkingInvoice.recording ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'"
+                      @click="toggleRecording"
+              >
                 <MicrophoneIcon class="w-5 h-5" />
               </button>
               <div class="flex-1">
@@ -434,8 +461,9 @@
           </div>
 
           <!-- Save Media -->
-          <button @click="saveMedia" :disabled="savingMedia"
-            class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+          <button :disabled="savingMedia" class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                  @click="saveMedia"
+          >
             {{ savingMedia ? 'جارٍ الحفظ...' : 'حفظ الوسائط وتفعيل الفاتورة الناطقة' }}
           </button>
         </div>
@@ -444,7 +472,8 @@
         <div v-if="!talkingInvoice.open && (talkingInvoice.beforePhotos.length || talkingInvoice.afterPhotos.length)" class="px-5 py-4">
           <div class="flex gap-2 overflow-x-auto pb-1">
             <div v-for="(img, i) in [...talkingInvoice.beforePhotos, ...talkingInvoice.afterPhotos].slice(0,6)" :key="i"
-              class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                 class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0"
+            >
               <img :src="img.url" class="w-full h-full object-cover" />
             </div>
             <div v-if="talkingInvoice.videoUrl" class="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
@@ -459,7 +488,8 @@
 
       <!-- ══════ التوقيع والختم ══════ -->
       <div v-if="company?.signature_url || company?.stamp_url || invoiceSettings.show_signature || invoiceSettings.show_stamp"
-        class="bg-white rounded-xl border border-gray-200">
+           class="bg-white rounded-xl border border-gray-200"
+      >
         <div class="px-5 py-3 border-b border-gray-100 flex items-center gap-2">
           <PencilSquareIcon class="w-4 h-4 text-gray-400" />
           <h3 class="text-sm font-semibold text-gray-700">التوقيع والختم الرسمي</h3>
@@ -509,6 +539,204 @@
         </div>
       </div>
     </template>
+
+    <!-- قالب طباعة / PDF: يُنقل إلى body لتفادي صفحة ثانية فارغة (ارتفاع #app + min-h-screen) -->
+    <Teleport to="body">
+      <section
+        id="invoice-print-template"
+        class="invoice-print-only print-container invoice-formal-print"
+        dir="rtl"
+      >
+        <div
+          class="formal-sheet"
+          :style="{ '--inv-accent': invoiceSettings.print_primary_color || '#5b21b6' }"
+        >
+          <header class="formal-issuer-bar">
+            <div class="formal-issuer-grid">
+              <div class="formal-issuer-en" dir="ltr">
+                <div class="formal-doc-type">Tax Invoice</div>
+                <p class="formal-co-name">{{ printCompanyNameEn }}</p>
+                <div class="formal-issuer-lines">
+                  <p v-if="company?.address">{{ company.address }}</p>
+                  <p v-if="company?.tax_number || company?.vat_number">
+                    VAT: {{ company?.tax_number || company?.vat_number }}
+                  </p>
+                  <p v-if="company?.cr_number">CR: {{ company.cr_number }}</p>
+                  <p v-if="company?.phone">{{ company.phone }}</p>
+                </div>
+              </div>
+              <div class="formal-issuer-logo-mid">
+                <div v-if="invoiceSettings.show_logo" class="formal-logo-on-brand">
+                  <img v-if="company?.logo_url" :src="company.logo_url" alt="" />
+                  <div v-else class="formal-logo-fallback" aria-hidden="true">
+                    {{ printLogoMonogram }}
+                  </div>
+                </div>
+              </div>
+              <div class="formal-issuer-ar" dir="rtl">
+                <div class="formal-doc-type">فاتورة ضريبية</div>
+                <p class="formal-co-name">{{ printCompanyNameAr }}</p>
+                <div class="formal-issuer-lines">
+                  <p v-if="company?.address">{{ company.address }}</p>
+                  <p v-if="company?.tax_number || company?.vat_number">
+                    الرقم الضريبي: {{ company?.tax_number || company?.vat_number }}
+                  </p>
+                  <p v-if="company?.cr_number">السجل التجاري: {{ company.cr_number }}</p>
+                  <p v-if="company?.phone">{{ company.phone }}</p>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <p class="formal-invoice-no">{{ invoice?.invoice_number || '—' }}</p>
+          <p v-if="invoiceSettings.print_header_note" class="formal-header-note">{{ invoiceSettings.print_header_note }}</p>
+
+          <div class="formal-section">
+            <div class="formal-section-head">
+              <span dir="ltr">Invoice details</span>
+              <span>تفاصيل الفاتورة</span>
+            </div>
+            <table class="formal-kv">
+              <tbody>
+                <tr>
+                  <th>
+                    رقم الفاتورة
+                    <span class="k-en">Invoice #</span>
+                  </th>
+                  <td class="font-mono">{{ invoice?.invoice_number || '—' }}</td>
+                </tr>
+                <tr>
+                  <th>
+                    تاريخ الإصدار
+                    <span class="k-en">Issue date</span>
+                  </th>
+                  <td>{{ formatInvoiceDateOnly(invoice?.issued_at || '') }}</td>
+                </tr>
+                <tr>
+                  <th>
+                    وقت الإصدار
+                    <span class="k-en">Issue time</span>
+                  </th>
+                  <td dir="ltr" style="text-align: right">{{ formatInvoiceTimeOnly(invoice?.issued_at || '') }}</td>
+                </tr>
+                <tr>
+                  <th>
+                    تاريخ الاستحقاق
+                    <span class="k-en">Due date</span>
+                  </th>
+                  <td>{{ formatInvoiceDateOnly(invoice?.due_at || invoice?.issued_at || '') }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="formal-section">
+            <div class="formal-section-head">
+              <span dir="ltr">Customer</span>
+              <span>معلومات العميل</span>
+            </div>
+            <table class="formal-kv">
+              <tbody>
+                <tr>
+                  <th>
+                    اسم العميل
+                    <span class="k-en">Customer name</span>
+                  </th>
+                  <td>{{ invoice?.customer?.name || '—' }}</td>
+                </tr>
+                <tr>
+                  <th>
+                    العنوان
+                    <span class="k-en">Address</span>
+                  </th>
+                  <td>{{ invoice?.customer?.address || 'المملكة العربية السعودية' }}</td>
+                </tr>
+                <tr>
+                  <th>
+                    الهاتف
+                    <span class="k-en">Phone</span>
+                  </th>
+                  <td>{{ invoice?.customer?.phone || '—' }}</td>
+                </tr>
+                <tr v-if="invoice?.vehicle?.plate_number">
+                  <th>
+                    رقم اللوحة
+                    <span class="k-en">Vehicle plate</span>
+                  </th>
+                  <td class="font-mono">{{ invoice.vehicle.plate_number }}</td>
+                </tr>
+                <tr>
+                  <th>
+                    السجل التجاري
+                    <span class="k-en">CR</span>
+                  </th>
+                  <td>{{ invoice?.customer?.cr_number || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="formal-lines-wrap">
+            <table class="formal-lines">
+              <thead>
+                <tr>
+                  <th style="width: 3%">#</th>
+                  <th style="width: 36%">وصف الخدمة / Description</th>
+                  <th style="width: 7%">كمية<br />Qty</th>
+                  <th style="width: 9%">سعر<br />Price</th>
+                  <th style="width: 12%">خاضع للضريبة<br />Taxable</th>
+                  <th style="width: 12%">ضريبة<br />VAT</th>
+                  <th style="width: 12%">الإجمالي<br />Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, idx) in (invoice?.items || [])" :key="item.id || idx">
+                  <td class="col-num">{{ idx + 1 }}</td>
+                  <td class="col-desc">{{ item.name }}</td>
+                  <td class="col-num">{{ Number(item.quantity || 0).toFixed(0) }}</td>
+                  <td class="col-num">{{ Number(item.unit_price || 0).toFixed(2) }}</td>
+                  <td class="col-num">{{ Number(item.subtotal ?? item.line_total ?? item.total ?? 0).toFixed(2) }}</td>
+                  <td class="col-num">{{ Number(item.tax_amount || 0).toFixed(2) }}</td>
+                  <td class="col-num">{{ Number(item.line_total ?? item.total ?? 0).toFixed(2) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="formal-totals-wrap">
+            <div class="formal-qr">
+              <img v-if="zatcaQRUrl" :src="zatcaQRUrl" alt="QR" />
+            </div>
+            <table class="formal-totals">
+              <tr>
+                <th>المجموع الفرعي <span dir="ltr">Subtotal</span></th>
+                <td>{{ Number(invoice?.subtotal || 0).toFixed(2) }} ر.س</td>
+              </tr>
+              <tr v-if="Number(invoice?.discount_amount) > 0">
+                <th>الخصم <span dir="ltr">Discount</span></th>
+                <td>-{{ Number(invoice?.discount_amount || 0).toFixed(2) }} ر.س</td>
+              </tr>
+              <tr>
+                <th>ضريبة القيمة المضافة <span dir="ltr">VAT</span></th>
+                <td>{{ Number(invoice?.tax_amount || 0).toFixed(2) }} ر.س</td>
+              </tr>
+              <tr class="grand">
+                <th>الإجمالي شامل الضريبة <span dir="ltr">Total inc. VAT</span></th>
+                <td>{{ Number(invoice?.total || 0).toFixed(2) }} ر.س</td>
+              </tr>
+            </table>
+          </div>
+
+          <p class="formal-thanks">شكراً لكم · Thank you</p>
+          <p class="formal-brand-line">صُدرت عبر نظام <strong>أسس برو</strong></p>
+          <div class="formal-footer-row">
+            <span>{{ printCompanyNameAr }}</span>
+            <span class="font-mono" dir="ltr">{{ invoice?.invoice_number || '' }}</span>
+          </div>
+          <p v-if="invoiceSettings.footer_note" class="formal-footer-note">{{ invoiceSettings.footer_note }}</p>
+        </div>
+      </section>
+    </Teleport>
   </div>
 </template>
 
@@ -523,6 +751,8 @@ import apiClient, { withIdempotency } from '@/lib/apiClient'
 import { v4 as uuidv4 } from 'uuid'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { appConfirm } from '@/services/appConfirmDialog'
+import { printDocument } from '@/composables/useAppPrint'
 import ShareModal from '@/components/ShareModal.vue'
 import NavigationSourceHint from '@/components/NavigationSourceHint.vue'
 import { getZatcaQRUrl, getQRImageUrl } from '@/utils/zatca'
@@ -533,6 +763,11 @@ import {
   paymentStatusClass,
   paymentStatusLabel,
 } from '@/utils/financialLabels'
+import { summarizeAxiosError } from '@/utils/apiErrorSummary'
+import {
+  invoicePrintCompanyDisplayName,
+  invoicePrintLogoMonogram,
+} from '@/utils/invoicePrintDisplay'
 
 const route   = useRoute()
 const id      = Number(route.params.id)
@@ -542,6 +777,11 @@ const loading = ref(false)
 const refreshing = ref(false)
 const auth    = useAuthStore()
 const toast   = useToast()
+const pdfExporting = ref(false)
+
+const printCompanyNameEn = computed(() => invoicePrintCompanyDisplayName(company.value, 'en'))
+const printCompanyNameAr = computed(() => invoicePrintCompanyDisplayName(company.value, 'ar'))
+const printLogoMonogram = computed(() => invoicePrintLogoMonogram(company.value))
 
 const paymentsList = computed(() => {
   const p = invoice.value?.payments
@@ -565,9 +805,10 @@ const canRecordPayment = computed(() => {
 // ZATCA QR — TLV encoded as per heza.gov.sa requirements
 const zatcaQRUrl = computed(() => {
   if (!invoice.value) return ''
+  const co = invoice.value.company ?? company.value
   return getZatcaQRUrl({
-    sellerName:   invoice.value.company?.name_ar ?? 'مركز الخدمة',
-    vatNumber:    invoice.value.company?.tax_number ?? '000000000000000',
+    sellerName:   invoicePrintCompanyDisplayName(co, 'ar') || 'مركز الخدمة',
+    vatNumber:    co?.tax_number ?? co?.vat_number ?? '000000000000000',
     invoiceDate:  invoice.value.created_at ?? new Date().toISOString(),
     totalWithVat: parseFloat(invoice.value.total ?? '0'),
     vatAmount:    parseFloat(invoice.value.tax_amount ?? invoice.value.vat_amount ?? '0'),
@@ -592,7 +833,7 @@ function drawBarcode(text: string) {
   const ctx = canvas.getContext('2d')!
   ctx.clearRect(0, 0, W, H)
   // Simple Code39-style barcode using char code based bars
-  const chars = text.replace(/[^A-Z0-9\-\.\ ]/gi, '').toUpperCase()
+  const chars = text.replace(/[^A-Z0-9. -]/gi, '').toUpperCase()
   const totalBars = chars.length * 9 + 5
   const barW = Math.max(1, Math.floor(W / totalBars))
   let x = 2
@@ -679,10 +920,15 @@ async function saveMedia() {
     talkingInvoice.beforePhotos.forEach((p, i) => { if (p.file) fd.append(`before[${i}]`, p.file) })
     talkingInvoice.afterPhotos.forEach((p, i)  => { if (p.file) fd.append(`after[${i}]`, p.file) })
     if (talkingInvoice.videoLink) fd.append('video_link', talkingInvoice.videoLink)
-    await apiClient.post(`/invoices/${id}/media`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+    await apiClient.post(`/invoices/${id}/media`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      skipGlobalErrorToast: true,
+    })
     toast.success('تم حفظ الوسائط', 'الفاتورة الناطقة جاهزة للمشاركة')
     talkingInvoice.open = false
-  } catch { toast.error('خطأ في الحفظ') }
+  } catch (e: unknown) {
+    toast.error('تعذّر الحفظ', summarizeAxiosError(e))
+  }
   finally { savingMedia.value = false }
 }
 
@@ -694,7 +940,10 @@ function copyInvoiceUrl() {
 const invoiceSettings = reactive({
   show_signature: true,
   show_stamp: true,
+  show_logo: true,
   show_bank_details: false,
+  print_primary_color: '#1e3a8a',
+  print_header_note: '',
   footer_note: '',
 })
 
@@ -716,7 +965,10 @@ async function load() {
         const opts = sRes.data.data?.invoice_options || {}
         invoiceSettings.show_signature    = opts.show_signature    ?? true
         invoiceSettings.show_stamp        = opts.show_stamp        ?? true
+        invoiceSettings.show_logo         = opts.show_logo         ?? true
         invoiceSettings.show_bank_details = opts.show_bank_details ?? false
+        invoiceSettings.print_primary_color = typeof opts.print_primary_color === 'string' ? opts.print_primary_color : '#1e3a8a'
+        invoiceSettings.print_header_note   = typeof opts.print_header_note === 'string' ? opts.print_header_note : ''
         invoiceSettings.footer_note       = sRes.data.data?.invoice_footer_note || ''
       } catch { /* */ }
     }
@@ -737,18 +989,22 @@ function canRefundPayment(p: Record<string, unknown>): boolean {
 }
 
 async function submitRefund(p: Record<string, unknown>) {
+  if (refundSubmittingId.value != null) return
   if (!canRefundPayment(p)) return
   const pid = Number(p.id)
-  if (!window.confirm(`استرداد كامل للدفع بقيمة ${Number(p.amount).toFixed(2)} ر.س؟ سيتم تحديث الفاتورة والمحفظة عند الدفع من المحفظة.`)) return
+  const ok = await appConfirm({
+    title: 'تأكيد الاسترداد',
+    message: `استرداد كامل للدفع بقيمة ${Number(p.amount).toFixed(2)} ر.س؟ سيتم تحديث الفاتورة والمحفظة عند الدفع من المحفظة.`,
+    confirmLabel: 'تأكيد الاسترداد',
+  })
+  if (!ok) return
   refundSubmittingId.value = pid
   try {
-    await apiClient.post(`/payments/${pid}/refund`, {}, withIdempotency())
+    await apiClient.post(`/payments/${pid}/refund`, {}, { ...withIdempotency(), skipGlobalErrorToast: true })
     toast.success('تم تسجيل الاسترداد')
     await load()
-  } catch (e: any) {
-    if (e?.response?.status !== 422) {
-      toast.error(e?.response?.data?.message ?? 'فشل الاسترداد')
-    }
+  } catch (e: unknown) {
+    toast.error('تعذّر الاسترداد', summarizeAxiosError(e))
   } finally {
     refundSubmittingId.value = null
   }
@@ -763,6 +1019,7 @@ function openPayModal() {
 }
 
 async function submitPay() {
+  if (paySubmitting.value) return
   payError.value = ''
   if (!payForm.amount || payForm.amount <= 0) {
     payError.value = 'أدخل مبلغاً صحيحاً'
@@ -778,13 +1035,13 @@ async function submitPay() {
     if (payForm.method === 'wallet') {
       body.wallet_idempotency_key = uuidv4()
     }
-    const { data } = await apiClient.post(`/invoices/${id}/pay`, body, withIdempotency())
+    const { data } = await apiClient.post(`/invoices/${id}/pay`, body, { ...withIdempotency(), skipGlobalErrorToast: true })
     invoice.value = data?.data?.invoice ?? invoice.value
     payModal.open = false
     toast.success('تم تسجيل الدفع')
     await load()
-  } catch (e: any) {
-    payError.value = e?.response?.data?.message ?? 'فشل تسجيل الدفع'
+  } catch (e: unknown) {
+    payError.value = summarizeAxiosError(e)
   } finally {
     paySubmitting.value = false
   }
@@ -793,57 +1050,94 @@ function formatDate(dt: string): string {
   if (!dt) return '—'
   return new Date(dt).toLocaleString('ar-SA')
 }
+
+function formatInvoiceDateOnly(iso: string): string {
+  if (!iso) return '—'
+  return iso.slice(0, 10)
+}
+
+function formatInvoiceTimeOnly(iso: string): string {
+  if (!iso) return '—'
+  try {
+    return new Date(iso).toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    })
+  } catch {
+    return '—'
+  }
+}
 const sourceLabel = computed(() => {
   if (!invoice.value?.source_type) return ''
   const type = invoice.value.source_type.split('\\').pop()
   return `${type} #${invoice.value.source_id}`
 })
 
-function printInvoice() {
-  window.print()
+async function printInvoice() {
+  const root = document.getElementById('invoice-print-template')
+  if (!root) {
+    toast.error('تعذّر الطباعة', 'لم يُعثر على قالب الفاتورة.')
+    return
+  }
+  await printDocument({ root })
 }
 
 async function exportPDF() {
+  if (pdfExporting.value) return
+  pdfExporting.value = true
   try {
-    const { jsPDF } = await import('jspdf')
-    const inv = invoice.value
-    const cmp = company.value
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-    const pageW = doc.internal.pageSize.getWidth()
+    const res = await apiClient.get<Blob>(`/invoices/${id}/pdf`, {
+      responseType: 'blob',
+      skipGlobalErrorToast: true,
+      headers: {
+        Accept: 'application/pdf',
+      },
+    } as Parameters<typeof apiClient.get>[1])
 
-    doc.setFontSize(18)
-    doc.text(cmp?.name_ar || cmp?.name || 'فاتورة', pageW / 2, 20, { align: 'center' })
-    doc.setFontSize(10)
-    doc.text(`رقم الفاتورة: ${inv.invoice_number}`, pageW - 15, 35, { align: 'right' })
-    doc.text(`التاريخ: ${inv.issued_at?.slice(0, 10)}`, pageW - 15, 41, { align: 'right' })
-    doc.text(`العميل: ${inv.customer?.name ?? '—'}`, 15, 35)
+    const blob = res.data
+    const ct = String(res.headers['content-type'] ?? '')
+    if (!ct.includes('application/pdf')) {
+      const text = await blob.text()
+      let msg = 'تعذّر إنشاء ملف PDF.'
+      try {
+        const j = JSON.parse(text) as { message?: string }
+        if (j.message) msg = j.message
+      } catch {
+        /* ignore */
+      }
+      throw new Error(msg)
+    }
 
-    const autoTable = (await import('jspdf-autotable')).default
-    const rows = (inv.items ?? []).map((item: any) => [
-      item.name,
-      item.quantity,
-      Number(item.unit_price).toFixed(2),
-      Number(item.tax_amount).toFixed(2),
-      Number(item.total).toFixed(2),
-    ])
-    autoTable(doc, {
-      head: [['الوصف', 'الكمية', 'سعر الوحدة', 'الضريبة', 'الإجمالي']],
-      body: rows,
-      startY: 55,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [59, 130, 246] },
-    })
-
-    const finalY = (doc as any).lastAutoTable.finalY + 10
-    doc.setFontSize(10)
-    doc.text(`الإجمالي: ${Number(inv.total).toFixed(2)} ر.س`, pageW - 15, finalY, { align: 'right' })
-    doc.text(`المدفوع: ${Number(inv.paid_amount).toFixed(2)} ر.س`, pageW - 15, finalY + 6, { align: 'right' })
-
-    doc.save(`${inv.invoice_number}.pdf`)
-  } catch {
-    window.print()
+    const fileBase = invoice.value?.invoice_number || `invoice-${id}`
+    const safeName = `${fileBase.replace(/[^\w.-]+/g, '_')}.pdf`
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = safeName
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    toast.success('تم التصدير', 'تم تنزيل ملف PDF.')
+  } catch (e: unknown) {
+    console.warn('[InvoiceShow PDF]', e)
+    const fallback = 'تعذّر تنزيل PDF. جرّب الطباعة ثم حفظ كـ PDF.'
+    const fromThrown = e instanceof Error && e.message.trim() ? e.message.trim() : ''
+    toast.error('تصدير PDF', summarizeAxiosError(e) || fromThrown || fallback)
+  } finally {
+    pdfExporting.value = false
   }
 }
 
 onMounted(load)
 </script>
+
+<style scoped>
+.invoice-print-only {
+  display: none;
+}
+
+</style>

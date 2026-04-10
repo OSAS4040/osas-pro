@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
+import { locale as appLocale, readPreferredLangFromStorage, type LangCode } from '@/composables/useLocale'
 import ar from '@/i18n/ar'
 import en from '@/i18n/en'
 import ur from '@/i18n/ur'
@@ -18,8 +19,11 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'bn', label: 'বাংলা',  flag: '🇧🇩', dir: 'ltr' },
 ]
 
+const LANG_STORAGE_KEY = 'asaspro_lang'
+const LANG_STORAGE_LEGACY = 'osas_lang'
+
 export const useI18nStore = defineStore('i18n', () => {
-  const savedLang = localStorage.getItem('osas_lang') ?? 'ar'
+  const savedLang = readPreferredLangFromStorage()
   const currentLang = ref<string>(savedLang)
   const messages = computed(() => locales[currentLang.value] ?? locales['ar'])
   const dir = computed(() => messages.value.dir ?? 'rtl')
@@ -37,9 +41,18 @@ export const useI18nStore = defineStore('i18n', () => {
   function setLang(code: string): void {
     if (!locales[code]) return
     currentLang.value = code
-    localStorage.setItem('osas_lang', code)
+    try {
+      localStorage.setItem(LANG_STORAGE_KEY, code)
+      localStorage.setItem(LANG_STORAGE_LEGACY, code)
+      localStorage.setItem('lang', code)
+    } catch {
+      /* تجاهل */
+    }
     document.documentElement.setAttribute('lang', code)
     document.documentElement.setAttribute('dir', locales[code].dir ?? 'rtl')
+    if (appLocale.value !== code) {
+      appLocale.value = code as LangCode
+    }
   }
 
   watch(currentLang, (code) => {

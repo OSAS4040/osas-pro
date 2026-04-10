@@ -15,10 +15,11 @@ class Purchase extends Model
         'uuid', 'company_id', 'branch_id', 'supplier_id', 'created_by_user_id',
         'reference_number', 'status', 'subtotal', 'discount_amount', 'tax_amount',
         'total', 'paid_amount', 'currency', 'notes', 'trace_id',
-        'expected_at', 'received_at', 'version',
+        'expected_at', 'received_at', 'version', 'document_attachments',
     ];
 
     protected $casts = [
+        'document_attachments' => 'array',
         'status'          => PurchaseStatus::class,
         'subtotal'        => 'decimal:4',
         'discount_amount' => 'decimal:4',

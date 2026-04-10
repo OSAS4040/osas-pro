@@ -12,6 +12,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Services\InventoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -117,6 +118,14 @@ class POSSaleTest extends TestCase
         ])->first();
 
         $this->assertEquals(98, $inventory->quantity);
+
+        $this->assertTrue(
+            DB::table('journal_entries')
+                ->where('source_type', Invoice::class)
+                ->where('source_id', $invoice->id)
+                ->exists(),
+            'POS sale must post a journal entry in the same transaction as the invoice.'
+        );
     }
 
     public function test_invoice_hash_is_populated(): void
@@ -218,5 +227,46 @@ class POSSaleTest extends TestCase
 
         $response->assertStatus(422);
         $this->assertStringContainsString('exceeds invoice due amount', (string) $response->json('message'));
+    }
+
+    public function test_cashier_can_complete_pilot_style_line_only_sale(): void
+    {
+        $cashier = $this->createUser($this->company, $this->branch, 'cashier');
+
+        $response = $this->actingAs($cashier, 'sanctum')
+            ->withHeaders(['Idempotency-Key' => Str::uuid()])
+            ->postJson('/api/v1/pos/sale', [
+                'customer_id' => $this->customer->id,
+                'items'       => [[
+                    'name'       => 'Pilot line',
+                    'quantity'   => 1,
+                    'unit_price' => 20,
+                    'tax_rate'   => 15,
+                ]],
+                'payment' => ['method' => 'cash', 'amount' => 23],
+            ]);
+
+        $response->assertStatus(201, (string) $response->getContent());
+        $response->assertJsonStructure(['behavior_applied']);
+    }
+
+    /** @see scripts/pilot_phase2_light50.js — five sequential line-only sales (stress idempotency + counter). */
+    public function test_five_sequential_pilot_style_sales_all_succeed(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->actingAs($this->user, 'sanctum')
+                ->withHeaders(['Idempotency-Key' => Str::uuid()])
+                ->postJson('/api/v1/pos/sale', [
+                    'customer_id' => $this->customer->id,
+                    'items'       => [[
+                        'name'       => 'Stress POS '.$i,
+                        'quantity'   => 1,
+                        'unit_price' => 20,
+                        'tax_rate'   => 15,
+                    ]],
+                    'payment' => ['method' => 'cash', 'amount' => 23],
+                ]);
+            $response->assertStatus(201, 'iteration '.$i.' body: '.$response->getContent());
+        }
     }
 }

@@ -1,6 +1,22 @@
 import { ref, computed, watch } from 'vue'
+import { getActivePinia } from 'pinia'
 
 export type LangCode = 'ar' | 'en' | 'ur' | 'bn' | 'tl' | 'hi'
+
+const KNOWN_CODES: readonly LangCode[] = ['ar', 'en', 'ur', 'bn', 'tl', 'hi']
+
+/** قراءة موحّدة: مفتاح الواجهة `lang` ثم مفاتيح المتجر القديمة. */
+export function readPreferredLangFromStorage(): LangCode {
+  try {
+    for (const key of ['lang', 'asaspro_lang', 'osas_lang'] as const) {
+      const v = localStorage.getItem(key)
+      if (v && (KNOWN_CODES as readonly string[]).includes(v)) return v as LangCode
+    }
+  } catch {
+    /* تجاهل */
+  }
+  return 'ar'
+}
 
 export const LANGUAGES: { code: LangCode; label: string; native: string; dir: 'rtl' | 'ltr'; flag: string }[] = [
   { code: 'ar', label: 'Arabic',   native: 'العربية',    dir: 'rtl', flag: '🇸🇦' },
@@ -51,13 +67,29 @@ function resolve(data: LocaleJson, key: string): string | undefined {
 }
 
 // ── Locale state ─────────────────────────────────────────────────────────
-export const locale = ref<LangCode>((localStorage.getItem('lang') as LangCode) ?? 'ar')
+export const locale = ref<LangCode>(readPreferredLangFromStorage())
 
-watch(locale, lang => {
-  localStorage.setItem('lang', lang)
-  const info = LANGUAGES.find(l => l.code === lang)!
+watch(locale, (lang) => {
+  try {
+    localStorage.setItem('lang', lang)
+    localStorage.setItem('asaspro_lang', lang)
+    localStorage.setItem('osas_lang', lang)
+  } catch {
+    /* تجاهل */
+  }
+  const info = LANGUAGES.find((l) => l.code === lang)
+  if (!info) return
   document.documentElement.setAttribute('dir', info.dir)
   document.documentElement.setAttribute('lang', lang)
+
+  const pinia = getActivePinia()
+  if (!pinia) return
+  void import('@/stores/i18n').then(({ useI18nStore }) => {
+    const store = useI18nStore(pinia)
+    if (store.currentLang !== lang) {
+      store.currentLang = lang
+    }
+  })
 })
 
 // Apply on load

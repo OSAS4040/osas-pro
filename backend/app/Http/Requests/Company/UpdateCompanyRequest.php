@@ -7,9 +7,24 @@ use Illuminate\Validation\Rule;
 
 class UpdateCompanyRequest extends FormRequest
 {
+    private function roleValue(): string
+    {
+        $role = $this->user()?->role;
+
+        if ($role instanceof \BackedEnum) {
+            return (string) $role->value;
+        }
+
+        if ($role instanceof \UnitEnum) {
+            return $role->name;
+        }
+
+        return (string) $role;
+    }
+
     public function authorize(): bool
     {
-        return in_array($this->user()?->role, ['owner', 'manager']);
+        return in_array($this->roleValue(), ['owner', 'manager'], true);
     }
 
     public function rules(): array

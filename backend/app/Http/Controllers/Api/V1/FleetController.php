@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Services\ApprovalWorkflowService;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\CustomerWallet;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use App\Enums\WalletType;
 use App\Enums\WorkOrderStatus;
+use App\Services\Config\ConfigResolverService;
 use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +19,11 @@ use Illuminate\Support\Facades\Auth;
 
 class FleetController extends Controller
 {
-    public function __construct(private readonly WalletService $walletService) {}
+    public function __construct(
+        private readonly WalletService $walletService,
+        private readonly ApprovalWorkflowService $approvalWorkflowService,
+        private readonly ConfigResolverService $configResolver
+    ) {}
 
     private function companyId(): int
     {
@@ -57,7 +64,7 @@ class FleetController extends Controller
 
         $workOrder = WorkOrder::where('company_id', $companyId)
             ->where('vehicle_id', $vehicle->id)
-            ->whereIn('status', [WorkOrderStatus::Pending->value, WorkOrderStatus::InProgress->value])
+            ->whereIn('status', [WorkOrderStatus::PendingManagerApproval->value, WorkOrderStatus::Approved->value, WorkOrderStatus::InProgress->value])
             ->latest()
             ->first();
 
@@ -75,7 +82,7 @@ class FleetController extends Controller
             ]);
         }
 
-        if ($workOrder->approval_status !== 'approved') {
+        if ($this->approvalRequired($workOrder->company_id, $workOrder->branch_id) && $workOrder->approval_status !== 'approved') {
             return response()->json([
                 'vehicle'    => $this->vehicleData($vehicle),
                 'work_order' => $this->workOrderData($workOrder),
@@ -187,12 +194,58 @@ class FleetController extends Controller
             ->whereNotIn('status', [WorkOrderStatus::Cancelled->value, WorkOrderStatus::Delivered->value])
             ->firstOrFail();
 
+        if ($workOrder->approval_status === 'approved') {
+            return response()->json([
+                'message'    => 'Work order already approved.',
+                'work_order' => [
+                    'id'                => $workOrder->id,
+                    'approval_status'   => $workOrder->approval_status,
+                    'credit_authorized' => $workOrder->credit_authorized,
+                    'approved_at'       => $workOrder->approved_at,
+                ],
+                'trace_id' => app('trace_id'),
+            ]);
+        }
+
+        if (! in_array((string) $workOrder->approval_status, ['pending', 'rejected', 'not_required'], true)) {
+            return response()->json([
+                'message' => "Work order approval transition {$workOrder->approval_status} -> approved is not allowed.",
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
         $workOrder->update([
             'approval_status'    => 'approved',
             'approved_by_user_id'=> Auth::id(),
             'approved_at'        => now(),
             'credit_authorized'  => $data['credit_authorized'] ?? false,
         ]);
+
+        $this->approvalWorkflowService->ensurePendingWorkflow(
+            $companyId,
+            'work_order',
+            (int) $workOrder->id,
+            (int) $request->user()->id,
+            null,
+            'fleet.work_order.approval',
+            'Work order approval request',
+            ['module' => 'fleet'],
+            1
+        );
+        try {
+            $this->approvalWorkflowService->transitionBySubject(
+                $companyId,
+                'work_order',
+                (int) $workOrder->id,
+                'approved',
+                (int) $request->user()->id,
+                (string) $request->input('note', '')
+            );
+        } catch (\DomainException) {
+            // keep existing work-order approval response stable if workflow already terminal
+        }
 
         return response()->json([
             'message'    => 'Work order approved successfully.',
@@ -204,6 +257,18 @@ class FleetController extends Controller
             ],
             'trace_id' => app('trace_id'),
         ]);
+    }
+
+    private function approvalRequired(int $companyId, ?int $branchId): bool
+    {
+        $vertical = Company::query()->where('id', $companyId)->value('vertical_profile_code');
+
+        return $this->configResolver->resolveBool('fleet.approval_required', [
+            'plan' => null,
+            'vertical' => $vertical,
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
+        ], true);
     }
 
     // -------------------------------------------------------------------------

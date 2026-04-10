@@ -2,7 +2,8 @@
   <div :class="[
     'animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:400%_100%] rounded-lg',
     props.class
-  ]" :style="{ width: props.width, height: props.height }" />
+  ]" :style="{ width: props.width, height: props.height }"
+  />
 </template>
 
 <script setup lang="ts">

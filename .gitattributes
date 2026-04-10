@@ -1,0 +1,3 @@
+# سكربتات Shell داخل Linux containers (تجنّباً لـ CRLF على Windows)
+docker/ngrok/entrypoint.sh text eol=lf
+scripts/*.sh text eol=lf

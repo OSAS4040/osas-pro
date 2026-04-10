@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Services\BillingModelPolicyService;
+use App\Services\Config\VerticalBehaviorResolverService;
 use App\Services\POSService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,7 +14,11 @@ use Illuminate\Http\Request;
  */
 class POSController extends Controller
 {
-    public function __construct(private readonly POSService $posService) {}
+    public function __construct(
+        private readonly POSService $posService,
+        private readonly VerticalBehaviorResolverService $behaviorResolver,
+        private readonly BillingModelPolicyService $billingModelPolicy,
+    ) {}
 
     /**
      * @OA\Post(
@@ -61,6 +67,13 @@ class POSController extends Controller
      */
     public function sale(Request $request): JsonResponse
     {
+        $user = $request->user();
+        $behavior = $this->behaviorResolver->resolve((int) $user->company_id, $user->branch_id ? (int) $user->branch_id : null);
+
+        if (! ($behavior['features']['pos.quick_sale'] ?? true)) {
+            return response()->json(['message' => 'POS quick sale is disabled by configuration.', 'trace_id' => app('trace_id')], 403);
+        }
+
         $idempotencyKey = $request->header('Idempotency-Key');
 
         if (! $idempotencyKey) {
@@ -92,7 +105,30 @@ class POSController extends Controller
         ]);
 
         $data['idempotency_key'] = $idempotencyKey;
-        $user = $request->user();
+        if (($behavior['flags']['require_customer'] ?? false) && ! $request->filled('customer_id')) {
+            return response()->json([
+                'message' => 'customer_id is required for this vertical profile.',
+                'trace_id' => app('trace_id'),
+                'behavior_applied' => ['require_customer'],
+            ], 422);
+        }
+
+        if (($behavior['flags']['enable_cash_only_mode'] ?? false) && $request->input('payment.method') !== 'cash') {
+            return response()->json([
+                'message' => 'Only cash payment method is allowed for this vertical profile.',
+                'trace_id' => app('trace_id'),
+                'behavior_applied' => ['enable_cash_only_mode'],
+            ], 422);
+        }
+
+        try {
+            $this->billingModelPolicy->assertTenantMayOperate((int) $user->company_id);
+            if (($data['payment']['method'] ?? '') === 'wallet') {
+                $this->billingModelPolicy->assertPrepaidWalletTopUp((int) $user->company_id);
+            }
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
+        }
 
         try {
             $invoice = $this->posService->sale(
@@ -108,8 +144,9 @@ class POSController extends Controller
         }
 
         return response()->json([
-            'data'     => $invoice,
-            'trace_id' => app('trace_id'),
+            'data'             => $invoice,
+            'trace_id'         => app('trace_id'),
+            'behavior_applied' => $this->behaviorResolver->activeBehaviorMarkers($behavior),
         ], 201);
     }
 }

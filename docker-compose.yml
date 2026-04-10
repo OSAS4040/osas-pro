@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   app:
     build:
@@ -12,9 +10,11 @@ services:
       - ./backend:/var/www
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    env_file:
+      - ./backend/.env
     environment:
       - APP_ENV=${APP_ENV:-local}
-      - APP_KEY=base64:RMaiJaOLwmG+k51FgjrosxDQtrG756n1Uyc2kQP5k7g=
+      # APP_KEY يُحمّل من backend/.env (env_file) — لا تثبّت مفتاحاً في المستودع
       - APP_DEBUG=${APP_DEBUG:-true}
       - APP_URL=${APP_URL:-http://localhost}
       - DB_CONNECTION=pgsql
@@ -29,7 +29,8 @@ services:
       - CACHE_DRIVER=redis
       - QUEUE_CONNECTION=redis
       - SESSION_DRIVER=redis
-      - SENTRY_LARAVEL_DSN=${SENTRY_LARAVEL_DSN}
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
+      - SENTRY_LARAVEL_DSN=${SENTRY_LARAVEL_DSN:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,9 +48,10 @@ services:
     working_dir: /var/www
     volumes:
       - ./backend:/var/www
-    command: php artisan queue:work redis --queue=high_priority --sleep=3 --tries=3 --timeout=90
+    env_file:
+      - ./backend/.env
+    command: php artisan queue:work redis --queue=high_priority --sleep=3 --tries=6 --timeout=120
     environment:
-      - APP_KEY=base64:RMaiJaOLwmG+k51FgjrosxDQtrG756n1Uyc2kQP5k7g=
       - APP_ENV=${APP_ENV:-local}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
@@ -62,6 +64,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
       - QUEUE_CONNECTION=redis
       - CACHE_DRIVER=redis
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
     depends_on:
       - app
     networks:
@@ -76,9 +79,10 @@ services:
     working_dir: /var/www
     volumes:
       - ./backend:/var/www
-    command: php artisan queue:work redis --queue=default --sleep=3 --tries=3 --timeout=60
+    env_file:
+      - ./backend/.env
+    command: php artisan queue:work redis --queue=default --sleep=3 --tries=6 --timeout=120
     environment:
-      - APP_KEY=base64:RMaiJaOLwmG+k51FgjrosxDQtrG756n1Uyc2kQP5k7g=
       - APP_ENV=${APP_ENV:-local}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
@@ -91,6 +95,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
       - QUEUE_CONNECTION=redis
       - CACHE_DRIVER=redis
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
     depends_on:
       - app
     networks:
@@ -105,9 +110,10 @@ services:
     working_dir: /var/www
     volumes:
       - ./backend:/var/www
-    command: php artisan queue:work redis --queue=low_priority --sleep=5 --tries=2 --timeout=120
+    env_file:
+      - ./backend/.env
+    command: php artisan queue:work redis --queue=low_priority --sleep=5 --tries=6 --timeout=300
     environment:
-      - APP_KEY=base64:RMaiJaOLwmG+k51FgjrosxDQtrG756n1Uyc2kQP5k7g=
       - APP_ENV=${APP_ENV:-local}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
@@ -120,6 +126,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
       - QUEUE_CONNECTION=redis
       - CACHE_DRIVER=redis
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
     depends_on:
       - app
     networks:
@@ -134,9 +141,10 @@ services:
     working_dir: /var/www
     volumes:
       - ./backend:/var/www
+    env_file:
+      - ./backend/.env
     command: php artisan schedule:work
     environment:
-      - APP_KEY=base64:RMaiJaOLwmG+k51FgjrosxDQtrG756n1Uyc2kQP5k7g=
       - APP_ENV=${APP_ENV:-local}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
@@ -149,6 +157,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
       - QUEUE_CONNECTION=redis
       - CACHE_DRIVER=redis
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
     depends_on:
       - app
     networks:
@@ -184,10 +193,35 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      # Leave unset for same-origin `/api/v1` (Vite proxy + nginx). Set only if API is on another origin.
+      # Leave unset for same-origin `/api/v1` (Vite proxy → nginx). Browser may still set VITE_API_BASE_URL to http://localhost/api/v1 via frontend/.env.
       - VITE_API_BASE_URL=${VITE_API_BASE_URL:-}
       - VITE_APP_NAME=${VITE_APP_NAME:-SaaS POS}
-      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
+      # ثابت داخل الحاوية — لا يُستبدل من جذر المشروع .env (تجنّباً لحقن 127.0.0.1:8000 الخاص بـ artisan على المضيف).
+      - VITE_DEV_PROXY_TARGET=http://nginx
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+      - VITE_INTELLIGENCE_COMMAND_CENTER=${VITE_INTELLIGENCE_COMMAND_CENTER:-true}
+    networks:
+      - saas_network
+
+  # نفق عام → خدمة frontend:5173. يتطلب NGROK_AUTHTOKEN في `.env` عند جذر المشروع.
+  # NGROK_DOMAIN (اختياري): دومين محجوز (مثلاً xxx.ngrok-free.dev) ليبقى الرابط ثابتاً — يقلل ERR_NGROK_3200 عند إعادة تشغيل الوكيل.
+  # تشغيل: make up-ngrok  أو  docker compose --profile ngrok up -d
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: saas_ngrok
+    profiles:
+      - ngrok
+    restart: unless-stopped
+    entrypoint: ['/bin/sh', '/etc/ngrok/entrypoint.sh']
+    volumes:
+      - ./docker/ngrok/entrypoint.sh:/etc/ngrok/entrypoint.sh:ro
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+      NGROK_DOMAIN: ${NGROK_DOMAIN:-}
+    depends_on:
+      - frontend
+    ports:
+      - '4040:4040'
     networks:
       - saas_network
 
@@ -195,6 +229,12 @@ services:
     image: postgres:16-alpine
     container_name: saas_postgres
     restart: unless-stopped
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c pg_stat_statements.max=10000
+      -c pg_stat_statements.save=on
     ports:
       - "5432:5432"
     environment:

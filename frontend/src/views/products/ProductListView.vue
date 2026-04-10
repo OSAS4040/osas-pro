@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between flex-wrap gap-2">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white">المنتجات</h2>
       <div class="flex gap-2">
-        <button @click="downloadTemplate" class="px-3 py-2 text-sm border border-gray-300 dark:border-slate-600 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5">
+        <button class="px-3 py-2 text-sm border border-gray-300 dark:border-slate-600 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5" @click="downloadTemplate">
           <span>⬇</span> قالب Excel
         </button>
         <label class="px-3 py-2 text-sm border border-primary-500 text-primary-600 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-1.5 cursor-pointer">
@@ -85,7 +85,7 @@
             </td>
             <td class="px-4 py-3 text-center">
               <RouterLink :to="`/products/${p.id}/edit`" class="text-primary-600 hover:underline text-xs ml-3">تعديل</RouterLink>
-              <button @click="deleteProduct(p)" class="text-red-500 hover:text-red-700 text-xs">حذف</button>
+              <button class="text-red-500 hover:text-red-700 text-xs" @click="deleteProduct(p)">حذف</button>
             </td>
           </tr>
           <tr v-if="!products.length">
@@ -110,7 +110,10 @@
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import apiClient from '@/lib/apiClient'
+import { appConfirm } from '@/services/appConfirmDialog'
+import { useToast } from '@/composables/useToast'
 
+const toast = useToast()
 const products    = ref<any[]>([])
 const loading     = ref(false)
 const page        = ref(1)
@@ -137,7 +140,7 @@ async function importExcel(e: Event) {
   } catch (err: any) {
     importResult.value = { error: true, message: err.response?.data?.message ?? 'فشل الاستيراد' }
   }
-  ;(e.target as HTMLInputElement).value = ''
+  (e.target as HTMLInputElement).value = ''
 }
 
 let debounceTimer: ReturnType<typeof setTimeout>
@@ -163,12 +166,18 @@ async function load() {
 }
 
 async function deleteProduct(p: any) {
-  if (!confirm(`هل تريد حذف المنتج "${p.name}"؟`)) return
+  const ok = await appConfirm({
+    title: 'حذف المنتج',
+    message: `هل تريد حذف المنتج «${p.name}»؟`,
+    variant: 'danger',
+    confirmLabel: 'حذف',
+  })
+  if (!ok) return
   try {
     await apiClient.delete(`/products/${p.id}`)
     await load()
   } catch (e: any) {
-    alert(e.response?.data?.message ?? 'فشل الحذف.')
+    toast.error('فشل الحذف', e.response?.data?.message ?? '')
   }
 }
 

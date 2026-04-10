@@ -1,40 +1,64 @@
 <template>
-  <div class="space-y-6" dir="rtl">
+  <div class="app-shell-page space-y-5" dir="rtl">
     <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <h2 class="text-2xl font-bold text-gray-900">إدارة الإجازات</h2>
-      <button @click="openNew"
-        class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+    <div class="page-head no-print">
+      <div class="page-title-wrap">
+        <h2 class="page-title-xl">إدارة الإجازات</h2>
+        <p class="page-subtitle">تدفق واضح للطلب والمراجعة والاعتماد مع فلترة سريعة وتقليل التشتت</p>
+      </div>
+      <button class="btn btn-primary"
+              @click="openNew"
+      >
         <PlusIcon class="w-4 h-4" />
         طلب إجازة جديدة
       </button>
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-white rounded-xl p-4 border border-gray-200 text-center">
+    <div class="no-print grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="panel p-4 text-center">
         <p class="text-2xl font-bold text-yellow-600">{{ stats.pending }}</p>
         <p class="text-xs text-gray-500 mt-1">معلقة</p>
       </div>
-      <div class="bg-white rounded-xl p-4 border border-gray-200 text-center">
+      <div class="panel p-4 text-center">
         <p class="text-2xl font-bold text-green-600">{{ stats.approved }}</p>
         <p class="text-xs text-gray-500 mt-1">مقبولة</p>
       </div>
-      <div class="bg-white rounded-xl p-4 border border-gray-200 text-center">
+      <div class="panel p-4 text-center">
         <p class="text-2xl font-bold text-red-600">{{ stats.rejected }}</p>
         <p class="text-xs text-gray-500 mt-1">مرفوضة</p>
       </div>
-      <div class="bg-white rounded-xl p-4 border border-gray-200 text-center">
+      <div class="panel p-4 text-center">
         <p class="text-2xl font-bold text-primary-600">{{ stats.totalDays }}</p>
         <p class="text-xs text-gray-500 mt-1">إجمالي أيام</p>
       </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 flex gap-3 flex-wrap">
+    <div class="no-print panel p-4 flex gap-3 flex-wrap items-end">
+      <div class="flex gap-2 flex-wrap">
+        <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium border"
+                :class="quickTab==='all' ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-gray-200 text-gray-500'"
+                @click="quickTab='all'"
+        >
+          الكل
+        </button>
+        <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium border"
+                :class="quickTab==='pending' ? 'border-yellow-500 bg-yellow-50 text-yellow-700' : 'border-gray-200 text-gray-500'"
+                @click="quickTab='pending'"
+        >
+          المعلقة
+        </button>
+        <button type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium border"
+                :class="quickTab==='approved' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500'"
+                @click="quickTab='approved'"
+        >
+          المقبولة
+        </button>
+      </div>
       <select v-model="filterEmployee" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
         <option value="">كل الموظفين</option>
-        <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name }}</option>
+        <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name || e.name }}</option>
       </select>
       <select v-model="filterStatus" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
         <option value="">كل الحالات</option>
@@ -42,15 +66,18 @@
         <option value="approved">مقبولة</option>
         <option value="rejected">مرفوضة</option>
       </select>
+      <div class="mr-auto flex gap-2">
+        <button class="btn btn-outline btn-sm" @click="printPage">طباعة</button>
+      </div>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
+    <div v-if="loading" class="no-print flex justify-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
     </div>
 
     <!-- Table -->
-    <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div v-else class="table-shell print-container">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-gray-50 border-b border-gray-200">
@@ -61,7 +88,7 @@
               <th class="px-4 py-3 text-right font-semibold text-gray-700">إلى تاريخ</th>
               <th class="px-4 py-3 text-right font-semibold text-gray-700">عدد الأيام</th>
               <th class="px-4 py-3 text-right font-semibold text-gray-700">الحالة</th>
-              <th class="px-4 py-3 text-right font-semibold text-gray-700">إجراءات</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700 no-print">إجراءات</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -87,16 +114,20 @@
                   {{ statusLabel(leave.status) }}
                 </span>
               </td>
-              <td class="px-4 py-3">
+              <td class="px-4 py-3 no-print">
                 <div v-if="leave.status === 'pending'" class="flex items-center gap-2">
-                  <button @click="updateStatus(leave, 'approved')"
-                    :disabled="actionId === leave.id"
-                    class="text-xs bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 disabled:opacity-50">
+                  <button :disabled="actionId === leave.id"
+                          class="text-xs bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                          data-smart-tip="اعتماد الإجازة وتحديث الرصيد التشغيلي"
+                          @click="updateStatus(leave, 'approved')"
+                  >
                     قبول
                   </button>
-                  <button @click="updateStatus(leave, 'rejected')"
-                    :disabled="actionId === leave.id"
-                    class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200 disabled:opacity-50">
+                  <button :disabled="actionId === leave.id"
+                          class="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200 disabled:opacity-50"
+                          data-smart-tip="رفض الطلب مع إشعار الموظف"
+                          @click="updateStatus(leave, 'rejected')"
+                  >
                     رفض
                   </button>
                 </div>
@@ -116,14 +147,14 @@
       <div class="bg-white rounded-2xl w-full max-w-lg shadow-xl">
         <div class="flex items-center justify-between px-6 py-4 border-b">
           <h3 class="font-bold text-lg">طلب إجازة جديدة</h3>
-          <button @click="closeModal" class="text-gray-400 hover:text-gray-700"><XMarkIcon class="w-5 h-5" /></button>
+          <button class="text-gray-400 hover:text-gray-700" @click="closeModal"><XMarkIcon class="w-5 h-5" /></button>
         </div>
-        <form @submit.prevent="save" class="p-6 space-y-4">
+        <form class="p-6 space-y-4" @submit.prevent="save">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">الموظف *</label>
             <select v-model="form.employee_id" required class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
               <option value="">اختر موظفاً</option>
-              <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name }}</option>
+              <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name || e.name }}</option>
             </select>
           </div>
           <div>
@@ -138,14 +169,13 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">من تاريخ *</label>
-              <input v-model="form.start_date" type="date" required
-                class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">إلى تاريخ *</label>
-              <input v-model="form.end_date" type="date" required
-                class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+              <label class="block text-sm font-medium text-gray-700 mb-1">نطاق الإجازة *</label>
+              <SmartDatePicker
+                mode="range"
+                :from-value="form.start_date"
+                :to-value="form.end_date"
+                @change="onLeaveRangeChange"
+              />
             </div>
           </div>
           <div v-if="form.start_date && form.end_date" class="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
@@ -155,13 +185,15 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">سبب الإجازة</label>
             <textarea v-model="form.reason" rows="3" placeholder="اكتب سبب الإجازة..."
-              class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"></textarea>
+                      class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+            ></textarea>
           </div>
           <div v-if="modalError" class="text-red-600 text-sm bg-red-50 rounded-lg p-3">{{ modalError }}</div>
           <div class="flex gap-3 justify-end pt-1">
-            <button type="button" @click="closeModal" class="px-4 py-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50">إلغاء</button>
+            <button type="button" class="px-4 py-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50" @click="closeModal">إلغاء</button>
             <button type="submit" :disabled="saving"
-              class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50">
+                    class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50"
+            >
               {{ saving ? 'جاري الحفظ...' : 'إرسال الطلب' }}
             </button>
           </div>
@@ -175,6 +207,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { PlusIcon, XMarkIcon, CalendarDaysIcon } from '@heroicons/vue/24/outline'
 import { useApi } from '@/composables/useApi'
+import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
+import { printDocument } from '@/composables/useAppPrint'
 
 const { get, post } = useApi()
 
@@ -183,6 +217,7 @@ const employees = ref<any[]>([])
 const loading = ref(true)
 const filterEmployee = ref('')
 const filterStatus = ref('')
+const quickTab = ref<'all'|'pending'|'approved'>('all')
 const showModal = ref(false)
 const saving = ref(false)
 const modalError = ref('')
@@ -192,6 +227,7 @@ const form = ref({ employee_id: '', leave_type: '', start_date: '', end_date: ''
 
 const filtered = computed(() =>
   leaves.value.filter(l =>
+    (quickTab.value === 'all' || l.status === quickTab.value) &&
     (!filterEmployee.value || l.employee_id == filterEmployee.value) &&
     (!filterStatus.value || l.status === filterStatus.value)
   )
@@ -205,7 +241,8 @@ const stats = computed(() => ({
 }))
 
 function employeeName(id: any) {
-  return employees.value.find(e => e.id == id)?.full_name ?? null
+  const emp = employees.value.find((e) => e.id == id)
+  return emp?.full_name || emp?.name || null
 }
 
 function calcDays(start: string, end: string): number {
@@ -250,6 +287,11 @@ function openNew() {
   showModal.value = true
 }
 
+function onLeaveRangeChange(val: { from: string; to: string }) {
+  form.value.start_date = val.from
+  form.value.end_date = val.to
+}
+
 function closeModal() {
   showModal.value = false
   modalError.value = ''
@@ -290,6 +332,10 @@ async function updateStatus(leave: any, status: string) {
   } finally {
     actionId.value = null
   }
+}
+
+async function printPage() {
+  await printDocument()
 }
 
 onMounted(load)

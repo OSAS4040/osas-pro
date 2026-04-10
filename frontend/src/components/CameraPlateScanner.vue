@@ -65,6 +65,9 @@
               @input="editedPlate = editedPlate.toUpperCase()"
             />
             <p v-if="ocrMethod" class="text-[10px] text-center text-gray-400">طريقة الاستخراج: {{ ocrMethod }}</p>
+            <p v-if="ocrConfidence !== null" class="text-[10px] text-center" :class="ocrConfidence >= 0.85 ? 'text-green-600' : 'text-amber-600'">
+              دقة القراءة التقريبية: {{ Math.round(ocrConfidence * 100) }}%
+            </p>
 
             <!-- حلّ ذكي: مسجّل في النظام أم لا -->
             <div v-if="resolveInfo?.registered" class="rounded-xl bg-teal-50 border border-teal-200 p-3 text-xs text-right space-y-1">
@@ -89,7 +92,7 @@
 
             <p class="text-xs text-gray-400 text-center">راجع الرقم ثم اضغط تأكيد — لا يُحفَظ شيء قبل ذلك</p>
             <div class="flex gap-2">
-              <button :disabled="!editedPlate.trim()" class="flex-1 bg-teal-600 disabled:opacity-50 hover:bg-teal-700 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
+              <button :disabled="!canConfirm" class="flex-1 bg-teal-600 disabled:opacity-50 hover:bg-teal-700 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
                       @click="confirm"
               >
                 ✓ تأكيد واستخدام اللوحة
@@ -132,7 +135,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, nextTick } from 'vue'
+import { ref, onUnmounted, nextTick, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { CameraIcon, XMarkIcon, ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
@@ -149,6 +152,7 @@ const extracted   = ref(false)
 const editedPlate = ref('')
 const error       = ref('')
 const ocrMethod = ref('')
+const ocrConfidence = ref<number | null>(null)
 const resolveInfo = ref<{
   registered: boolean
   vehicle?: { id: number; customer?: { name: string }; plate_number?: string }
@@ -166,6 +170,7 @@ async function open() {
   extracted.value = false
   editedPlate.value = ''
   ocrMethod.value = ''
+  ocrConfidence.value = null
   resolveInfo.value = null
   visible.value   = true
 
@@ -266,6 +271,7 @@ async function processImage(canvas: HTMLCanvasElement) {
   processing.value = true
   error.value = ''
   ocrMethod.value = ''
+  ocrConfidence.value = null
   resolveInfo.value = null
   try {
     const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
@@ -275,21 +281,27 @@ async function processImage(canvas: HTMLCanvasElement) {
     })
     const pn = json.plate_normalized as { display?: string } | null | undefined
     const normalized = pn?.display ?? (json.plate as string) ?? ''
-    editedPlate.value = String(normalized).toUpperCase().trim()
+    editedPlate.value = sanitizePlateInput(String(normalized))
     ocrMethod.value =
       json.method === 'ocr'
         ? 'OCR'
         : json.method === 'unavailable'
-          ? 'غير متاح — أدخل يدوياً'
-          : 'استخراج جزئي'
+          ? 'محرك OCR غير متاح على الخادم'
+          : json.method === 'ocr_failed'
+            ? 'تعذّر القراءة التلقائية — راجع الصورة أو أدخل يدوياً'
+            : json.method === 'ocr_unparsed'
+              ? 'OCR (لم يُطابق نمط لوحة سعودي)'
+              : 'استخراج جزئي'
     if (!json.success && json.error) {
       error.value = String(json.error)
     }
     if (json.vehicle) {
       resolveInfo.value = json.vehicle as NonNullable<typeof resolveInfo.value>
     }
+    ocrConfidence.value = estimatePlateConfidence(editedPlate.value, Boolean(json.success))
   } catch {
     editedPlate.value = ''
+    ocrConfidence.value = null
     error.value = 'تعذّر الاتصال بالخادم — أدخل اللوحة يدوياً'
   } finally {
     processing.value = false
@@ -298,7 +310,7 @@ async function processImage(canvas: HTMLCanvasElement) {
 }
 
 function confirm() {
-  const p = editedPlate.value.trim().toUpperCase()
+  const p = sanitizePlateInput(editedPlate.value)
   if (!p) return
   emit('plate', p)
   emit('resolved', {
@@ -316,6 +328,7 @@ function retake() {
   error.value = ''
   resolveInfo.value = null
   ocrMethod.value = ''
+  ocrConfidence.value = null
   startCamera()
 }
 
@@ -326,6 +339,30 @@ function close() {
   extracted.value = false
   editedPlate.value = ''
   error.value = ''
+  ocrConfidence.value = null
+}
+
+const canConfirm = computed(() => {
+  const value = sanitizePlateInput(editedPlate.value)
+  if (!value) return false
+  if (!ocrMethod.value) return true
+  return estimatePlateConfidence(value, true) >= 0.55
+})
+
+function sanitizePlateInput(value: string): string {
+  const upper = String(value || '').toUpperCase().trim()
+  const compact = upper.replace(/[^A-Z0-9]/g, '')
+  const match = compact.match(/^([A-Z]{3})(\d{4})$/)
+  if (!match) return upper
+  return `${match[1]} ${match[2]}`
+}
+
+function estimatePlateConfidence(value: string, success: boolean): number {
+  const compact = value.replace(/[^A-Z0-9]/g, '')
+  if (!success) return 0.35
+  if (/^[A-Z]{3}\d{4}$/.test(compact)) return 0.96
+  if (/^[A-Z]{2,3}\d{3,4}$/.test(compact)) return 0.72
+  return 0.5
 }
 
 onUnmounted(stopCamera)

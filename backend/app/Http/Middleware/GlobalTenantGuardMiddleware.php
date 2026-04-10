@@ -26,7 +26,14 @@ class GlobalTenantGuardMiddleware
 
         $company = $user->company;
 
-        if (! $company || $company->status === CompanyStatus::Suspended) {
+        if (! $company) {
+            return response()->json([
+                'message'  => 'Company not found for this user. The account may be orphaned — run seeders or fix company_id.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
+        if ($company->status === CompanyStatus::Suspended) {
             return response()->json([
                 'message'  => 'Company account is suspended.',
                 'trace_id' => app('trace_id'),

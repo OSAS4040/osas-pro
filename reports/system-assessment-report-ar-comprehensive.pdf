@@ -1,0 +1,668 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+2 0 obj
+<< /Length 4477 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (# 'D*B1J1 'D91(J 'D4'ED H'D/BJB  *BJJE 'DF8'E 'DB'&E A9DJK') Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (## *91JA 'D*B1J1) Tj
+1 0 0 1 40 760 Tm () Tj
+1 0 0 1 40 746 Tm (- **G/A 'D*B1J1:** *BJJE H'B9J E('41 DDF8'E 'D-'DJ CE' GH EFA0 A9DJK'.) Tj
+1 0 0 1 40 732 Tm (- **FH9G:** *FAJ0J + *BFJ + 1B'(J + '3*1'*J,J.) Tj
+1 0 0 1 40 718 Tm (- **EFG,J*G:** Evidence-based AB7 \((/HF 'A*1'6'* E3*B(DJ) :J1 EFA0)\).) Tj
+1 0 0 1 40 704 Tm (- **F7'BG:** UI / DB / API / Services / Permissions / Workflows / Jobs / Architecture /) Tj
+1 0 0 1 40 690 Tm (Intelligence / Multi-vertical readiness.) Tj
+1 0 0 1 40 676 Tm () Tj
+1 0 0 1 40 662 Tm (---) Tj
+1 0 0 1 40 648 Tm () Tj
+1 0 0 1 40 634 Tm (## \(1\) 'D.D'5) 'D*FAJ0J) 'DE.*51) ,/K' DD%/'1)) Tj
+1 0 0 1 40 620 Tm () Tj
+1 0 0 1 40 606 Tm (### 'D5H1) 'D-BJBJ) 'D-'DJ)) Tj
+1 0 0 1 40 592 Tm (- 'DF8'E **BHJ *4:JDJK'** AJ 'DFH') 'D-'DJ) \(POS 'DAH'*J1 'DE.2HF #H'E1 'D9ED 'DE-'A8) Tj
+1 0 0 1 40 578 Tm ('4*1'C'* #3'3J)\).) Tj
+1 0 0 1 40 564 Tm (- JH,/ **92D E3*#,1JF** A9DJ E*9// 'D41C'*/'DA1H9.) Tj
+1 0 0 1 40 550 Tm (- *H,/ **7(B) 0C'! *4:JDJ** \(BH'9/ + E$41'* + *F(JG'* + -HCE) B1'1 /'.DJ)\) DCFG' DJ3* ML/LLM) Tj
+1 0 0 1 40 536 Tm (%F*',J).) Tj
+1 0 0 1 40 522 Tm (- 'D*C'ED'* H'D(FJ) 'D.DAJ) EH,H/) DCF 'D'*3'B H'D-HCE) :J1 EC*EDJF AJ CD 'DE3'1'* 'D-3'3).) Tj
+1 0 0 1 40 508 Tm () Tj
+1 0 0 1 40 494 Tm (### E' *E %F,'2G A9DJK') Tj
+1 0 0 1 40 480 Tm (- FH') *4:JDJ) E'DJ)/*4:JDJ) B'(D) DD'3*./'E.) Tj
+1 0 0 1 40 466 Tm (- Jobs/Scheduler/Queues *9ED.) Tj
+1 0 0 1 40 452 Tm (- (H'('* 9EJD/#37HD A9'D).) Tj
+1 0 0 1 40 438 Tm (- *B'1J1 HBI #3'3J) E*'-).) Tj
+1 0 0 1 40 424 Tm () Tj
+1 0 0 1 40 410 Tm (### E' DE JC*ED) Tj
+1 0 0 1 40 396 Tm (- E5AHA) 5D'-J'* granular EH-/) 9DI CD 'D9EDJ'* 'D-3'3).) Tj
+1 0 0 1 40 382 Tm (- *H-J/ C'ED DE5AHA'* 'D-'D'* H'D'F*B'D'* 9(1 ,EJ9 'DH-/'*.) Tj
+1 0 0 1 40 368 Tm (- E1C2 ',*E'9'* H*9'HF E$33J/E1&J A9DJ.) Tj
+1 0 0 1 40 354 Tm (- 7(B) *.5J5 9EJB E*9//) 'D#F47) \(Core + Config model\) (4CD EC*ED.) Tj
+1 0 0 1 40 340 Tm () Tj
+1 0 0 1 40 326 Tm (### #GE 'DA,H'* 'D-1,)) Tj
+1 0 0 1 40 312 Tm (1. A,H'* AJ *:7J) 'D5D'-J'* 9DI E3'1'* -1,).) Tj
+1 0 0 1 40 298 Tm (2. *('JF 51'E) transitions (JF 'DH-/'*.) Tj
+1 0 0 1 40 284 Tm (3. F6, ,2&J D(96 'D*C'ED'*/'DE1'B() 'D/'.DJ).) Tj
+1 0 0 1 40 270 Tm (4. :J'( EH/JHD 'D',*E'9'* 'DE$33J).) Tj
+1 0 0 1 40 256 Tm (5. A,H) (JF *H5JA 'D0C'! H'D0C'! 'D*HDJ/J 'DA9DJ.) Tj
+1 0 0 1 40 242 Tm () Tj
+1 0 0 1 40 228 Tm (### #GE 'DE.'71) Tj
+1 0 0 1 40 214 Tm (- 1B'(J)/E'DJ): E1*A9) 9F/ 'D*H39 (/HF hardening DD5D'-J'*.) Tj
+1 0 0 1 40 200 Tm (- *4:JDJ): E*H37)-E1*A9) 9F/ 69A 'DE1'B() 'DEH-/) /'.D 'DEF*,.) Tj
+1 0 0 1 40 186 Tm (- '3*1'*J,J): E1*A9) %0' *E *H3J9 'DB7'9'* B(D 7(B) *.5J5 EH-/).) Tj
+1 0 0 1 40 172 Tm () Tj
+1 0 0 1 40 158 Tm (### E' JECF 'D'9*E'/ 9DJG 'D"F) Tj
+1 0 0 1 40 144 Tm (- 'DFH') 'D*4:JDJ) DDF4'7 'D-'DJ.) Tj
+1 0 0 1 40 130 Tm (- 'DE3'1'* 'DE'DJ) 'D#3'3J) E9 1B'() *4:JDJ) EF'3().) Tj
+1 0 0 1 40 116 Tm () Tj
+1 0 0 1 40 102 Tm (### E' D' JECF 'D'9*E'/ 9DJG 'D"F) Tj
+1 0 0 1 40 88 Tm (- ,'G2J) 9'DEJ) Enterprise E*9//) 'DB7'9'*.) Tj
+1 0 0 1 40 74 Tm (- E1C2 ',*E'9'*/*9'HF E1&J E*C'ED.) Tj
+1 0 0 1 40 60 Tm (- 0C'! LLM/RAG/ML %F*',J E-CHE.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Length 2829 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm () Tj
+1 0 0 1 40 788 Tm (### E' J,( %JB'A 'D*H39 AHBG) Tj
+1 0 0 1 40 774 Tm (- #J *H39 9EJB AHB E3'1'* -3'3) B(D %:D'B A,H'*:) Tj
+1 0 0 1 40 760 Tm (  - 'D5D'-J'*) Tj
+1 0 0 1 40 746 Tm (  - transitions) Tj
+1 0 0 1 40 732 Tm (  - 'D*C'ED'*/'DE1'B()) Tj
+1 0 0 1 40 718 Tm () Tj
+1 0 0 1 40 704 Tm (---) Tj
+1 0 0 1 40 690 Tm () Tj
+1 0 0 1 40 676 Tm (## \(2\) E5'/1 'D#/D) 'DE9*E/)) Tj
+1 0 0 1 40 662 Tm () Tj
+1 0 0 1 40 648 Tm (### 'DH',G) 'D.DAJ)) Tj
+1 0 0 1 40 634 Tm (- `backend/routes/api.php`) Tj
+1 0 0 1 40 620 Tm (- `backend/app/Http/Controllers/Api/V1/**`) Tj
+1 0 0 1 40 606 Tm (- `backend/app/Services/**`) Tj
+1 0 0 1 40 592 Tm (- `backend/app/Models/**`) Tj
+1 0 0 1 40 578 Tm (- `backend/bootstrap/app.php`) Tj
+1 0 0 1 40 564 Tm (- `backend/config/permissions.php`) Tj
+1 0 0 1 40 550 Tm (- `backend/app/Policies/**`) Tj
+1 0 0 1 40 536 Tm (- `backend/app/Http/Middleware/**`) Tj
+1 0 0 1 40 522 Tm (- `backend/routes/console.php`) Tj
+1 0 0 1 40 508 Tm () Tj
+1 0 0 1 40 494 Tm (### B'9/) 'D(J'F'*) Tj
+1 0 0 1 40 480 Tm (- `backend/database/migrations/**` \(-H'DJ 77 migration\)) Tj
+1 0 0 1 40 466 Tm () Tj
+1 0 0 1 40 452 Tm (### 'DH',G) 'D#E'EJ)) Tj
+1 0 0 1 40 438 Tm (- `frontend/src/router/index.ts`) Tj
+1 0 0 1 40 424 Tm (- `frontend/src/views/**`) Tj
+1 0 0 1 40 410 Tm (- `frontend/src/layouts/**`) Tj
+1 0 0 1 40 396 Tm (- `frontend/src/components/**`) Tj
+1 0 0 1 40 382 Tm (- `frontend/src/stores/**`) Tj
+1 0 0 1 40 368 Tm (- `frontend/src/composables/**`) Tj
+1 0 0 1 40 354 Tm () Tj
+1 0 0 1 40 340 Tm (### 'D*4:JD H'D(FJ)) Tj
+1 0 0 1 40 326 Tm (- `docker-compose.yml`) Tj
+1 0 0 1 40 312 Tm (- `backend/config/database.php`) Tj
+1 0 0 1 40 298 Tm (- `backend/config/cache.php`) Tj
+1 0 0 1 40 284 Tm (- `scripts/**`) Tj
+1 0 0 1 40 270 Tm (- `load-testing/reports/**`) Tj
+1 0 0 1 40 256 Tm () Tj
+1 0 0 1 40 242 Tm (### 'D'.*('1'*) Tj
+1 0 0 1 40 228 Tm (- `backend/tests/Feature/**`) Tj
+1 0 0 1 40 214 Tm () Tj
+1 0 0 1 40 200 Tm (---) Tj
+1 0 0 1 40 186 Tm () Tj
+1 0 0 1 40 172 Tm (## \(3\) 'D,1/ 'DA9DJ DDF8'E 'D-'DJ) Tj
+1 0 0 1 40 158 Tm () Tj
+1 0 0 1 40 144 Tm (## 3.1 'DH-/'* 'DEC*4A) A9DJK') Tj
+1 0 0 1 40 130 Tm () Tj
+1 0 0 1 40 116 Tm (1. **'DE-'3()**: Ledger, Journal Entries, Chart of Accounts) Tj
+1 0 0 1 40 102 Tm (2. **'DE(J9'* HFB7) 'D(J9**: POS, Invoices, Payments) Tj
+1 0 0 1 40 88 Tm (3. **'DE.2HF H'DE4*1J'***: Products, Inventory, Purchases, Goods Receipts) Tj
+1 0 0 1 40 74 Tm (4. **'D*4:JD**: Work Orders, Bays, Bookings) Tj
+1 0 0 1 40 60 Tm (5. **'D9ED'!**: Customers, Vehicles, CRM components) Tj
+ET
+endstream
+endobj
+4 0 obj
+<< /Length 4577 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (6. **'DEH'1/ 'D(41J)**: Employees, Attendance, Leaves, Salaries, Tasks) Tj
+1 0 0 1 40 788 Tm (7. **'D'4*1'C'* H'D('B'***: Plans, Subscription) Tj
+1 0 0 1 40 774 Tm (8. **'D5D'-J'***: Roles/Permissions/Policies) Tj
+1 0 0 1 40 760 Tm (9. **'D%9/'/'***: Settings + domain config E3'1'* E*A1B)) Tj
+1 0 0 1 40 746 Tm (10. **'D*B'1J1 HDH-'* 'DE9DHE'***: Reports + BI view) Tj
+1 0 0 1 40 732 Tm (11. **'D*F(JG'* H'D%49'1'***: Notifications + Alerts services) Tj
+1 0 0 1 40 718 Tm (12. **'D*C'ED'***: API keys, Webhooks, External APIs, ZATCA) Tj
+1 0 0 1 40 704 Tm (13. **'D*9// 'DE3*#,1J**: Tenant/Branch middleware + scopes) Tj
+1 0 0 1 40 690 Tm (14. **E1C2 'D9EDJ'* 'D0CJ**: Internal Command Center + Phase services) Tj
+1 0 0 1 40 676 Tm (15. **0C'! 'D#9E'D**: Rule/aggregation-based) Tj
+1 0 0 1 40 662 Tm (16. **3HB 'D#F8E) 'D0CJ)**: Plugin marketplace present \(,2&J\)) Tj
+1 0 0 1 40 648 Tm (17. **'D',*E'9'* H'D*9'HF 'DE$33J**: :J1 EH,H/ CEH/JHD E*C'ED) Tj
+1 0 0 1 40 634 Tm () Tj
+1 0 0 1 40 620 Tm (---) Tj
+1 0 0 1 40 606 Tm () Tj
+1 0 0 1 40 592 Tm (## \(4\) E5AHA) 'D1(7 'D%D2'EJ) \(UI / DB / API / Logic / Permissions\)) Tj
+1 0 0 1 40 578 Tm () Tj
+1 0 0 1 40 564 Tm (| 'DH-/) | UI | DB | API | Logic | Permissions | 'D-CE |) Tj
+1 0 0 1 40 550 Tm (|---|---|---|---|---|---|---|) Tj
+1 0 0 1 40 536 Tm (| 'DE-'3() | F9E | F9E | F9E | BHJ | ,2&J | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 522 Tm (| POS/'DAH'*J1 | F9E | F9E | F9E | BHJ | ,2&J | EFA0 ('DC'ED F3(JK' |) Tj
+1 0 0 1 40 508 Tm (| 'DE-'A8/'DE/AH9'* | F9E | F9E | F9E | BHJ ,/K' | ,2&J | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 494 Tm (| 'DE.2HF/'DE4*1J'* | F9E | F9E | F9E | ,J/ | E*H37 | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 480 Tm (| 'D*4:JD | F9E | F9E | F9E | BHJ | E*H37 | EFA0 ('DC'ED F3(JK' |) Tj
+1 0 0 1 40 466 Tm (| 'DEH'1/ 'D(41J) | F9E | F9E | F9E | E*H37 | E*H37 | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 452 Tm (| 'D'4*1'C'* | F9E | F9E | F9E | E*H37 | E*H37 | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 438 Tm (| 'D*B'1J1/BI | F9E | F9E | F9E | E*H37 | ,J/ ,2&JK' | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 424 Tm (| E1C2 'D9EDJ'* 'D0CJ | F9E | F9E | F9E | Rule-based | ,J/ /'.DJK' | ,'G2 *,1J(JK' |) Tj
+1 0 0 1 40 410 Tm (| 3HB 'D#F8E) 'D0CJ) | F9E | F9E | F9E | ,2&J | E*H37 | EH,H/ GJCDJK'/,2&JK' |) Tj
+1 0 0 1 40 396 Tm (| 'D',*E'9'*/'D*9'HF | D' | D' | D' | D' | D' | :J1 EFA0 |) Tj
+1 0 0 1 40 382 Tm () Tj
+1 0 0 1 40 368 Tm (---) Tj
+1 0 0 1 40 354 Tm () Tj
+1 0 0 1 40 340 Tm (## \(5\) 'D4'4'*: EH,H//F'B5/4CDJ) Tj
+1 0 0 1 40 326 Tm () Tj
+1 0 0 1 40 312 Tm (## EH,H/ A9DJK') Tj
+1 0 0 1 40 298 Tm (- F7'B H'39 EF 'D4'4'* 'D*4:JDJ) H'DE'DJ) H'D%/'1J) HBI H'D/9E.) Tj
+1 0 0 1 40 284 Tm () Tj
+1 0 0 1 40 270 Tm (## F'B5) Tj
+1 0 0 1 40 256 Tm (- 4'4)/EH/JHD ',*E'9'* E$33J) E*C'ED \(%F4'!//9H'*/E-'61/B1'1'*/%,1'!'*/#14A)\).) Tj
+1 0 0 1 40 242 Tm () Tj
+1 0 0 1 40 228 Tm (## EH,H/ 4CDJK' #H ,2&JK') Tj
+1 0 0 1 40 214 Tm (- #,2'! EF 'D0C'! AJ marketplace/plugin layer #B1( DGJCD HE-'C') EF 0C'! %F*',J.) Tj
+1 0 0 1 40 200 Tm () Tj
+1 0 0 1 40 186 Tm (---) Tj
+1 0 0 1 40 172 Tm () Tj
+1 0 0 1 40 158 Tm (## \(6\) *-DJD B'9/) 'D(J'F'*: 'DEH,H/ 'DA9DJ HE' J-*',) Tj
+1 0 0 1 40 144 Tm () Tj
+1 0 0 1 40 130 Tm (## EH,H/ A9DJK') Tj
+1 0 0 1 40 116 Tm (- E.77 :FJ J:7J 'DCJ'F'* 'D#3'3J) 'D*4:JDJ)/'DE'DJ)/'D/9E/'D0C'!.) Tj
+1 0 0 1 40 102 Tm (- ,/'HD permission/auth/subscription/api_keys/idempotency/failed_jobs EH,H/).) Tj
+1 0 0 1 40 88 Tm () Tj
+1 0 0 1 40 74 Tm (## J-*', *92J2) Tj
+1 0 0 1 40 60 Tm (- FE0,) #4ED D%9/'/'* 'DF4'7 \(vertical-specific config tables\).) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Length 3023 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (- readiness #9DI DD@ approvals 'DEH-/.) Tj
+1 0 0 1 40 788 Tm (- ,/'HD ',*E'9'*/B1'1'*/E-'61/%,1'!'* \(:J1 EH,H/) CE,EH9) H'6-)\).) Tj
+1 0 0 1 40 774 Tm () Tj
+1 0 0 1 40 760 Tm (---) Tj
+1 0 0 1 40 746 Tm () Tj
+1 0 0 1 40 732 Tm (## \(7\) *-DJD API HControllers HBusiness Logic) Tj
+1 0 0 1 40 718 Tm () Tj
+1 0 0 1 40 704 Tm (## BHJ) Tj
+1 0 0 1 40 690 Tm (- WorkOrderService, WalletService, PaymentService, LedgerService.) Tj
+1 0 0 1 40 676 Tm () Tj
+1 0 0 1 40 662 Tm (## ,2&J) Tj
+1 0 0 1 40 648 Tm (- (96 controllers D' *7(B FA3 51'E) permission/policy matrix.) Tj
+1 0 0 1 40 634 Tm (- transitions AJ (96 'DH-/'* #BD 'F6('7K' EF H-/'* #.1I.) Tj
+1 0 0 1 40 620 Tm () Tj
+1 0 0 1 40 606 Tm (## 'D-CE) Tj
+1 0 0 1 40 592 Tm (- 'DEF7B EH,H/ (BH) DCF 'D*H-J/ Governance-wise :J1 EC*ED.) Tj
+1 0 0 1 40 578 Tm () Tj
+1 0 0 1 40 564 Tm (---) Tj
+1 0 0 1 40 550 Tm () Tj
+1 0 0 1 40 536 Tm (## \(8\) *-DJD 'D-'D'* H'D'F*B'D'* \(Workflow / State Transitions\)) Tj
+1 0 0 1 40 522 Tm () Tj
+1 0 0 1 40 508 Tm (## CJ'F'* BHJ)) Tj
+1 0 0 1 40 494 Tm (- #H'E1 'D9ED: 'F*B'D'* H'6-) HE6(H7).) Tj
+1 0 0 1 40 480 Tm (- 'DE-'A8/'DE/AH9'*: BJH/ E'DJ) BHJ).) Tj
+1 0 0 1 40 466 Tm () Tj
+1 0 0 1 40 452 Tm (## CJ'F'* *-*', tightening) Tj
+1 0 0 1 40 438 Tm (- 'DAH'*J1 \('*3'B 'D'F*B'D'*\).) Tj
+1 0 0 1 40 424 Tm (- 'DE4*1J'*/'D'3*D'E \('*3'B enforce\).) Tj
+1 0 0 1 40 410 Tm (- 'D*0'C1 \(transition graph 5'1E) E7DH()\).) Tj
+1 0 0 1 40 396 Tm (- HR flows \((96 'D-'D'* *-*', enforce #BHI\).) Tj
+1 0 0 1 40 382 Tm () Tj
+1 0 0 1 40 368 Tm (---) Tj
+1 0 0 1 40 354 Tm () Tj
+1 0 0 1 40 340 Tm (## \(9\) E5AHA) 'D5D'-J'* 'D*A5JDJ) \(*FAJ0JK'\)) Tj
+1 0 0 1 40 326 Tm () Tj
+1 0 0 1 40 312 Tm (## E' GH E*'-) Tj
+1 0 0 1 40 298 Tm (- roles/permissions catalog) Tj
+1 0 0 1 40 284 Tm (- middleware permissions) Tj
+1 0 0 1 40 270 Tm (- policies 9DI CJ'F'* #3'3J)) Tj
+1 0 0 1 40 256 Tm () Tj
+1 0 0 1 40 242 Tm (## A,H'* -1,)) Tj
+1 0 0 1 40 228 Tm (- *:7J) :J1 E*,'F3) endpoint-level DD9EDJ'* 'D-3'3).) Tj
+1 0 0 1 40 214 Tm (- (96 'DE3'1'* *9*E/ 9DI auth/tenant (/HF granular permission EH-/).) Tj
+1 0 0 1 40 200 Tm () Tj
+1 0 0 1 40 186 Tm (## 'DE7DH() Tj
+1 0 0 1 40 172 Tm (- route-to-permission audit matrix *DB'&J.) Tj
+1 0 0 1 40 158 Tm (- A5D H'6- (JF:) Tj
+1 0 0 1 40 144 Tm (  - 916) Tj
+1 0 0 1 40 130 Tm (  - %F4'!) Tj
+1 0 0 1 40 116 Tm (  - *9/JD) Tj
+1 0 0 1 40 102 Tm (  - '9*E'/) Tj
+1 0 0 1 40 88 Tm (  - %D:'!/9C3) Tj
+1 0 0 1 40 74 Tm (  - -0A) Tj
+1 0 0 1 40 60 Tm (  - *5/J1/7('9)) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Length 2856 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (  - 'DH5HD 'D-3'3) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (---) Tj
+1 0 0 1 40 760 Tm () Tj
+1 0 0 1 40 746 Tm (## \(10\) 'D*-DJD 'DE-'3(J 'D%D2'EJ) Tj
+1 0 0 1 40 732 Tm () Tj
+1 0 0 1 40 718 Tm (## E' J9ED A9DJK') Tj
+1 0 0 1 40 704 Tm (- BJH/ E-'3(J) E2/H,) 'DBJ/.) Tj
+1 0 0 1 40 690 Tm (- -E'J) 9DI 'DE/AH9'*/'DE-A8).) Tj
+1 0 0 1 40 676 Tm (- 1(7 *4:JDJ-E-'3(J B'&E.) Tj
+1 0 0 1 40 662 Tm () Tj
+1 0 0 1 40 648 Tm (## 'DE.'71 'DE-'3(J)) Tj
+1 0 0 1 40 634 Tm (- '9*E'/ E3'1'* async J-*', monitoring /'&E integrated.) Tj
+1 0 0 1 40 620 Tm (- reconciliation J,( #F JCHF CEJ2) #5DJ) /'&E) /'.D 'DF8'E.) Tj
+1 0 0 1 40 606 Tm (- 5D'-J'* 'D9EDJ'* 'DE-'3(J) 'D-1,) **7D( *-5JF #9DI.) Tj
+1 0 0 1 40 592 Tm () Tj
+1 0 0 1 40 578 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 564 Tm (- **,'G2 ,2&JK' DD%F*',** AJ 'DF7'B 'D-'DJ.) Tj
+1 0 0 1 40 550 Tm () Tj
+1 0 0 1 40 536 Tm (---) Tj
+1 0 0 1 40 522 Tm () Tj
+1 0 0 1 40 508 Tm (## \(11\) 'D*B'1J1 HDH-'* 'DE9DHE'*) Tj
+1 0 0 1 40 494 Tm () Tj
+1 0 0 1 40 480 Tm (## EH,H/ A9DJK') Tj
+1 0 0 1 40 466 Tm (- *B'1J1 9EDJ'*/E'DJ)/E-'3(J).) Tj
+1 0 0 1 40 452 Tm (- BI view.) Tj
+1 0 0 1 40 438 Tm () Tj
+1 0 0 1 40 424 Tm (## F'B5) Tj
+1 0 0 1 40 410 Tm (- *B'1J1 1B'(J) H*FAJ0J) E*B/E) EH-/).) Tj
+1 0 0 1 40 396 Tm (- *B'1J1 ',*E'9'*/B1'1'*/*FAJ0 \(:J1 E*'-\).) Tj
+1 0 0 1 40 382 Tm () Tj
+1 0 0 1 40 368 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 354 Tm (- **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 340 Tm () Tj
+1 0 0 1 40 326 Tm (---) Tj
+1 0 0 1 40 312 Tm () Tj
+1 0 0 1 40 298 Tm (## \(12\) 'D%9/'/'* H'D(J'F'* 'DE1,9J)) Tj
+1 0 0 1 40 284 Tm () Tj
+1 0 0 1 40 270 Tm (## E*'-) Tj
+1 0 0 1 40 256 Tm (- %9/'/'* #3'3J) DD41C'*/'DA1H9/'D.77/(96 'DE1,9J'*.) Tj
+1 0 0 1 40 242 Tm () Tj
+1 0 0 1 40 228 Tm (## F'B5) Tj
+1 0 0 1 40 214 Tm (- Master Data layer EH-/ E*9// 'DB7'9'* \(3J'3'*/BH'D(/*3D3D/#FH'9/*5FJA'*\) (4CD E$33J.) Tj
+1 0 0 1 40 200 Tm () Tj
+1 0 0 1 40 186 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 172 Tm (- **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 158 Tm () Tj
+1 0 0 1 40 144 Tm (---) Tj
+1 0 0 1 40 130 Tm () Tj
+1 0 0 1 40 116 Tm (## \(13\) 'D.DAJ) :J1 'D8'G1) \(Jobs/Queues/Events/Schedulers\)) Tj
+1 0 0 1 40 102 Tm () Tj
+1 0 0 1 40 88 Tm (## EH,H/) Tj
+1 0 0 1 40 74 Tm (- jobs E*9//) scheduler queue tiers failed_jobs handling.) Tj
+1 0 0 1 40 60 Tm () Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Length 2465 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (## A,H'*) Tj
+1 0 0 1 40 788 Tm (- in-app ops monitoring :J1 EC*ED.) Tj
+1 0 0 1 40 774 Tm (- (96 retries/logging AJ 'D*C'ED'* *-*', *-3JF.) Tj
+1 0 0 1 40 760 Tm () Tj
+1 0 0 1 40 746 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 732 Tm (- **EFA0 ,2&JK' BHJ**.) Tj
+1 0 0 1 40 718 Tm () Tj
+1 0 0 1 40 704 Tm (---) Tj
+1 0 0 1 40 690 Tm () Tj
+1 0 0 1 40 676 Tm (## \(14\) E1C2 'D9EDJ'* 'D0CJ) Tj
+1 0 0 1 40 662 Tm () Tj
+1 0 0 1 40 648 Tm (## 'DEH,H/) Tj
+1 0 0 1 40 634 Tm (- command center /'.DJ + alerts/recommendations + governance audit.) Tj
+1 0 0 1 40 620 Tm () Tj
+1 0 0 1 40 606 Tm (## 'DF'B5) Tj
+1 0 0 1 40 592 Tm (- Ops cockpit E$33J -J 4'ED.) Tj
+1 0 0 1 40 578 Tm (- 5D'-J'* */.D *4:JDJ /BJB) HH',G'* *-BJB /'.DJ) #9EB.) Tj
+1 0 0 1 40 564 Tm () Tj
+1 0 0 1 40 550 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 536 Tm (- **,'G2 *,1J(JK'**.) Tj
+1 0 0 1 40 522 Tm () Tj
+1 0 0 1 40 508 Tm (---) Tj
+1 0 0 1 40 494 Tm () Tj
+1 0 0 1 40 480 Tm (## \(15\) 0C'! 'D#9E'D) Tj
+1 0 0 1 40 466 Tm () Tj
+1 0 0 1 40 452 Tm (## 'DEH,H/) Tj
+1 0 0 1 40 438 Tm (- KPIs H*-DJD'* *4:JDJ)/E'DJ).) Tj
+1 0 0 1 40 424 Tm () Tj
+1 0 0 1 40 410 Tm (## 'D-CE) Tj
+1 0 0 1 40 396 Tm (- BI 9EDJ) DCFG' DJ3* E$33J) C'ED).) Tj
+1 0 0 1 40 382 Tm (- *9*E/ #3'3K' 9DI BH'9/ H*,EJ9'*.) Tj
+1 0 0 1 40 368 Tm () Tj
+1 0 0 1 40 354 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 340 Tm (- **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 326 Tm () Tj
+1 0 0 1 40 312 Tm (---) Tj
+1 0 0 1 40 298 Tm () Tj
+1 0 0 1 40 284 Tm (## \(16\) 'D*C'ED'* \(API/Webhooks/Idempotency\)) Tj
+1 0 0 1 40 270 Tm () Tj
+1 0 0 1 40 256 Tm (## 'DEH,H/) Tj
+1 0 0 1 40 242 Tm (- API keys) Tj
+1 0 0 1 40 228 Tm (- external routes) Tj
+1 0 0 1 40 214 Tm (- idempotency middleware) Tj
+1 0 0 1 40 200 Tm (- webhook infrastructure) Tj
+1 0 0 1 40 186 Tm () Tj
+1 0 0 1 40 172 Tm (## 'D,2&J) Tj
+1 0 0 1 40 158 Tm (- retry semantics/consistency J-*','F tightening.) Tj
+1 0 0 1 40 144 Tm (- E1'B() *C'ED'* E1C2J) /'.D 'DEF*, *-*', *92J2.) Tj
+1 0 0 1 40 130 Tm () Tj
+1 0 0 1 40 116 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 102 Tm (- **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 88 Tm () Tj
+1 0 0 1 40 74 Tm (---) Tj
+1 0 0 1 40 60 Tm () Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Length 2902 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (## \(17\) 3HB #F8E) 'D0C'!) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (## 'DEH,H/) Tj
+1 0 0 1 40 760 Tm (- H',G'* marketplace/Plugins.) Tj
+1 0 0 1 40 746 Tm () Tj
+1 0 0 1 40 732 Tm (## 'DH69 'DA9DJ) Tj
+1 0 0 1 40 718 Tm (- 7(B) #B1( %DI plugin ecosystem E9 0C'! B'9/J/E-'C') AJ #,2'!.) Tj
+1 0 0 1 40 704 Tm () Tj
+1 0 0 1 40 690 Tm (## 'DE7DH() Tj
+1 0 0 1 40 676 Tm (- -HCE) *A9JD/'3*./'E/AH*1)/F*'&,/92D (J'F'* 9DI E3*HI E$33J.) Tj
+1 0 0 1 40 662 Tm () Tj
+1 0 0 1 40 648 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 634 Tm (- **EH,H/ GJCDJK' + ,2&J H8JAJK'**.) Tj
+1 0 0 1 40 620 Tm () Tj
+1 0 0 1 40 606 Tm (---) Tj
+1 0 0 1 40 592 Tm () Tj
+1 0 0 1 40 578 Tm (## \(18\) E1C2 'D',*E'9'* H'D*9'HF 'DE$33J/'DE1&J) Tj
+1 0 0 1 40 564 Tm () Tj
+1 0 0 1 40 550 Tm (## 'DH'B9 'D-'DJ) Tj
+1 0 0 1 40 536 Tm (- :J1 EH,H/ A9DJK' CEH/JHD E3*BD.) Tj
+1 0 0 1 40 522 Tm () Tj
+1 0 0 1 40 508 Tm (## MVP "EF EB*1-) Tj
+1 0 0 1 40 494 Tm (1. ',*E'9 \(AH1J/E,/HD\)) Tj
+1 0 0 1 40 480 Tm (2. -6H1/:J'() Tj
+1 0 0 1 40 466 Tm (3. E-61) Tj
+1 0 0 1 40 452 Tm (4. B1'1'*) Tj
+1 0 0 1 40 438 Tm (5. %,1'!'* F'*,) \(Action Items\)) Tj
+1 0 0 1 40 424 Tm (6. 1(7 CJ'FJ \(WorkOrder/Invoice/Ticket/HR\)) Tj
+1 0 0 1 40 410 Tm (7. 5D'-J'* -3'3J)/'9*E'/) Tj
+1 0 0 1 40 396 Tm (8. *B'1J1 *FAJ0 'DB1'1'*) Tj
+1 0 0 1 40 382 Tm () Tj
+1 0 0 1 40 368 Tm (## E' J$,D) Tj
+1 0 0 1 40 354 Tm (- 'D*3,JD 'DE1&J 'DC'ED) Tj
+1 0 0 1 40 340 Tm (- 'D*A1J: 'DF5J) Tj
+1 0 0 1 40 326 Tm (- 'D*D.J5 'D0CJ 'D"DJ) Tj
+1 0 0 1 40 312 Tm (- '3*.1', 'DB1'1'* *DB'&JK') Tj
+1 0 0 1 40 298 Tm () Tj
+1 0 0 1 40 284 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 270 Tm (- **:J1 EFA0** \(E9 B'(DJ) *FAJ0 EF.A6) 'DE.'71 9DI E1'-D\).) Tj
+1 0 0 1 40 256 Tm () Tj
+1 0 0 1 40 242 Tm (---) Tj
+1 0 0 1 40 228 Tm () Tj
+1 0 0 1 40 214 Tm (## \(19\) C4A 'D*C1'1 H'D9F'51 'DJ*JE)/'DEJ*)) Tj
+1 0 0 1 40 200 Tm () Tj
+1 0 0 1 40 186 Tm (## E' 1O5/ E(/&JK') Tj
+1 0 0 1 40 172 Tm (- '-*E'D'* '.*D'A *3EJ)/'*3'B (JF (96 7(B'* 'D916 H'DEF7B.) Tj
+1 0 0 1 40 158 Tm (- '-*E'D'* (B'J' GJCDJ) AJ #,2'! plugins/intelligence.) Tj
+1 0 0 1 40 144 Tm () Tj
+1 0 0 1 40 130 Tm (## 'DE7DH() Tj
+1 0 0 1 40 116 Tm (- pass "DJ 4'ED D'C*4'A:) Tj
+1 0 0 1 40 102 Tm (  - dead routes) Tj
+1 0 0 1 40 88 Tm (  - orphan tables/fields) Tj
+1 0 0 1 40 74 Tm (  - unused services/components) Tj
+1 0 0 1 40 60 Tm () Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Length 2627 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (## 'D*5FJA) Tj
+1 0 0 1 40 788 Tm (- **J-*', *-BB %6'AJ**.) Tj
+1 0 0 1 40 774 Tm () Tj
+1 0 0 1 40 760 Tm (---) Tj
+1 0 0 1 40 746 Tm () Tj
+1 0 0 1 40 732 Tm (## \(20\) 'D/JHF 'D*BFJ) H'DE9E'1J)) Tj
+1 0 0 1 40 718 Tm () Tj
+1 0 0 1 40 704 Tm (1. Authorization coverage :J1 EH-/).) Tj
+1 0 0 1 40 690 Tm (2. Workflow enforcement :J1 E*,'F3.) Tj
+1 0 0 1 40 676 Tm (3. Monitoring 'D/'.DJ :J1 C'AM CE1C2 9EDJ'* E$33J.) Tj
+1 0 0 1 40 662 Tm (4. :J'( approval engine EH-/.) Tj
+1 0 0 1 40 648 Tm (5. :J'( meetings module.) Tj
+1 0 0 1 40 634 Tm (6. multi-vertical config architecture :J1 EC*ED).) Tj
+1 0 0 1 40 620 Tm () Tj
+1 0 0 1 40 606 Tm (---) Tj
+1 0 0 1 40 592 Tm () Tj
+1 0 0 1 40 578 Tm (## \(21\) 'D*BFJ'* 'DE3*./E) A9DJK') Tj
+1 0 0 1 40 564 Tm () Tj
+1 0 0 1 40 550 Tm (- Frontend: Vue ecosystem) Tj
+1 0 0 1 40 536 Tm (- Backend: Laravel) Tj
+1 0 0 1 40 522 Tm (- DB: PostgreSQL) Tj
+1 0 0 1 40 508 Tm (- Cache/Queue: Redis) Tj
+1 0 0 1 40 494 Tm (- Scheduler/Jobs: Laravel queue/schedule) Tj
+1 0 0 1 40 480 Tm (- Auth: Sanctum + API keys) Tj
+1 0 0 1 40 466 Tm (- Infra: Docker compose) Tj
+1 0 0 1 40 452 Tm (- Testing: Feature tests) Tj
+1 0 0 1 40 438 Tm (- Monitoring: Sentry config + *4:JD 9(1 scripts/load-testing) Tj
+1 0 0 1 40 424 Tm () Tj
+1 0 0 1 40 410 Tm (---) Tj
+1 0 0 1 40 396 Tm () Tj
+1 0 0 1 40 382 Tm (## \(22\) #F8E) 'D0C'! 'DE3*./E) HCJA *O7HQ1 -'DJK') Tj
+1 0 0 1 40 368 Tm () Tj
+1 0 0 1 40 354 Tm (## 'DEH,H/) Tj
+1 0 0 1 40 340 Tm (- rule-based intelligence) Tj
+1 0 0 1 40 326 Tm (- internal command center) Tj
+1 0 0 1 40 312 Tm (- explainability/governance artifacts) Tj
+1 0 0 1 40 298 Tm () Tj
+1 0 0 1 40 284 Tm (## :J1 'DEH,H/) Tj
+1 0 0 1 40 270 Tm (- LLM runtime) Tj
+1 0 0 1 40 256 Tm (- RAG pipeline) Tj
+1 0 0 1 40 242 Tm (- ML lifecycle) Tj
+1 0 0 1 40 228 Tm () Tj
+1 0 0 1 40 214 Tm (## 'D*EJJ2 'D51J-) Tj
+1 0 0 1 40 200 Tm (- 'D0C'! 'D-'DJ = BH'9/ + *-DJD'* + *F(JG'*.) Tj
+1 0 0 1 40 186 Tm (- DJ3 = *HDJ//'3*/D'D D:HJ E*B/E production-grade.) Tj
+1 0 0 1 40 172 Tm () Tj
+1 0 0 1 40 158 Tm (---) Tj
+1 0 0 1 40 144 Tm () Tj
+1 0 0 1 40 130 Tm (## \(23\) *BJJE 'DF6,) Tj
+1 0 0 1 40 116 Tm () Tj
+1 0 0 1 40 102 Tm (| 'DE-H1 | E3*HI 'DF6, \(*B1J(J\) |) Tj
+1 0 0 1 40 88 Tm (|---|---|) Tj
+1 0 0 1 40 74 Tm (| 'DE-'3() | 3.5/5 |) Tj
+1 0 0 1 40 60 Tm (| 'D*4:JD | 3.5/5 |) Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Length 3123 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (| 'DEH'1/ 'D(41J) | 2.8/5 |) Tj
+1 0 0 1 40 788 Tm (| 'D5D'-J'*/'D-HCE) | 2.7/5 |) Tj
+1 0 0 1 40 774 Tm (| 'DE9E'1J) | 3.4/5 |) Tj
+1 0 0 1 40 760 Tm (| 'DB'(DJ) DD*H39 | 3.2/5 |) Tj
+1 0 0 1 40 746 Tm (| 'D*.5J5 E*9// 'D#F47) | 2.3/5 |) Tj
+1 0 0 1 40 732 Tm (| 'D*B'1J1/BI | 3.0/5 |) Tj
+1 0 0 1 40 718 Tm (| 'D0C'! | 2.6/5 |) Tj
+1 0 0 1 40 704 Tm (| 'D*C'ED'* | 2.9/5 |) Tj
+1 0 0 1 40 690 Tm (| E1C2 'D9EDJ'* 'D0CJ | 2.7/5 |) Tj
+1 0 0 1 40 676 Tm (| 'D',*E'9'* 'DE$33J) | 1.0/5 |) Tj
+1 0 0 1 40 662 Tm () Tj
+1 0 0 1 40 648 Tm (---) Tj
+1 0 0 1 40 634 Tm () Tj
+1 0 0 1 40 620 Tm (## \(24\) 'D*BJJE 'D'3*1'*J,J H'DEJ2) 'D*F'A3J)) Tj
+1 0 0 1 40 606 Tm () Tj
+1 0 0 1 40 592 Tm (## E' 'D0J JFB5 DJ5(- 9'DEJK') Tj
+1 0 0 1 40 578 Tm (1. Governance #BHI DD5D'-J'* H'D'9*E'/'*.) Tj
+1 0 0 1 40 564 Tm (2. Configurable core E*9// 'DB7'9'*.) Tj
+1 0 0 1 40 550 Tm (3. Approval engine E$33J.) Tj
+1 0 0 1 40 536 Tm (4. AI production layer -BJBJ).) Tj
+1 0 0 1 40 522 Tm (5. Meetings module E1*(7 ('D*FAJ0 H'D-HCE).) Tj
+1 0 0 1 40 508 Tm () Tj
+1 0 0 1 40 494 Tm (## 'DEJ2) 'D*F'A3J) 'DA9DJ) 'DEECF)) Tj
+1 0 0 1 40 480 Tm (- FH') E'DJ)/*4:JDJ) EH-/) + 0C'! *4:JDJ B'(D DD*A3J1 + -HCE) B1'1 + *.5J5 B7'9J 9EJB.) Tj
+1 0 0 1 40 466 Tm () Tj
+1 0 0 1 40 452 Tm (---) Tj
+1 0 0 1 40 438 Tm () Tj
+1 0 0 1 40 424 Tm (## \(25\) .'17) 'D71JB 'D*FAJ0J)) Tj
+1 0 0 1 40 410 Tm () Tj
+1 0 0 1 40 396 Tm (## 'DE1-D) 1 \(%D2'EJ) B(D 'D*H39\)) Tj
+1 0 0 1 40 382 Tm (1. hardening DD5D'-J'* endpoint-by-endpoint.) Tj
+1 0 0 1 40 368 Tm (2. *H-J/ state transitions.) Tj
+1 0 0 1 40 354 Tm (3. tightening DD*C'ED'* H'DE1'B().) Tj
+1 0 0 1 40 340 Tm (4. DH-'* 1B'(J) /'.DJ) DD@ queues/failed/reconciliation.) Tj
+1 0 0 1 40 326 Tm () Tj
+1 0 0 1 40 312 Tm (## 'DE1-D) 2 \(Quick Wins\)) Tj
+1 0 0 1 40 298 Tm (1. permission coverage report.) Tj
+1 0 0 1 40 284 Tm (2. reconciliation dashboards.) Tj
+1 0 0 1 40 270 Tm (3. BI metric dictionary.) Tj
+1 0 0 1 40 256 Tm (4. Meetings MVP F5J EF.A6 'DE.'71.) Tj
+1 0 0 1 40 242 Tm () Tj
+1 0 0 1 40 228 Tm (## 'DE1-D) 3 \(E$33J)\)) Tj
+1 0 0 1 40 214 Tm (1. approval engine.) Tj
+1 0 0 1 40 200 Tm (2. configurable multi-vertical profiles.) Tj
+1 0 0 1 40 186 Tm (3. master data governance.) Tj
+1 0 0 1 40 172 Tm () Tj
+1 0 0 1 40 158 Tm (## 'DE1-D) 4 \(0C'! E*B/E\)) Tj
+1 0 0 1 40 144 Tm (1. LLM/RAG governed layer.) Tj
+1 0 0 1 40 130 Tm (2. sector-intelligence packs.) Tj
+1 0 0 1 40 116 Tm (3. meetings intelligence \(summary/action extraction\).) Tj
+1 0 0 1 40 102 Tm () Tj
+1 0 0 1 40 88 Tm (---) Tj
+1 0 0 1 40 74 Tm () Tj
+1 0 0 1 40 60 Tm (## \(26\) %6'A'* 31J9) EF.A6) 'D*#+J1) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Length 2003 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm () Tj
+1 0 0 1 40 788 Tm (1. DH-) 5-) 'DE3'1'* 'D-1,).) Tj
+1 0 0 1 40 774 Tm (2. *B1J1 AH1J DDA,H'* AJ 'D5D'-J'*.) Tj
+1 0 0 1 40 760 Tm (3. reconciliation monitor.) Tj
+1 0 0 1 40 746 Tm (4. *F(JG'* queue-reserved slope.) Tj
+1 0 0 1 40 732 Tm (5. Meetings MVP (/HF AJ/JH.) Tj
+1 0 0 1 40 718 Tm (6. Dashboard D*FAJ0 'DB1'1'* \((9/ MVP meetings\).) Tj
+1 0 0 1 40 704 Tm () Tj
+1 0 0 1 40 690 Tm (---) Tj
+1 0 0 1 40 676 Tm () Tj
+1 0 0 1 40 662 Tm (## \(27\) FB'7 *-*', *-BB %6'AJ) Tj
+1 0 0 1 40 648 Tm () Tj
+1 0 0 1 40 634 Tm (1. E5AHA) 5D'-J'* endpoint-level C'ED) \("DJK'\).) Tj
+1 0 0 1 40 620 Tm (2. C4A 4'ED dead/orphan artifacts.) Tj
+1 0 0 1 40 606 Tm (3. BJ'3 /BJB test coverage EB'(D 'DE.'71.) Tj
+1 0 0 1 40 592 Tm (4. A-5 B7'9J E.55 \(5J/DJ'*/ED'(3/3H(1E'1C*\) 9(1 3JF'1JHG'* (J'F'* H*4:JD.) Tj
+1 0 0 1 40 578 Tm () Tj
+1 0 0 1 40 564 Tm (---) Tj
+1 0 0 1 40 550 Tm () Tj
+1 0 0 1 40 536 Tm (## \(28\) 'D.D'5) 'DFG'&J) DDA1JB 'D*FAJ0J H'D*BFJ) Tj
+1 0 0 1 40 522 Tm () Tj
+1 0 0 1 40 508 Tm (- 'DF8'E **EF'3( DD*4:JD 'D-'DJ** HJE*DC #3'3K' BHJK'.) Tj
+1 0 0 1 40 494 Tm (- 'D*H39 'DC(J1 J,( #F J3(BG %:D'B A,H'* 'D-HCE) H'D5D'-J'* H'D'*3'B 'D*4:JDJ.) Tj
+1 0 0 1 40 480 Tm (- D*-BJB EF5) 9'DEJ) E*9//) 'DB7'9'*:) Tj
+1 0 0 1 40 466 Tm (  - '(FP Core EH-/K') Tj
+1 0 0 1 40 452 Tm (  - #6A Config layer E-CE)) Tj
+1 0 0 1 40 438 Tm (  - A9QD Approval engine) Tj
+1 0 0 1 40 424 Tm (  - 7HQ1 AI -BJBJ) E-CHE)) Tj
+1 0 0 1 40 410 Tm (  - #7DB Meetings module E1*(7K' ('DB1'1'* H'D*FAJ0) Tj
+1 0 0 1 40 396 Tm () Tj
+1 0 0 1 40 382 Tm () Tj
+ET
+endstream
+endobj
+12 0 obj
+<< /Type /Pages /Count 10 /Kids [ 13 0 R 14 0 R 15 0 R 16 0 R 17 0 R 18 0 R 19 0 R 20 0 R 21 0 R 22 0 R ] >>
+endobj
+13 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+14 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 3 0 R >>
+endobj
+15 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+16 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 5 0 R >>
+endobj
+17 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+18 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 7 0 R >>
+endobj
+19 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+20 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 9 0 R >>
+endobj
+21 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 10 0 R >>
+endobj
+22 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 11 0 R >>
+endobj
+23 0 obj
+<< /Type /Catalog /Pages 12 0 R >>
+endobj
+xref
+0 24
+0000000000 65535 f 
+0000000009 00000 n 
+0000000077 00000 n 
+0000004606 00000 n 
+0000007487 00000 n 
+0000012116 00000 n 
+0000015191 00000 n 
+0000018099 00000 n 
+0000020616 00000 n 
+0000023570 00000 n 
+0000026249 00000 n 
+0000029425 00000 n 
+0000031481 00000 n 
+0000031606 00000 n 
+0000031734 00000 n 
+0000031862 00000 n 
+0000031990 00000 n 
+0000032118 00000 n 
+0000032246 00000 n 
+0000032374 00000 n 
+0000032502 00000 n 
+0000032630 00000 n 
+0000032759 00000 n 
+0000032888 00000 n 
+trailer
+<< /Size 24 /Root 23 0 R >>
+startxref
+32939
+%%EOF

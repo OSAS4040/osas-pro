@@ -9,7 +9,8 @@
     <!-- Quick Access Chips -->
     <div class="flex flex-wrap gap-2">
       <RouterLink v-for="q in quickLinks" :key="q.label" :to="q.to"
-        class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 hover:bg-orange-50 hover:border-orange-300 transition-colors shadow-sm">
+                  class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 hover:bg-orange-50 hover:border-orange-300 transition-colors shadow-sm"
+      >
         <component :is="q.icon" class="w-3.5 h-3.5 text-gray-500" />
         {{ q.label }}
       </RouterLink>
@@ -53,9 +54,10 @@
             <svg viewBox="0 0 36 36" class="w-24 h-24 -rotate-90">
               <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e5e7eb" stroke-width="3" />
               <circle v-for="(seg, i) in donutSegments" :key="i"
-                cx="18" cy="18" r="15.9" fill="none" :stroke="seg.color" stroke-width="3"
-                :stroke-dasharray="`${seg.dash} 100`"
-                :stroke-dashoffset="`-${seg.offset}`" stroke-linecap="round" />
+                      cx="18" cy="18" r="15.9" fill="none" :stroke="seg.color" stroke-width="3"
+                      :stroke-dasharray="`${seg.dash} 100`"
+                      :stroke-dashoffset="`-${seg.offset}`" stroke-linecap="round"
+              />
             </svg>
             <div class="absolute inset-0 flex items-center justify-center">
               <p class="text-sm font-bold text-gray-900">{{ kpi.totalVehicles }}</p>
@@ -80,7 +82,8 @@
       <div class="flex items-end gap-1.5 h-20">
         <div v-for="(d, i) in weekDays" :key="i" class="flex-1 flex flex-col items-center gap-1">
           <div class="w-full rounded-sm bg-purple-400 transition-all"
-            :style="{ height: `${Math.max(d * 14, 3)}px`, opacity: d === 0 ? 0.3 : 1 }"></div>
+               :style="{ height: `${Math.max(d * 14, 3)}px`, opacity: d === 0 ? 0.3 : 1 }"
+          ></div>
           <span class="text-[10px] text-gray-400">{{ weekLabels[i] }}</span>
         </div>
       </div>
@@ -89,28 +92,32 @@
     <!-- 4 Nav Cards -->
     <div class="grid grid-cols-2 gap-3">
       <RouterLink to="/customer/bookings"
-        class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center gap-2 hover:border-orange-300 hover:shadow-md transition-all">
+                  class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center gap-2 hover:border-orange-300 hover:shadow-md transition-all"
+      >
         <div class="w-11 h-11 bg-orange-100 rounded-xl flex items-center justify-center">
           <CalendarDaysIcon class="w-6 h-6 text-orange-600" />
         </div>
         <span class="text-xs font-semibold text-gray-800">حجز موعد</span>
       </RouterLink>
       <RouterLink to="/customer/vehicles"
-        class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center gap-2 hover:border-orange-300 hover:shadow-md transition-all">
+                  class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center gap-2 hover:border-orange-300 hover:shadow-md transition-all"
+      >
         <div class="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center">
           <TruckIcon class="w-6 h-6 text-purple-600" />
         </div>
         <span class="text-xs font-semibold text-gray-800">مركباتي</span>
       </RouterLink>
       <RouterLink to="/customer/invoices"
-        class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center gap-2 hover:border-orange-300 hover:shadow-md transition-all">
+                  class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center gap-2 hover:border-orange-300 hover:shadow-md transition-all"
+      >
         <div class="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center">
           <DocumentTextIcon class="w-6 h-6 text-green-600" />
         </div>
         <span class="text-xs font-semibold text-gray-800">فواتيري</span>
       </RouterLink>
       <RouterLink to="/customer"
-        class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center gap-2 hover:border-orange-300 hover:shadow-md transition-all">
+                  class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center gap-2 hover:border-orange-300 hover:shadow-md transition-all"
+      >
         <div class="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center">
           <ChatBubbleLeftRightIcon class="w-6 h-6 text-blue-600" />
         </div>
@@ -126,7 +133,7 @@ import { RouterLink } from 'vue-router'
 import {
   TruckIcon, CreditCardIcon, StarIcon, CalendarDaysIcon,
   DocumentTextIcon, ChatBubbleLeftRightIcon, ClipboardDocumentListIcon,
-  WrenchScrewdriverIcon, CurrencyDollarIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 

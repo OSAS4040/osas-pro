@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Service\StoreServiceRequest;
 use App\Http\Requests\Service\UpdateServiceRequest;
 use App\Models\Service;
+use App\Services\Config\VerticalBehaviorResolverService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,6 +15,8 @@ use Illuminate\Http\Request;
  */
 class ServiceController extends Controller
 {
+    public function __construct(private readonly VerticalBehaviorResolverService $behaviorResolver) {}
+
     /**
      * @OA\Get(
      *     path="/api/v1/services",
@@ -60,11 +63,21 @@ class ServiceController extends Controller
      */
     public function store(StoreServiceRequest $request): JsonResponse
     {
+        $user = $request->user();
+        $behavior = $this->behaviorResolver->resolve((int) $user->company_id, $user->branch_id ? (int) $user->branch_id : null);
+        if (($behavior['rules']['services.require_estimated_minutes'] ?? false) && ! $request->filled('estimated_minutes')) {
+            return response()->json([
+                'message' => 'estimated_minutes is required for this vertical profile.',
+                'trace_id' => app('trace_id'),
+                'behavior_applied' => ['services.require_estimated_minutes'],
+            ], 422);
+        }
+
         $service = Service::create(array_merge(
             $request->validated(),
             [
-                'company_id'         => $request->user()->company_id,
-                'created_by_user_id' => $request->user()->id,
+                'company_id'         => $user->company_id,
+                'created_by_user_id' => $user->id,
             ]
         ));
 

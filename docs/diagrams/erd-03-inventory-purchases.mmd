@@ -1,0 +1,64 @@
+%% المنتجات والمخزون والمشتريات — المخطط 3 من 4
+erDiagram
+  companies ||--o{ product_categories : "company_id"
+  companies ||--o{ products : "company_id"
+  companies ||--o{ inventory : "company_id"
+  companies ||--o{ suppliers : "company_id"
+  companies ||--o{ purchases : "company_id"
+  product_categories ||--o{ products : "category_id"
+  products ||--o{ inventory : "product_id"
+  suppliers ||--o{ purchases : "supplier_id"
+  purchases ||--o{ purchase_items : "purchase_id"
+  purchases ||--o{ goods_receipts : "purchase_id"
+  goods_receipts ||--o{ goods_receipt_items : "goods_receipt_id"
+  products ||--o{ stock_movements : "product_id"
+  products ||--o{ inventory_reservations : "product_id"
+
+  products {
+    bigint id PK
+    bigint company_id FK
+    bigint category_id FK
+    string name
+    string sku
+  }
+
+  inventory {
+    bigint id PK
+    bigint company_id FK
+    bigint product_id FK
+    bigint branch_id FK
+    decimal quantity
+  }
+
+  suppliers {
+    bigint id PK
+    bigint company_id FK
+    string name
+  }
+
+  purchases {
+    bigint id PK
+    bigint company_id FK
+    bigint supplier_id FK
+    string status
+  }
+
+  purchase_items {
+    bigint id PK
+    bigint purchase_id FK
+  }
+
+  goods_receipts {
+    bigint id PK
+    bigint purchase_id FK
+  }
+
+  stock_movements {
+    bigint id PK
+    bigint product_id FK
+  }
+
+  inventory_reservations {
+    bigint id PK
+    bigint product_id FK
+  }

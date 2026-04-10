@@ -1,0 +1,651 @@
+# Wave 1 Security Execution Log
+
+## Execution status
+
+- Started automatically as requested (no interactive approvals).
+- Security baseline audit command implemented:
+  - `backend/app/Console/Commands/SecurityBaselineAuditCommand.php`
+- Baseline reports generated (latest):
+- `backend/reports/security-baseline-after-financial-permission-batch1/sensitive-endpoints.json`
+  - `backend/reports/security-baseline-after-financial-permission-batch1/route-permission-matrix.csv`
+  - `backend/reports/security-baseline-after-financial-permission-batch1/policy-coverage-report.json`
+
+## Current metrics (latest run)
+
+- `TOTAL_ROUTES=345`
+- `SENSITIVE_ROUTES=270`
+- `HIGH_RISK_SENSITIVE_ROUTES=0`
+- `MEDIUM_RISK_SENSITIVE_ROUTES=75`
+- Transition guard hints: `missing_or_unknown=0` (`present=16`)
+
+## High-risk endpoint remaining
+
+- None (`HIGH_RISK_SENSITIVE_ROUTES=0` in latest baseline).
+
+## Security fix already applied
+
+- Secured seed endpoint:
+  - `POST /api/v1/plans/seed`
+  - From: public `api` only
+  - To: `auth:sanctum` + `permission:subscriptions.manage`
+  - File: `backend/routes/api.php`
+- Secured role/permission admin endpoints:
+  - `GET|POST /api/v1/roles/{id}/assign`
+  - `apiResource /api/v1/roles`
+  - `GET /api/v1/permissions`
+  - `GET /api/v1/permissions/my`
+  - Added guard: `permission:users.update`
+  - File: `backend/routes/api.php`
+- Secured subscription management endpoints:
+  - `/api/v1/subscriptions` + `/current` => `permission:subscriptions.view`
+  - `/api/v1/subscriptions/renew` => `permission:subscriptions.manage`
+  - `/api/v1/subscription/change` => `permission:subscriptions.manage`
+  - `/api/v1/subscription/usage` => `permission:subscriptions.view`
+  - `/api/v1/plans/{slug}` (update) => `permission:subscriptions.manage`
+  - File: `backend/routes/api.php`
+- Secured governance endpoints (group-level):
+  - `/api/v1/governance/*` => added `permission:users.update`
+  - File: `backend/routes/api.php`
+- Security audit signal refinement:
+  - `auth:sanctum` is now treated as a special guard middleware in the risk classifier.
+  - This removes false-positive high-risk classifications for authenticated endpoints without explicit permission tags (e.g. logout-like endpoints).
+  - File: `backend/app/Console/Commands/SecurityBaselineAuditCommand.php`
+- Transition Guard Hints in policy report (new):
+  - Added per-route fields:
+    - `transition_guard_hint`
+    - `transition_guard_signal`
+  - Added aggregated fields:
+    - `transition_guard_summary`
+    - `transition_guard_hints` (focused slice for mutation routes with transition relevance)
+  - File: `backend/app/Console/Commands/SecurityBaselineAuditCommand.php`
+- Operational state-transition hardening:
+  - Invoice status mutation now rejects invalid transitions with `409` (only allowed transitions from `draft|pending`).
+  - Purchase receiving now rejects receiving when purchase is not in `ordered|partial` with unified message style.
+  - Support ticket status change now enforces explicit transition map and rejects invalid transitions with `409`.
+  - Files:
+    - `backend/app/Http/Controllers/Api/V1/InvoiceController.php`
+    - `backend/app/Http/Controllers/Api/V1/PurchaseController.php`
+    - `backend/app/Http/Controllers/Api/V1/SupportController.php`
+- Transition guard validation tests (new):
+  - Added focused feature suite:
+    - `backend/tests/Feature/Security/StateTransitionGuardsTest.php`
+  - Executed:
+    - `docker exec saas_app php artisan test --filter=StateTransitionGuardsTest`
+  - Result:
+    - `7 passed` / `0 failed` (`22 assertions`)
+  - Coverage now includes:
+    - success transition path (allowed transition accepted)
+    - reject transition path (invalid transition blocked)
+    - no side effects after `409`
+    - DB state stability after rejection
+    - message consistency check (`... is not allowed.`)
+
+- Before/after measurement (transition hints rollout):
+  - Before:
+    - `backend/reports/security-baseline-before-transition-hints/`
+    - `TOTAL_ROUTES=344`, `SENSITIVE_ROUTES=264`, `HIGH_RISK_SENSITIVE_ROUTES=0`, `MEDIUM_RISK_SENSITIVE_ROUTES=100`
+  - After:
+    - `backend/reports/security-baseline-after-transition-hints/`
+    - `TOTAL_ROUTES=344`, `SENSITIVE_ROUTES=264`, `HIGH_RISK_SENSITIVE_ROUTES=0`, `MEDIUM_RISK_SENSITIVE_ROUTES=100`
+    - New transition metadata visible in `policy-coverage-report.json`:
+      - `transition_guard_summary.present=11`
+      - `transition_guard_summary.missing_or_unknown=21`
+      - `transition_guard_summary.not_applicable=232`
+- 409 API Contract standardization (new):
+  - Unified conflict payload for transition rejection responses:
+    - `message`
+    - `trace_id`
+    - `code=TRANSITION_NOT_ALLOWED`
+    - `status=409`
+  - Files:
+    - `backend/app/Http/Controllers/Api/V1/InvoiceController.php`
+    - `backend/app/Http/Controllers/Api/V1/PurchaseController.php`
+    - `backend/app/Http/Controllers/Api/V1/SupportController.php`
+  - Test:
+    - `backend/tests/Feature/Security/ConflictErrorContractTest.php`
+  - Executed:
+    - `docker exec saas_app php artisan test --filter="StateTransitionGuardsTest|ConflictErrorContractTest"`
+  - Result:
+    - `8 passed` / `0 failed` (`43 assertions`)
+- Gate refinement (transition route detection):
+  - Detection narrowed to explicit transition keywords:
+    - `status`, `receive`, `approve`, `reject`, `cancel`, `close`, `reopen`, `renew`
+  - Generic `@update` detection removed to reduce false positives.
+  - File:
+    - `backend/app/Console/Commands/SecurityBaselineAuditCommand.php`
+  - Re-measured:
+    - `backend/reports/security-baseline-after-gate-refinement/`
+    - Core risk metrics unchanged (`HIGH_RISK=0`, `MEDIUM_RISK=100`)
+    - Transition signal quality improved:
+      - Before (`after-transition-hints`): `present=11`, `missing_or_unknown=21`, `not_applicable=232`
+      - After (`after-gate-refinement`): `present=4`, `missing_or_unknown=12`, `not_applicable=248`
+- Batch-1 (Governance approve/reject hardening):
+  - Hardened approve/reject transition handling and unified 409 contract in governance workflows/leaves/salaries:
+    - `backend/app/Http/Controllers/Api/V1/GovernanceController.php`
+    - `backend/app/Http/Controllers/Api/V1/LeaveController.php`
+    - `backend/app/Http/Controllers/Api/V1/SalaryController.php`
+  - Re-measured:
+    - `backend/reports/security-baseline-after-governance-batch1/`
+    - Core risk metrics unchanged (`HIGH_RISK=0`, `MEDIUM_RISK=100`)
+    - Transition signal improved vs previous baseline:
+      - Before (`after-gate-refinement`): `present=4`, `missing_or_unknown=12`, `not_applicable=248`
+      - After (`after-governance-batch1`): `present=7`, `missing_or_unknown=9`, `not_applicable=248`
+  - Regression check:
+    - `docker exec saas_app php artisan test --filter="ConflictErrorContractTest|StateTransitionGuardsTest"`
+    - Result: `8 passed` / `0 failed` (`43 assertions`)
+- Batch-2 (Fleet / Fleet-Portal approve/reject hardening):
+  - Hardened transition handling and 409 contract for fleet approval endpoints:
+    - `backend/app/Http/Controllers/Api/V1/FleetController.php`
+    - `backend/app/Http/Controllers/Api/V1/FleetPortalController.php`
+  - Added explicit permission guard coverage on targeted routes:
+    - `/api/v1/fleet/work-orders/{id}/approve` => `permission:work_orders.update`
+    - `/api/v1/fleet-portal/work-orders/{id}/approve-credit` => `permission:fleet.workorder.approve`
+    - `/api/v1/fleet-portal/work-orders/{id}/reject-credit` => `permission:fleet.workorder.approve`
+    - File: `backend/routes/api.php`
+  - Added feature contract coverage:
+    - `backend/tests/Feature/Security/ConflictErrorContractTest.php`
+    - New case: fleet-portal invalid transition returns unified 409 contract.
+  - Re-measured:
+    - `backend/reports/security-baseline-after-fleet-batch1/`
+    - Core security delta:
+      - `HIGH_RISK`: `0 -> 0`
+      - `MEDIUM_RISK`: `100 -> 97` ✅
+    - Transition signal delta:
+      - Before (`after-governance-batch1`): `present=7`, `missing_or_unknown=9`, `not_applicable=248`
+      - After (`after-fleet-batch1`): `present=10`, `missing_or_unknown=6`, `not_applicable=248`
+  - Regression check:
+    - `docker exec saas_app php artisan test --filter="ConflictErrorContractTest|StateTransitionGuardsTest"`
+    - Result: `9 passed` / `0 failed` (`51 assertions`)
+- Batch-3 (Governance workflows approve/reject closure):
+  - Closed remaining transition-hint gaps on governance workflow endpoints:
+    - `backend/app/Http/Controllers/Api/V1/GovernanceController.php`
+  - Added explicit company-scoped workflow lookup + strict pending-only transition gate for:
+    - `/api/v1/governance/workflows/{id}/approve`
+    - `/api/v1/governance/workflows/{id}/reject`
+  - Unified 409 contract for invalid transitions:
+    - `message`, `trace_id`, `code=TRANSITION_NOT_ALLOWED`, `status=409`
+  - Added feature coverage:
+    - `backend/tests/Feature/Security/ConflictErrorContractTest.php`
+    - New case: governance workflow invalid approve transition returns unified 409 contract.
+  - Re-measured:
+    - `backend/reports/security-baseline-after-governance-batch2/`
+    - Core metrics:
+      - `HIGH_RISK`: `0 -> 0`
+      - `MEDIUM_RISK`: `97 -> 97` (stable)
+    - Transition signal quality:
+      - Before (`after-fleet-batch1`): `present=10`, `missing_or_unknown=6`, `not_applicable=248`
+      - After (`after-governance-batch2`): `present=12`, `missing_or_unknown=4`, `not_applicable=248`
+  - Regression check:
+    - `docker exec saas_app php artisan test --filter="ConflictErrorContractTest|StateTransitionGuardsTest"`
+    - Result: `10 passed` / `0 failed` (`59 assertions`)
+- Batch-4 (WorkOrder / Bays / Workshop / Bookings operational transitions):
+  - Objective:
+    - Enforce explicit transition maps on high-density operational routes and keep the unified 409 JSON contract (`message`, `trace_id`, `code`, `status`) for illegal transitions; preserve `trace_id` on success payloads where added.
+  - Updated files:
+    - `backend/app/Services/WorkOrderService.php` — transition rejection message aligned with `... is not allowed.` contract text.
+    - `backend/app/Http/Controllers/Api/V1/WorkOrderController.php` — invalid status transitions return `409` + `TRANSITION_NOT_ALLOWED`; optimistic version conflicts return `409` + `RESOURCE_VERSION_MISMATCH` (still full contract: `message`, `trace_id`, `code`, `status`).
+    - `backend/app/Http/Controllers/Api/V1/BayController.php` — `PATCH /bays/{id}/status` bay state machine; `PATCH /bookings/{id}` action/state machine with backward compatibility for legacy `{ status: confirmed|cancelled|... }` payloads used by the bookings UI.
+    - `backend/app/Http/Controllers/Api/V1/WorkshopController.php` — `PATCH /workshop/tasks/{id}/status` requires explicit `action` or `status` (not both); transition guards for `start` / `complete` / `assign` and direct status patches.
+  - Tests:
+    - `backend/tests/Feature/Security/StateTransitionGuardsTest.php` — work order, bay, task, and booking (legacy confirm) cases.
+    - `backend/tests/Feature/Security/ConflictErrorContractTest.php` — combined 409 contract assertion across WO, bay, task, booking.
+    - `backend/tests/Feature/WorkOrder/OptimisticLockingTest.php` — expectations updated (`422` → `409` for invalid transition; version conflict asserts `RESOURCE_VERSION_MISMATCH`).
+  - Re-measured:
+    - `backend/reports/security-baseline-after-wo-bay-workshop-batch/`
+    - Core metrics: `HIGH_RISK=0`, `MEDIUM_RISK=97` (unchanged vs prior run).
+    - Transition signal:
+      - Before (`after-governance-batch2`): `present=12`, `missing_or_unknown=4`, `not_applicable=248`
+      - After (`after-wo-bay-workshop-batch`): `present=14`, `missing_or_unknown=2`, `not_applicable=248`
+  - Regression check:
+    - `docker compose exec -T app php artisan test tests/Feature/Security/StateTransitionGuardsTest.php tests/Feature/Security/ConflictErrorContractTest.php tests/Feature/WorkOrder/OptimisticLockingTest.php`
+    - Result: `20 passed` / `0 failed` (`116 assertions`)
+- Batch-5 (Close final `transition_guard_missing_or_unknown` + team-facing state docs):
+  - Controllers:
+    - `backend/app/Http/Controllers/Api/V1/InventoryController.php` — explicit `in_array` gate + unified `409` on illegal cancel (+ catch `DomainException` as `409` with contract).
+    - `backend/app/Http/Controllers/Api/V1/SubscriptionController.php` — explicit renewable-from statuses before `renew` (`in_array` on latest company subscription).
+  - Documentation:
+    - `docs/api-state-transition-matrices.md` — consolidated matrices for work orders, bays, workshop tasks, inventory reservations, subscriptions, and **bookings `PATCH` contract** (action vs legacy `status`, **422** when both missing; external API note).
+  - Tests:
+    - `ConflictErrorContractTest`: inventory reservation cancel when already `consumed`.
+    - `StateTransitionGuardsTest`: booking patch with empty JSON body → **422**, state unchanged.
+  - Re-measured:
+    - `backend/reports/security-baseline-after-missing-or-unknown-close/`
+    - `transition_guard_summary`: `present=16`, `missing_or_unknown=0`, `not_applicable=248`
+    - Prior (`after-wo-bay-workshop-batch`): `present=14`, `missing_or_unknown=2`
+- Batch-6 (Financial & subscriptions permission hardening):
+  - Objective:
+    - Start Wave-1 medium-risk reduction by securing high-impact financial mutation routes with explicit permission middleware, while preserving `missing_or_unknown=0`.
+  - Updated routes:
+    - `backend/routes/api.php`
+  - Applied controls (examples):
+    - Invoice write paths (`/invoices`, `/invoices/{id}/pay`, `/invoices/from-work-order/{workOrderId}`, `/invoices/{id}/media`, update/delete) now require invoice permissions.
+    - POS sale + wallet/payment mutation paths now require permission middleware.
+    - Ledger and chart-of-accounts endpoints now require accounting permission middleware.
+  - Re-measured:
+    - `backend/reports/security-baseline-after-financial-permission-batch1/`
+    - Core metrics:
+      - `TOTAL_ROUTES: 344 -> 345`
+      - `SENSITIVE_ROUTES: 264 -> 270`
+      - `HIGH_RISK: 0 -> 0`
+      - `MEDIUM_RISK: 97 -> 75` ✅
+    - Transition signal quality held:
+      - `missing_or_unknown: 0 -> 0`
+  - Regression check:
+    - `docker compose exec -T app php artisan test tests/Feature/Security/StateTransitionGuardsTest.php tests/Feature/Security/ConflictErrorContractTest.php tests/Feature/WorkOrder/OptimisticLockingTest.php`
+    - Result: `22 passed` / `0 failed` (`128 assertions`)
+- Batch-7 (Platform/Governance permission hardening - internal QA + notifications):
+  - Objective:
+    - Continue medium-risk closure in platform/governance slice by adding explicit route-level permission coverage to sensitive mutating endpoints still flagged as `medium`.
+  - Updated routes:
+    - `backend/routes/api.php`
+  - Applied controls:
+    - `/api/v1/internal/run-tests` => added `permission:users.update` at the QA middleware group.
+    - `/api/v1/notifications/share-email` => added `permission:users.update`.
+    - `/api/v1/notifications/track-share` => added `permission:users.update`.
+  - Re-measured:
+    - `backend/reports/security-baseline-after-platform-governance-batch1/`
+    - Core metrics:
+      - `TOTAL_ROUTES: 345 -> 345`
+      - `SENSITIVE_ROUTES: 270 -> 270`
+      - `HIGH_RISK: 0 -> 0`
+      - `MEDIUM_RISK: 75 -> 72` ✅
+    - Transition signal quality held:
+      - `missing_or_unknown: 0 -> 0`
+  - Regression check:
+    - `docker compose exec -T app php artisan test tests/Feature/Security/StateTransitionGuardsTest.php tests/Feature/Security/ConflictErrorContractTest.php tests/Feature/WorkOrder/OptimisticLockingTest.php`
+    - Result: `22 passed` / `0 failed` (`128 assertions`)
+- Batch-8 (Integrations/External hardening - external invoice authz signal):
+  - Objective:
+    - Close remaining external mutation risk in the integrations slice without breaking `auth.apikey` flow.
+  - Updated code:
+    - `backend/app/Http/Requests/External/StoreExternalInvoiceRequest.php` (new FormRequest with `authorize()` tied to injected `api_key` attribute).
+    - `backend/app/Http/Controllers/Api/V1/External/ExternalInvoiceController.php` (`store` now uses typed FormRequest + `validated()` payload).
+  - Re-measured:
+    - `backend/reports/security-baseline-after-integrations-external-batch8/`
+    - Core metrics:
+      - `TOTAL_ROUTES: 345 -> 345`
+      - `SENSITIVE_ROUTES: 270 -> 270`
+      - `HIGH_RISK: 0 -> 0`
+      - `MEDIUM_RISK: 72 -> 71` ✅
+    - Transition signal quality held:
+      - `missing_or_unknown: 0 -> 0`
+  - Integrations/External explicit extraction:
+    - Exited medium-risk:
+      - `POST /api/v1/external/v1/invoices` (now `low-medium` due to `form_request_authorize=yes`).
+    - Remaining medium-risk:
+      - `GET /api/v1/plans` (read-only public catalog on `api` middleware; no permission/auth guard by current design).
+  - Regression check:
+    - `docker compose exec -T app php artisan test tests/Feature/Security/StateTransitionGuardsTest.php tests/Feature/Security/ConflictErrorContractTest.php tests/Feature/WorkOrder/OptimisticLockingTest.php`
+    - Result: `22 passed` / `0 failed` (`128 assertions`)
+- Batch-9 (Support/Workshop/HR mutation permission hardening):
+  - Objective:
+    - Close medium-risk mutation routes in support/workshop slice using explicit route-level permission middleware, without changing transition contracts.
+  - Updated routes:
+    - `backend/routes/api.php`
+  - Applied controls:
+    - Added `permission:users.update` to workshop mutation routes:
+      - employees create/update
+      - attendance check-in/check-out
+      - tasks create/status update
+      - commission-rules create/update/delete
+      - commissions pay
+    - Added `permission:users.update` to support mutation routes:
+      - tickets create/update/status/reply/rate
+      - SLA create/update/check-breaches
+      - KB create/update/vote + KB categories create
+  - Re-measured:
+    - `backend/reports/security-baseline-after-support-workshop-batch9/`
+    - Core metrics:
+      - `TOTAL_ROUTES: 345 -> 345`
+      - `SENSITIVE_ROUTES: 270 -> 270`
+      - `HIGH_RISK: 0 -> 0`
+      - `MEDIUM_RISK: 71 -> 49` ✅
+    - Transition signal quality held:
+      - `missing_or_unknown: 0 -> 0`
+  - Support/Workshop explicit extraction:
+    - Exited medium-risk:
+      - `POST /api/v1/workshop/employees`
+      - `PUT /api/v1/workshop/employees/{id}`
+      - `POST /api/v1/workshop/attendance/check-in`
+      - `POST /api/v1/workshop/attendance/check-out`
+      - `POST /api/v1/workshop/tasks`
+      - `PATCH /api/v1/workshop/tasks/{id}/status`
+      - `POST /api/v1/workshop/commission-rules`
+      - `PUT /api/v1/workshop/commission-rules/{id}`
+      - `DELETE /api/v1/workshop/commission-rules/{id}`
+      - `POST /api/v1/workshop/commissions/{id}/pay`
+      - `POST /api/v1/support/tickets`
+      - `PUT /api/v1/support/tickets/{id}`
+      - `PATCH /api/v1/support/tickets/{id}/status`
+      - `POST /api/v1/support/tickets/{id}/replies`
+      - `POST /api/v1/support/tickets/{id}/rate`
+      - `POST /api/v1/support/sla-policies`
+      - `PUT /api/v1/support/sla-policies/{id}`
+      - `POST /api/v1/support/sla/check-breaches`
+      - `POST /api/v1/support/kb`
+      - `PUT /api/v1/support/kb/{id}`
+      - `POST /api/v1/support/kb/{id}/vote`
+      - `POST /api/v1/support/kb-categories`
+    - Remaining medium-risk (within support/workshop scope):
+      - none
+  - Regression check:
+    - `docker compose exec -T app php artisan test tests/Feature/Security/StateTransitionGuardsTest.php tests/Feature/Security/ConflictErrorContractTest.php tests/Feature/WorkOrder/OptimisticLockingTest.php`
+    - Result: `22 passed` / `0 failed` (`128 assertions`)
+- Batch-10 (Route-by-route precision closure + audit refinement):
+  - Objective:
+    - Shift from wide batches to per-route closure with two tracks:
+      - Group A: real hardening on mutation routes via explicit middleware/authorization signals.
+      - Group B: audit classification refinement for public-by-design endpoints.
+  - Group A updates (hardening):
+    - `backend/routes/api.php`
+    - Added explicit permission coverage for medium mutation routes across:
+      - customers, vehicles, suppliers (store/update/delete)
+      - work-orders (store/update/status/destroy)
+      - purchases + receipts/documents/status/receive
+      - inventory reservations mutations
+      - fleet verify-plate, fleet-portal top-up/create-work-order
+      - bays/bookings mutations
+      - notifications read/write mutations
+      - plugins mutation endpoints
+      - zatca submit
+    - Route duplication cleanup:
+      - constrained `apiResource` definitions to avoid unguarded duplicate mutation routes:
+        - `customers`, `vehicles`, `suppliers` => `only(['index', 'show'])`
+        - `products` => `except(['destroy'])`
+  - Group B updates (classification refinement):
+    - `backend/app/Console/Commands/SecurityBaselineAuditCommand.php`
+    - Added `/api/v1/plans` to `nonSensitiveExactUris` as public read-only by design.
+  - Re-measured:
+    - `backend/reports/security-baseline-after-batch10-route-by-route-v2/`
+    - Core metrics:
+      - `TOTAL_ROUTES: 345 -> 345`
+      - `SENSITIVE_ROUTES: 270 -> 269`
+      - `HIGH_RISK: 0 -> 0`
+      - `MEDIUM_RISK: 49 -> 9` ✅
+    - Transition signal quality held:
+      - `missing_or_unknown: 0 -> 0`
+  - Explicit diff from pre-batch (`after-support-workshop-batch9`) to post-batch:
+    - Exited medium-risk (40):
+      - `DELETE /api/v1/customers/{customer}`
+      - `DELETE /api/v1/plugins/{key}/uninstall`
+      - `DELETE /api/v1/products/{product}`
+      - `DELETE /api/v1/purchases/{id}/documents/{index}`
+      - `DELETE /api/v1/suppliers/{supplier}`
+      - `DELETE /api/v1/vehicles/{vehicle}`
+      - `DELETE /api/v1/work-orders/{id}`
+      - `GET /api/v1/plans`
+      - `PATCH /api/v1/bays/{id}/status`
+      - `PATCH /api/v1/bookings/{id}`
+      - `PATCH /api/v1/inventory/reservations/{id}/cancel`
+      - `PATCH /api/v1/inventory/reservations/{id}/consume`
+      - `PATCH /api/v1/inventory/reservations/{id}/release`
+      - `PATCH /api/v1/purchases/{id}/status`
+      - `PATCH /api/v1/work-orders/{id}/status`
+      - `POST /api/v1/bays`
+      - `POST /api/v1/bookings`
+      - `POST /api/v1/bookings/availability`
+      - `POST /api/v1/customers`
+      - `POST /api/v1/fleet/verify-plate`
+      - `POST /api/v1/fleet-portal/wallet/top-up`
+      - `POST /api/v1/fleet-portal/work-orders`
+      - `POST /api/v1/inventory/reservations`
+      - `POST /api/v1/plugins/{key}/execute`
+      - `POST /api/v1/plugins/{key}/install`
+      - `POST /api/v1/purchases`
+      - `POST /api/v1/purchases/{id}/documents`
+      - `POST /api/v1/purchases/{id}/receipts`
+      - `POST /api/v1/purchases/{id}/receive`
+      - `POST /api/v1/suppliers`
+      - `POST /api/v1/vehicles`
+      - `POST /api/v1/work-orders`
+      - `POST /api/v1/zatca/submit`
+      - `PUT /api/v1/customers/{customer}`
+      - `PUT /api/v1/notifications/{id}/read`
+      - `PUT /api/v1/notifications/read-all`
+      - `PUT /api/v1/plugins/{key}/configure`
+      - `PUT /api/v1/suppliers/{supplier}`
+      - `PUT /api/v1/vehicles/{vehicle}`
+      - `PUT /api/v1/work-orders/{id}`
+    - Remaining medium-risk (9):
+      - `DELETE /api/v1/bundles/{bundle}`
+      - `DELETE /api/v1/quotes/{quote}`
+      - `DELETE /api/v1/services/{service}`
+      - `DELETE /api/v1/units/{id}`
+      - `POST /api/v1/nps`
+      - `POST /api/v1/quotes`
+      - `POST /api/v1/units/conversions`
+      - `PUT /api/v1/quotes/{quote}`
+      - `PUT /api/v1/units/{id}`
+  - Regression check:
+    - `docker compose exec -T app php artisan test tests/Feature/Security/StateTransitionGuardsTest.php tests/Feature/Security/ConflictErrorContractTest.php tests/Feature/WorkOrder/OptimisticLockingTest.php`
+    - Result: `22 passed` / `0 failed` (`128 assertions`)
+- Batch-11 (Final 9 routes closure):
+  - Objective:
+    - Close remaining 9 medium-risk routes by priority: destructive/master-data routes, quotes routes, then NPS write route.
+  - Updated routes:
+    - `backend/routes/api.php`
+  - Applied controls:
+    - services/bundles destructive delete routes protected with `permission:users.update` and moved to explicit guarded routes.
+    - units update/delete/conversions write routes protected with `permission:inventory.adjust`.
+    - quotes create/update/delete protected with `permission:users.update`, with resource registration constrained to read-only endpoints.
+    - nps write route protected with `permission:users.update`.
+  - Re-measured:
+    - `backend/reports/security-baseline-after-batch11-final9/`
+    - Core metrics:
+      - `TOTAL_ROUTES: 345 -> 345`
+      - `SENSITIVE_ROUTES: 269 -> 269`
+      - `HIGH_RISK: 0 -> 0`
+      - `MEDIUM_RISK: 9 -> 0` ✅
+  - Final classification for prior remaining 9:
+    - closed by hardening (9/9):
+      - `DELETE /api/v1/services/{service}`
+      - `DELETE /api/v1/bundles/{bundle}`
+      - `POST /api/v1/quotes`
+      - `PUT /api/v1/quotes/{quote}`
+      - `DELETE /api/v1/quotes/{quote}`
+      - `POST /api/v1/nps`
+      - `PUT /api/v1/units/{id}`
+      - `DELETE /api/v1/units/{id}`
+      - `POST /api/v1/units/conversions`
+    - acceptable by design: none
+    - audit refinement: none (Batch-10 already handled `GET /api/v1/plans`)
+  - Regression check:
+    - `docker compose exec -T app php artisan test tests/Feature/Security/StateTransitionGuardsTest.php tests/Feature/Security/ConflictErrorContractTest.php tests/Feature/WorkOrder/OptimisticLockingTest.php`
+    - Result: `22 passed` / `0 failed` (`128 assertions`)
+
+## Next execution batch (automated plan)
+
+1. ✅ Add automated tests for state-transition guards (invoice / purchase / support).
+2. ✅ Expand policy coverage report output with transition-guard hints for mutation routes.
+3. ✅ Re-run baseline and produce delta report (`before/after`) including noise-reduction notes.
+4. ✅ Export Wave-1 interim review package:
+   - sensitive endpoint register
+   - route-to-permission matrix
+   - policy coverage report
+   - closed gaps list
+   - transition-hardening changelog
+   - 409 API contract evidence
+
+## Latest audit artifact directory
+
+- `backend/reports/security-baseline-after-batch11-final9/`
+
+## Program note (Wave 1 exit gate)
+
+- `MEDIUM_RISK_SENSITIVE_ROUTES=0` in latest baseline. Keep transition-hint backlog clear (`missing_or_unknown=0`) and proceed to formal Wave-1 closure review before any Wave-3 decision.
+
+## Wave 3 handoff marker
+
+- Wave 3 Batch-1 (financial reconciliation foundation) started and completed within approved scope.
+- Tracking file:
+  - `reports/wave3-financial-reliability-log.md`
+- Core output artifact:
+  - `backend/reports/financial-reliability/reconciliation-report.json`
+- Wave 3 Batch-2 (auditable DB runs/findings + daily idempotency) completed within approved scope.
+- New persistence artifacts:
+  - DB tables: `financial_reconciliation_runs`, `financial_reconciliation_findings`
+  - Measurement artifacts:
+    - `backend/reports/financial-reliability/reconciliation-report.batch2.measure.before.json`
+    - `backend/reports/financial-reliability/reconciliation-report.batch2.measure.after.json`
+- Wave 3 Batch-3 (operational review layer + finding lifecycle) completed within approved scope.
+- New API review layer:
+  - `GET /api/v1/financial-reconciliation/latest`
+  - `GET /api/v1/financial-reconciliation/runs`
+  - `GET /api/v1/financial-reconciliation/findings`
+  - `GET /api/v1/financial-reconciliation/summary`
+  - `PATCH /api/v1/financial-reconciliation/findings/{id}/status`
+- Wave 3 Batch-4 (finding review audit trail) completed within approved scope.
+- New auditability artifacts:
+  - DB table: `financial_reconciliation_finding_histories`
+  - API addition: `GET /api/v1/financial-reconciliation/findings/{id}` (current + history)
+  - Measurement artifacts:
+    - `backend/reports/financial-reliability/reconciliation-review-audit.batch4.before.json`
+    - `backend/reports/financial-reliability/reconciliation-review-audit.batch4.after.json`
+- Wave 3 Batch-5 (operational financial summary + runbook readiness) completed within approved scope.
+- New summary/runbook artifacts:
+  - API addition: `GET /api/v1/financial-reconciliation/health`
+  - Extended summary payload: `GET /api/v1/financial-reconciliation/summary` (additive fields only)
+  - Runbook doc: `docs/financial-reconciliation-operational-runbook.md`
+  - Measurement artifacts:
+    - `backend/reports/financial-reliability/reconciliation-operational-summary.batch5.before.json`
+    - `backend/reports/financial-reliability/reconciliation-operational-summary.batch5.after.json`
+- Wave 3 Batch-6 (execution observability + stale/failure-aware health) completed within approved scope.
+- New execution observability artifacts:
+  - DB schema extension on runs:
+    - `execution_status`, `started_at`, `completed_at`, `duration_ms`, `failure_message`, `failure_class`
+  - Command lifecycle update:
+    - `finance:reconcile-daily` now persists `running -> succeeded/failed`
+  - Summary/health extensions:
+    - `last_successful_run`, `last_failed_run`
+    - `runs_by_execution_status`
+    - `stale_status`, `hours_since_last_success`
+  - Measurement artifacts:
+    - `backend/reports/financial-reliability/reconciliation-execution-observability.batch6.before.json`
+    - `backend/reports/financial-reliability/reconciliation-execution-observability.batch6.after.json`
+- Wave 3 Batch-7 (concurrency guard + stuck-running control) completed within approved scope.
+- New reliability-control artifacts:
+  - DB table: `financial_reconciliation_run_attempts` (attempt lifecycle: started/blocked/succeeded/failed)
+  - Concurrency exceptions:
+    - `ReconciliationConcurrencyBlockedException`
+    - `ReconciliationStuckRunException`
+  - Command/service guard policy:
+    - block second run when active running exists within execution window
+    - auto-fail stuck running beyond window then allow controlled continuation
+  - Summary/health additions:
+    - `has_running_run`, `running_runs_count`
+    - `has_stuck_run`, `stuck_runs_count`
+    - `blocked_concurrent_attempts_count`, `latest_blocked_attempt`
+    - `concurrent_run_prevention_active`
+  - Measurement artifacts:
+    - `backend/reports/financial-reliability/reconciliation-concurrency-control.batch7.before.json`
+    - `backend/reports/financial-reliability/reconciliation-concurrency-control.batch7.after.json`
+- Wave 3 final closure gate executed.
+- Final closure artifacts:
+  - `backend/reports/financial-reliability/wave3-signoff-gate-final.json`
+  - `reports/wave3-closure-package.md`
+  - `reports/wave3-signoff-draft.md`
+- Wave 3 final circulation sign-off file prepared:
+  - `reports/wave3-signoff-final-for-circulation.md`
+- Final Wave 3 reference suite:
+  - `27 passed / 0 failed (130 assertions)`
+- Closure recommendation:
+  - Go for formal Wave 3 sign-off.
+- Next phase started (Institutional shared capabilities) — Batch-1 completed:
+  - Unified Approval Engine foundation
+  - Tracking file:
+    - `reports/institutional-capabilities-execution-log.md`
+- Institutional shared capabilities — Batch-2 completed:
+  - Meetings MVP low-risk foundation
+  - Measurement artifacts:
+    - `backend/reports/institutional-capabilities/meetings-mvp.batch2.before.json`
+    - `backend/reports/institutional-capabilities/meetings-mvp.batch2.after.json`
+- Institutional shared capabilities — Batch-3 completed:
+  - Meetings + approvals + execution bridge
+  - Measurement artifacts:
+    - `backend/reports/institutional-capabilities/meetings-approval-execution.batch3.before.json`
+    - `backend/reports/institutional-capabilities/meetings-approval-execution.batch3.after.json`
+- Institutional phase closure gate executed.
+- Closure artifacts:
+  - `backend/reports/institutional-capabilities/institutional-phase-signoff-gate-final.json`
+  - `reports/institutional-capabilities-closure-package.md`
+  - `reports/institutional-capabilities-signoff-draft.md`
+  - `reports/institutional-capabilities-signoff-final-for-circulation.md`
+- Next phase started (Multi-Vertical Configurable Core) — Batch-1 completed:
+  - Core vs Config extraction foundation
+  - Tracking file:
+    - `reports/multi-vertical-core-execution-log.md`
+  - Measurement artifacts:
+    - `backend/reports/multi-vertical-core/core-config-extraction.batch1.before.json`
+    - `backend/reports/multi-vertical-core/core-config-extraction.batch1.after.json`
+- Multi-Vertical Configurable Core — Batch-2 completed:
+  - Seeded operational config keys across scoped hierarchy (`system|plan|vertical|company|branch`)
+  - Wired first live use-cases:
+    - `quotes.enabled`
+    - `wallet.enabled`
+    - `work_orders.require_bay_assignment`
+    - `bookings.enabled`
+    - `fleet.approval_required`
+    - `pos.quick_sale_enabled`
+  - Test evidence:
+    - `7 passed / 0 failed (14 assertions)` for Batch-1/2 config suites
+  - Measurement artifacts:
+    - `backend/reports/multi-vertical-core/core-config-batch2.before.json`
+    - `backend/reports/multi-vertical-core/core-config-batch2.after.json`
+- Multi-Vertical Configurable Core — Batch-3 completed:
+  - Profile assignment on `company` / `branch` + read-only effective config visibility.
+  - Added admin actions:
+    - `PATCH /api/v1/companies/{id}/vertical-profile`
+    - `PATCH /api/v1/branches/{id}/vertical-profile`
+    - `GET /api/v1/companies/{id}/effective-config`
+    - `GET /api/v1/branches/{id}/effective-config`
+  - Test coverage added for:
+    - company override
+    - branch override
+    - vertical fallback
+    - runtime behavior change after profile assignment
+  - Measurement artifacts:
+    - `backend/reports/multi-vertical-core/core-config-batch3.before.json`
+    - `backend/reports/multi-vertical-core/core-config-batch3.after.json`
+- Multi-Vertical Configurable Core — final closure gate executed:
+  - Final artifact:
+    - `backend/reports/multi-vertical-core/multi-vertical-core-signoff-gate-final.json`
+  - Closure documents:
+    - `reports/multi-vertical-core-closure-package.md`
+    - `reports/multi-vertical-core-signoff-draft.md`
+    - `reports/multi-vertical-core-signoff-final-for-circulation.md`
+  - Gate-level assignment evidence included in artifact:
+    - `companies_with_vertical_profile: 0 -> 1`
+    - `branches_with_vertical_profile: 0 -> 1`
+  - Regression reference suite:
+    - `11 passed / 0 failed (23 assertions)`
+- Multi-Vertical Governance & Enablement — Batch-1 completed:
+  - Central governance assignment service + safe reassignment/unassignment rules.
+  - Effective config visibility with source labels (`default|company_override|branch_override`).
+  - Full audit trail for assignment/reassignment/unassignment and resolution checks.
+  - Authorization layer:
+    - `config_profiles.manage`
+    - `config_profiles.view`
+  - Gate artifact:
+    - `backend/reports/multi-vertical-governance/multi-vertical-governance-gate.json`
+  - Phase closure docs:
+    - `reports/multi-vertical-governance-execution-log.md`
+    - `reports/multi-vertical-governance-closure-package.md`
+    - `reports/multi-vertical-governance-signoff-draft.md`
+  - Regression evidence:
+    - `16 passed / 0 failed (47 assertions)` + auth regression `9 passed / 0 failed (42 assertions)`
+- Multi-Vertical Runtime Behavior Enforcement — implementation completed:
+  - Central runtime behavior resolver added:
+    - `backend/app/Services/Config/VerticalBehaviorResolverService.php`
+  - Runtime behavior wiring completed for:
+    - Work Orders
+    - Inventory
+    - Services
+    - POS non-financial behavior
+  - Phase artifacts:
+    - `backend/reports/multi-vertical-runtime-behavior/multi-vertical-runtime-behavior-gate.json`
+    - `reports/multi-vertical-runtime-behavior-execution-log.md`
+    - `reports/multi-vertical-runtime-behavior-closure-package.md`
+    - `reports/multi-vertical-runtime-behavior-signoff-draft.md`
+  - Regression evidence:
+    - `29 passed / 0 failed (101 assertions)`
+

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
+use App\Support\Media\TenantUploadDisk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -15,6 +16,7 @@ class ContractController extends Controller
     public function index(Request $request): JsonResponse
     {
         $q = Contract::with('creator:id,name')
+            ->withCount('serviceItems')
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->party_type, fn($q) => $q->where('party_type', $request->party_type))
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
@@ -94,8 +96,13 @@ class ContractController extends Controller
     {
         $request->validate(['document' => 'required|file|mimes:pdf,doc,docx|max:10240']);
 
-        $path = $request->file('document')->store("contracts/{$contract->id}", 'public');
-        $contract->update(['document_url' => Storage::disk('public')->url($path)]);
+        if ($contract->document_url) {
+            TenantUploadDisk::deleteIfExists($contract->document_url);
+        }
+
+        $disk = TenantUploadDisk::name();
+        $path = $request->file('document')->store("contracts/{$contract->id}", $disk);
+        $contract->update(['document_url' => Storage::disk($disk)->url($path)]);
 
         return response()->json(['data' => ['document_url' => $contract->document_url], 'trace_id' => app('trace_id')]);
     }

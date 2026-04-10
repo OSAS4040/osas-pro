@@ -1,0 +1,14 @@
+{
+    "approval_workflows_total": 4,
+    "approval_actions_total": 4,
+    "pending": 0,
+    "approved": 3,
+    "rejected": 1,
+    "cancelled": 0,
+    "subjects_covered": {
+        "governance": 1,
+        "leave": 1,
+        "salary": 1,
+        "work_order": 1
+    }
+}

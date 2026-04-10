@@ -1,0 +1,7 @@
+{
+    "findings_with_review_history": 1,
+    "status_changes_logged": 1,
+    "rejected_due_note_requirement": 2,
+    "acknowledged_without_note_http_status": 200,
+    "state_history_mismatches": 0
+}

@@ -66,6 +66,7 @@ class ReportController extends Controller
 
         $summaryRow = Invoice::where('company_id', $companyId)
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
+            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->selectRaw('COUNT(*) as invoice_count, SUM(total) as total_sales, SUM(tax_amount) as total_tax, SUM(discount_amount) as total_discount')
             ->first();
@@ -80,6 +81,7 @@ class ReportController extends Controller
 
         $byBranch = Invoice::where('company_id', $companyId)
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
+            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->selectRaw('branch_id, COUNT(*) as invoice_count, SUM(total) as total_sales')
             ->groupBy('branch_id')
@@ -103,6 +105,7 @@ class ReportController extends Controller
 
         $data = Invoice::where('company_id', $companyId)
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
+            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->whereNotNull('customer_id')
             ->selectRaw('customer_id, COUNT(*) as invoice_count, SUM(total) as total_sales, SUM(tax_amount) as total_tax')
@@ -130,6 +133,7 @@ class ReportController extends Controller
             ->join('products', 'products.id', '=', 'invoice_items.product_id')
             ->where('invoices.company_id', $companyId)
             ->whereBetween('invoices.issued_at', [$fromEnd, $toEnd])
+            ->when($request->filled('branch_id'), fn($q) => $q->where('invoices.branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('invoices.status', ['cancelled', 'draft'])
             ->selectRaw('products.name as product_name, products.sku, SUM(invoice_items.quantity) as total_qty, SUM(invoice_items.total) as total_sales, SUM(invoice_items.total) as total_revenue')
             ->groupBy('products.id', 'products.name', 'products.sku')
@@ -152,6 +156,7 @@ class ReportController extends Controller
         $companyId = app('tenant_company_id');
 
         $data = Invoice::where('company_id', $companyId)
+            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereIn('status', ['pending', 'partial_paid'])
             ->where('due_at', '<', now())
             ->with('customer:id,name,phone')
@@ -315,6 +320,7 @@ class ReportController extends Controller
 
         $row = Invoice::where('company_id', $companyId)
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
+            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->selectRaw('
                 COUNT(*) as invoice_count,
@@ -341,6 +347,7 @@ class ReportController extends Controller
             ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
             ->where('invoices.company_id', $companyId)
             ->whereBetween('invoices.issued_at', [$fromEnd, $toEnd])
+            ->when($request->filled('branch_id'), fn($q) => $q->where('invoices.branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('invoices.status', ['cancelled', 'draft'])
             ->selectRaw('invoice_items.tax_rate, SUM(invoice_items.subtotal) as taxable_amount, SUM(invoice_items.tax_amount) as tax_amount')
             ->groupBy('invoice_items.tax_rate')
@@ -406,6 +413,177 @@ class ReportController extends Controller
 
         return response()->json([
             'data'     => ['payments_by_method' => $payments],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function cashFlow(Request $request): JsonResponse
+    {
+        $from = $request->input('from', now()->startOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
+        $companyId = app('tenant_company_id');
+        $fromEnd = $from.' 00:00:00';
+        $toEnd = $to.' 23:59:59';
+
+        $incoming = Payment::where('company_id', $companyId)
+            ->whereBetween('created_at', [$fromEnd, $toEnd])
+            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->where('status', 'completed')
+            ->selectRaw('DATE(created_at) as day, COALESCE(SUM(amount),0) as incoming')
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy('day')
+            ->get()
+            ->keyBy('day');
+
+        $outgoingByDay = collect();
+        if (Schema::hasTable('purchases')) {
+            $outgoingByDay = DB::table('purchases')
+                ->where('company_id', $companyId)
+                ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+                ->when($request->filled('supplier_id'), fn($q) => $q->where('supplier_id', (int) $request->integer('supplier_id')))
+                ->whereNull('deleted_at')
+                ->whereBetween('created_at', [$fromEnd, $toEnd])
+                ->selectRaw('DATE(created_at) as day, COALESCE(SUM(total),0) as outgoing')
+                ->groupBy(DB::raw('DATE(created_at)'))
+                ->orderBy('day')
+                ->get()
+                ->keyBy('day');
+        }
+
+        $days = collect(array_unique(array_merge($incoming->keys()->all(), $outgoingByDay->keys()->all())))
+            ->sort()
+            ->values();
+
+        $rows = $days->map(function (string $day) use ($incoming, $outgoingByDay) {
+            $in = (float) ($incoming[$day]->incoming ?? 0);
+            $out = (float) ($outgoingByDay[$day]->outgoing ?? 0);
+            return [
+                'day' => $day,
+                'incoming' => round($in, 2),
+                'outgoing' => round($out, 2),
+                'net' => round($in - $out, 2),
+            ];
+        })->all();
+
+        return response()->json([
+            'data' => [
+                'summary' => [
+                    'incoming_total' => round(array_sum(array_column($rows, 'incoming')), 2),
+                    'outgoing_total' => round(array_sum(array_column($rows, 'outgoing')), 2),
+                    'net_total' => round(array_sum(array_column($rows, 'net')), 2),
+                ],
+                'daily' => $rows,
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function purchasesReport(Request $request): JsonResponse
+    {
+        $from = $request->input('from', now()->startOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
+        $companyId = app('tenant_company_id');
+        $fromEnd = $from.' 00:00:00';
+        $toEnd = $to.' 23:59:59';
+
+        if (!Schema::hasTable('purchases')) {
+            return response()->json(['data' => ['summary' => ['count' => 0, 'total' => 0], 'by_supplier' => []], 'trace_id' => app('trace_id')]);
+        }
+
+        $summary = DB::table('purchases')
+            ->where('company_id', $companyId)
+            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('supplier_id'), fn($q) => $q->where('supplier_id', (int) $request->integer('supplier_id')))
+            ->whereNull('deleted_at')
+            ->whereBetween('created_at', [$fromEnd, $toEnd])
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(total),0) as total')
+            ->first();
+
+        $bySupplier = DB::table('purchases')
+            ->leftJoin('suppliers', 'suppliers.id', '=', 'purchases.supplier_id')
+            ->where('purchases.company_id', $companyId)
+            ->when($request->filled('branch_id'), fn($q) => $q->where('purchases.branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('supplier_id'), fn($q) => $q->where('purchases.supplier_id', (int) $request->integer('supplier_id')))
+            ->whereNull('purchases.deleted_at')
+            ->whereBetween('purchases.created_at', [$fromEnd, $toEnd])
+            ->selectRaw(
+                'purchases.supplier_id, COALESCE(suppliers.name, ?) as supplier_name, COUNT(*) as orders_count, COALESCE(SUM(purchases.total),0) as total_amount',
+                ['غير محدد']
+            )
+            ->groupBy('purchases.supplier_id', 'suppliers.name')
+            ->orderByDesc('total_amount')
+            ->limit(100)
+            ->get()
+            ->map(fn ($r) => [
+                'supplier_id' => $r->supplier_id ? (int) $r->supplier_id : null,
+                'supplier_name' => (string) $r->supplier_name,
+                'orders_count' => (int) $r->orders_count,
+                'total_amount' => round((float) $r->total_amount, 2),
+            ])
+            ->values()
+            ->all();
+
+        return response()->json([
+            'data' => [
+                'summary' => [
+                    'count' => (int) ($summary->count ?? 0),
+                    'total' => round((float) ($summary->total ?? 0), 2),
+                ],
+                'by_supplier' => $bySupplier,
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function receivablesAging(Request $request): JsonResponse
+    {
+        $companyId = app('tenant_company_id');
+
+        $rows = Invoice::where('company_id', $companyId)
+            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->whereIn('status', ['pending', 'partial_paid'])
+            ->whereNotNull('due_at')
+            ->select('id', 'invoice_number', 'customer_id', 'due_amount', 'due_at')
+            ->with('customer:id,name')
+            ->orderBy('due_at')
+            ->limit(300)
+            ->get();
+
+        $buckets = [
+            'current' => 0.0,
+            '1_30' => 0.0,
+            '31_60' => 0.0,
+            '61_90' => 0.0,
+            '90_plus' => 0.0,
+        ];
+
+        $lines = $rows->map(function ($inv) use (&$buckets) {
+            $days = max(0, now()->diffInDays($inv->due_at, false) * -1);
+            $due = (float) $inv->due_amount;
+            if ($days === 0) $buckets['current'] += $due;
+            elseif ($days <= 30) $buckets['1_30'] += $due;
+            elseif ($days <= 60) $buckets['31_60'] += $due;
+            elseif ($days <= 90) $buckets['61_90'] += $due;
+            else $buckets['90_plus'] += $due;
+
+            return [
+                'invoice_number' => $inv->invoice_number,
+                'customer_name' => $inv->customer?->name ?? 'غير محدد',
+                'due_amount' => round($due, 2),
+                'days_overdue' => (int) $days,
+            ];
+        })->values()->all();
+
+        foreach ($buckets as $k => $v) {
+            $buckets[$k] = round($v, 2);
+        }
+
+        return response()->json([
+            'data' => [
+                'buckets' => $buckets,
+                'total_due' => round(array_sum($buckets), 2),
+                'lines' => $lines,
+            ],
             'trace_id' => app('trace_id'),
         ]);
     }

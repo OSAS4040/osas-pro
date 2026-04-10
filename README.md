@@ -35,9 +35,9 @@ project-root/
 │   │   └── Traits/             # HasTenantScope, etc.
 │   ├── bootstrap/app.php       # Middleware aliases, exception handler (Sentry)
 │   ├── database/
-│   │   ├── migrations/         # 32 migrations, ordered by prefix
+│   │   ├── migrations/         # Schema history (many files; see directory)
 │   │   ├── seeders/            # PlanSeeder, RolePermissionSeeder, DemoCompanySeeder
-│   │   └── factories/          # Model factories for testing
+│   │   └── factories/          # Optional Eloquent factories (if present)
 │   ├── routes/
 │   │   ├── api.php             # All /api/v1/ routes
 │   │   └── console.php         # Scheduled jobs
@@ -51,7 +51,8 @@ project-root/
 │   │   ├── stores/             # Pinia stores
 │   │   ├── utils/              # idempotency key generator
 │   │   └── views/              # Feature-based pages
-│   └── env.example.txt         # Frontend env template
+│   ├── env.example             # Frontend env template (copy to .env)
+│   └── env.example.txt         # Deprecated pointer → use env.example
 ├── docker/                     # Nginx config, PHP Dockerfile
 ├── docker-compose.yml          # Services: app, nginx, postgres, redis, queue workers
 ├── Makefile                    # Developer convenience commands
@@ -60,36 +61,15 @@ project-root/
 
 ---
 
-## Migrations (in order)
+## Migrations
 
-| # | File | Description |
-|---|---|---|
-| 000001 | create_companies_table | Companies (tenants) |
-| 000002 | create_branches_table | Branches per company |
-| 000003 | create_users_table | Users with company + branch |
-| 000004 | create_roles_permissions_tables | RBAC: roles, permissions, pivots |
-| 000005 | create_plans_subscriptions_tables | SaaS subscription state machine |
-| 000006 | create_api_keys_table | External API keys |
-| 000007 | create_idempotency_keys_table | Idempotency enforcement |
-| 000008 | create_wallets_table | Customer wallets |
-| 000009 | create_wallet_transactions_table | Append-only ledger |
-| 000010 | create_customers_table | B2C/B2B customers |
-| 000011 | create_vehicles_table | Vehicles linked to customers |
-| 000012 | create_payments_table | Invoice payments (append-only) |
-| 000013 | create_webhooks_tables | Webhook endpoints + deliveries |
-| 000014 | create_units_table | Units of measure + conversions |
-| 000015 | create_products_table | Products with SKU/barcode |
-| 000016 | create_suppliers_purchases_tables | Suppliers + purchase orders + items |
-| 000017 | create_stock_movements_table | Append-only inventory ledger |
-| 000018 | create_inventory_reservations_table | Reservations with lifecycle |
-| 000019 | create_services_bundles_tables | Services + bundles |
-| 000020 | create_work_orders_tables | Work orders + items (optimistic lock) |
-| 000021 | create_invoices_tables | Invoices + items (ZATCA-ready) |
-| 000022 | create_zatca_logs_table | ZATCA integration audit log |
-| 000023 | create_api_usage_logs_table (via 000032) | API key usage logging |
-| 000030 | update_wallets_payments_phase6 | Add branch_id/status/credit_limit to wallets |
-| 000031 | create_goods_receipts_enhance_suppliers | GRN tables + supplier branch_id/code |
-| 000032 | create_api_usage_logs_table | API usage tracking |
+All schema changes live under `backend/database/migrations/`. The set evolves with the product; apply with:
+
+```bash
+cd backend && php artisan migrate
+```
+
+(Docker: run inside the `app` container.) Early migrations introduce core tables (companies, branches, users, subscriptions, wallets, inventory, work orders, invoices, etc.); later files add SaaS, intelligence, governance, and operational features.
 
 ---
 
@@ -108,13 +88,13 @@ cd project-root
 
 Copy environment files:
 ```bash
-cp backend/env.example.txt backend/.env
-cp frontend/env.example.txt frontend/.env
+cp backend/.env.example backend/.env
+cp frontend/env.example frontend/.env
 ```
 
 Edit `backend/.env`:
-- Set `APP_KEY` (will be generated in step 3)
-- Confirm `DB_*` and `REDIS_*` match docker-compose.yml (they do by default)
+- Set `APP_KEY` via `php artisan key:generate` (step 3 or before first `docker compose up`)
+- **Docker:** `DB_HOST=postgres`, `REDIS_HOST=redis` (match `docker-compose.yml`). **Local PHP:** `DB_HOST=127.0.0.1` as in `.env.example`.
 - Set `SENTRY_LARAVEL_DSN` if using Sentry
 
 ### 2. Build and start
@@ -411,6 +391,22 @@ Base URL: `/api/v1/`
 
 ---
 
+## Staging-first rollout (safe)
+
+- **ترتيب التنفيذ الرسمي (مرقم):** [`docs/Execution_Order_Asas_Pro.md`](docs/Execution_Order_Asas_Pro.md) — ابدأ من المرحلة 0 ولا تتخطَّ مرحلة دون إكمال السابقة.
+- **CI:** [`policy-env-on-pr.yml`](.github/workflows/policy-env-on-pr.yml) يفحص سياسة env على **كل** PR نحو `main`؛ [`staging-gate.yml`](.github/workflows/staging-gate.yml) للبوابة الكاملة حسب المسارات.
+- **Policy (Arabic, binding):** [`docs/Staging_Governance_Policy.md`](docs/Staging_Governance_Policy.md) — إغلاق حلقة Staging قبل التوسع.
+- **Mandatory gate (PR / production):** [`docs/Staging_Gate_Mandatory_Policy.md`](docs/Staging_Gate_Mandatory_Policy.md) — `policy-env-example` + `staging-gate` قبل الدمج والإنتاج.
+- **قالب PR:** [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) — قائمة تحقق عند فتح طلب الدمج.
+- **حماية `main` + مراجعة:** [`docs/Branch_Protection_And_Review_Policy.md`](docs/Branch_Protection_And_Review_Policy.md) · إعداد GitHub: [`docs/GitHub_Branch_Protection_Setup.md`](docs/GitHub_Branch_Protection_Setup.md).
+- **Runbook (Arabic):** [`docs/Staging_Deploy_Runbook.md`](docs/Staging_Deploy_Runbook.md) — staging قبل الإنتاج، متغيرات محافظة، فحص بعد النشر.
+- **اختبار Staging يدوي (مرقم):** [`docs/Staging_Manual_Test_Checklist.md`](docs/Staging_Manual_Test_Checklist.md).
+- **ما نفعله الآن + PASS/FAIL + ما لا نفعله:** [`docs/Staging_Execution_Now.md`](docs/Staging_Execution_Now.md).
+- **Quick automated check (Docker):** `make staging-gate` — Vitest + PHPUnit (SaaS / platform gates).
+- **Example env:** [`backend/.env.staging.example`](backend/.env.staging.example), [`frontend/env.staging.example`](frontend/env.staging.example).
+
+---
+
 ## Production Deployment (AWS)
 
 ### Recommended Services
@@ -438,6 +434,7 @@ Base URL: `/api/v1/`
 [ ] Set FILESYSTEM_DISK=s3 + AWS credentials
 [ ] Configure CORS_ALLOWED_ORIGINS to production domain only
 [ ] Set L5_SWAGGER_GENERATE_ALWAYS=false
+[ ] SaaS: `SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT=false` — `SAAS_PLATFORM_ADMIN_EMAILS` لمشغّلي المنصة فقط (ليست قائمة طويلة تجريبية)
 [ ] Run: php artisan config:cache
 [ ] Run: php artisan route:cache
 [ ] Run: php artisan view:cache
@@ -482,6 +479,8 @@ make tinker        # Laravel Tinker REPL
 make queue-restart # Restart all queue worker containers
 make swagger       # Generate Swagger documentation
 make test          # Run all tests in parallel
+make staging-gate  # Quick gate: npm ci + Vitest + SaaS/platform PHPUnit (Docker)
+make policy-env-example  # Static check: env *.example must not enable tenant catalog edit (Node)
 make test-filter filter=TestName  # Run specific test
 make test-coverage # Run tests with coverage report
 make logs          # Follow app container logs

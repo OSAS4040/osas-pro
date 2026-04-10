@@ -1,0 +1,74 @@
+# بوابة النشر: بناء compose → تشغيل → migrations → check.sh
+# الخطوات يجب أن تبقى في مهمة واحدة حتى لا تُفقد حاويات الـ stack بين jobs.
+#
+# متغيرات اختيارية (Settings → CI/CD → Variables):
+#   CI_REDIS_PASSWORD  CI_DB_PASSWORD  (افتراضيات آمنة للتجربة أدناه)
+
+stages:
+  - verify
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+  REDIS_PASSWORD: "${CI_REDIS_PASSWORD:-redis_password}"
+  DB_PASSWORD: "${CI_DB_PASSWORD:-saas_password}"
+  DB_USERNAME: saas_user
+  DB_DATABASE: saas_db
+  HEALTH_WAIT_SECS: "180"
+  # حركة المرور إلى منفذ 80 على مضيف Docker (خدمة dind اسمها عادة docker)
+  CHECK_BASE_URL: "http://docker:80"
+
+compose_stack_and_gate:
+  stage: verify
+  image: docker:27-cli
+  services:
+    - docker:27-dind
+  after_script:
+    - mkdir -p ci-artifacts
+    - docker compose ps &> ci-artifacts/compose-ps.txt || true
+    - docker compose logs --no-color &> ci-artifacts/compose-logs.txt || true
+    - docker compose exec -T app php artisan integrity:verify --json &> ci-artifacts/integrity-verify.json || true
+  artifacts:
+    when: on_failure
+    paths:
+      - ci-artifacts/
+    expire_in: 7 days
+  before_script:
+    # صورة docker:cli (Alpine) لا تضم openssl افتراضياً — مطلوب لتوليد APP_KEY في كل تشغيل
+    - apk add --no-cache openssl
+    - docker info
+    - |
+      set -e
+      cp backend/.env.example backend/.env
+      APP_KEY_VAL="base64:$(openssl rand -base64 32 | tr -d '\n')"
+      sed -i "s#^APP_KEY=.*#APP_KEY=${APP_KEY_VAL}#" backend/.env
+      sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|" backend/.env
+      sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" backend/.env
+      sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" backend/.env
+      sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PASSWORD}|" backend/.env
+  script:
+    - docker compose build
+    - docker compose up -d
+    - |
+      set -e
+      deadline=$(( $(date +%s) + ${HEALTH_WAIT_SECS} ))
+      attempt=0
+      while [ "$(date +%s)" -lt "$deadline" ]; do
+        attempt=$((attempt + 1))
+        if curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/api/v1/health"; then
+          echo "Health OK (attempt ${attempt}, within ${HEALTH_WAIT_SECS}s)"
+          break
+        fi
+        echo "Waiting for health... (${attempt})"
+        sleep 3
+      done
+      if ! curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/api/v1/health"; then
+        echo "Timeout: health not ready within ${HEALTH_WAIT_SECS}s"
+        docker compose ps || true
+        docker compose logs --tail=100 nginx app || true
+        exit 1
+      fi
+    - docker compose exec -T app php artisan migrate --force
+    - docker compose exec -T app php artisan integrity:verify
+    - chmod +x check.sh
+    - export FAIL_ON_FAILED_JOBS=1 REDIS_PASSWORD CHECK_BASE_URL
+    - ./check.sh

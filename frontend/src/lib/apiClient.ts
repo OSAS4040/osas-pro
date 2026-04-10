@@ -46,6 +46,11 @@ function attachApiInterceptors(instance: AxiosInstance): void {
         error.response.data = localizeApiErrorPayload(error.response.data)
       }
 
+      const cfg = error.config as InternalAxiosRequestConfig & { skipGlobalErrorToast?: boolean }
+      if (cfg?.skipGlobalErrorToast === true) {
+        return Promise.reject(error)
+      }
+
       if (error.response?.status === 401) {
         const path = String(error.config?.url ?? '')
         if (path.includes('auth/login')) {

@@ -1,0 +1,17 @@
+{
+  "phase": "before_fix",
+  "captured_at": "2026-03-28T00:00:00+00:00",
+  "note": "تحليل الكود قبل إصلاح checkIdempotency — لم يُشغَّل ctov:operational-report بعد على نفس الشفرة.",
+  "critical_finding": {
+    "area": "WalletService::checkIdempotency",
+    "risk": "عند تعارض UNIQUE على idempotency_keys مع صف بدون response_snapshot، كان المسار يسمح بإكمال التنفيذ (أو return صامت في QueryException) مما قد يؤدي إلى تنفيذ مالي مكرر تحت تزامن عالٍ.",
+    "expected_race_symptom": "أكثر من exit code 0 لعمليات ctov:wallet-race-attempt بنفس المفتاح"
+  },
+  "stress_db_ping": {
+    "operations": null,
+    "note": "يُملأ بعد تشغيل php artisan ctov:operational-report على شفرة ما قبل الإصلاح (مرجع تاريخي) أو من سجلاتك المحلية"
+  },
+  "wallet_race": {
+    "note": "قبل الإصلاح: احتمال success_count > 1 تحت تزامن حقيقي"
+  }
+}

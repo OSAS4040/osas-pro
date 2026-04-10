@@ -2,8 +2,9 @@
   <div class="space-y-6" dir="rtl">
     <div class="flex items-center justify-between flex-wrap gap-3">
       <h2 class="text-2xl font-bold text-gray-900">مناطق العمل</h2>
-      <button @click="showModal = true"
-        class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium">
+      <button class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium"
+              @click="showModal = true"
+      >
         <PlusIcon class="w-4 h-4" />
         منطقة عمل جديدة
       </button>
@@ -12,8 +13,9 @@
     <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
       <div v-for="s in statusCounts" :key="s.status"
-        class="bg-white rounded-xl p-3 border border-gray-200 text-center cursor-pointer hover:border-primary-300"
-        @click="filterStatus = s.status === filterStatus ? '' : s.status">
+           class="bg-white rounded-xl p-3 border border-gray-200 text-center cursor-pointer hover:border-primary-300"
+           @click="filterStatus = s.status === filterStatus ? '' : s.status"
+      >
         <p class="text-xl font-bold" :class="s.color">{{ s.count }}</p>
         <p class="text-xs text-gray-500 mt-0.5">{{ s.label }}</p>
         <div :class="s.dot" class="w-2 h-2 rounded-full mx-auto mt-1"></div>
@@ -26,8 +28,9 @@
     </div>
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       <div v-for="bay in filtered" :key="bay.id"
-        class="bg-white rounded-xl border-2 transition-colors p-4 shadow-sm"
-        :class="statusBorder(bay.status)">
+           class="bg-white rounded-xl border-2 transition-colors p-4 shadow-sm"
+           :class="statusBorder(bay.status)"
+      >
         <div class="flex items-start justify-between mb-3">
           <div>
             <p class="font-bold text-gray-900">{{ bay.name }}</p>
@@ -39,13 +42,15 @@
         </div>
         <div v-if="bay.capabilities?.length" class="flex flex-wrap gap-1 mb-3">
           <span v-for="cap in bay.capabilities" :key="cap"
-            class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">{{ cap }}</span>
+                class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs"
+          >{{ cap }}</span>
         </div>
         <div class="flex gap-2 flex-wrap">
           <button v-for="opt in statusOptions(bay.status)" :key="opt.value"
-            @click="changeStatus(bay, opt.value)"
-            class="flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors"
-            :class="opt.class">
+                  class="flex-1 text-xs py-1.5 rounded-lg font-medium transition-colors"
+                  :class="opt.class"
+                  @click="changeStatus(bay, opt.value)"
+          >
             {{ opt.label }}
           </button>
         </div>
@@ -60,7 +65,7 @@
           <h3 class="font-bold text-lg">منطقة عمل جديدة</h3>
           <button @click="showModal = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
         </div>
-        <form @submit.prevent="save" class="p-6 space-y-4">
+        <form class="p-6 space-y-4" @submit.prevent="save">
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">الكود *</label>
@@ -68,7 +73,7 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">الاسم *</label>
-              <input v-model="form.name" required placeholder="رافعة 1" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+              <input v-model="form.name" required placeholder="منطقة عمل 1" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">النوع</label>
@@ -87,11 +92,12 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">القدرات (مفصولة بفاصلة)</label>
             <input v-model="capStr" placeholder="oil_change, brakes, alignment"
-              class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                   class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
           </div>
           <div v-if="modalError" class="text-red-600 text-sm bg-red-50 rounded-lg p-3">{{ modalError }}</div>
           <div class="flex gap-3 justify-end">
-            <button type="button" @click="showModal = false" class="px-4 py-2 border rounded-lg text-sm text-gray-700">إلغاء</button>
+            <button type="button" class="px-4 py-2 border rounded-lg text-sm text-gray-700" @click="showModal = false">إلغاء</button>
             <button type="submit" :disabled="saving" class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
               {{ saving ? 'جاري...' : 'إنشاء' }}
             </button>

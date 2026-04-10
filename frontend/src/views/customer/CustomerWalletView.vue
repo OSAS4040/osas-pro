@@ -9,8 +9,8 @@
     <div v-if="loading" class="flex justify-center py-8"><div class="spinner"></div></div>
     <div v-else-if="wallets.length" class="space-y-3">
       <div v-for="w in wallets" :key="w.id"
-        class="rounded-2xl p-5 text-white shadow-md"
-        :class="walletGradient(walletKind(w))"
+           class="rounded-2xl p-5 text-white shadow-md"
+           :class="walletGradient(walletKind(w))"
       >
         <div class="flex items-start justify-between mb-4">
           <div>
@@ -39,10 +39,12 @@
       <div v-if="txLoading" class="flex justify-center py-4"><div class="spinner"></div></div>
       <div v-else-if="transactions.length" class="space-y-2">
         <div v-for="tx in transactions" :key="tx.id"
-          class="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-slate-700/40">
+             class="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-slate-700/40"
+        >
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl flex items-center justify-center"
-              :class="txCredit(tx) ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'">
+                 :class="txCredit(tx) ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'"
+            >
               <span class="text-sm">{{ txCredit(tx) ? '⬆️' : '⬇️' }}</span>
             </div>
             <div>

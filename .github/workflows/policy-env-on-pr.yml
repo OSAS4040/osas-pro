@@ -1,0 +1,26 @@
+# فحص سياسة أمثلة الإعداد — يعمل على كل PR نحو main (خفيف، ~ثوانٍ)
+# يُنصح بجعله check إلزامي في Branch Protection (انظر docs/GitHub_Branch_Protection_Setup.md)
+# بوابة Staging الكاملة (Docker) تبقى في staging-gate.yml حسب المسارات.
+
+name: Policy env on PR
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: policy-env-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy-env-example:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Policy — SAAS catalog edit off in .env examples
+        run: node scripts/check-policy-env-example.mjs

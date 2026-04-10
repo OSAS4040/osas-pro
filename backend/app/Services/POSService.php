@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\JournalEntryType;
+use App\Exceptions\LedgerPostingFailedException;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Support\Accounting\FinancialGlMapping;
@@ -15,8 +16,8 @@ use Illuminate\Support\Str;
  * POSService handles the B2C fast-track atomic flow:
  *   create invoice → record payment → deduct stock → wallet debit → log
  *
- * All steps run inside a single DB transaction.
- * Target: complete within 1.5 seconds end-to-end.
+ * Critical write path runs inside a single DB transaction, including ledger posting.
+ * If the journal entry cannot be posted, the entire sale rolls back (no orphan invoice).
  */
 class POSService
 {
@@ -42,36 +43,48 @@ class POSService
         string $idempotencyKey,
     ): Invoice {
         $traceId = trim((string) (app('trace_id') ?? '')) ?: Str::uuid()->toString();
+        $wallStart = microtime(true);
+        $seg = [
+            'prefetch_ms' => 0.0,
+            'tx_total_ms' => 0.0,
+            'invoice_number_ms' => 0.0,
+            'build_items_ms' => 0.0,
+            'invoice_insert_ms' => 0.0,
+            'invoice_items_insert_ms' => 0.0,
+            'payment_ms' => 0.0,
+            'inventory_ms' => 0.0,
+            'wallet_ms' => 0.0,
+            'ledger_sync_ms' => 0.0,
+            'hydrate_ms' => 0.0,
+        ];
+        $t = microtime(true);
+        $trackedProductIds = $this->trackedProductIds($data['items']);
+        $seg['prefetch_ms'] = round((microtime(true) - $t) * 1000, 2);
 
+        $tTx = microtime(true);
         $invoice = DB::transaction(function () use (
-            $data, $companyId, $branchId, $userId, $traceId
+            $data, $companyId, $branchId, $userId, $traceId, $trackedProductIds, &$seg
         ) {
-            $previousInvoice = Invoice::where('company_id', $companyId)
-                ->orderByDesc('invoice_counter')
-                ->lockForUpdate()
-                ->first();
-
-            // Use MAX of both invoice_counter and extract from invoice_number to avoid gaps
-            $maxByCounter = Invoice::where('company_id', $companyId)
-                ->whereNotNull('invoice_counter')
-                ->max('invoice_counter') ?? 0;
-
-            // Also extract max from invoice_number pattern INV-{company_id}-{counter}
-            $maxByPattern = (int) Invoice::where('company_id', $companyId)
-                ->where('invoice_number', 'LIKE', "INV-{$companyId}-%")
-                ->selectRaw("MAX(CAST(SPLIT_PART(invoice_number, '-', 3) AS INTEGER)) as max_num")
-                ->value('max_num') ?? 0;
-
-            $counter       = max($maxByCounter, $maxByPattern) + 1;
+            $ti = microtime(true);
+            $counter = $this->allocateInvoiceCounter($companyId);
             $invoiceNumber = sprintf('INV-%d-%06d', $companyId, $counter);
+            $previousInvoice = Invoice::query()
+                ->where('company_id', $companyId)
+                ->whereNotNull('invoice_hash')
+                ->orderByDesc('id')
+                ->first();
             $previousHash  = $previousInvoice?->invoice_hash ?? hash('sha256', 'genesis');
+            $seg['invoice_number_ms'] = round((microtime(true) - $ti) * 1000, 2);
 
+            $ti = microtime(true);
             [$subtotal, $taxAmount, $itemsData] = $this->buildItems($data['items'], $companyId);
+            $seg['build_items_ms'] = round((microtime(true) - $ti) * 1000, 2);
 
             $discount   = (float) ($data['discount_amount'] ?? 0);
             $total      = round($subtotal + $taxAmount - $discount, 4);
             $invoiceHash = hash('sha256', $invoiceNumber . number_format($total, 4, '.', '') . $previousHash);
 
+            $ti = microtime(true);
             $invoice = Invoice::create([
                 'uuid'                  => Str::uuid(),
                 'company_id'            => $companyId,
@@ -99,12 +112,15 @@ class POSService
                 'notes'                 => $data['notes'] ?? null,
                 'issued_at'             => now(),
             ]);
+            $seg['invoice_insert_ms'] = round((microtime(true) - $ti) * 1000, 2);
 
+            $ti = microtime(true);
             foreach ($itemsData as $item) {
                 InvoiceItem::create(array_merge($item, ['invoice_id' => $invoice->id]));
             }
+            $seg['invoice_items_insert_ms'] = round((microtime(true) - $ti) * 1000, 2);
 
-            $invoice->refresh();
+            $ti = microtime(true);
             $payment = $this->paymentService->createPayment(
                 invoice:   $invoice,
                 amount:    (float) $data['payment']['amount'],
@@ -114,11 +130,22 @@ class POSService
                 branchId:  $branchId,
                 reference: $data['payment']['reference'] ?? null,
             );
-            $invoice->refresh();
+            $seg['payment_ms'] = round((microtime(true) - $ti) * 1000, 2);
 
-            $this->deductInventory($data['items'], $companyId, $branchId, $userId, $invoice, $traceId);
+            $ti = microtime(true);
+            $this->deductInventory(
+                items: $data['items'],
+                trackedProductIds: $trackedProductIds,
+                companyId: $companyId,
+                branchId: $branchId,
+                userId: $userId,
+                invoice: $invoice,
+                traceId: $traceId
+            );
+            $seg['inventory_ms'] = round((microtime(true) - $ti) * 1000, 2);
 
             if ($data['payment']['method'] === 'wallet' && $invoice->customer_id) {
+                $ti = microtime(true);
                 $walletIdempotencyKey = $data['idempotency_key'] . '_wallet_debit';
                 $vehicleId            = $data['vehicle_id'] ?? null;
                 $customerType         = $data['customer_type'] ?? 'b2c';
@@ -154,7 +181,13 @@ class POSService
                         paymentMode:    'prepaid',
                     );
                 }
+                $seg['wallet_ms'] = round((microtime(true) - $ti) * 1000, 2);
             }
+
+            $invoice->refresh();
+            $tiLedger = microtime(true);
+            $this->postPosSaleLedgerOrThrow($invoice, $traceId);
+            $seg['ledger_sync_ms'] = round((microtime(true) - $tiLedger) * 1000, 2);
 
             Log::info('pos.sale.completed', [
                 'invoice_id'     => $invoice->id,
@@ -164,19 +197,48 @@ class POSService
                 'trace_id'       => $traceId,
             ]);
 
-            $this->postPosLedger($invoice, $traceId);
-
-            return $invoice->load(['items', 'payments']);
+            return $invoice;
         });
+        $seg['tx_total_ms'] = round((microtime(true) - $tTx) * 1000, 2);
+
+        $ti = microtime(true);
+        $invoice = Invoice::query()
+            ->with(['items', 'payments'])
+            ->findOrFail($invoice->id);
+        $seg['hydrate_ms'] = round((microtime(true) - $ti) * 1000, 2);
+
+        $totalMs = round((microtime(true) - $wallStart) * 1000, 2);
+        if (filter_var((string) env('POS_HOTPATH_PROFILING', true), FILTER_VALIDATE_BOOL) && $totalMs >= 300) {
+            Log::warning('pos.sale.hotpath.profile', [
+                'trace_id' => $traceId,
+                'invoice_id' => $invoice->id,
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'items_count' => count($data['items']),
+                'tracked_items_count' => count($trackedProductIds),
+                'payment_method' => (string) ($data['payment']['method'] ?? ''),
+                'total_ms' => $totalMs,
+            ] + $seg + ['hotpath_over_1s' => $totalMs >= 1000]);
+        }
 
         return $invoice;
     }
 
-    private function postPosLedger(Invoice $invoice, string $traceId): void
+    /**
+     * Synchronous ledger post inside the POS sale transaction — failure rolls back payment, stock, and invoice.
+     */
+    private function postPosSaleLedgerOrThrow(Invoice $invoice, string $traceId): void
     {
         try {
-            $lines = FinancialGlMapping::linesForPosSale($invoice);
+            $alreadyPosted = DB::table('journal_entries')
+                ->where('source_type', Invoice::class)
+                ->where('source_id', $invoice->id)
+                ->exists();
+            if ($alreadyPosted) {
+                return;
+            }
 
+            $lines = FinancialGlMapping::linesForPosSale($invoice);
             $this->ledger->post(
                 companyId: $invoice->company_id,
                 data: [
@@ -189,15 +251,25 @@ class POSService
                     'trace_id'    => $traceId,
                 ],
                 branchId: $invoice->branch_id,
-                userId:   $invoice->created_by_user_id,
+                userId: $invoice->created_by_user_id,
             );
+        } catch (LedgerPostingFailedException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('pos.ledger.post.failed', [
-                'invoice_id' => $invoice->id,
-                'error'      => $e->getMessage(),
-                'trace_id'   => $traceId,
-            ]);
+            throw new LedgerPostingFailedException(
+                source: 'pos',
+                companyId: (int) $invoice->company_id,
+                invoiceId: $invoice->id,
+                previous: $e,
+            );
         }
+    }
+
+    private function allocateInvoiceCounter(int $companyId): int
+    {
+        $row = DB::selectOne("SELECT nextval('invoice_counter_global_seq') AS next_counter");
+
+        return (int) ($row->next_counter ?? 1);
     }
 
     private function buildItems(array $items, int $companyId): array
@@ -237,28 +309,27 @@ class POSService
     }
 
     private function deductInventory(
-        array   $items,
-        int     $companyId,
-        int     $branchId,
-        int     $userId,
+        array $items,
+        array $trackedProductIds,
+        int $companyId,
+        int $branchId,
+        int $userId,
         Invoice $invoice,
-        string  $traceId,
+        string $traceId,
     ): void {
         foreach ($items as $item) {
-            if (empty($item['product_id'])) {
+            $productId = isset($item['product_id']) ? (int) $item['product_id'] : 0;
+            if ($productId <= 0) {
                 continue;
             }
-
-            // Skip inventory deduction for products that don't track inventory
-            $product = \App\Models\Product::find($item['product_id']);
-            if (!$product || !$product->track_inventory) {
+            if (! isset($trackedProductIds[$productId])) {
                 continue;
             }
 
             $this->inventoryService->deductStock(
                 companyId:     $companyId,
                 branchId:      $branchId,
-                productId:     (int) $item['product_id'],
+                productId:     $productId,
                 quantity:      (float) $item['quantity'],
                 userId:        $userId,
                 referenceType: Invoice::class,
@@ -267,5 +338,31 @@ class POSService
                 unitCost:      $item['cost_price'] ?? null,
             );
         }
+    }
+
+    /**
+     * Resolve inventory-tracked products once to keep POS transaction lean.
+     *
+     * @return array<int, true>
+     */
+    private function trackedProductIds(array $items): array
+    {
+        $productIds = [];
+        foreach ($items as $item) {
+            if (! empty($item['product_id'])) {
+                $productIds[] = (int) $item['product_id'];
+            }
+        }
+        $productIds = array_values(array_unique(array_filter($productIds, fn (int $id): bool => $id > 0)));
+        if ($productIds === []) {
+            return [];
+        }
+
+        return \App\Models\Product::query()
+            ->whereIn('id', $productIds)
+            ->where('track_inventory', true)
+            ->pluck('id')
+            ->mapWithKeys(fn ($id): array => [(int) $id => true])
+            ->all();
     }
 }

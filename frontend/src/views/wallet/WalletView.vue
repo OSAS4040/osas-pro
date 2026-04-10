@@ -1,16 +1,33 @@
 <template>
-  <div class="space-y-6" dir="rtl">
+  <div class="app-shell-page" dir="rtl">
+    <NavigationSourceHint />
     <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+    <div class="page-head">
+      <div class="page-title-wrap">
+        <h1 class="page-title-xl flex items-center gap-2">
           <CreditCardIcon class="w-7 h-7 text-primary-600" />
           إدارة المحافظ
         </h1>
-        <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">إدارة أرصدة ومحافظ العملاء</p>
+        <p class="page-subtitle">إدارة أرصدة ومحافظ العملاء</p>
+        <p class="text-[11px] text-gray-500 dark:text-slate-400 mt-1 max-w-xl">
+          «شحن رصيد» يفتح نافذة فوق الصفحة؛ إن لم تظهر، حرّك الصفحة للأعلى أو أغلق أي نافذة مفتوحة.
+        </p>
+        <RouterLink
+          v-if="
+            auth.hasPermission('wallet.top_up_requests.create')
+              || auth.hasPermission('wallet.top_up_requests.view')
+              || auth.hasPermission('wallet.top_up_requests.review')
+          "
+          to="/wallet/top-up-requests"
+          class="inline-flex mt-2 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+        >
+          طلبات شحن الرصيد (مراجعة وإيصال)
+        </RouterLink>
       </div>
-      <button @click="showTopUp = true"
-        class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm">
+      <button type="button"
+              class="btn btn-primary relative z-10"
+              @click="openTopUpModal"
+      >
         <PlusCircleIcon class="w-5 h-5" />
         شحن رصيد
       </button>
@@ -26,38 +43,42 @@
         </div>
       </template>
       <template v-else>
-      <div v-for="wt in walletTypes" :key="wt.key"
-        class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm transition-shadow hover:shadow-md">
-        <div class="flex items-center justify-between mb-3">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center" :class="wt.bg">
-            <component :is="wt.icon" class="w-5 h-5" :class="wt.iconColor" />
+        <div v-for="wt in walletTypes" :key="wt.key"
+             class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm transition-shadow hover:shadow-md"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center" :class="wt.bg">
+              <component :is="wt.icon" class="w-5 h-5" :class="wt.iconColor" />
+            </div>
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="wt.badge">{{ wt.label }}</span>
           </div>
-          <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="wt.badge">{{ wt.label }}</span>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{{ fmt(totals[wt.key] ?? 0) }}</p>
+          <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">إجمالي {{ wt.label }}</p>
         </div>
-        <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">{{ fmt(totals[wt.key] ?? 0) }}</p>
-        <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">إجمالي {{ wt.label }}</p>
-      </div>
       </template>
     </div>
 
     <!-- Search + Filter -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-4 shadow-sm">
+    <div class="table-toolbar">
       <div class="flex flex-wrap gap-3 items-center">
         <div class="flex-1 min-w-[200px] relative">
           <MagnifyingGlassIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input v-model="search" @input="debouncedLoad" placeholder="بحث بالاسم أو الهاتف..."
-            class="w-full pr-9 py-2 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          <input v-model="search" placeholder="بحث بالاسم أو الهاتف..." class="w-full pr-9 py-2 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                 @input="debouncedLoad"
+          />
         </div>
-        <select v-model="filterType" @change="load"
-          class="px-3 py-2 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500">
+        <select v-model="filterType" class="px-3 py-2 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500"
+                @change="load"
+        >
           <option value="">كل الأنواع</option>
           <option value="cash">نقدية</option>
           <option value="promotional">ترويجية</option>
           <option value="reserved">محجوزة</option>
           <option value="credit">ائتمان</option>
         </select>
-        <select v-model="filterStatus" @change="load"
-          class="px-3 py-2 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500">
+        <select v-model="filterStatus" class="px-3 py-2 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500"
+                @change="load"
+        >
           <option value="">كل الحالات</option>
           <option value="active">نشطة</option>
           <option value="frozen">مجمّدة</option>
@@ -67,10 +88,10 @@
     </div>
 
     <!-- Wallets Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
-        <h3 class="font-semibold text-gray-800 dark:text-white">قائمة المحافظ</h3>
-        <span class="text-xs text-gray-400 dark:text-slate-500">{{ wallets.length }} محفظة</span>
+    <div class="table-shell">
+      <div class="panel-head">
+        <h3 class="panel-title">قائمة المحافظ</h3>
+        <span class="panel-muted">{{ wallets.length }} محفظة</span>
       </div>
 
       <div v-if="loading" class="px-2 py-4">
@@ -94,15 +115,15 @@
         <p class="text-gray-400 dark:text-slate-500 text-xs mt-1 max-w-xs mx-auto">شحن رصيد لعميل أو تغيير عوامل البحث لعرض النتائج</p>
         <button
           type="button"
-          class="mt-4 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline"
-          @click="showTopUp = true"
+          class="mt-4 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline relative z-10"
+          @click="openTopUpModal"
         >
           + شحن رصيد
         </button>
       </div>
 
-      <table v-else class="w-full text-sm">
-        <thead class="bg-gray-50 dark:bg-slate-700/50 text-xs text-gray-500 dark:text-slate-400">
+      <table v-else class="data-table">
+        <thead>
           <tr>
             <th class="px-5 py-3 text-right font-semibold">العميل</th>
             <th class="px-4 py-3 text-right font-semibold">نوع المحفظة</th>
@@ -112,8 +133,8 @@
             <th class="px-4 py-3"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
-          <tr v-for="w in wallets" :key="w.id" class="hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
+        <tbody>
+          <tr v-for="w in wallets" :key="w.id">
             <td class="px-5 py-3.5">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-primary-100 dark:bg-primary-900/40 rounded-full flex items-center justify-center flex-shrink-0">
@@ -148,13 +169,17 @@
                 <RouterLink
                   :to="{ name: 'wallet-transactions', params: { walletId: w.id } }"
                   class="text-xs font-medium text-primary-600 hover:underline px-1"
-                >سجل</RouterLink>
-                <button @click="openTxn(w)" title="معاينة سريعة"
-                  class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 text-gray-400 hover:text-primary-600 transition-colors">
+                >
+                  سجل
+                </RouterLink>
+                <button type="button" title="معاينة سريعة" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 text-gray-400 hover:text-primary-600 transition-colors"
+                        @click="openTxn(w)"
+                >
                   <ClockIcon class="w-4 h-4" />
                 </button>
-                <button @click="openTopUpFor(w)" title="شحن"
-                  class="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors">
+                <button type="button" title="شحن" class="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors"
+                        @click="openTopUpFor(w)"
+                >
                   <PlusCircleIcon class="w-4 h-4" />
                 </button>
               </div>
@@ -167,29 +192,29 @@
     <!-- Top-Up Modal -->
     <Teleport to="body">
       <Transition name="modal-fade">
-        <div v-if="showTopUp" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showTopUp = false" dir="rtl">
-          <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl">
+        <div v-if="showTopUp" class="modal-overlay" dir="rtl" @click.self="showTopUp = false">
+          <div class="modal-box max-w-md shadow-2xl">
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
               <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <PlusCircleIcon class="w-5 h-5 text-green-500" />
                 شحن رصيد
               </h3>
-              <button @click="showTopUp = false" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+              <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700" @click="showTopUp = false">
                 <XMarkIcon class="w-5 h-5 text-gray-400" />
               </button>
             </div>
-            <div class="p-6 space-y-4">
-              <div>
+            <div class="form-shell">
+              <div class="form-section">
                 <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">العميل <span class="text-red-500">*</span></label>
-                <select v-model="topUpForm.customer_id" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500">
+                <select v-model="topUpForm.customer_id" class="field">
                   <option value="">اختر عميل</option>
                   <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} — {{ c.phone }}</option>
                 </select>
               </div>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="form-grid-2">
                 <div>
                   <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">نوع الشحن</label>
-                  <select v-model="topUpForm.target" class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500">
+                  <select v-model="topUpForm.target" class="field">
                     <option value="individual">عميل / محفظة فردية</option>
                     <option value="fleet">محفظة أسطول</option>
                   </select>
@@ -197,28 +222,32 @@
                 <div>
                   <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">المبلغ (ريال) <span class="text-red-500">*</span></label>
                   <input v-model.number="topUpForm.amount" type="number" min="1" step="0.01"
-                    class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500"
-                    placeholder="0.00" />
+                         class="field"
+                         placeholder="0.00"
+                  />
                 </div>
               </div>
-              <div>
+              <div class="form-section">
                 <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">مركبة (اختياري — للأسطول)</label>
                 <input v-model.number="topUpForm.vehicle_id" type="number" min="0" step="1"
-                  class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500"
-                  placeholder="معرّف المركبة" />
+                       class="field"
+                       placeholder="معرّف المركبة"
+                />
               </div>
-              <div>
+              <div class="form-section">
                 <label class="block text-xs font-semibold text-gray-600 dark:text-slate-300 mb-1.5">ملاحظة</label>
                 <input v-model="topUpForm.note" type="text"
-                  class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500"
-                  placeholder="اختياري..." />
+                       class="field"
+                       placeholder="اختياري..."
+                />
               </div>
               <div v-if="topUpError" class="text-sm text-red-600 bg-red-50 dark:bg-red-900/30 rounded-xl p-3">{{ topUpError }}</div>
             </div>
-            <div class="flex gap-3 px-6 py-4 border-t border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 rounded-b-2xl">
-              <button @click="showTopUp = false" class="flex-1 px-4 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">إلغاء</button>
-              <button @click="submitTopUp" :disabled="submitting"
-                class="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors">
+            <div class="form-actions px-6 pb-5 pt-4">
+              <button class="btn btn-outline flex-1" @click="showTopUp = false">إلغاء</button>
+              <button :disabled="submitting" class="btn btn-success flex-1 disabled:opacity-50"
+                      @click="submitTopUp"
+              >
                 {{ submitting ? 'جارٍ الشحن...' : 'شحن الرصيد' }}
               </button>
             </div>
@@ -230,13 +259,13 @@
     <!-- Transactions Modal -->
     <Teleport to="body">
       <Transition name="modal-fade">
-        <div v-if="showTxnModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showTxnModal = false" dir="rtl">
+        <div v-if="showTxnModal" class="modal-overlay" dir="rtl" @click.self="showTxnModal = false">
           <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[80vh] flex flex-col">
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex-shrink-0">
               <h3 class="font-bold text-gray-900 dark:text-white">
                 سجل العمليات — {{ selectedWallet?.customer?.name }}
               </h3>
-              <button @click="showTxnModal = false" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+              <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700" @click="showTxnModal = false">
                 <XMarkIcon class="w-5 h-5 text-gray-400" />
               </button>
             </div>
@@ -251,11 +280,14 @@
               </div>
               <div v-else class="space-y-2">
                 <div v-for="t in transactions" :key="t.id"
-                  class="flex items-center gap-4 p-3 rounded-xl border border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
+                     class="flex items-center gap-4 p-3 rounded-xl border border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors"
+                >
                   <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                    :class="txnDisplay(t).credit ? 'bg-green-100 dark:bg-green-900/40' : 'bg-red-100 dark:bg-red-900/40'">
+                       :class="txnDisplay(t).credit ? 'bg-green-100 dark:bg-green-900/40' : 'bg-red-100 dark:bg-red-900/40'"
+                  >
                     <component :is="txnDisplay(t).credit ? ArrowDownIcon : ArrowUpIcon" class="w-4 h-4"
-                      :class="txnDisplay(t).credit ? 'text-green-600' : 'text-red-500'" />
+                               :class="txnDisplay(t).credit ? 'text-green-600' : 'text-red-500'"
+                    />
                   </div>
                   <div class="flex-1">
                     <p class="text-sm font-medium text-gray-800 dark:text-white">{{ t.description ?? txnTypeLabel(t.type) }}</p>
@@ -280,17 +312,22 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import {
   CreditCardIcon, PlusCircleIcon, MagnifyingGlassIcon,
   ClockIcon, XMarkIcon,
   ArrowDownIcon, ArrowUpIcon,
 } from '@heroicons/vue/24/outline'
 import apiClient, { withIdempotency } from '@/lib/apiClient'
+import { summarizeAxiosError } from '@/utils/apiErrorSummary'
 import { v4 as uuidv4 } from 'uuid'
 import { useToast } from '@/composables/useToast'
+import NavigationSourceHint from '@/components/NavigationSourceHint.vue'
 
 const toast = useToast()
+const auth = useAuthStore()
 const loading = ref(false)
+const customersLoading = ref(false)
 const submitting = ref(false)
 const showTopUp = ref(false)
 const showTxnModal = ref(false)
@@ -384,13 +421,29 @@ async function load() {
 }
 
 async function loadCustomers() {
+  customersLoading.value = true
   try {
-    const r = await apiClient.get('/customers', { params: { per_page: 300 } })
+    const r = await apiClient.get('/customers', { params: { per_page: 500 } })
     customers.value = r.data?.data ?? []
-  } catch { /* silent */ }
+  } catch {
+    customers.value = []
+  } finally {
+    customersLoading.value = false
+  }
 }
 
-function openTopUpFor(w: any) {
+async function openTopUpModal() {
+  topUpForm.customer_id = ''
+  topUpForm.target = 'individual'
+  topUpForm.vehicle_id = null
+  topUpForm.amount = null
+  topUpForm.note = ''
+  topUpError.value = ''
+  showTopUp.value = true
+  await loadCustomers()
+}
+
+async function openTopUpFor(w: any) {
   topUpForm.customer_id = w.customer_id ?? ''
   topUpForm.target = 'individual'
   topUpForm.vehicle_id = null
@@ -398,9 +451,11 @@ function openTopUpFor(w: any) {
   topUpForm.note = ''
   topUpError.value = ''
   showTopUp.value = true
+  await loadCustomers()
 }
 
 async function submitTopUp() {
+  if (submitting.value) return
   if (!topUpForm.customer_id || !topUpForm.amount || topUpForm.amount <= 0) {
     topUpError.value = 'يرجى اختيار عميل وإدخال مبلغ صحيح'
     return
@@ -418,13 +473,13 @@ async function submitTopUp() {
         notes: topUpForm.note || undefined,
         idempotency_key: uuidv4(),
       },
-      withIdempotency(),
+      { ...withIdempotency(), skipGlobalErrorToast: true },
     )
     toast.success(`تم شحن ${fmt(topUpForm.amount)} بنجاح`)
     showTopUp.value = false
     await load()
-  } catch (e: any) {
-    topUpError.value = e?.response?.data?.message ?? 'حدث خطأ أثناء الشحن'
+  } catch (e: unknown) {
+    topUpError.value = summarizeAxiosError(e)
   } finally {
     submitting.value = false
   }
@@ -447,3 +502,10 @@ onMounted(async () => {
   await Promise.all([load(), loadCustomers()])
 })
 </script>
+
+<style scoped>
+.modal-fade-enter-active { transition: opacity 0.2s ease-out; }
+.modal-fade-leave-active { transition: opacity 0.15s ease-in; }
+.modal-fade-enter-from,
+.modal-fade-leave-to { opacity: 0; }
+</style>

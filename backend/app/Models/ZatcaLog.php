@@ -9,9 +9,19 @@ class ZatcaLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'uuid', 'company_id', 'reference_type', 'reference_id', 'action',
-        'status', 'request_payload', 'response_payload',
-        'zatca_uuid', 'zatca_status', 'error_message', 'trace_id', 'created_at',
+        'uuid',
+        'company_id',
+        'reference_type',
+        'reference_id',
+        'action',
+        'status',
+        'request_payload',
+        'response_payload',
+        'zatca_uuid',
+        'zatca_status',
+        'error_message',
+        'trace_id',
+        'created_at',
     ];
 
     protected $casts = [

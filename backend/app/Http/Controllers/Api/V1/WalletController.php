@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomerWallet;
 use App\Models\Payment;
 use App\Models\WalletTransaction;
+use App\Models\Company;
+use App\Services\BillingModelPolicyService;
+use App\Services\Config\ConfigResolverService;
 use App\Services\PaymentService;
 use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +21,8 @@ class WalletController extends Controller
     public function __construct(
         private readonly WalletService $walletService,
         private readonly PaymentService $paymentService,
+        private readonly ConfigResolverService $configResolver,
+        private readonly BillingModelPolicyService $billingModelPolicy,
     ) {}
 
     private function companyId(): int
@@ -36,6 +41,10 @@ class WalletController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
+        if (! $this->isEnabled($request, 'wallet.enabled', true)) {
+            return response()->json(['message' => 'Wallet is disabled by configuration.', 'trace_id' => app('trace_id')], 403);
+        }
+
         $companyId = $this->companyId();
         $wallets = CustomerWallet::where('company_id', $companyId)
             ->with('customer:id,name,phone')
@@ -57,6 +66,10 @@ class WalletController extends Controller
      */
     public function summary(Request $request, int $customerId): JsonResponse
     {
+        if (! $this->isEnabled($request, 'wallet.enabled', true)) {
+            return response()->json(['message' => 'Wallet is disabled by configuration.', 'trace_id' => app('trace_id')], 403);
+        }
+
         $summary = $this->walletService->getBalanceSummary($this->companyId(), $customerId);
         return response()->json(['data' => $summary]);
     }
@@ -67,6 +80,10 @@ class WalletController extends Controller
      */
     public function transactions(Request $request, ?int $walletId = null): JsonResponse
     {
+        if (! $this->isEnabled($request, 'wallet.enabled', true)) {
+            return response()->json(['message' => 'Wallet is disabled by configuration.', 'trace_id' => app('trace_id')], 403);
+        }
+
         $companyId = $this->companyId();
 
         $resolvedWalletId = $walletId;
@@ -106,6 +123,10 @@ class WalletController extends Controller
      */
     public function topUp(Request $request): JsonResponse
     {
+        if (! $this->isEnabled($request, 'wallet.enabled', true)) {
+            return response()->json(['message' => 'Wallet is disabled by configuration.', 'trace_id' => app('trace_id')], 403);
+        }
+
         $data = $request->validate([
             'customer_id'     => 'required|integer',
             'vehicle_id'      => 'nullable|integer',
@@ -116,6 +137,12 @@ class WalletController extends Controller
             'idempotency_key' => 'nullable|string|max:255',
             'notes'           => 'nullable|string',
         ]);
+
+        try {
+            $this->billingModelPolicy->assertPrepaidWalletTopUp($this->companyId());
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
+        }
 
         $idem = $data['idempotency_key'] ?? $request->attributes->get('idempotency_key');
         if (! $idem) {
@@ -167,6 +194,10 @@ class WalletController extends Controller
      */
     public function topUpIndividual(Request $request): JsonResponse
     {
+        if (! $this->isEnabled($request, 'wallet.enabled', true)) {
+            return response()->json(['message' => 'Wallet is disabled by configuration.', 'trace_id' => app('trace_id')], 403);
+        }
+
         $data = $request->validate([
             'customer_id'     => 'required|integer',
             'vehicle_id'      => 'nullable|integer',
@@ -176,6 +207,12 @@ class WalletController extends Controller
             'idempotency_key' => 'required|string|max:255',
             'notes'           => 'nullable|string',
         ]);
+
+        try {
+            $this->billingModelPolicy->assertPrepaidWalletTopUp($this->companyId());
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
+        }
 
         $txn = $this->walletService->topUpIndividual(
             companyId:      $this->companyId(),
@@ -199,6 +236,10 @@ class WalletController extends Controller
      */
     public function topUpFleet(Request $request): JsonResponse
     {
+        if (! $this->isEnabled($request, 'wallet.enabled', true)) {
+            return response()->json(['message' => 'Wallet is disabled by configuration.', 'trace_id' => app('trace_id')], 403);
+        }
+
         $data = $request->validate([
             'customer_id'     => 'required|integer',
             'vehicle_id'      => 'nullable|integer',
@@ -208,6 +249,12 @@ class WalletController extends Controller
             'idempotency_key' => 'required|string|max:255',
             'notes'           => 'nullable|string',
         ]);
+
+        try {
+            $this->billingModelPolicy->assertPrepaidWalletTopUp($this->companyId());
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
+        }
 
         $txn = $this->walletService->topUpFleet(
             companyId:      $this->companyId(),
@@ -231,6 +278,10 @@ class WalletController extends Controller
      */
     public function transfer(Request $request): JsonResponse
     {
+        if (! $this->isEnabled($request, 'wallet.enabled', true)) {
+            return response()->json(['message' => 'Wallet is disabled by configuration.', 'trace_id' => app('trace_id')], 403);
+        }
+
         $data = $request->validate([
             'customer_id'     => 'required|integer',
             'vehicle_id'      => 'required|integer',
@@ -253,7 +304,11 @@ class WalletController extends Controller
             notes:          $data['notes'] ?? null,
         );
 
-        return response()->json(['data' => $result, 'message' => 'Transfer successful.'], 201);
+        return response()->json([
+            'data'     => $result,
+            'message'  => 'Transfer successful.',
+            'trace_id' => app('trace_id'),
+        ], 201);
     }
 
     /**
@@ -261,6 +316,10 @@ class WalletController extends Controller
      */
     public function reverse(Request $request): JsonResponse
     {
+        if (! $this->isEnabled($request, 'wallet.enabled', true)) {
+            return response()->json(['message' => 'Wallet is disabled by configuration.', 'trace_id' => app('trace_id')], 403);
+        }
+
         $data = $request->validate([
             'transaction_id'  => 'required|integer',
             'idempotency_key' => 'required|string|max:255',
@@ -336,5 +395,17 @@ class WalletController extends Controller
         }
 
         return response()->json(['data' => $refund, 'trace_id' => app('trace_id')], 201);
+    }
+
+    private function isEnabled(Request $request, string $key, bool $default): bool
+    {
+        $vertical = Company::query()->where('id', $this->companyId())->value('vertical_profile_code');
+
+        return $this->configResolver->resolveBool($key, [
+            'plan' => null,
+            'vertical' => $vertical,
+            'company_id' => $this->companyId(),
+            'branch_id' => $this->branchId(),
+        ], $default);
     }
 }

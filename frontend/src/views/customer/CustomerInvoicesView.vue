@@ -27,7 +27,8 @@
               <td class="px-4 py-3 font-semibold text-gray-800">{{ fmt(inv.total) }} ر.س</td>
               <td class="px-4 py-3">
                 <span class="px-2 py-0.5 rounded-full text-xs font-medium"
-                  :class="inv.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'">
+                      :class="inv.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'"
+                >
                   {{ inv.status === 'paid' ? 'مدفوعة' : 'معلقة' }}
                 </span>
               </td>

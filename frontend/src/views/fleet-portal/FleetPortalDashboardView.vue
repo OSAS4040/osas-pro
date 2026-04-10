@@ -8,11 +8,13 @@
       </div>
       <div class="flex gap-2">
         <RouterLink to="/fleet-portal/top-up"
-          class="flex items-center gap-1.5 px-3 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">
+                    class="flex items-center gap-1.5 px-3 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
+        >
           <CreditCardIcon class="w-4 h-4" /> شحن رصيد
         </RouterLink>
         <RouterLink to="/fleet-portal/new-order"
-          class="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    class="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <PlusCircleIcon class="w-4 h-4" /> طلب خدمة
         </RouterLink>
       </div>
@@ -21,7 +23,8 @@
     <!-- Quick Access Chips -->
     <div class="flex flex-wrap gap-2">
       <RouterLink v-for="chip in chips" :key="chip.label" :to="chip.to"
-        class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm">
+                  class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+      >
         <component :is="chip.icon" class="w-3.5 h-3.5 text-gray-500" />
         {{ chip.label }}
       </RouterLink>
@@ -65,18 +68,21 @@
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-xl border border-gray-100 p-5">
+      <RouterLink to="/fleet-portal/top-up"
+                  class="block bg-white rounded-xl border border-gray-100 p-5 hover:border-purple-200 hover:shadow-md transition-all cursor-pointer group"
+                  title="شحن رصيد المحفظة"
+      >
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-2xl font-bold text-purple-700">{{ fmtMoney(kpi.walletBalance) }}</p>
+            <p class="text-2xl font-bold text-purple-700 group-hover:text-purple-800">{{ fmtMoney(kpi.walletBalance) }}</p>
             <p class="text-sm text-gray-600 mt-1">رصيد المحفظة</p>
-            <p class="text-xs text-gray-400">ريال سعودي</p>
+            <p class="text-xs text-gray-400">ريال سعودي — اضغط للشحن</p>
           </div>
-          <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center">
+          <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100">
             <CreditCardIcon class="w-5 h-5 text-purple-600" />
           </div>
         </div>
-      </div>
+      </RouterLink>
     </div>
 
     <!-- Charts Row -->
@@ -93,8 +99,9 @@
         <div class="flex items-end gap-2 h-28">
           <div v-for="(day, i) in weekDays" :key="i" class="flex-1 flex flex-col items-center gap-1">
             <div class="w-full rounded-t-sm transition-all duration-500"
-              :class="day.val > 0 ? 'bg-teal-500' : 'bg-gray-100'"
-              :style="{ height: `${Math.max(day.val * 20, 4)}px` }">
+                 :class="day.val > 0 ? 'bg-teal-500' : 'bg-gray-100'"
+                 :style="{ height: `${Math.max(day.val * 20, 4)}px` }"
+            >
             </div>
             <span class="text-[10px] text-gray-400">{{ day.label }}</span>
           </div>
@@ -109,11 +116,13 @@
             <svg viewBox="0 0 36 36" class="w-28 h-28 -rotate-90">
               <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e5e7eb" stroke-width="3" />
               <circle cx="18" cy="18" r="15.9" fill="none" stroke="#10b981" stroke-width="3"
-                :stroke-dasharray="`${kpi.maintenancePct === 0 ? 100 : (100 - kpi.maintenancePct)} 100`"
-                stroke-dashoffset="0" stroke-linecap="round" />
+                      :stroke-dasharray="`${kpi.maintenancePct === 0 ? 100 : (100 - kpi.maintenancePct)} 100`"
+                      stroke-dashoffset="0" stroke-linecap="round"
+              />
               <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f97316" stroke-width="3"
-                :stroke-dasharray="`${kpi.maintenancePct} 100`"
-                :stroke-dashoffset="`-${100 - kpi.maintenancePct}`" stroke-linecap="round" />
+                      :stroke-dasharray="`${kpi.maintenancePct} 100`"
+                      :stroke-dashoffset="`-${100 - kpi.maintenancePct}`" stroke-linecap="round"
+              />
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center">
               <span class="text-lg font-bold text-gray-900">{{ kpi.maintenancePct }}%</span>
@@ -142,15 +151,16 @@
       </h2>
       <div class="space-y-2">
         <div v-for="wo in pendingOrders" :key="wo.id"
-          class="bg-white rounded-lg px-4 py-3 flex items-center justify-between shadow-xs">
+             class="bg-white rounded-lg px-4 py-3 flex items-center justify-between shadow-xs"
+        >
           <div class="text-sm">
             <span class="font-medium text-gray-800">WO-{{ wo.id }}</span>
             <span class="mx-2 text-gray-300">|</span>
             <span class="text-gray-600">{{ wo.vehicle?.plate_number }}</span>
           </div>
           <div class="flex gap-2">
-            <button @click="approveCredit(wo.id)" class="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">اعتماد</button>
-            <button @click="rejectCredit(wo.id)" class="px-3 py-1 bg-red-100 text-red-700 text-xs rounded-lg hover:bg-red-200">رفض</button>
+            <button class="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700" @click="approveCredit(wo.id)">اعتماد</button>
+            <button class="px-3 py-1 bg-red-100 text-red-700 text-xs rounded-lg hover:bg-red-200" @click="rejectCredit(wo.id)">رفض</button>
           </div>
         </div>
       </div>
@@ -179,7 +189,11 @@
           <tr v-for="wo in recentOrders" :key="wo.id" class="hover:bg-gray-50 transition-colors">
             <td class="px-5 py-3 font-medium text-teal-700">{{ wo.order_number }}</td>
             <td class="px-5 py-3 text-gray-700">{{ wo.vehicle?.plate_number }}</td>
-            <td class="px-5 py-3"><StatusBadge :status="wo.status" /></td>
+            <td class="px-5 py-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="workOrderStatusBadgeClass(wo.status)">
+                {{ workOrderStatusLabel(wo.status) }}
+              </span>
+            </td>
             <td class="px-5 py-3">
               <span v-if="wo.credit_authorized" class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">معتمد</span>
               <span v-else-if="wo.approval_status === 'pending'" class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">بانتظار</span>
@@ -200,9 +214,9 @@ import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   CreditCardIcon, PlusCircleIcon, ChartBarIcon, WrenchScrewdriverIcon,
-  TruckIcon, DocumentTextIcon, ClipboardDocumentListIcon, CalendarDaysIcon, Cog6ToothIcon,
+  TruckIcon, DocumentTextIcon, ClipboardDocumentListIcon, Cog6ToothIcon,
 } from '@heroicons/vue/24/outline'
-import StatusBadge from '@/components/StatusBadge.vue'
+import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 
 const BASE  = '/api/v1'
 const token = () => localStorage.getItem('auth_token') ?? ''

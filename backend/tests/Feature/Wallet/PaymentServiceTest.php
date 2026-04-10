@@ -264,4 +264,153 @@ class PaymentServiceTest extends TestCase
             idempotencyKey: (string) Str::uuid(),
         );
     }
+
+    /**
+     * Case 1 — New invoice: pay 40 of 100 → partial, due 60, paid 40.
+     */
+    public function test_due_amount_case1_partial_first_payment(): void
+    {
+        $inv = $this->makeHundredSarInvoice();
+
+        $this->paymentService->createPayment(
+            invoice: $inv,
+            amount:  40.00,
+            method:  'cash',
+            userId:  $this->tenant['user']->id,
+            traceId: 'case1',
+        );
+
+        $inv->refresh();
+        $this->assertEquals(InvoiceStatus::PartialPaid, $inv->status);
+        $this->assertEquals('40.0000', $inv->paid_amount);
+        $this->assertEquals('60.0000', $inv->due_amount);
+    }
+
+    /**
+     * Case 2 — After partial (40 paid, 60 due), pay 60 → paid, due 0.
+     */
+    public function test_due_amount_case2_second_payment_closes_invoice(): void
+    {
+        $inv = $this->makeHundredSarInvoice();
+
+        $this->paymentService->createPayment(
+            invoice: $inv,
+            amount:  40.00,
+            method:  'cash',
+            userId:  $this->tenant['user']->id,
+            traceId: 'case2a',
+        );
+        $inv->refresh();
+
+        $this->paymentService->createPayment(
+            invoice: $inv,
+            amount:  60.00,
+            method:  'cash',
+            userId:  $this->tenant['user']->id,
+            traceId: 'case2b',
+        );
+
+        $inv->refresh();
+        $this->assertEquals(InvoiceStatus::Paid, $inv->status);
+        $this->assertEquals('100.0000', $inv->paid_amount);
+        $this->assertEquals('0.0000', $inv->due_amount);
+    }
+
+    /**
+     * Case 3 — With 60 due, paying 100 (full original total) must fail; remainder is due, not total.
+     */
+    public function test_due_amount_case3_rejects_pay_using_total_when_partially_paid(): void
+    {
+        $inv = $this->makeHundredSarInvoice();
+
+        $this->paymentService->createPayment(
+            invoice: $inv,
+            amount:  40.00,
+            method:  'cash',
+            userId:  $this->tenant['user']->id,
+            traceId: 'case3a',
+        );
+        $inv->refresh();
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessageMatches('/exceeds invoice due amount/');
+
+        $this->paymentService->createPayment(
+            invoice: $inv,
+            amount:  100.00,
+            method:  'cash',
+            userId:  $this->tenant['user']->id,
+            traceId: 'case3b',
+        );
+    }
+
+    /**
+     * Case 4 — Payment above current due is rejected.
+     */
+    public function test_due_amount_case4_rejects_overpay_vs_due(): void
+    {
+        $inv = $this->makeHundredSarInvoice();
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessageMatches('/exceeds invoice due amount/');
+
+        $this->paymentService->createPayment(
+            invoice: $inv,
+            amount:  100.01,
+            method:  'cash',
+            userId:  $this->tenant['user']->id,
+            traceId: 'case4',
+        );
+    }
+
+    /**
+     * Case 5 — Fully paid invoice cannot accept another payment.
+     */
+    public function test_due_amount_case5_paid_invoice_rejects_payment(): void
+    {
+        $inv = $this->makeHundredSarInvoice();
+
+        $this->paymentService->createPayment(
+            invoice: $inv,
+            amount:  100.00,
+            method:  'cash',
+            userId:  $this->tenant['user']->id,
+            traceId: 'case5a',
+        );
+        $inv->refresh();
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessageMatches('/cannot accept a payment/');
+
+        $this->paymentService->createPayment(
+            invoice: $inv,
+            amount:  1.00,
+            method:  'cash',
+            userId:  $this->tenant['user']->id,
+            traceId: 'case5b',
+        );
+    }
+
+    private function makeHundredSarInvoice(): Invoice
+    {
+        return Invoice::create([
+            'uuid'               => (string) Str::uuid(),
+            'company_id'         => $this->tenant['company']->id,
+            'branch_id'          => $this->tenant['branch']->id,
+            'created_by_user_id' => $this->tenant['user']->id,
+            'customer_id'        => $this->customer->id,
+            'invoice_number'     => 'INV-HUNDRED-'.Str::lower(Str::random(6)),
+            'invoice_hash'       => hash('sha256', Str::random(16)),
+            'invoice_counter'    => random_int(10_000, 99_999),
+            'source_type'        => 'pos',
+            'source_id'          => 0,
+            'subtotal'           => 100.00,
+            'tax_amount'         => 0,
+            'total'              => 100.00,
+            'paid_amount'        => 0,
+            'due_amount'         => 100.00,
+            'status'             => 'pending',
+            'currency'           => 'SAR',
+        ]);
+    }
 }

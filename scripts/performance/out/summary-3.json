@@ -1,0 +1,202 @@
+{
+    "metrics": {
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 27046,
+            "thresholds": {
+                "rate<0.15": false
+            },
+            "value": 0
+        },
+        "http_req_duration": {
+            "max": 868.932171,
+            "p(90)": 443.37915499999997,
+            "p(95)": 481.994532,
+            "avg": 316.8793796323298,
+            "min": 82.005744,
+            "med": 322.79269999999997
+        },
+        "iteration_duration": {
+            "min": 336.325998,
+            "med": 791.068149,
+            "max": 1491.865358,
+            "p(90)": 1013.603899,
+            "p(95)": 1066.1618114,
+            "avg": 792.7156749098062
+        },
+        "vus": {
+            "max": 50,
+            "value": 32,
+            "min": 0
+        },
+        "data_received": {
+            "rate": 876955.5727056278,
+            "count": 527475910
+        },
+        "http_reqs": {
+            "rate": 44.96535286207934,
+            "count": 27046
+        },
+        "http_req_blocked": {
+            "min": 0.001597,
+            "med": 0.00863,
+            "max": 23.057439,
+            "p(90)": 0.0137015,
+            "p(95)": 0.01711675,
+            "avg": 0.018267603860090263
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 481.994532,
+            "avg": 316.8793796323298,
+            "min": 82.005744,
+            "med": 322.79269999999997,
+            "max": 868.932171,
+            "p(90)": 443.37915499999997
+        },
+        "http_req_tls_handshaking": {
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0
+        },
+        "checks": {
+            "passes": 27043,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_connecting": {
+            "avg": 0.0060686916734452425,
+            "min": 0,
+            "med": 0,
+            "max": 9.578409,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_sending": {
+            "avg": 0.04757377024328888,
+            "min": 0.005936,
+            "med": 0.035083500000000004,
+            "max": 2.456244,
+            "p(90)": 0.07823050000000001,
+            "p(95)": 0.09612375000000001
+        },
+        "iterations": {
+            "count": 27043,
+            "rate": 44.960365209243946
+        },
+        "http_req_waiting": {
+            "avg": 314.76880699966745,
+            "min": 81.907512,
+            "med": 320.94502850000003,
+            "max": 868.243566,
+            "p(90)": 439.4516205,
+            "p(95)": 477.86083325
+        },
+        "http_req_duration{name:work_orders_list}": {
+            "p(95)": 494.8088786999999,
+            "avg": 346.66918429097404,
+            "min": 116.520673,
+            "med": 362.373049,
+            "max": 827.331954,
+            "p(90)": 463.7925052,
+            "thresholds": {
+                "p(99)<30000": false
+            }
+        },
+        "http_req_receiving": {
+            "avg": 2.062998862419566,
+            "min": 0.024429,
+            "med": 0.7009369999999999,
+            "max": 124.078578,
+            "p(90)": 5.222602999999999,
+            "p(95)": 6.712733500000001
+        },
+        "vus_max": {
+            "value": 50,
+            "min": 50,
+            "max": 50
+        },
+        "data_sent": {
+            "count": 6096214,
+            "rate": 10135.266347435783
+        }
+    },
+    "setup_data": {
+        "vehiclePlate": "ABL 0112",
+        "writeEnabled": true,
+        "baseUrl": "http://host.docker.internal",
+        "customerId": 2,
+        "headers": {
+            "Accept": "application/json",
+            "Authorization": "Bearer 19|jvvBs9a59NnAaraW6BfjF2ja0JJA7bsvE4qNrQyX6a660973",
+            "Content-Type": "application/json"
+        },
+        "vehicleId": 1
+    },
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "inv_list 200": {
+                    "passes": 6757,
+                    "fails": 0,
+                    "name": "inv_list 200",
+                    "path": "::inv_list 200",
+                    "id": "4db332fb87ab2a7b2ff013405d65fb53"
+                },
+                "wo_list 200": {
+                    "name": "wo_list 200",
+                    "path": "::wo_list 200",
+                    "id": "3b287f434d42b986db0f28bdd71d6639",
+                    "passes": 13039,
+                    "fails": 0
+                },
+                "dash 200": {
+                    "name": "dash 200",
+                    "path": "::dash 200",
+                    "id": "680344fb7e1e19132031a3e16c7a94ee",
+                    "passes": 2671,
+                    "fails": 0
+                },
+                "me 200": {
+                    "path": "::me 200",
+                    "id": "30e7556edf82eff0e3762598c402eb40",
+                    "passes": 1092,
+                    "fails": 0,
+                    "name": "me 200"
+                },
+                "wo_create 2xx": {
+                    "fails": 0,
+                    "name": "wo_create 2xx",
+                    "path": "::wo_create 2xx",
+                    "id": "14a2fa3afbe92f8fbb5bc918dbaddee1",
+                    "passes": 391
+                },
+                "version 200": {
+                    "fails": 0,
+                    "name": "version 200",
+                    "path": "::version 200",
+                    "id": "b3dc38c67f719bd3cedf746a39b9d2c9",
+                    "passes": 1077
+                },
+                "health 200": {
+                    "id": "8e4f90a842a57472549a6b2cf699032d",
+                    "passes": 1623,
+                    "fails": 0,
+                    "name": "health 200",
+                    "path": "::health 200"
+                },
+                "batch_neg expected 4xx": {
+                    "name": "batch_neg expected 4xx",
+                    "path": "::batch_neg expected 4xx",
+                    "id": "ff8263bbe4af0f1b30cab73f85e6b76d",
+                    "passes": 393,
+                    "fails": 0
+                }
+            },
+        "name": "",
+        "path": ""
+    }
+}

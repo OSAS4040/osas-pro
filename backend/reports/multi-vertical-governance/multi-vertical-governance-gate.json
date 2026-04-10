@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-04-01T17:08:40+03:00",
+  "phase": "Multi-Vertical Governance & Enablement",
+  "status": "ready_for_signoff_review",
+  "scope_constraints_respected": {
+    "financial_modules_modified": false,
+    "ledger_or_invoice_contracts_modified": false,
+    "pos_financial_flow_modified": false,
+    "core_behavior_broken": false
+  },
+  "governance_capabilities": {
+    "central_assignment_service": true,
+    "central_validation_rules": true,
+    "company_assignment_supported": true,
+    "branch_assignment_supported": true,
+    "reassignment_supported": true,
+    "unassignment_supported": true
+  },
+  "visibility_capabilities": {
+    "company_effective_config_readonly": true,
+    "branch_effective_config_readonly": true,
+    "resolution_source_exposed": [
+      "default",
+      "company_override",
+      "branch_override"
+    ]
+  },
+  "auditability": {
+    "assignment_audit": true,
+    "reassignment_audit": true,
+    "unassignment_audit": true,
+    "resolution_check_audit": true
+  },
+  "authorization": {
+    "manage_permission": "config_profiles.manage",
+    "view_permission": "config_profiles.view",
+    "unauthorized_enforced": true
+  },
+  "governance_safety": {
+    "assignment_operations_transactional": true,
+    "concurrency_protection": "pessimistic_lock"
+  },
+  "test_evidence": {
+    "governance_suite": "5 passed (19 assertions)",
+    "core_regression_suite": "11 passed (47 assertions with governance suite run)",
+    "auth_regression_suite": "9 passed (42 assertions)"
+  },
+  "decision_recommendation": "Go for formal governance phase sign-off"
+}
+

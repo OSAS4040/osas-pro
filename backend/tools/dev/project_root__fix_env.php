@@ -7,7 +7,6 @@ $replacements = [
     'DB_USERNAME=postgres' => 'DB_USERNAME=saas_user',
     'DB_PASSWORD=secret'   => 'DB_PASSWORD=saas_password',
     'LOG_LEVEL=debug'      => 'LOG_LEVEL=warning',
-    'APP_KEY=base64:CHANGE_ME_RUN_php_artisan_key_generate' => 'APP_KEY=base64:RMaiJaOLwmG+k51FgjrosxDQtrG756n1Uyc2kQP5k7g=',
 ];
 
 foreach ($replacements as $from => $to) {
@@ -19,4 +18,4 @@ foreach ($replacements as $from => $to) {
 
 file_put_contents($path, $content);
 echo "Done. New .env values:\n";
-echo shell_exec("grep -E 'DB_|LOG_LEVEL|APP_KEY' /var/www/.env");
+echo shell_exec("grep -E 'DB_|LOG_LEVEL|APP_KEY' /var/www/.env") ?? '';

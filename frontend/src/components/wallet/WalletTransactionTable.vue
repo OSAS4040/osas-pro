@@ -1,6 +1,6 @@
 <template>
   <div class="table-wrapper">
-    <table class="data-table" v-if="transactions.length">
+    <table v-if="transactions.length" class="data-table">
       <thead>
         <tr>
           <th>Type</th>

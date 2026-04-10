@@ -52,8 +52,8 @@ export function renderQRToCanvas(
   canvas: HTMLCanvasElement,
   text: string,
   size = 200,
-  darkColor = '#000000',
-  lightColor = '#ffffff'
+  _darkColor = '#000000',
+  _lightColor = '#ffffff'
 ): void {
   // Use qrcodegen library logic — minimal implementation
   const ctx = canvas.getContext('2d')

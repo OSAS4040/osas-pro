@@ -12,23 +12,46 @@
     <div v-if="!purchase" class="text-gray-400 text-sm">جارٍ التحميل...</div>
 
     <template v-else>
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 space-y-3 text-sm">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <h3 class="font-semibold text-gray-800 dark:text-slate-100">مرفقات PDF</h3>
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 text-xs font-medium cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/50">
+            <input type="file" accept="application/pdf,.pdf" class="hidden" @change="uploadPdf" />
+            رفع ملف PDF
+          </label>
+        </div>
+        <p v-if="docUploading" class="text-xs text-primary-600">جاري الرفع...</p>
+        <ul v-if="attachments.length" class="space-y-2">
+          <li v-for="(a, idx) in attachments" :key="idx" class="flex items-center justify-between gap-2 rounded-lg border border-gray-100 dark:border-slate-600 px-3 py-2">
+            <a
+              :href="resolveDocUrl(a)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="min-w-0 truncate text-sm text-primary-600 hover:underline dark:text-primary-400"
+            >{{ a.name }}</a>
+            <button type="button" class="text-xs text-red-600 dark:text-red-400 hover:underline shrink-0" @click="removeDoc(idx)">حذف</button>
+          </li>
+        </ul>
+        <p v-else-if="!docUploading" class="text-xs text-gray-400 dark:text-slate-500">ارفع عروض أسعار أو فواتير المورد بصيغة PDF (حتى 10 ميجا).</p>
+      </div>
+
       <div class="grid grid-cols-2 gap-4">
-        <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-2 text-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 space-y-2 text-sm">
           <p><span class="text-gray-500">المورد:</span> <strong>{{ purchase.supplier?.name }}</strong></p>
           <p><span class="text-gray-500">الفرع:</span> {{ purchase.branch?.name ?? '—' }}</p>
           <p><span class="text-gray-500">تاريخ التسليم المتوقع:</span> {{ purchase.expected_at?.slice(0, 10) ?? '—' }}</p>
           <p><span class="text-gray-500">تاريخ الاستلام:</span> {{ purchase.received_at?.slice(0, 10) ?? '—' }}</p>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-2 text-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 space-y-2 text-sm">
           <p><span class="text-gray-500">المجموع الفرعي:</span> {{ Number(purchase.subtotal).toFixed(2) }} ر.س</p>
           <p><span class="text-gray-500">الضريبة:</span> {{ Number(purchase.tax_amount).toFixed(2) }} ر.س</p>
           <p class="text-base font-bold"><span class="text-gray-500 font-normal">الإجمالي:</span> {{ Number(purchase.total).toFixed(2) }} ر.س</p>
         </div>
       </div>
 
-      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div class="flex items-center justify-between px-4 py-3 border-b">
-          <h3 class="text-sm font-semibold">البنود</h3>
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-700">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100">البنود</h3>
         </div>
         <table class="w-full text-sm">
           <thead class="bg-gray-50 text-xs text-gray-500">
@@ -61,12 +84,16 @@
           v-if="canTransition('ordered')"
           class="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700"
           @click="doTransition('ordered')"
-        >تأكيد الطلب</button>
+        >
+          تأكيد الطلب
+        </button>
         <button
           v-if="canTransition('cancelled')"
           class="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
           @click="doTransition('cancelled')"
-        >إلغاء أمر الشراء</button>
+        >
+          إلغاء أمر الشراء
+        </button>
         <RouterLink
           v-if="canReceive"
           :to="`/purchases/${purchase.id}/receive`"
@@ -110,10 +137,63 @@
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import apiClient from '@/lib/apiClient'
+import { useToast } from '@/composables/useToast'
+import { appConfirm } from '@/services/appConfirmDialog'
+import { resolveStoragePublicUrl } from '@/utils/storageUrl'
 
-const route    = useRoute()
-const purchase = ref<any>(null)
-const receipts = ref<any[]>([])
+const route         = useRoute()
+const toast         = useToast()
+const purchase      = ref<any>(null)
+const receipts      = ref<any[]>([])
+const docUploading  = ref(false)
+
+const attachments = computed(() => purchase.value?.document_attachments ?? [])
+
+function resolveDocUrl(a: { url?: string }) {
+  return resolveStoragePublicUrl(a?.url)
+}
+
+async function uploadPdf(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file  = input.files?.[0]
+  if (!file || !purchase.value) return
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    toast.warning('صيغة غير مدعومة', 'يرجى اختيار ملف PDF فقط (حتى 10 ميجا).')
+    input.value = ''
+    return
+  }
+  docUploading.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    await apiClient.post(`/purchases/${purchase.value.id}/documents`, fd)
+    toast.success('تم الرفع', 'أضيف المستند إلى أمر الشراء.')
+    await load()
+  } catch (e: any) {
+    toast.error('فشل الرفع', e?.response?.data?.message ?? 'تحقق من الصلاحيات وحجم الملف.')
+  } finally {
+    docUploading.value = false
+    input.value        = ''
+  }
+}
+
+async function removeDoc(idx: number) {
+  if (!purchase.value) return
+  const ok = await appConfirm({
+    title: 'حذف المرفق',
+    message: 'حذف هذا الملف؟',
+    variant: 'danger',
+    confirmLabel: 'حذف',
+  })
+  if (!ok) return
+  try {
+    await apiClient.delete(`/purchases/${purchase.value.id}/documents/${idx}`)
+    toast.success('تم الحذف')
+    await load()
+  } catch {
+    toast.error('تعذر حذف المرفق')
+  }
+}
 
 const TRANSITIONS: Record<string, string[]> = {
   pending:   ['ordered', 'cancelled'],

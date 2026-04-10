@@ -36,7 +36,7 @@ class UomConversionTest extends TestCase
     public function test_convert_to_same_unit_returns_same_quantity(): void
     {
         $unit   = $this->createUnit('kg');
-        $result = $unit->convertTo($unit->id, 10);
+        $result = $unit->convertTo($unit, 10);
 
         $this->assertEquals(10.0, $result);
     }
@@ -54,7 +54,7 @@ class UomConversionTest extends TestCase
             'is_active'    => true,
         ]);
 
-        $result = $kg->convertTo($g->id, 2.5);
+        $result = $kg->convertTo($g, 2.5);
 
         $this->assertEquals(2500.0, $result);
     }
@@ -72,7 +72,7 @@ class UomConversionTest extends TestCase
             'is_active'    => true,
         ]);
 
-        $result = $g->convertTo($kg->id, 500);
+        $result = $g->convertTo($kg, 500);
 
         $this->assertEquals(0.5, $result);
     }
@@ -83,7 +83,7 @@ class UomConversionTest extends TestCase
         $b = $this->createUnit('bar');
 
         $this->expectException(\DomainException::class);
-        $a->convertTo($b->id, 5);
+        $a->convertTo($b, 5);
     }
 
     public function test_unit_conversion_api_store_and_list(): void
@@ -103,11 +103,11 @@ class UomConversionTest extends TestCase
             ]);
 
         $response->assertStatus(201);
-        $response->assertJsonPath('data.factor', 12);
+        $response->assertJsonPath('data.factor', '12.00000000');
 
         $list = $this->actingAs($user, 'sanctum')->getJson('/api/v1/units/conversions');
         $list->assertStatus(200);
-        $list->assertJsonFragment(['factor' => 12]);
+        $list->assertJsonFragment(['factor' => '12.00000000']);
     }
 
     public function test_unit_store_and_delete(): void

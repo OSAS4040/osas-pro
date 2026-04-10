@@ -5,7 +5,7 @@
         <ClockIcon class="w-6 h-6 text-purple-500" />
         سياسات مستوى الخدمة (SLA)
       </h2>
-      <button @click="showNew = true" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium">
+      <button class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium" @click="showNew = true">
         + سياسة جديدة
       </button>
     </div>
@@ -13,11 +13,13 @@
     <!-- SLA Matrix -->
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <div v-for="p in policies" :key="p.id" :class="priorityCardClass(p.priority)"
-        class="rounded-xl p-4 border">
+           class="rounded-xl p-4 border"
+      >
         <div class="flex items-center justify-between mb-3">
           <span class="font-bold text-sm">{{ priorityLabel(p.priority) }}</span>
           <span :class="p.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
-            class="text-xs px-2 py-0.5 rounded-full">{{ p.is_active ? 'فعال' : 'معطّل' }}</span>
+                class="text-xs px-2 py-0.5 rounded-full"
+          >{{ p.is_active ? 'فعال' : 'معطّل' }}</span>
         </div>
         <div class="space-y-2 text-xs">
           <div class="flex items-center gap-2">
@@ -37,8 +39,8 @@
           </div>
         </div>
         <div class="mt-3 flex gap-2">
-          <button @click="editPolicy(p)" class="text-xs text-gray-500 hover:text-gray-700 underline">تعديل</button>
-          <button @click="toggleActive(p)" class="text-xs" :class="p.is_active ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700'">
+          <button class="text-xs text-gray-500 hover:text-gray-700 underline" @click="editPolicy(p)">تعديل</button>
+          <button class="text-xs" :class="p.is_active ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700'" @click="toggleActive(p)">
             {{ p.is_active ? 'تعطيل' : 'تفعيل' }}
           </button>
         </div>
@@ -72,7 +74,7 @@
             <h3 class="font-bold text-gray-900 dark:text-white">{{ editing ? 'تعديل' : 'سياسة جديدة' }}</h3>
             <button @click="closeModal"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
           </div>
-          <form @submit.prevent="savePolicy" class="p-5 space-y-4">
+          <form class="p-5 space-y-4" @submit.prevent="savePolicy">
             <div>
               <label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">الاسم</label>
               <input v-model="form.name" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white outline-none" />
@@ -101,7 +103,7 @@
               </div>
             </div>
             <div class="flex justify-end gap-2">
-              <button type="button" @click="closeModal" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">إلغاء</button>
+              <button type="button" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg" @click="closeModal">إلغاء</button>
               <button type="submit" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium">حفظ</button>
             </div>
           </form>

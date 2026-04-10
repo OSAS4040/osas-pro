@@ -2,8 +2,8 @@
   <div class="space-y-6" dir="rtl">
     <div class="flex items-center justify-between flex-wrap gap-3">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">الحضور والانصراف</h2>
-        <p class="text-xs text-gray-400 mt-0.5">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-slate-100">الحضور والانصراف</h2>
+        <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
           طريقة التسجيل:
           <span class="font-medium" :class="geoEnabled ? 'text-green-600' : 'text-blue-600'">
             {{ geoEnabled ? '📍 جيومكاني (GPS)' : '🖥️ دخول النظام' }}
@@ -12,38 +12,47 @@
         </p>
       </div>
       <div class="flex gap-2">
-        <button @click="checkAction('check-in')"
-          class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
+        <button class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                @click="checkAction('check-in')"
+        >
           <ArrowRightEndOnRectangleIcon class="w-4 h-4" />
           تسجيل حضور
         </button>
-        <button @click="checkAction('check-out')"
-          class="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm font-medium">
+        <button class="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm font-medium"
+                @click="checkAction('check-out')"
+        >
           <ArrowLeftStartOnRectangleIcon class="w-4 h-4" />
           تسجيل انصراف
         </button>
       </div>
     </div>
 
+    <div
+      v-if="smartHint"
+      class="rounded-xl border border-amber-200/90 bg-amber-50/95 dark:bg-amber-950/35 dark:border-amber-900/50 px-4 py-3 text-sm text-amber-950 dark:text-amber-100"
+    >
+      <span class="font-semibold">تنبيه:</span> {{ smartHint }}
+    </div>
+
     <!-- Attendance Method Selector (managers only, based on plan) -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5">
-      <h3 class="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-5 transition-colors">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-slate-200 mb-4 flex items-center gap-2">
         <Cog6ToothIcon class="w-4 h-4 text-gray-500" />
         طريقة تسجيل الحضور
       </h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <!-- Option 1: System Login -->
         <button
-          @click="setAttendanceMethod('system')"
           class="flex items-start gap-4 p-4 rounded-xl border-2 transition-all text-right"
-          :class="attendanceMethod === 'system' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white'"
+          :class="attendanceMethod === 'system' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40' : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 bg-white dark:bg-slate-800'"
+          @click="setAttendanceMethod('system')"
         >
           <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" :class="attendanceMethod === 'system' ? 'bg-blue-100' : 'bg-gray-100'">
             <ComputerDesktopIcon class="w-5 h-5" :class="attendanceMethod === 'system' ? 'text-blue-600' : 'text-gray-400'" />
           </div>
           <div>
-            <p class="text-sm font-semibold text-gray-900">دخول النظام</p>
-            <p class="text-xs text-gray-500 mt-0.5">يُسجَّل الحضور عبر النظام دون تحقق من الموقع</p>
+            <p class="text-sm font-semibold text-gray-900 dark:text-slate-100">دخول النظام</p>
+            <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">يُسجَّل الحضور عبر النظام دون تحقق من الموقع</p>
             <span class="inline-block mt-1.5 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">متاح لجميع الباقات</span>
           </div>
           <CheckCircleIcon v-if="attendanceMethod === 'system'" class="w-5 h-5 text-blue-500 mr-auto flex-shrink-0 mt-0.5" />
@@ -51,19 +60,19 @@
 
         <!-- Option 2: GPS Geo -->
         <button
-          @click="setAttendanceMethod('geo')"
           class="flex items-start gap-4 p-4 rounded-xl border-2 transition-all text-right"
           :class="[
             !canUseGeo ? 'opacity-60 cursor-not-allowed' : '',
-            attendanceMethod === 'geo' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300 bg-white'
+            attendanceMethod === 'geo' ? 'border-green-500 bg-green-50 dark:bg-green-950/30' : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 bg-white dark:bg-slate-800'
           ]"
           :disabled="!canUseGeo"
+          @click="setAttendanceMethod('geo')"
         >
           <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" :class="attendanceMethod === 'geo' ? 'bg-green-100' : 'bg-gray-100'">
             <MapPinIcon class="w-5 h-5" :class="attendanceMethod === 'geo' ? 'text-green-600' : 'text-gray-400'" />
           </div>
           <div>
-            <p class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <p class="text-sm font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
               جيومكاني (GPS + Geofence)
               <LockClosedIcon v-if="!canUseGeo" class="w-3.5 h-3.5 text-gray-400" />
             </p>
@@ -92,76 +101,95 @@
             <input v-model="geoConfig.radius" type="number" min="50" max="5000" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="200" />
           </div>
         </div>
-        <button @click="getMyLocation" class="flex items-center gap-1.5 text-xs text-green-700 hover:underline">
+        <button class="flex items-center gap-1.5 text-xs text-green-700 hover:underline" @click="getMyLocation">
           <MapPinIcon class="w-3.5 h-3.5" />
           استخدام موقعي الحالي كإحداثيات الفرع
         </button>
       </div>
     </div>
 
+    <!-- تكاملات أنظمة (روابط) -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-5">
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-slate-100 mb-2">تكاملات مقترحة</h3>
+      <p class="text-xs text-gray-500 dark:text-slate-400 mb-3">
+        ربط الحضور والرواتب مع منصات رسمية يتم من صفحة التكاملات بعد اعتماد العقود مع المزوّد.
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <RouterLink to="/settings/integrations" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-medium text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600">
+          إعدادات التكاملات
+        </RouterLink>
+        <RouterLink to="/workshop/salaries" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-900/30 text-xs font-medium text-primary-800 dark:text-primary-200">
+          مسير الرواتب
+        </RouterLink>
+      </div>
+    </div>
+
     <!-- Today Summary -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div v-for="s in todayStats" :key="s.label" class="bg-white rounded-xl p-4 border border-gray-200 text-center">
+      <div v-for="s in todayStats" :key="s.label" class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 text-center transition-colors">
         <p class="text-2xl font-bold" :class="s.color">{{ s.value }}</p>
-        <p class="text-xs text-gray-500 mt-1">{{ s.label }}</p>
+        <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">{{ s.label }}</p>
       </div>
     </div>
 
     <!-- Employee selector & date -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 flex gap-3 flex-wrap items-end">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 flex gap-3 flex-wrap items-end transition-colors">
       <div class="flex-1 min-w-[200px]">
-        <label class="block text-xs font-medium text-gray-600 mb-1">الموظف</label>
-        <select v-model="selectedEmployee" @change="loadMonth" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none">
+        <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">الموظف</label>
+        <select v-model="selectedEmployee" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none text-gray-900 dark:text-slate-100" @change="loadMonth">
           <option value="">كل الموظفين</option>
-          <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name }}</option>
+          <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name || e.name }}</option>
         </select>
       </div>
       <div class="flex-1 min-w-[160px]">
-        <label class="block text-xs font-medium text-gray-600 mb-1">الشهر</label>
-        <input v-model="selectedMonth" type="month" @change="loadMonth"
-          class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
+        <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">الشهر</label>
+        <input v-model="selectedMonth" type="month" class="w-full border border-gray-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none text-gray-900 dark:text-slate-100"
+               @change="loadMonth"
+        />
       </div>
     </div>
 
     <!-- Attendance Log -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div class="px-4 py-3 border-b bg-gray-50">
-        <h3 class="font-semibold text-sm text-gray-700">سجل الحضور</h3>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden transition-colors">
+      <div class="px-4 py-3 border-b bg-gray-50 dark:bg-slate-900/50 border-gray-200 dark:border-slate-700">
+        <h3 class="font-semibold text-sm text-gray-700 dark:text-slate-200">سجل الحضور</h3>
       </div>
       <div v-if="loading" class="flex justify-center py-8">
         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
       </div>
       <table v-else class="w-full text-sm">
-        <thead class="bg-gray-50 border-b">
+        <thead class="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-200 dark:border-slate-700">
           <tr>
-            <th class="px-4 py-3 text-right font-semibold text-gray-700">الموظف</th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-700">النوع</th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-700">الوقت</th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-700">الطريقة</th>
-            <th class="px-4 py-3 text-right font-semibold text-gray-700">الموقع</th>
+            <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">الموظف</th>
+            <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">النوع</th>
+            <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">الوقت</th>
+            <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">الطريقة</th>
+            <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">الموقع</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-          <tr v-for="log in logs" :key="log.id" class="hover:bg-gray-50">
-            <td class="px-4 py-3 font-medium text-gray-900">{{ log.employee_name ?? log.employee_id }}</td>
+          <tr v-for="log in logs" :key="log.id" class="hover:bg-gray-50 dark:hover:bg-slate-900/40">
+            <td class="px-4 py-3 font-medium text-gray-900 dark:text-slate-100">{{ log.employee_name ?? log.employee_id }}</td>
             <td class="px-4 py-3">
               <span :class="log.type === 'check_in' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'"
-                class="px-2 py-0.5 rounded-full text-xs font-medium">
+                    class="px-2 py-0.5 rounded-full text-xs font-medium"
+              >
                 {{ log.type === 'check_in' ? 'حضور' : 'انصراف' }}
               </span>
             </td>
-            <td class="px-4 py-3 text-gray-600 text-xs">{{ formatDate(log.logged_at) }}</td>
+            <td class="px-4 py-3 text-gray-600 dark:text-slate-400 text-xs">{{ formatDate(log.logged_at) }}</td>
             <td class="px-4 py-3 text-xs">
               <span v-if="log.latitude" class="flex items-center gap-1 text-green-600">
                 <MapPinIcon class="w-3 h-3" /> GPS
               </span>
               <span v-else class="text-gray-400">نظام</span>
             </td>
-            <td class="px-4 py-3 text-gray-500 text-xs">
+            <td class="px-4 py-3 text-gray-500 dark:text-slate-500 text-xs">
               <a v-if="log.latitude"
-                :href="`https://www.google.com/maps?q=${log.latitude},${log.longitude}`"
-                target="_blank"
-                class="text-blue-600 hover:underline font-mono">
+                 :href="`https://www.google.com/maps?q=${log.latitude},${log.longitude}`"
+                 target="_blank"
+                 class="text-blue-600 hover:underline font-mono"
+              >
                 {{ Number(log.latitude).toFixed(4) }}, {{ Number(log.longitude).toFixed(4) }}
               </a>
               <span v-else>—</span>
@@ -193,13 +221,13 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">الموظف *</label>
                 <select v-model="checkForm.employee_id" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
                   <option value="">اختر موظفاً</option>
-                  <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name }}</option>
+                  <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name || e.name }}</option>
                 </select>
               </div>
 
               <!-- GPS Status (geo mode) -->
               <div v-if="geoEnabled" class="rounded-xl p-3 text-sm border"
-                :class="geoStatus === 'ok' ? 'bg-green-50 border-green-200 text-green-700' : geoStatus === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'"
+                   :class="geoStatus === 'ok' ? 'bg-green-50 border-green-200 text-green-700' : geoStatus === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'"
               >
                 <div class="flex items-center gap-2">
                   <MapPinIcon class="w-4 h-4 flex-shrink-0" />
@@ -210,10 +238,11 @@
 
               <div v-if="checkError" class="text-red-600 text-sm bg-red-50 rounded-lg p-3">{{ checkError }}</div>
               <div class="flex gap-3 justify-end">
-                <button @click="checkModal = null" class="px-4 py-2 border rounded-lg text-sm text-gray-700">إلغاء</button>
-                <button @click="submitCheck" :disabled="checkSaving || (geoEnabled && geoStatus === 'fetching')"
-                  :class="checkModal === 'check-in' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600'"
-                  class="px-4 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                <button class="px-4 py-2 border rounded-lg text-sm text-gray-700" @click="checkModal = null">إلغاء</button>
+                <button :disabled="checkSaving || (geoEnabled && geoStatus === 'fetching')" :class="checkModal === 'check-in' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600'"
+                        class="px-4 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                        @click="submitCheck"
+                >
                   {{ checkSaving ? 'جاري...' : (checkModal === 'check-in' ? 'تسجيل الحضور' : 'تسجيل الانصراف') }}
                 </button>
               </div>
@@ -227,6 +256,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import {
   ArrowRightEndOnRectangleIcon, ArrowLeftStartOnRectangleIcon, XMarkIcon,
   MapPinIcon, ComputerDesktopIcon, Cog6ToothIcon, LockClosedIcon, CheckCircleIcon,
@@ -249,7 +279,7 @@ const geoConfig = ref({ lat: '', lng: '', radius: 200 })
 const employees      = ref<any[]>([])
 const logs           = ref<any[]>([])
 const loading        = ref(false)
-const selectedEmployee = ref('')
+const selectedEmployee = ref<string | number>('')
 const selectedMonth  = ref(new Date().toISOString().slice(0, 7))
 const checkModal     = ref<string | null>(null)
 const checkSaving    = ref(false)
@@ -265,11 +295,30 @@ const todayStats = computed(() => {
   const today = new Date().toDateString()
   const todayLogs = logs.value.filter(l => new Date(l.logged_at).toDateString() === today)
   return [
-    { label: 'حاضرون اليوم',    value: new Set(todayLogs.filter(l => l.type === 'check_in').map(l => l.employee_id)).size,  color: 'text-green-600' },
-    { label: 'منصرفون',          value: new Set(todayLogs.filter(l => l.type === 'check_out').map(l => l.employee_id)).size, color: 'text-orange-500' },
-    { label: 'إجمالي الموظفين', value: employees.value.length,  color: 'text-primary-600' },
-    { label: 'سجلات الشهر',     value: logs.value.length,       color: 'text-blue-600' },
+    { label: 'حاضرون اليوم',    value: new Set(todayLogs.filter(l => l.type === 'check_in').map(l => l.employee_id)).size,  color: 'text-green-600 dark:text-green-400' },
+    { label: 'منصرفون',          value: new Set(todayLogs.filter(l => l.type === 'check_out').map(l => l.employee_id)).size, color: 'text-orange-500 dark:text-orange-400' },
+    { label: 'إجمالي الموظفين', value: employees.value.length,  color: 'text-primary-600 dark:text-primary-400' },
+    { label: 'سجلات الشهر',     value: logs.value.length,       color: 'text-blue-600 dark:text-blue-400' },
   ]
+})
+
+/** كشف أيام بها حضور دون انصراف لاحق — عند اختيار موظف واحد فقط */
+const smartHint = computed(() => {
+  if (!selectedEmployee.value || !logs.value.length) return ''
+  const byDay = new Map<string, { in: number; out: number }>()
+  for (const l of logs.value) {
+    const d = new Date(l.logged_at).toDateString()
+    const cur = byDay.get(d) ?? { in: 0, out: 0 }
+    if (l.type === 'check_in') cur.in++
+    if (l.type === 'check_out') cur.out++
+    byDay.set(d, cur)
+  }
+  let odd = 0
+  byDay.forEach((v) => {
+    if (v.in > v.out) odd++
+  })
+  if (odd > 2) return `يوجد ${odd} يوماً تقريباً بها حضور بلا انصراف مطابق — راجع السجل أو سجّل الانصراف.`
+  return ''
 })
 
 function formatDate(d: string) {
@@ -351,13 +400,21 @@ async function loadEmployees() {
 }
 
 async function loadMonth() {
-  if (!selectedEmployee.value) { logs.value = []; return }
   loading.value = true
   try {
     const [y, m] = selectedMonth.value.split('-')
-    const r = await apiClient.get(`/workshop/attendance/${selectedEmployee.value}/month?year=${y}&month=${m}`)
+    if (selectedEmployee.value === '' || selectedEmployee.value === null) {
+      const r = await apiClient.get(`/workshop/attendance/month-all?year=${y}&month=${m}`)
+      logs.value = r.data?.data ?? []
+      return
+    }
+    const r = await apiClient.get(
+      `/workshop/attendance/${selectedEmployee.value}/logs?year=${y}&month=${m}`,
+    )
     logs.value = r.data?.data ?? []
-  } finally { loading.value = false }
+  } finally {
+    loading.value = false
+  }
 }
 
 async function submitCheck() {
@@ -384,10 +441,8 @@ async function submitCheck() {
 
 onMounted(async () => {
   await loadEmployees()
-  if (employees.value.length) {
-    selectedEmployee.value = employees.value[0].id
-    await loadMonth()
-  }
+  selectedEmployee.value = ''
+  await loadMonth()
 })
 </script>
 

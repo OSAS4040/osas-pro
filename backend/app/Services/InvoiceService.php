@@ -4,10 +4,13 @@ namespace App\Services;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\JournalEntryType;
+use App\Enums\WorkOrderStatus;
+use App\Exceptions\LedgerPostingFailedException;
 use App\Intelligence\Events\InvoiceCreated;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\WorkOrder;
 use App\Support\Accounting\FinancialGlMapping;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +24,7 @@ class InvoiceService
         private readonly IdempotencyService $idempotency,
         private readonly LedgerService      $ledger,
         private readonly IntelligentEventEmitter $intelligentEvents,
+        private readonly PaymentService     $paymentService,
     ) {}
 
     /**
@@ -77,7 +81,16 @@ class InvoiceService
                 $this->recordPayment($invoice, $data['payment'], $userId, $traceId);
             }
 
-            $this->deductInventoryForItems($data['items'], $companyId, $branchId, $userId, $invoice, $traceId);
+            $trackedProductIds = $this->trackedProductIdsForInvoice($data['items'], $companyId);
+            $this->deductInventoryForItems(
+                $data['items'],
+                $trackedProductIds,
+                $companyId,
+                $branchId,
+                $userId,
+                $invoice,
+                $traceId,
+            );
 
             $this->postInvoiceLedger($invoice, $traceId);
 
@@ -98,6 +111,10 @@ class InvoiceService
         return $invoice;
     }
 
+    /**
+     * Must succeed for the surrounding DB transaction to commit: a posted invoice without
+     * a balanced journal entry is a financial integrity violation.
+     */
     private function postInvoiceLedger(Invoice $invoice, string $traceId): void
     {
         try {
@@ -117,12 +134,15 @@ class InvoiceService
                 branchId: $invoice->branch_id,
                 userId:   $invoice->created_by_user_id,
             );
+        } catch (LedgerPostingFailedException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('ledger.post.failed', [
-                'invoice_id' => $invoice->id,
-                'error'      => $e->getMessage(),
-                'trace_id'   => $traceId,
-            ]);
+            throw new LedgerPostingFailedException(
+                source: 'invoice',
+                companyId: (int) $invoice->company_id,
+                invoiceId: $invoice->id,
+                previous: $e,
+            );
         }
     }
 
@@ -133,15 +153,6 @@ class InvoiceService
     public function issueFromWorkOrder(WorkOrder $order, int $userId, ?string $idempotencyKey = null): Invoice
     {
         $companyId = $order->company_id;
-        $endpoint  = 'invoice.from_work_order';
-
-        if ($idempotencyKey) {
-            $payloadHash = $this->idempotency->hashPayload(['work_order_id' => $order->id]);
-            $cached      = $this->idempotency->check($companyId, $idempotencyKey, $endpoint, $payloadHash);
-            if ($cached) {
-                return Invoice::with(['items', 'payments'])->findOrFail($cached['invoice_id']);
-            }
-        }
 
         if (! in_array($order->status->value, ['completed', 'delivered'])) {
             throw new \DomainException('Work order must be completed or delivered before issuing an invoice.');
@@ -181,6 +192,10 @@ class InvoiceService
             'notes'         => $order->notes,
         ];
 
+        if ($idempotencyKey !== null && trim($idempotencyKey) !== '') {
+            $data['idempotency_key'] = trim($idempotencyKey);
+        }
+
         $invoice = $this->createInvoice($data, $companyId, $order->branch_id, $userId);
 
         $order->update([
@@ -188,13 +203,62 @@ class InvoiceService
             'work_order_sync_status' => 'invoiced',
         ]);
 
-        if ($idempotencyKey) {
-            $this->idempotency->store(
-                $companyId, $idempotencyKey, $endpoint,
-                $this->idempotency->hashPayload(['work_order_id' => $order->id]),
-                ['invoice_id' => $invoice->id],
-            );
+        return $invoice;
+    }
+
+    /**
+     * Credit tenants: single invoice at managerial approval (per work order), before execution starts.
+     */
+    public function issueFromApprovedCreditWorkOrder(WorkOrder $order, int $userId, ?string $idempotencyKey = null): Invoice
+    {
+        if ($order->status !== WorkOrderStatus::Approved) {
+            throw new \DomainException('Work order must be in approved status to issue the credit approval invoice.');
         }
+
+        $existingInvoice = Invoice::where('source_type', WorkOrder::class)
+            ->where('source_id', $order->id)
+            ->first();
+
+        if ($existingInvoice) {
+            return $existingInvoice;
+        }
+
+        $order->loadMissing('items');
+
+        $items = $order->items->map(fn ($item) => [
+            'name' => $item->name,
+            'description' => $item->sku ?? null,
+            'product_id' => $item->product_id ?? null,
+            'service_id' => null,
+            'sku' => $item->sku ?? null,
+            'quantity' => (float) $item->quantity,
+            'unit_price' => (float) $item->unit_price,
+            'cost_price' => null,
+            'discount_amount' => (float) $item->discount_amount,
+            'tax_rate' => (float) $item->tax_rate,
+        ])->toArray();
+
+        $data = [
+            'customer_id' => $order->customer_id,
+            'vehicle_id' => $order->vehicle_id,
+            'type' => 'sale',
+            'source_type' => WorkOrder::class,
+            'source_id' => $order->id,
+            'customer_type' => 'b2b',
+            'items' => $items,
+            'notes' => $order->notes,
+        ];
+
+        if ($idempotencyKey !== null && trim($idempotencyKey) !== '') {
+            $data['idempotency_key'] = trim($idempotencyKey);
+        }
+
+        $invoice = $this->createInvoice($data, (int) $order->company_id, (int) $order->branch_id, $userId);
+
+        $order->update([
+            'invoice_id' => $invoice->id,
+            'work_order_sync_status' => 'invoiced',
+        ]);
 
         return $invoice;
     }
@@ -263,29 +327,17 @@ class InvoiceService
 
     private function recordPayment(Invoice $invoice, array $paymentData, int $userId, string $traceId): Payment
     {
-        $payment = Payment::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $invoice->company_id,
-            'branch_id'          => $invoice->branch_id,
-            'invoice_id'         => $invoice->id,
-            'created_by_user_id' => $userId,
-            'method'             => $paymentData['method'],
-            'amount'             => $paymentData['amount'],
-            'currency'           => $invoice->currency,
-            'reference'          => $paymentData['reference'] ?? null,
-            'status'             => 'completed',
-            'trace_id'           => $traceId,
-        ]);
+        $payment = $this->paymentService->createPayment(
+            invoice:   $invoice,
+            amount:    (float) $paymentData['amount'],
+            method:    (string) $paymentData['method'],
+            userId:    $userId,
+            traceId:   $traceId,
+            branchId:  $invoice->branch_id,
+            reference: $paymentData['reference'] ?? null,
+        );
 
-        $paidAmount = (float)$invoice->paid_amount + (float)$payment->amount;
-        $dueAmount  = (float)$invoice->total - $paidAmount;
-        $status     = $dueAmount <= 0.001 ? InvoiceStatus::Paid : InvoiceStatus::PartialPaid;
-
-        $invoice->update([
-            'paid_amount' => $paidAmount,
-            'due_amount'  => max(0, $dueAmount),
-            'status'      => $status,
-        ]);
+        $invoice->refresh();
 
         if ($paymentData['method'] === 'wallet' && $invoice->customer_id) {
             $walletKey  = ($paymentData['idempotency_key'] ?? ($invoice->idempotency_key . '_wallet'));
@@ -328,17 +380,56 @@ class InvoiceService
         return $payment;
     }
 
+    /**
+     * Same rule as POS: only physical (or other) products with inventory tracking deduct stock.
+     * Services and lines without {@see Product::track_inventory} must not hit {@see InventoryService::deductStock}.
+     *
+     * @return array<int, true>
+     */
+    private function trackedProductIdsForInvoice(array $items, int $companyId): array
+    {
+        $productIds = [];
+        foreach ($items as $item) {
+            if (! empty($item['product_id'])) {
+                $productIds[] = (int) $item['product_id'];
+            }
+        }
+        $productIds = array_values(array_unique(array_filter($productIds, fn (int $id): bool => $id > 0)));
+        if ($productIds === []) {
+            return [];
+        }
+
+        return Product::query()
+            ->where('company_id', $companyId)
+            ->whereIn('id', $productIds)
+            ->where('track_inventory', true)
+            ->pluck('id')
+            ->mapWithKeys(fn ($id): array => [(int) $id => true])
+            ->all();
+    }
+
+    /**
+     * @param  array<int, true>  $trackedProductIds
+     */
     private function deductInventoryForItems(
-        array $items, int $companyId, int $branchId,
-        int $userId, Invoice $invoice, string $traceId,
+        array $items,
+        array $trackedProductIds,
+        int $companyId,
+        int $branchId,
+        int $userId,
+        Invoice $invoice,
+        string $traceId,
     ): void {
         foreach ($items as $item) {
-            if (empty($item['product_id'])) continue;
+            $productId = isset($item['product_id']) ? (int) $item['product_id'] : 0;
+            if ($productId <= 0 || ! isset($trackedProductIds[$productId])) {
+                continue;
+            }
 
             $this->inventoryService->deductStock(
                 companyId:     $companyId,
                 branchId:      $branchId,
-                productId:     (int) $item['product_id'],
+                productId:     $productId,
                 quantity:      (float) $item['quantity'],
                 userId:        $userId,
                 referenceType: Invoice::class,

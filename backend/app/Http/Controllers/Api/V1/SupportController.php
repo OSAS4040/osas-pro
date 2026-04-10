@@ -212,6 +212,23 @@ class SupportController extends Controller
 
         $oldStatus   = $ticket->status;
         $newStatus   = $data['status'];
+        $allowedTransitions = [
+            'open' => ['in_progress', 'pending_customer', 'resolved', 'escalated', 'closed'],
+            'in_progress' => ['pending_customer', 'resolved', 'escalated', 'closed'],
+            'pending_customer' => ['in_progress', 'resolved', 'escalated', 'closed'],
+            'resolved' => ['closed'],
+            'escalated' => ['in_progress', 'pending_customer', 'resolved', 'closed'],
+            'closed' => [],
+        ];
+        $allowed = $allowedTransitions[$oldStatus] ?? [];
+        if ($newStatus !== $oldStatus && ! in_array($newStatus, $allowed, true)) {
+            return response()->json([
+                'message' => "Ticket status transition {$oldStatus} -> {$newStatus} is not allowed.",
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
         $timestamps  = [];
 
         if ($newStatus === 'resolved' && !$ticket->resolved_at) {

@@ -1,0 +1,11 @@
+# انسخ هذا الملف إلى `.env` عند جذر المشروع (مستبعد من git).
+#
+# نفق ngrok لـ Vite (Docker):
+#   1) ضع NGROK_AUTHTOKEN أدناه من https://dashboard.ngrok.com/get-started/your-authtoken
+#   2) docker compose up -d frontend   (أو make up)
+#   3) make ngrok-up
+#   4) make ngrok-url  ← يطبع الرابط وقيمة VITE_DEV_PUBLIC_HOST لواجهة frontend/.env
+#   5) أعد تشغيل حاوية frontend بعد تحديث VITE_DEV_PUBLIC_HOST
+#
+# بدون authtoken ستظهر أخطاء ERR_NGROK_4018 في سجلات الحاوية saas_ngrok.
+NGROK_AUTHTOKEN=

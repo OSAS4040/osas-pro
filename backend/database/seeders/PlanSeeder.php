@@ -54,6 +54,7 @@ class PlanSeeder extends Seeder
                     'reports'         => true,
                     'api_access'      => false,
                     'zatca'           => false,
+                    'work_order_advanced_pricing' => false,
                 ],
             ],
             [
@@ -77,6 +78,7 @@ class PlanSeeder extends Seeder
                     'reports'         => true,
                     'api_access'      => true,
                     'zatca'           => true,
+                    'work_order_advanced_pricing' => true,
                 ],
             ],
             [
@@ -100,6 +102,7 @@ class PlanSeeder extends Seeder
                     'reports'         => true,
                     'api_access'      => true,
                     'zatca'           => true,
+                    'work_order_advanced_pricing' => true,
                     'dedicated_support' => true,
                     'sla'             => true,
                 ],

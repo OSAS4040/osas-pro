@@ -38,7 +38,11 @@ class TenantIsolationTest extends TestCase
     public function test_grace_period_blocks_write_operations(): void
     {
         $tenant = $this->createTenant('owner');
-        $tenant['subscription']->update(['status' => 'grace_period']);
+        $tenant['subscription']->update([
+            'ends_at'       => now()->subDay(),
+            'grace_ends_at' => now()->addDays(14),
+            'status'        => 'grace_period',
+        ]);
 
         $response = $this->actingAsUser($tenant['user'])
             ->postJson('/api/v1/customers', [
@@ -53,7 +57,11 @@ class TenantIsolationTest extends TestCase
     public function test_grace_period_allows_read_operations(): void
     {
         $tenant = $this->createTenant('owner');
-        $tenant['subscription']->update(['status' => 'grace_period']);
+        $tenant['subscription']->update([
+            'ends_at'       => now()->subDay(),
+            'grace_ends_at' => now()->addDays(14),
+            'status'        => 'grace_period',
+        ]);
 
         $response = $this->actingAsUser($tenant['user'])
             ->getJson('/api/v1/invoices');

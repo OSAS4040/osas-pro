@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Performance indexes for OSAS hot query paths.
+ * Performance indexes for Osas Pro hot query paths.
  * Based on profiling: slowest queries use these columns without indexes.
  */
 return new class extends Migration

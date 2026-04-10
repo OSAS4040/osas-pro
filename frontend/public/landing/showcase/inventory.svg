@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750" viewBox="0 0 1200 750" role="img" aria-labelledby="t">
+  <title id="t">معاينة توضيحية المخزون في أسس برو</title>
+  <defs>
+    <linearGradient id="bg" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#78350f"/>
+      <stop offset="50%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#9a3412"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="#020617"/>
+  <rect x="36" y="36" width="1128" height="678" rx="28" fill="url(#bg)"/>
+  <rect x="36" y="36" width="1128" height="678" rx="28" fill="url(#shine)"/>
+  <rect x="72" y="108" width="1056" height="564" rx="14" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
+  <rect x="92" y="132" width="220" height="14" rx="4" fill="#334155"/>
+  <rect x="92" y="158" width="360" height="10" rx="3" fill="#1e293b"/>
+  <rect x="92" y="200" width="1016" height="40" rx="8" fill="#1e293b"/>
+  <rect x="92" y="256" width="1016" height="380" rx="12" fill="#1e293b"/>
+  <rect x="112" y="280" width="976" height="36" rx="6" fill="#334155" opacity="0.85"/>
+  <rect x="112" y="332" width="976" height="44" rx="6" fill="#0f172a"/>
+  <rect x="112" y="388" width="976" height="44" rx="6" fill="#0f172a"/>
+  <rect x="112" y="444" width="976" height="44" rx="6" fill="#0f172a"/>
+  <rect x="112" y="500" width="976" height="44" rx="6" fill="#0f172a"/>
+  <rect x="112" y="556" width="976" height="44" rx="6" fill="#0f172a"/>
+  <rect x="920" y="344" width="140" height="20" rx="4" fill="#f59e0b" opacity="0.85"/>
+  <rect x="920" y="400" width="100" height="20" rx="4" fill="#64748b"/>
+  <text x="600" y="86" text-anchor="middle" fill="#fffbeb" font-size="34" font-weight="700" font-family="Tahoma, 'Segoe UI', Arial, sans-serif">المخزون والمشتريات</text>
+  <text x="600" y="118" text-anchor="middle" fill="#fcd34d" font-size="18" font-family="Tahoma, 'Segoe UI', Arial, sans-serif">حركات وتغطية وحدود طلب، توضيح بصري</text>
+</svg>

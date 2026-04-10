@@ -2,6 +2,9 @@ FROM php:8.3-fpm-alpine
 
 WORKDIR /var/www
 
+# Tesseract (OCR): مطلوب لمسح اللوحة والفواتير والمستندات داخل نفس حاوية php-fpm.
+# Alpine: حزم tesseract-ocr-data-eng / tesseract-ocr-data-ara
+# Debian/Ubuntu بديل: apt-get install -y tesseract-ocr tesseract-ocr-ara tesseract-ocr-eng && rm -rf /var/lib/apt/lists/*
 RUN apk add --no-cache \
     postgresql-client postgresql-dev \
     libpq \
@@ -13,6 +16,9 @@ RUN apk add --no-cache \
     oniguruma-dev \
     icu-dev \
     linux-headers \
+    tesseract-ocr \
+    tesseract-ocr-data-eng \
+    tesseract-ocr-data-ara \
     $PHPIZE_DEPS
 
 RUN docker-php-ext-install \

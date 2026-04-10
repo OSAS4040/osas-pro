@@ -4,6 +4,12 @@ import * as Sentry from '@sentry/vue'
 import App from './App.vue'
 import router from './router'
 import './assets/main.css'
+import './assets/invoice-formal-print.css'
+import { syncBrowserAxiosWithApiClient } from '@/lib/apiClient'
+import { initOptionalGtm } from '@/utils/gtm'
+
+syncBrowserAxiosWithApiClient()
+initOptionalGtm()
 
 const app = createApp(App)
 

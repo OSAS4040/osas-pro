@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import apiClient from '@/lib/apiClient'
 
 export type Severity = 'info' | 'warning' | 'critical' | string
@@ -89,11 +89,24 @@ export interface ApiEnvelope<T> {
 
 const INTERNAL = '/internal/intelligence'
 
+export type IntelligenceSectionKey = 'overview' | 'insights' | 'recommendations' | 'alerts' | 'commandCenter'
+
 export function useIntelligenceCommandCenter() {
+  /** Full-page skeleton: true until any endpoint returns usable data */
   const loading = ref(true)
+  /** Background refresh (strip spin) */
+  const refreshing = ref(false)
   const error = ref<string | null>(null)
   const refreshedAt = ref<Date | null>(null)
   const traceId = ref<string | null>(null)
+
+  const sectionLoading = reactive<Record<IntelligenceSectionKey, boolean>>({
+    overview: true,
+    insights: true,
+    recommendations: true,
+    alerts: true,
+    commandCenter: true,
+  })
 
   const overview = ref<OverviewData | null>(null)
   const insights = ref<InsightsData | null>(null)
@@ -103,43 +116,88 @@ export function useIntelligenceCommandCenter() {
 
   const hasCommandCenterPayload = computed(() => commandCenter.value !== null)
 
+  const hasAnyData = computed(
+    () =>
+      overview.value !== null ||
+      insights.value !== null ||
+      commandCenter.value !== null ||
+      recommendations.value !== null ||
+      alerts.value !== null,
+  )
+
+  function collectErr(reason: unknown, errs: string[]): void {
+    const msg = (reason as { response?: { status?: number } })?.response?.status
+    if (msg === 404) {
+      errs.push('أحد واجهات الذكاء غير مفعّل في الخادم (404).')
+    } else if (msg === 403) {
+      errs.push('غير مصرح بعرض لوحة العمليات.')
+    } else {
+      errs.push('تعذّر تحميل بيانات الذكاء.')
+    }
+  }
+
   async function loadAll(): Promise<void> {
-    loading.value = true
+    const isBootstrap = !hasAnyData.value
+    if (isBootstrap) {
+      loading.value = true
+      Object.keys(sectionLoading).forEach((k) => {
+        sectionLoading[k as IntelligenceSectionKey] = true
+      })
+    } else {
+      refreshing.value = true
+    }
     error.value = null
 
-    const results = await Promise.allSettled([
-      apiClient.get<ApiEnvelope<OverviewData>>(`${INTERNAL}/overview`),
-      apiClient.get<ApiEnvelope<InsightsData>>(`${INTERNAL}/insights`),
-      apiClient.get<ApiEnvelope<unknown[]>>(`${INTERNAL}/recommendations`),
-      apiClient.get<ApiEnvelope<AlertRow[]>>(`${INTERNAL}/alerts`),
-      apiClient.get<ApiEnvelope<CommandCenterData>>(`${INTERNAL}/command-center`),
-    ])
-
     const errs: string[] = []
-
-    const pick = <T>(i: number): T | null => {
-      const r = results[i]
-      if (r.status === 'fulfilled') {
-        const body = r.value.data as ApiEnvelope<T>
-        traceId.value = body.trace_id ?? traceId.value
-        return body.data as T
+    let firstPaintUnlocked = false
+    const unlockSkeletonOnFirstResponse = () => {
+      if (!firstPaintUnlocked && loading.value) {
+        firstPaintUnlocked = true
+        loading.value = false
       }
-      const msg = (r.reason as { response?: { status?: number } })?.response?.status
-      if (msg === 404) {
-        errs.push('أحد واجهات الذكاء غير مفعّل في الخادم (404).')
-      } else if (msg === 403) {
-        errs.push('غير مصرح بعرض لوحة العمليات.')
-      } else {
-        errs.push('تعذّر تحميل بيانات الذكاء.')
-      }
-      return null
     }
 
-    overview.value = pick<OverviewData>(0)
-    insights.value = pick<InsightsData>(1)
-    recommendations.value = pick<unknown[]>(2)
-    alerts.value = pick<AlertRow[]>(3)
-    commandCenter.value = pick<CommandCenterData>(4)
+    const run = async <T>(
+      key: IntelligenceSectionKey,
+      url: string,
+      assign: (data: T | null) => void,
+    ): Promise<void> => {
+      if (isBootstrap) {
+        sectionLoading[key] = true
+      }
+      try {
+        const res = await apiClient.get<ApiEnvelope<T>>(url)
+        const env = res.data as ApiEnvelope<T>
+        traceId.value = env.trace_id ?? traceId.value
+        assign((env?.data ?? null) as T | null)
+      } catch (e) {
+        collectErr(e, errs)
+        assign(null)
+      } finally {
+        unlockSkeletonOnFirstResponse()
+        if (isBootstrap) {
+          sectionLoading[key] = false
+        }
+      }
+    }
+
+    await Promise.all([
+      run<OverviewData>('overview', `${INTERNAL}/overview`, (d) => {
+        overview.value = d
+      }),
+      run<InsightsData>('insights', `${INTERNAL}/insights`, (d) => {
+        insights.value = d
+      }),
+      run<unknown[]>('recommendations', `${INTERNAL}/recommendations`, (d) => {
+        recommendations.value = d
+      }),
+      run<AlertRow[]>('alerts', `${INTERNAL}/alerts`, (d) => {
+        alerts.value = d
+      }),
+      run<CommandCenterData>('commandCenter', `${INTERNAL}/command-center`, (d) => {
+        commandCenter.value = d
+      }),
+    ])
 
     if (!overview.value && !insights.value && !commandCenter.value) {
       error.value = errs[0] ?? 'تعذّر الاتصال بواجهات الذكاء.'
@@ -149,10 +207,13 @@ export function useIntelligenceCommandCenter() {
 
     refreshedAt.value = new Date()
     loading.value = false
+    refreshing.value = false
   }
 
   return {
     loading,
+    refreshing,
+    sectionLoading,
     error,
     refreshedAt,
     traceId,
@@ -162,6 +223,7 @@ export function useIntelligenceCommandCenter() {
     alerts,
     commandCenter,
     hasCommandCenterPayload,
+    hasAnyData,
     loadAll,
   }
 }

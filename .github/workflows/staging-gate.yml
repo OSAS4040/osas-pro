@@ -1,0 +1,117 @@
+# بوابة Staging الكاملة (Docker + Vitest + PHPUnit SaaS) — حسب المسارات فقط
+# فحص سياسة env على كل PR: policy-env-on-pr.yml
+# يطابق: make staging-gate
+# + وظيفة frontend-test-ci: npm run test:ci على ubuntu-latest (Playwright لا يعمل داخل حاوية frontend Alpine)
+
+name: Staging gate
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'Makefile'
+      - 'scripts/**'
+      - '.github/workflows/staging-gate.yml'
+      - 'docs/Staging*.md'
+  workflow_dispatch:
+
+concurrency:
+  group: staging-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHECK_BASE_URL: http://127.0.0.1
+  HEALTH_WAIT_SECS: "180"
+  DB_USERNAME: saas_user
+  DB_DATABASE: saas_db
+  CI_REDIS_PASSWORD: ${{ secrets.CI_REDIS_PASSWORD }}
+  CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+
+jobs:
+  policy-env-example:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Policy — SAAS catalog edit off in .env examples
+        run: node scripts/check-policy-env-example.mjs
+
+  staging-gate:
+    needs: [policy-env-example]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare backend .env for CI
+        run: |
+          set -euo pipefail
+          REDIS_PW="${CI_REDIS_PASSWORD:-redis_password}"
+          DB_PW="${CI_DB_PASSWORD:-saas_password}"
+          cp backend/.env.example backend/.env
+          APP_KEY_VAL="base64:$(openssl rand -base64 32 | tr -d '\n')"
+          sed -i "s#^APP_KEY=.*#APP_KEY=${APP_KEY_VAL}#" backend/.env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PW}|" backend/.env
+          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" backend/.env
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" backend/.env
+          sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PW}|" backend/.env
+          echo "REDIS_PASSWORD=${REDIS_PW}" >> "${GITHUB_ENV}"
+          echo "DB_PASSWORD=${DB_PW}" >> "${GITHUB_ENV}"
+
+      - name: Docker compose up + migrations + staging-gate
+        run: |
+          set -euo pipefail
+          docker compose build
+          docker compose up -d
+          deadline=$(( $(date +%s) + ${HEALTH_WAIT_SECS} ))
+          while [ "$(date +%s)" -lt "$deadline" ]; do
+            if curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/api/v1/health"; then
+              echo "Health OK"
+              break
+            fi
+            sleep 3
+          done
+          curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/api/v1/health" || { echo "Health timeout"; docker compose logs --tail=80 nginx app; exit 1; }
+          docker compose exec -T app php artisan migrate --force
+          docker compose exec -T app php artisan dev:demo-seed
+          export PGPASSWORD="${DB_PASSWORD:-saas_password}"
+          EXISTS=$(docker compose exec -T -e PGPASSWORD="$PGPASSWORD" postgres psql -U "${DB_USERNAME}" -d postgres -Atc \
+            "SELECT 1 FROM pg_database WHERE datname = 'saas_test'" 2>/dev/null || echo "0")
+          if [ "$EXISTS" != "1" ]; then
+            docker compose exec -T -e PGPASSWORD="$PGPASSWORD" postgres psql -U "${DB_USERNAME}" -d postgres -c "CREATE DATABASE saas_test;"
+          fi
+          chmod +x scripts/staging-gate.sh
+          bash scripts/staging-gate.sh
+
+  # Lint + vue-tsc + Vitest + Playwright ضد vite preview (نفس المضيف؛ ليس داخل Alpine)
+  frontend-test-ci:
+    needs: [policy-env-example]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium (with system deps)
+        run: npx playwright install --with-deps chromium
+
+      - name: test:ci
+        run: npm run test:ci
+        env:
+          CI: true

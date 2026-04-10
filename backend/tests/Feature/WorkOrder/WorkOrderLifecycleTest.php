@@ -57,25 +57,37 @@ class WorkOrderLifecycleTest extends TestCase
     private function createOrder(array $extra = []): WorkOrder
     {
         return $this->service->create(
-            array_merge(['customer_id' => $this->customer->id, 'vehicle_id' => $this->vehicle->id], $extra),
+            array_merge([
+                'customer_id' => $this->customer->id,
+                'vehicle_id' => $this->vehicle->id,
+                'items' => [$this->minimalWorkOrderLineItem()],
+            ], $extra),
             $this->company->id,
             $this->branch->id,
             $this->user->id,
         );
     }
 
-    public function test_create_work_order_defaults_to_pending(): void
+    private function pathToInProgress(WorkOrder $order): WorkOrder
+    {
+        $this->service->transition($order, WorkOrderStatus::Approved);
+        $order->refresh();
+
+        return $this->service->transition($order, WorkOrderStatus::InProgress);
+    }
+
+    public function test_create_work_order_defaults_to_pending_manager_approval(): void
     {
         $order = $this->createOrder();
 
-        $this->assertEquals(WorkOrderStatus::Pending, $order->status);
+        $this->assertEquals(WorkOrderStatus::PendingManagerApproval, $order->status);
         $this->assertNotEmpty($order->order_number);
     }
 
-    public function test_pending_can_transition_to_in_progress(): void
+    public function test_pending_manager_can_transition_to_approved_then_in_progress(): void
     {
         $order   = $this->createOrder();
-        $updated = $this->service->transition($order, WorkOrderStatus::InProgress);
+        $updated = $this->pathToInProgress($order);
 
         $this->assertEquals(WorkOrderStatus::InProgress, $updated->status);
         $this->assertNotNull($updated->started_at);
@@ -84,7 +96,7 @@ class WorkOrderLifecycleTest extends TestCase
     public function test_in_progress_can_complete(): void
     {
         $order = $this->createOrder();
-        $this->service->transition($order, WorkOrderStatus::InProgress);
+        $this->pathToInProgress($order);
         $order->refresh();
 
         $updated = $this->service->transition($order, WorkOrderStatus::Completed, [
@@ -100,7 +112,7 @@ class WorkOrderLifecycleTest extends TestCase
     public function test_completed_can_be_delivered(): void
     {
         $order = $this->createOrder();
-        $this->service->transition($order, WorkOrderStatus::InProgress);
+        $this->pathToInProgress($order);
         $order->refresh();
         $this->service->transition($order, WorkOrderStatus::Completed);
         $order->refresh();
@@ -114,7 +126,7 @@ class WorkOrderLifecycleTest extends TestCase
     public function test_delivered_order_cannot_transition_further(): void
     {
         $order = $this->createOrder();
-        $this->service->transition($order, WorkOrderStatus::InProgress);
+        $this->pathToInProgress($order);
         $order->refresh();
         $this->service->transition($order, WorkOrderStatus::Completed);
         $order->refresh();
@@ -133,7 +145,7 @@ class WorkOrderLifecycleTest extends TestCase
         $this->service->transition($order, WorkOrderStatus::Delivered);
     }
 
-    public function test_can_cancel_pending_order(): void
+    public function test_can_cancel_pending_manager_approval_order(): void
     {
         $order   = $this->createOrder();
         $updated = $this->service->transition($order, WorkOrderStatus::Cancelled);
@@ -144,7 +156,7 @@ class WorkOrderLifecycleTest extends TestCase
     public function test_can_hold_and_resume(): void
     {
         $order = $this->createOrder();
-        $this->service->transition($order, WorkOrderStatus::InProgress);
+        $this->pathToInProgress($order);
         $order->refresh();
         $this->service->transition($order, WorkOrderStatus::OnHold);
         $order->refresh();
@@ -155,23 +167,30 @@ class WorkOrderLifecycleTest extends TestCase
         $this->assertEquals(WorkOrderStatus::InProgress, $resumed->status);
     }
 
-    public function test_only_draft_and_cancelled_can_be_deleted(): void
+    public function test_deletion_allowed_for_queue_and_cancelled_blocked_for_approved(): void
     {
         $this->createActiveSubscription($this->company);
-        $order = $this->createOrder();
 
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->deleteJson("/api/v1/work-orders/{$order->id}");
+        $queued = $this->createOrder();
+        $this->actingAs($this->user, 'sanctum')
+            ->deleteJson("/api/v1/work-orders/{$queued->id}")
+            ->assertStatus(200);
+        // API uses soft-delete; order_number unique prevents reusing the same sequence slot in this company.
+        $queued->forceDelete();
 
-        $response->assertStatus(422);
+        $approved = $this->createOrder();
+        $this->service->transition($approved, WorkOrderStatus::Approved);
+        $approved->refresh();
+        $this->actingAs($this->user, 'sanctum')
+            ->deleteJson("/api/v1/work-orders/{$approved->id}")
+            ->assertStatus(422);
 
-        $this->service->transition($order, WorkOrderStatus::Cancelled);
-        $order->refresh();
-
-        $response2 = $this->actingAs($this->user, 'sanctum')
-            ->deleteJson("/api/v1/work-orders/{$order->id}");
-
-        $response2->assertStatus(200);
+        $cancelled = $this->createOrder();
+        $this->service->transition($cancelled, WorkOrderStatus::Cancelled);
+        $cancelled->refresh();
+        $this->actingAs($this->user, 'sanctum')
+            ->deleteJson("/api/v1/work-orders/{$cancelled->id}")
+            ->assertStatus(200);
     }
 
     public function test_version_increments_on_each_transition(): void
@@ -179,11 +198,11 @@ class WorkOrderLifecycleTest extends TestCase
         $order = $this->createOrder();
         $this->assertEquals(0, $order->version);
 
-        $this->service->transition($order, WorkOrderStatus::InProgress);
+        $this->service->transition($order, WorkOrderStatus::Approved);
         $order->refresh();
         $this->assertEquals(1, $order->version);
 
-        $this->service->transition($order, WorkOrderStatus::OnHold);
+        $this->service->transition($order, WorkOrderStatus::InProgress);
         $order->refresh();
         $this->assertEquals(2, $order->version);
     }

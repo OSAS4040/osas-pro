@@ -13,6 +13,16 @@ class StoreProductRequest extends FormRequest
         return $this->user()?->hasPermission('products.create');
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->missing('track_inventory') && ! $this->has('track_stock')) {
+            $type = ProductType::tryFrom((string) $this->input('product_type', ''));
+            if ($type === ProductType::Service || $type === ProductType::Labor) {
+                $this->merge(['track_inventory' => false]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         $companyId = $this->user()->company_id;

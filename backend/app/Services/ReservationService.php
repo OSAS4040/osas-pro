@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Enums\ReservationStatus;
 use App\Enums\StockMovementType;
+use App\Intelligence\Events\InventoryReserved;
+use App\Intelligence\Events\StockMovementRecorded;
 use App\Models\Inventory;
 use App\Models\InventoryReservation;
 use App\Models\StockMovement;
@@ -12,6 +14,10 @@ use Illuminate\Support\Str;
 
 class ReservationService
 {
+    public function __construct(
+        private readonly IntelligentEventEmitter $intelligentEvents,
+    ) {}
+
     public function reserve(
         int     $companyId,
         int     $branchId,
@@ -50,7 +56,7 @@ class ReservationService
             $inventory->increment('reserved_quantity', $quantity);
             $inventory->increment('version');
 
-            return InventoryReservation::create([
+            $reservation = InventoryReservation::create([
                 'uuid'               => Str::uuid(),
                 'company_id'         => $companyId,
                 'branch_id'          => $branchId,
@@ -64,6 +70,21 @@ class ReservationService
                 'status'             => ReservationStatus::Pending,
                 'expires_at'         => $expiresAt,
             ]);
+
+            $this->intelligentEvents->emit(new InventoryReserved(
+                companyId: $companyId,
+                branchId: $branchId,
+                causedByUserId: $userId,
+                reservationId: $reservation->id,
+                productId: $productId,
+                quantity: (float) $quantity,
+                workOrderId: $workOrderId,
+                referenceType: $referenceType,
+                referenceId: $referenceId,
+                sourceContext: 'ReservationService::reserve',
+            ));
+
+            return $reservation;
         });
     }
 
@@ -86,7 +107,7 @@ class ReservationService
             $inventory->decrement('reserved_quantity', $reservation->quantity);
             $inventory->increment('version');
 
-            StockMovement::create([
+            $movement = StockMovement::create([
                 'uuid'               => Str::uuid(),
                 'company_id'         => $reservation->company_id,
                 'branch_id'          => $reservation->branch_id,
@@ -102,6 +123,22 @@ class ReservationService
                 'note'               => "Reservation #{$reservation->id} consumed.",
                 'created_at'         => now(),
             ]);
+
+            $typeStr = $movement->type instanceof \BackedEnum
+                ? $movement->type->value
+                : (string) $movement->type;
+            $this->intelligentEvents->emit(new StockMovementRecorded(
+                companyId: (int) $movement->company_id,
+                branchId: $movement->branch_id ? (int) $movement->branch_id : null,
+                causedByUserId: $movement->created_by_user_id ? (int) $movement->created_by_user_id : null,
+                stockMovementId: (int) $movement->id,
+                productId: (int) $movement->product_id,
+                movementType: $typeStr,
+                quantityDelta: (float) $movement->quantity,
+                referenceType: $movement->reference_type,
+                referenceId: $movement->reference_id !== null ? (int) $movement->reference_id : null,
+                sourceContext: 'ReservationService::consume',
+            ));
 
             $reservation->update(['status' => ReservationStatus::Consumed]);
 

@@ -39,9 +39,17 @@
                 {{ s.is_active ? 'نشط' : 'غير نشط' }}
               </span>
             </td>
-            <td class="px-4 py-3 text-left">
-              <button class="text-primary-600 hover:underline text-xs ml-3" @click="openEdit(s)">تعديل</button>
+            <td class="px-4 py-3 text-left flex flex-wrap gap-x-3 gap-y-1 justify-end">
+              <button class="text-primary-600 hover:underline text-xs" @click="openEdit(s)">تعديل</button>
               <RouterLink :to="`/purchases?supplier_id=${s.id}`" class="text-gray-500 hover:underline text-xs">الطلبات</RouterLink>
+              <button
+                v-if="biz.isEnabled('supplier_contract_mgmt')"
+                type="button"
+                class="text-gray-700 hover:underline text-xs"
+                @click="openContracts(s)"
+              >
+                عقود PDF
+              </button>
             </td>
           </tr>
           <tr v-if="!suppliers.length">
@@ -90,7 +98,7 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <input v-model="form.is_active" type="checkbox" id="isActive" />
+            <input id="isActive" v-model="form.is_active" type="checkbox" />
             <label for="isActive" class="text-sm text-gray-700">نشط</label>
           </div>
           <div v-if="formError" class="text-red-500 text-sm">{{ formError }}</div>
@@ -103,6 +111,42 @@
         </form>
       </div>
     </div>
+
+    <div v-if="contractsSupplier" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" @click.self="closeContracts">
+      <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <h3 class="text-base font-semibold mb-1">عقود المورد: {{ contractsSupplier.name }}</h3>
+        <p class="text-xs text-gray-500 mb-4">متاح عند تفعيل «عقود الموردين» في نشاط المنشأة.</p>
+        <div v-if="contractsError" class="text-red-600 text-sm mb-2">{{ contractsError }}</div>
+        <ul v-if="!contractsLoading" class="space-y-2 mb-4 text-sm border rounded-lg divide-y max-h-48 overflow-y-auto">
+          <li v-for="c in contracts" :key="c.id" class="px-3 py-2 flex justify-between gap-2">
+            <div>
+              <div class="font-medium">{{ c.title }}</div>
+              <div class="text-xs text-gray-500">ينتهي: {{ c.expires_at ?? '—' }}</div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button type="button" class="text-primary-600 text-xs hover:underline" @click="downloadContract(c)">تنزيل</button>
+              <button type="button" class="text-red-600 text-xs hover:underline" @click="deleteContract(c)">حذف</button>
+            </div>
+          </li>
+          <li v-if="!contracts.length" class="px-3 py-4 text-center text-gray-400">لا عقود بعد.</li>
+        </ul>
+        <p v-else class="text-sm text-gray-500 mb-4">جارٍ التحميل…</p>
+        <form class="space-y-2 border-t pt-4" @submit.prevent="uploadContract">
+          <label class="block text-xs font-medium text-gray-600">عنوان العقد</label>
+          <input v-model="uploadTitle" type="text" class="w-full border rounded-lg px-3 py-2 text-sm" required />
+          <label class="block text-xs font-medium text-gray-600">تاريخ الانتهاء (اختياري)</label>
+          <input v-model="uploadExpires" type="date" class="w-full border rounded-lg px-3 py-2 text-sm" />
+          <label class="block text-xs font-medium text-gray-600">ملف PDF</label>
+          <input type="file" accept="application/pdf,.pdf" class="text-sm" @change="onContractFile" />
+          <div class="flex gap-2 justify-end pt-2">
+            <button type="button" class="px-4 py-2 text-sm border rounded-lg" @click="closeContracts">إغلاق</button>
+            <button type="submit" class="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg" :disabled="uploadingContract">
+              {{ uploadingContract ? '…' : 'رفع' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -110,6 +154,10 @@
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import apiClient from '@/lib/apiClient'
+import { useBusinessProfileStore } from '@/stores/businessProfile'
+import { appConfirm } from '@/services/appConfirmDialog'
+
+const biz = useBusinessProfileStore()
 
 const suppliers    = ref<any[]>([])
 const search       = ref('')
@@ -126,6 +174,15 @@ const emptyForm = () => ({
 })
 
 const form = ref(emptyForm())
+
+const contractsSupplier   = ref<any>(null)
+const contracts           = ref<any[]>([])
+const contractsLoading    = ref(false)
+const contractsError      = ref('')
+const uploadTitle         = ref('')
+const uploadExpires       = ref('')
+const contractPdf         = ref<File | null>(null)
+const uploadingContract   = ref(false)
 
 let debounceTimer: ReturnType<typeof setTimeout>
 function debouncedLoad() {
@@ -158,5 +215,98 @@ async function saveSupplier() {
   }
 }
 
-onMounted(load)
+async function openContracts(s: any) {
+  await biz.load().catch(() => {})
+  if (!biz.isEnabled('supplier_contract_mgmt')) return
+  contractsSupplier.value = s
+  contractsError.value = ''
+  uploadTitle.value = ''
+  uploadExpires.value = ''
+  contractPdf.value = null
+  await fetchContracts()
+}
+
+function closeContracts() {
+  contractsSupplier.value = null
+}
+
+async function fetchContracts() {
+  if (!contractsSupplier.value) return
+  contractsLoading.value = true
+  contractsError.value = ''
+  try {
+    const { data } = await apiClient.get(`/suppliers/${contractsSupplier.value.id}/contracts`)
+    contracts.value = data.data ?? []
+  } catch (e: any) {
+    contractsError.value = e?.response?.data?.message ?? 'تعذر تحميل العقود.'
+    contracts.value = []
+  } finally {
+    contractsLoading.value = false
+  }
+}
+
+function onContractFile(e: Event) {
+  const f = (e.target as HTMLInputElement).files?.[0]
+  contractPdf.value = f ?? null
+}
+
+async function uploadContract() {
+  if (!contractsSupplier.value || !contractPdf.value) return
+  uploadingContract.value = true
+  contractsError.value = ''
+  try {
+    const fd = new FormData()
+    fd.append('title', uploadTitle.value.trim())
+    if (uploadExpires.value) fd.append('expires_at', uploadExpires.value)
+    fd.append('file', contractPdf.value)
+    await apiClient.post(`/suppliers/${contractsSupplier.value.id}/contracts`, fd)
+    uploadTitle.value = ''
+    uploadExpires.value = ''
+    contractPdf.value = null
+    await fetchContracts()
+  } catch (e: any) {
+    contractsError.value = e?.response?.data?.message ?? 'فشل الرفع.'
+  } finally {
+    uploadingContract.value = false
+  }
+}
+
+async function downloadContract(c: any) {
+  if (!contractsSupplier.value) return
+  try {
+    const res = await apiClient.get(`/suppliers/${contractsSupplier.value.id}/contracts/${c.id}/download`, {
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = c.original_filename || 'contract.pdf'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  } catch {
+    contractsError.value = 'تعذر التنزيل.'
+  }
+}
+
+async function deleteContract(c: any) {
+  if (!contractsSupplier.value) return
+  const ok = await appConfirm({
+    title: 'حذف العقد',
+    message: 'حذف هذا العقد؟',
+    variant: 'danger',
+    confirmLabel: 'حذف',
+  })
+  if (!ok) return
+  try {
+    await apiClient.delete(`/suppliers/${contractsSupplier.value.id}/contracts/${c.id}`)
+    await fetchContracts()
+  } catch (e: any) {
+    contractsError.value = e?.response?.data?.message ?? 'تعذر الحذف.'
+  }
+}
+
+onMounted(() => {
+  biz.load().catch(() => {})
+  load()
+})
 </script>

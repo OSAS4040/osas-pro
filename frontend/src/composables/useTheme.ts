@@ -1,4 +1,6 @@
 import { ref, watch } from 'vue'
+import apiClient from '@/lib/apiClient'
+import { useAuthStore } from '@/stores/auth'
 
 type ThemePreset = {
   name: string
@@ -10,12 +12,12 @@ type ThemePreset = {
 }
 
 export const THEME_PRESETS: ThemePreset[] = [
-  { name: 'blue',   label: 'أزرق (افتراضي)',  primary: '#2563eb', hover: '#1d4ed8', ring: '#3b82f6', css: '' },
-  { name: 'teal',   label: 'فيروزي',          primary: '#0d9488', hover: '#0f766e', ring: '#14b8a6', css: '' },
-  { name: 'violet', label: 'بنفسجي',          primary: '#7c3aed', hover: '#6d28d9', ring: '#8b5cf6', css: '' },
-  { name: 'rose',   label: 'وردي',            primary: '#e11d48', hover: '#be123c', ring: '#f43f5e', css: '' },
-  { name: 'amber',  label: 'ذهبي',            primary: '#d97706', hover: '#b45309', ring: '#f59e0b', css: '' },
-  { name: 'slate',  label: 'رمادي',           primary: '#475569', hover: '#334155', ring: '#64748b', css: '' },
+  { name: 'enterprise-blue',   label: 'Enterprise Blue (افتراضي)', primary: '#2563eb', hover: '#1d4ed8', ring: '#3b82f6', css: '' },
+  { name: 'emerald-executive', label: 'Emerald Executive',          primary: '#0d9488', hover: '#0f766e', ring: '#14b8a6', css: '' },
+  { name: 'slate-professional',label: 'Slate Professional',         primary: '#475569', hover: '#334155', ring: '#64748b', css: '' },
+  { name: 'violet',            label: 'بنفسجي',                      primary: '#7c3aed', hover: '#6d28d9', ring: '#8b5cf6', css: '' },
+  { name: 'rose',              label: 'وردي',                        primary: '#e11d48', hover: '#be123c', ring: '#f43f5e', css: '' },
+  { name: 'amber',             label: 'ذهبي',                        primary: '#d97706', hover: '#b45309', ring: '#f59e0b', css: '' },
 ]
 
 export function hexToRgb(hex: string): string {
@@ -73,23 +75,68 @@ function applyTheme(primaryHex: string) {
 }
 
 const currentTheme = ref<string>(localStorage.getItem('theme_color') ?? '#2563eb')
+const currentPreset = ref<string>(localStorage.getItem('theme_preset') ?? 'enterprise-blue')
+const themeLoadedFromCompany = ref(false)
 
 watch(currentTheme, (c) => {
   localStorage.setItem('theme_color', c)
   applyTheme(c)
 })
+watch(currentPreset, (p) => localStorage.setItem('theme_preset', p))
 
 // Apply on load
 applyTheme(currentTheme.value)
 
 export function useTheme() {
+  function setThemePreset(name: string) {
+    const preset = THEME_PRESETS.find((p) => p.name === name)
+    if (!preset) return
+    currentPreset.value = preset.name
+    currentTheme.value = preset.primary
+  }
+
   function setTheme(hexColor: string) {
+    currentPreset.value = 'custom'
     currentTheme.value = hexColor
+  }
+
+  async function loadCompanyTheme(): Promise<void> {
+    if (themeLoadedFromCompany.value) return
+    const auth = useAuthStore()
+    if (!auth.user?.company_id) return
+    try {
+      const { data } = await apiClient.get(`/companies/${auth.user.company_id}/settings`)
+      const uiTheme = data?.data?.ui_theme ?? null
+      if (uiTheme?.preset && typeof uiTheme.preset === 'string') {
+        setThemePreset(uiTheme.preset)
+      }
+      if (uiTheme?.primary && typeof uiTheme.primary === 'string') {
+        currentTheme.value = uiTheme.primary
+      }
+      themeLoadedFromCompany.value = true
+    } catch {
+      // Keep local fallback
+    }
+  }
+
+  async function saveCompanyTheme(): Promise<void> {
+    const auth = useAuthStore()
+    if (!auth.user?.company_id) return
+    await apiClient.patch(`/companies/${auth.user.company_id}/settings`, {
+      ui_theme: {
+        preset: currentPreset.value,
+        primary: currentTheme.value,
+      },
+    })
   }
 
   return {
     currentTheme,
+    currentPreset,
     presets: THEME_PRESETS,
     setTheme,
+    setThemePreset,
+    loadCompanyTheme,
+    saveCompanyTheme,
   }
 }

@@ -6,7 +6,10 @@
       <h2 class="text-lg font-semibold text-gray-900">استلام البضاعة (GRN)</h2>
     </div>
 
-    <div v-if="!purchase" class="text-gray-400 text-sm">جارٍ التحميل...</div>
+    <div v-if="purchaseLoadError" class="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {{ purchaseLoadError }}
+    </div>
+    <div v-else-if="!purchase" class="text-gray-400 text-sm">جارٍ التحميل...</div>
 
     <template v-else>
       <div class="bg-white rounded-xl border border-gray-200 p-4 text-sm mb-2">
@@ -70,6 +73,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import apiClient from '@/lib/apiClient'
+import { summarizeAxiosError } from '@/utils/apiErrorSummary'
 
 const route      = useRoute()
 const router     = useRouter()
@@ -77,6 +81,7 @@ const purchaseId = computed(() => route.params.id as string)
 const purchase   = ref<any>(null)
 const saving     = ref(false)
 const error      = ref('')
+const purchaseLoadError = ref('')
 
 const form = ref<{
   delivery_note_number: string
@@ -95,15 +100,21 @@ const receiveLines = computed(() =>
 )
 
 onMounted(async () => {
-  const { data } = await apiClient.get(`/purchases/${purchaseId.value}`)
-  purchase.value = data.data
-  form.value.items = purchase.value.items.map((item: any) => ({
-    purchase_item_id:  item.id,
-    received_quantity: Math.max(0, item.quantity - item.received_quantity),
-  }))
+  purchaseLoadError.value = ''
+  try {
+    const { data } = await apiClient.get(`/purchases/${purchaseId.value}`, { skipGlobalErrorToast: true })
+    purchase.value = data.data
+    form.value.items = purchase.value.items.map((item: any) => ({
+      purchase_item_id: item.id,
+      received_quantity: Math.max(0, item.quantity - item.received_quantity),
+    }))
+  } catch (e: unknown) {
+    purchaseLoadError.value = summarizeAxiosError(e)
+  }
 })
 
 async function submit() {
+  if (saving.value) return
   saving.value = true
   error.value = ''
   try {
@@ -119,10 +130,12 @@ async function submit() {
       return
     }
 
-    const { data } = await apiClient.post(`/purchases/${purchaseId.value}/receipts`, payload)
+    const { data } = await apiClient.post(`/purchases/${purchaseId.value}/receipts`, payload, {
+      skipGlobalErrorToast: true,
+    })
     router.push(`/goods-receipts/${data.data.id}`)
-  } catch (e: any) {
-    error.value = e?.response?.data?.message ?? 'حدث خطأ أثناء ترحيل الاستلام.'
+  } catch (e: unknown) {
+    error.value = summarizeAxiosError(e)
   } finally {
     saving.value = false
   }

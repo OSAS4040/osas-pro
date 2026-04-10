@@ -7,6 +7,7 @@ use App\Http\Requests\Inventory\AdjustInventoryRequest;
 use App\Models\Inventory;
 use App\Models\InventoryReservation;
 use App\Models\StockMovement;
+use App\Services\Config\VerticalBehaviorResolverService;
 use App\Services\InventoryService;
 use App\Services\ReservationService;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,7 @@ class InventoryController extends Controller
     public function __construct(
         private readonly InventoryService   $inventoryService,
         private readonly ReservationService $reservationService,
+        private readonly VerticalBehaviorResolverService $behaviorResolver,
     ) {}
 
     /**
@@ -89,6 +91,8 @@ class InventoryController extends Controller
         $data    = $request->validated();
         $user    = $request->user();
         $traceId = app('trace_id');
+        $behavior = $this->behaviorResolver->resolve((int) $user->company_id, $user->branch_id ? (int) $user->branch_id : null);
+        $allowNegativeStock = (bool) ($behavior['flags']['allow_negative_stock'] ?? false);
 
         $movement = match($data['type']) {
             'subtract' => $this->inventoryService->deductStock(
@@ -103,6 +107,7 @@ class InventoryController extends Controller
                 unitId:        $data['unit_id'] ?? null,
                 unitCost:      $data['unit_cost'] ?? null,
                 note:          $data['note'] ?? null,
+                allowNegativeStock: $allowNegativeStock,
             ),
             'set' => $this->handleSetAdjustment($data, $user, $traceId),
             default => $this->inventoryService->addStock(
@@ -119,7 +124,11 @@ class InventoryController extends Controller
             ),
         };
 
-        return response()->json(['data' => $movement, 'trace_id' => $traceId], 201);
+        return response()->json([
+            'data'             => $movement,
+            'trace_id'         => $traceId,
+            'behavior_applied' => $this->behaviorResolver->activeBehaviorMarkers($behavior),
+        ], 201);
     }
 
     /**
@@ -202,6 +211,14 @@ class InventoryController extends Controller
             'work_order_id'  => ['nullable', 'integer', 'exists:work_orders,id'],
             'expires_at'     => ['nullable', 'date', 'after:now'],
         ]);
+        $behavior = $this->behaviorResolver->resolve((int) $request->user()->company_id, $request->user()->branch_id ? (int) $request->user()->branch_id : null);
+        if (($behavior['flags']['track_expiry'] ?? false) && empty($data['expires_at'])) {
+            return response()->json([
+                'message' => 'expires_at is required when expiry tracking is enabled.',
+                'trace_id' => app('trace_id'),
+                'behavior_applied' => ['track_expiry'],
+            ], 422);
+        }
 
         $reservation = $this->reservationService->reserve(
             companyId:     $request->user()->company_id,
@@ -268,7 +285,28 @@ class InventoryController extends Controller
     public function cancelReservation(int $id): JsonResponse
     {
         $reservation = InventoryReservation::findOrFail($id);
-        $result      = $this->reservationService->cancel($reservation);
+        $current     = (string) $reservation->status->value;
+        $allowedFrom = ['pending'];
+
+        if (! in_array($current, $allowedFrom, true)) {
+            return response()->json([
+                'message'  => "Reservation status transition {$current} -> cancel is not allowed.",
+                'code'     => 'TRANSITION_NOT_ALLOWED',
+                'status'   => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
+        try {
+            $result = $this->reservationService->cancel($reservation);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'message'  => $e->getMessage(),
+                'code'     => 'TRANSITION_NOT_ALLOWED',
+                'status'   => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
 
         return response()->json(['data' => $result, 'trace_id' => app('trace_id')]);
     }

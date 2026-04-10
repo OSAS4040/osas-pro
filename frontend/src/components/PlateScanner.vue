@@ -8,7 +8,7 @@
               <CameraIcon class="w-5 h-5 text-primary-600" />
               <h3 class="font-bold text-gray-900 dark:text-slate-100">مسح لوحة المركبة</h3>
             </div>
-            <button @click="close" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg">
+            <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg" @click="close">
               <XMarkIcon class="w-5 h-5 text-gray-400" />
             </button>
           </div>
@@ -36,22 +36,25 @@
 
             <!-- Camera Controls -->
             <div class="flex gap-2 justify-center">
-              <button v-if="!streaming" @click="startCamera"
-                class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">
+              <button v-if="!streaming" class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium"
+                      @click="startCamera"
+              >
                 <VideoCameraIcon class="w-4 h-4" /> تشغيل الكاميرا
               </button>
               <template v-else-if="!capturedImg">
-                <button @click="capture"
-                  class="flex items-center gap-2 px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-medium">
+                <button class="flex items-center gap-2 px-5 py-2 bg-green-600 text-white rounded-lg text-sm font-medium"
+                        @click="capture"
+                >
                   <CameraIcon class="w-4 h-4" /> التقاط
                 </button>
-                <button @click="stopCamera"
-                  class="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-gray-600 dark:text-slate-300">
+                <button class="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-gray-600 dark:text-slate-300"
+                        @click="stopCamera"
+                >
                   إيقاف
                 </button>
               </template>
               <template v-else>
-                <button @click="retake" class="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm">
+                <button class="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm" @click="retake">
                   <ArrowPathIcon class="w-4 h-4" /> إعادة الالتقاط
                 </button>
               </template>
@@ -67,19 +70,19 @@
               <div class="relative">
                 <input
                   v-model="plate"
-                  @input="plate = plate.toUpperCase()"
                   class="w-full px-3 py-3 border-2 rounded-xl text-center text-xl font-bold font-mono tracking-widest uppercase focus:outline-none transition-colors"
                   :class="plate ? 'border-green-500 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-slate-100'"
                   placeholder="أ ب ج - ١٢٣٤"
                   dir="ltr"
+                  @input="plate = plate.toUpperCase()"
                 />
               </div>
               <p class="text-xs text-gray-400 dark:text-slate-500 mt-1 text-center">يمكن التعديل يدوياً</p>
             </div>
 
             <div v-if="plate" class="flex gap-3 justify-end">
-              <button @click="close" class="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm dark:text-slate-300">إلغاء</button>
-              <button @click="confirm" class="px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700">
+              <button class="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm dark:text-slate-300" @click="close">إلغاء</button>
+              <button class="px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700" @click="confirm">
                 تأكيد اللوحة ← {{ plate }}
               </button>
             </div>
@@ -93,6 +96,8 @@
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
 import { CameraIcon, XMarkIcon, VideoCameraIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
+import apiClient from '@/lib/apiClient'
+import { downscaleDataUrlForUpload } from '@/utils/imagePipeline'
 
 const emit = defineEmits<{ (e: 'confirm', plate: string): void }>()
 
@@ -128,15 +133,20 @@ function stopCamera() {
   streaming.value = false
 }
 
-function capture() {
+async function capture() {
   if (!videoRef.value || !canvasRef.value) return
   const v = videoRef.value
   const c = canvasRef.value
   c.width = v.videoWidth
   c.height = v.videoHeight
   c.getContext('2d')!.drawImage(v, 0, 0)
-  capturedImg.value = c.toDataURL('image/jpeg', 0.92)
+  const raw = c.toDataURL('image/jpeg', 0.92)
   stopCamera()
+  try {
+    capturedImg.value = await downscaleDataUrlForUpload(raw)
+  } catch {
+    capturedImg.value = raw
+  }
   detectPlate()
 }
 
@@ -145,12 +155,18 @@ function retake() { capturedImg.value = ''; plate.value = ''; plateDetected.valu
 async function detectPlate() {
   if (!capturedImg.value) return
   detecting.value = true
+  plateDetected.value = false
   try {
-    // Pattern-based detection fallback (no external API needed)
-    // Saudi plate pattern: 3 Arabic letters + 4 digits  (or 3 Latin letters + 4 digits)
-    // We attempt basic text extraction via fetch to our own OCR endpoint
-    await new Promise(r => setTimeout(r, 1200)) // simulate processing
-    // Suggest common Saudi plate format as placeholder
+    const base64 = capturedImg.value.split(',')[1] ?? ''
+    const { data: json } = await apiClient.post('/governance/ocr/plate', {
+      image: base64,
+      resolve_vehicle: true,
+    })
+    const pn = json.plate_normalized as { display?: string } | null | undefined
+    const raw = pn?.display ?? (json.plate as string) ?? ''
+    plate.value = String(raw).toUpperCase().trim()
+    plateDetected.value = !!json.success && !!plate.value
+  } catch {
     plate.value = ''
     plateDetected.value = false
   } finally {

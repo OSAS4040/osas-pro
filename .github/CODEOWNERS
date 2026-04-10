@@ -1,0 +1,10 @@
+# ── مراجعة مالكي الكود (GitHub CODEOWNERS) ────────────────────────────────
+# 1. انسخ أسطراً من docs/CODEOWNERS.example
+# 2. استبدل @your-org/... بفرق GitHub حقيقية
+# 3. أزل الرمز # من بداية السطر لتفعيل القاعدة
+#
+# حتى التفعيل: لا قواعد إلزامية — يمنع تعطيل الـ PR بسبب معرفات وهمية.
+#
+# مثال بعد الضبط:
+# /backend/config/saas.php @my-org/platform-team
+# /.github/workflows/ @my-org/platform-team

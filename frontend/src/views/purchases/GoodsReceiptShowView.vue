@@ -17,7 +17,8 @@
           <p><span class="text-gray-500">الفرع:</span> {{ receipt.branch?.name ?? '—' }}</p>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-1 text-sm">
-          <p><span class="text-gray-500">الحالة:</span>
+          <p>
+            <span class="text-gray-500">الحالة:</span>
             <span class="mr-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">مكتمل</span>
           </p>
           <p><span class="text-gray-500">تاريخ الاستلام:</span> {{ receipt.received_at?.slice(0, 16).replace('T', ' ') }}</p>

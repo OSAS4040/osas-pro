@@ -13,10 +13,9 @@ class EnsurePhase2ReadonlyEnabled
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $readModels = (bool) config('intelligent.read_models.enabled');
-        $legacyP2   = (bool) config('intelligent.phase2.enabled');
-
-        if (! $readModels && ! $legacyP2) {
+        // Keep a single master gate so tests/config overrides are deterministic.
+        $phase2Enabled = (bool) config('intelligent.phase2.enabled');
+        if (! $phase2Enabled) {
             abort(404);
         }
 

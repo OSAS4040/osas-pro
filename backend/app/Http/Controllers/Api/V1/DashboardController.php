@@ -23,7 +23,8 @@ class DashboardController extends Controller
         $to   = $request->input('to', now()->endOfMonth()->toDateString());
         $companyId = (int) app('tenant_company_id');
 
-        $cacheKey = "dashboard:summary:{$companyId}:{$from}:{$to}";
+        /* v2: يتضمن charts — تغيير المفتاح يبطل الكاش القديم */
+        $cacheKey = "dashboard:summary:v2:{$companyId}:{$from}:{$to}";
         $ttl      = now()->diffInHours(now()->endOfDay()) < 2 ? 300 : 1800;
 
         $data = Cache::remember($cacheKey, $ttl, function () use ($companyId, $from, $to) {
@@ -70,6 +71,25 @@ class DashboardController extends Controller
                 'credit'      => (float) CustomerWallet::where('company_id', $companyId)->where('wallet_type', 'credit')->sum('balance'),
             ];
 
+            $revenueLast7Days = [];
+            $workOrdersLast7Days = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $day = now()->subDays($i)->toDateString();
+                $revenueLast7Days[] = [
+                    'date'    => $day,
+                    'revenue' => round((float) Invoice::where('company_id', $companyId)
+                        ->whereDate('issued_at', $day)
+                        ->whereNotIn('status', ['cancelled', 'draft'])
+                        ->sum('total'), 2),
+                ];
+                $workOrdersLast7Days[] = [
+                    'date'  => $day,
+                    'count' => WorkOrder::where('company_id', $companyId)
+                        ->whereDate('created_at', $day)
+                        ->count(),
+                ];
+            }
+
             return [
                 'period' => ['from' => $from, 'to' => $to],
                 'sales'  => [
@@ -92,6 +112,10 @@ class DashboardController extends Controller
                 ],
                 'wallets' => [
                     'balance_by_type' => array_map(fn ($v) => round($v, 2), $walletTotals),
+                ],
+                'charts' => [
+                    'revenue_last_7_days'     => $revenueLast7Days,
+                    'work_orders_last_7_days' => $workOrdersLast7Days,
                 ],
             ];
         });

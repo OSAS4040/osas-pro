@@ -1,6 +1,10 @@
 <template>
   <Teleport to="body">
-    <div class="fixed top-5 left-5 z-[9999] flex flex-col gap-2 pointer-events-none" dir="rtl">
+    <div
+      data-print-chrome
+      class="print:hidden fixed top-5 left-5 z-[9999] flex flex-col gap-2 pointer-events-none font-sans"
+      dir="rtl"
+    >
       <TransitionGroup name="toast">
         <div
           v-for="t in toasts"

@@ -13,12 +13,14 @@ class ApprovalWorkflow extends Model
     protected $fillable = [
         'uuid', 'company_id', 'subject_type', 'subject_id', 'policy_code',
         'status', 'requested_by', 'assigned_approver', 'resolved_by',
-        'resolved_at', 'requester_note', 'resolver_note', 'meta',
+        'resolved_at', 'acted_at', 'requester_note', 'resolver_note', 'trace_id',
+        'current_step', 'total_steps', 'meta',
     ];
 
     protected $casts = [
         'meta'        => 'array',
         'resolved_at' => 'datetime',
+        'acted_at' => 'datetime',
     ];
 
     protected static function booted(): void

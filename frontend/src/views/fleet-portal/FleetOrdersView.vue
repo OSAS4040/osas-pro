@@ -7,9 +7,10 @@
 
     <!-- Filters -->
     <div class="flex gap-2 flex-wrap">
-      <button v-for="tab in tabs" :key="tab.value" @click="activeTab = tab.value"
-        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-        :class="activeTab === tab.value ? 'bg-teal-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'">
+      <button v-for="tab in tabs" :key="tab.value" class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              :class="activeTab === tab.value ? 'bg-teal-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
+              @click="activeTab = tab.value"
+      >
         {{ tab.label }}
         <span v-if="tab.count > 0" class="mr-1 bg-white/20 text-white px-1.5 py-0.5 rounded-full text-[10px]">{{ tab.count }}</span>
       </button>
@@ -36,8 +37,8 @@
               <td class="px-4 py-3 font-semibold text-teal-700">{{ wo.order_number }}</td>
               <td class="px-4 py-3 text-gray-700">{{ wo.vehicle?.plate_number ?? '—' }}</td>
               <td class="px-4 py-3">
-                <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="statusClass(wo.status)">
-                  {{ statusLabel(wo.status) }}
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="workOrderStatusBadgeClass(wo.status)">
+                  {{ workOrderStatusLabel(wo.status) }}
                 </span>
               </td>
               <td class="px-4 py-3 text-gray-600">{{ wo.payment_method === 'credit' ? 'ائتمان' : wo.payment_method === 'wallet' ? 'محفظة' : '—' }}</td>
@@ -58,14 +59,27 @@
       <h3 class="font-semibold text-orange-800 text-sm mb-3">طلبات تنتظر اعتمادك ({{ pendingApproval.length }})</h3>
       <div class="space-y-2">
         <div v-for="wo in pendingApproval" :key="wo.id"
-          class="bg-white rounded-lg p-4 flex items-center justify-between shadow-xs">
+             class="bg-white rounded-lg p-4 flex items-center justify-between shadow-xs"
+        >
           <div>
             <p class="text-sm font-semibold text-gray-800">{{ wo.order_number }}</p>
             <p class="text-xs text-gray-500">{{ wo.vehicle?.plate_number }} • {{ wo.description }}</p>
           </div>
           <div class="flex gap-2">
-            <button @click="approve(wo.id)" class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700">اعتماد</button>
-            <button @click="reject(wo.id)" class="px-3 py-1.5 bg-red-100 text-red-700 text-xs rounded-lg hover:bg-red-200">رفض</button>
+            <button
+              class="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:opacity-50"
+              :disabled="actionLoading === wo.id"
+              @click="approve(wo.id)"
+            >
+              {{ actionLoading === wo.id ? '…' : 'اعتماد' }}
+            </button>
+            <button
+              class="px-3 py-1.5 bg-red-100 text-red-700 text-xs rounded-lg hover:bg-red-200 disabled:opacity-50"
+              :disabled="actionLoading === wo.id"
+              @click="reject(wo.id)"
+            >
+              {{ actionLoading === wo.id ? '…' : 'رفض' }}
+            </button>
           </div>
         </div>
       </div>
@@ -77,9 +91,13 @@
 import { ref, computed, onMounted } from 'vue'
 import apiClient from '@/lib/apiClient'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
+import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 
 const auth    = useAuthStore()
+const toast   = useToast()
 const loading = ref(true)
+const actionLoading = ref<number | null>(null)
 const orders  = ref<any[]>([])
 const activeTab = ref('all')
 
@@ -107,35 +125,37 @@ async function load() {
     const endpoint = isManager.value ? '/fleet-portal/work-orders' : '/fleet-portal/work-orders'
     const { data } = await apiClient.get(endpoint)
     orders.value = data.data ?? []
-  } catch { /* silent */ } finally { loading.value = false }
+  } catch (e: any) {
+    toast.error('تعذّر التحميل', e.response?.data?.message ?? 'تحقق من الاتصال وحاول مجدداً.')
+  } finally { loading.value = false }
 }
 
 async function approve(id: number) {
+  actionLoading.value = id
   try {
     await apiClient.post(`/fleet-portal/work-orders/${id}/approve-credit`)
+    toast.success('تم الاعتماد', 'تم تحديث قائمة الطلبات.')
     await load()
-  } catch (e: any) { alert(e.response?.data?.message ?? 'فشل الاعتماد') }
+  } catch (e: any) {
+    toast.error('فشل الاعتماد', e.response?.data?.message ?? '')
+  } finally {
+    actionLoading.value = null
+  }
 }
 
 async function reject(id: number) {
+  actionLoading.value = id
   try {
     await apiClient.post(`/fleet-portal/work-orders/${id}/reject-credit`)
+    toast.success('تم الرفض', 'تم تحديث قائمة الطلبات.')
     await load()
-  } catch (e: any) { alert(e.response?.data?.message ?? 'فشل الرفض') }
+  } catch (e: any) {
+    toast.error('فشل الرفض', e.response?.data?.message ?? '')
+  } finally {
+    actionLoading.value = null
+  }
 }
 
-function statusLabel(s: string) {
-  const m: Record<string, string> = { pending: 'معلق', assigned: 'مُسنَد', in_progress: 'جاري', completed: 'مكتمل', invoiced: 'مُفوتر', cancelled: 'ملغي' }
-  return m[s] ?? s
-}
-function statusClass(s: string) {
-  const m: Record<string, string> = {
-    pending: 'bg-gray-100 text-gray-600', assigned: 'bg-blue-100 text-blue-700',
-    in_progress: 'bg-yellow-100 text-yellow-700', completed: 'bg-green-100 text-green-700',
-    invoiced: 'bg-purple-100 text-purple-700', cancelled: 'bg-red-100 text-red-700',
-  }
-  return m[s] ?? 'bg-gray-100 text-gray-600'
-}
 function fmtDate(d: string) { return d ? new Date(d).toLocaleDateString('ar-SA') : '—' }
 
 onMounted(load)

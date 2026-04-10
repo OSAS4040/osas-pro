@@ -7,7 +7,7 @@ $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 $company = App\Models\Company::firstOrCreate(
     ['email' => 'admin@osas.sa'],
     [
-        'name' => 'إدارة المنصة - OSAS',
+        'name' => 'إدارة المنصة — أسس برو',
         'name_ar' => 'إدارة المنصة',
         'phone' => '0500000001',
         'is_active' => true,

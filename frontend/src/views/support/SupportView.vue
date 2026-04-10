@@ -10,28 +10,29 @@
         <p class="text-sm text-gray-500 mt-1">إدارة التذاكر · قاعدة المعرفة · SLA</p>
       </div>
       <div class="flex gap-2">
-        <button @click="activeTab = 'kb'" :class="tabClass('kb')" class="px-4 py-2 rounded-lg text-sm font-medium transition-all">
+        <button :class="tabClass('kb')" class="px-4 py-2 rounded-lg text-sm font-medium transition-all" @click="activeTab = 'kb'">
           <BookOpenIcon class="w-4 h-4 inline ml-1" /> قاعدة المعرفة
         </button>
-        <button @click="activeTab = 'sla'" :class="tabClass('sla')" class="px-4 py-2 rounded-lg text-sm font-medium transition-all">
+        <button :class="tabClass('sla')" class="px-4 py-2 rounded-lg text-sm font-medium transition-all" @click="activeTab = 'sla'">
           <ClockIcon class="w-4 h-4 inline ml-1" /> سياسات SLA
         </button>
-        <button @click="openNewTicket = true"
-          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-sm">
+        <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-sm"
+                @click="openNewTicket = true"
+        >
           <PlusIcon class="w-4 h-4" /> تذكرة جديدة
         </button>
       </div>
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6" v-if="stats">
-      <StatCard label="الإجمالي"     :value="stats.total"       color="blue"   icon="InboxIcon" />
-      <StatCard label="مفتوحة"       :value="stats.open"        color="yellow" icon="ExclamationCircleIcon" />
+    <div v-if="stats" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+      <StatCard label="الإجمالي" :value="stats.total" color="blue" icon="InboxIcon" />
+      <StatCard label="مفتوحة" :value="stats.open" color="yellow" icon="ExclamationCircleIcon" />
       <StatCard label="قيد المعالجة" :value="stats.in_progress" color="indigo" icon="ArrowPathIcon" />
-      <StatCard label="محلولة"       :value="stats.resolved"    color="green"  icon="CheckCircleIcon" />
-      <StatCard label="متأخرة ⚠️"    :value="stats.overdue"     color="red"    icon="FireIcon" />
-      <StatCard label="متوسط الحل"   :value="`${stats.avg_resolution_hours}س`" color="purple" icon="ClockIcon" />
-      <StatCard label="رضا العملاء"  :value="`${stats.avg_satisfaction}/5`"    color="amber"  icon="StarIcon" />
+      <StatCard label="محلولة" :value="stats.resolved" color="green" icon="CheckCircleIcon" />
+      <StatCard label="متأخرة ⚠️" :value="stats.overdue" color="red" icon="FireIcon" />
+      <StatCard label="متوسط الحل" :value="`${stats.avg_resolution_hours}س`" color="purple" icon="ClockIcon" />
+      <StatCard label="رضا العملاء" :value="`${stats.avg_satisfaction}/5`" color="amber" icon="StarIcon" />
     </div>
 
     <!-- TICKETS TAB -->
@@ -39,10 +40,12 @@
       <!-- Filters -->
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-4">
         <div class="flex flex-wrap gap-3">
-          <input v-model="filters.search" @input="fetchTickets()" placeholder="بحث بالموضوع أو رقم التذكرة..."
-            class="flex-1 min-w-48 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
-          <select v-model="filters.status" @change="fetchTickets()"
-            class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white">
+          <input v-model="filters.search" placeholder="بحث بالموضوع أو رقم التذكرة..." class="flex-1 min-w-48 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                 @input="fetchTickets()"
+          />
+          <select v-model="filters.status" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+                  @change="fetchTickets()"
+          >
             <option value="">كل الحالات</option>
             <option value="open">مفتوحة</option>
             <option value="in_progress">قيد المعالجة</option>
@@ -51,16 +54,18 @@
             <option value="closed">مغلقة</option>
             <option value="escalated">مصعّدة</option>
           </select>
-          <select v-model="filters.priority" @change="fetchTickets()"
-            class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white">
+          <select v-model="filters.priority" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+                  @change="fetchTickets()"
+          >
             <option value="">كل الأولويات</option>
             <option value="critical">حرجة 🔴</option>
             <option value="high">عالية 🟠</option>
             <option value="medium">متوسطة 🟡</option>
             <option value="low">منخفضة 🟢</option>
           </select>
-          <select v-model="filters.category" @change="fetchTickets()"
-            class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white">
+          <select v-model="filters.category" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+                  @change="fetchTickets()"
+          >
             <option value="">كل الفئات</option>
             <option value="financial">مالية</option>
             <option value="technical">تقنية</option>
@@ -71,9 +76,17 @@
             <option value="general">عامة</option>
           </select>
           <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
-            <input type="checkbox" v-model="filters.overdue" @change="fetchTickets()" class="rounded" />
+            <input v-model="filters.overdue" type="checkbox" class="rounded" @change="fetchTickets()" />
             المتأخرة فقط
           </label>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <span class="text-[10px] text-gray-400 w-full">اختصارات ذكية:</span>
+          <button v-for="q in quickFilters" :key="q.label" type="button" class="px-2.5 py-1 rounded-lg text-[11px] font-medium border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
+                  @click="applyQuick(q)"
+          >
+            {{ q.label }}
+          </button>
         </div>
       </div>
 
@@ -102,8 +115,9 @@
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
             <tr v-for="t in tickets" :key="t.id"
-              class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer"
-              @click="openTicket(t)">
+                class="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer"
+                @click="openTicket(t)"
+            >
               <td class="px-4 py-3 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">{{ t.ticket_number }}</td>
               <td class="px-4 py-3">
                 <div class="font-medium text-gray-900 dark:text-white line-clamp-1">{{ t.subject }}</div>
@@ -135,9 +149,12 @@
         <div v-if="pagination.last_page > 1" class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between text-sm">
           <span class="text-gray-500">{{ pagination.from }}–{{ pagination.to }} من {{ pagination.total }}</span>
           <div class="flex gap-1">
-            <button v-for="p in pagination.last_page" :key="p" @click="fetchTickets(p)"
-              :class="p === pagination.current_page ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'"
-              class="w-8 h-8 rounded-lg text-xs font-medium transition-all">{{ p }}</button>
+            <button v-for="p in pagination.last_page" :key="p" :class="p === pagination.current_page ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                    class="w-8 h-8 rounded-lg text-xs font-medium transition-all"
+                    @click="fetchTickets(p)"
+            >
+              {{ p }}
+            </button>
           </div>
         </div>
       </div>
@@ -158,17 +175,17 @@
 
     <!-- Ticket Detail Drawer -->
     <TicketDetailDrawer v-if="selectedTicket" :ticket="selectedTicket"
-      @close="selectedTicket = null" @updated="onTicketUpdated" />
+                        @close="selectedTicket = null" @updated="onTicketUpdated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import {
   LifebuoyIcon, PlusIcon, BookOpenIcon, ClockIcon,
-  InboxIcon, ExclamationCircleIcon, ArrowPathIcon,
-  CheckCircleIcon, FireIcon, StarIcon, ChevronLeftIcon,
+  ArrowPathIcon, ChevronLeftIcon,
 } from '@heroicons/vue/24/outline'
 import StatCard from '@/components/support/StatCard.vue'
 import PriorityBadge from '@/components/support/PriorityBadge.vue'
@@ -190,6 +207,24 @@ const pagination   = ref({ last_page: 1, current_page: 1, from: 1, to: 1, total:
 const filters = ref({
   search: '', status: '', priority: '', category: '', overdue: false,
 })
+
+const quickFilters: { label: string; priority?: string; status?: string; category?: string; overdue: boolean }[] = [
+  { label: '🔴 حرجة اليوم', priority: 'critical', overdue: false },
+  { label: '⏱️ متأخرة', overdue: true },
+  { label: '🛠️ تقنية', category: 'technical', overdue: false },
+  { label: '🚗 مركبات', category: 'vehicle', overdue: false },
+]
+
+function applyQuick(q: (typeof quickFilters)[number]) {
+  filters.value = {
+    search: '',
+    status: q.status ?? '',
+    priority: q.priority ?? '',
+    category: q.category ?? '',
+    overdue: q.overdue,
+  }
+  fetchTickets(1)
+}
 
 const tabClass = (tab: string) => tab === activeTab.value
   ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
@@ -217,7 +252,7 @@ async function fetchStats() {
 
 function openTicket(t: any) { selectedTicket.value = t }
 
-function onTicketCreated(t: any) {
+function onTicketCreated(_t: any) {
   openNewTicket.value = false
   fetchTickets()
   fetchStats()

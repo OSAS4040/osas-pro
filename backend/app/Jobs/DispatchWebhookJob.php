@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\WebhookDelivery;
-use App\Models\WebhookEndpoint;
 use App\Services\WebhookService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,15 +16,17 @@ class DispatchWebhookJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int    $tries   = 1;
-    public int    $timeout = 30;
-    public bool   $failOnTimeout = true;
+    public int $tries = 3;
 
-    private const MAX_ATTEMPTS    = 3;
-    private const BACKOFF_SECONDS = [60, 300, 900];
+    /** @var list<int> */
+    public array $backoff = [10, 30, 60];
+
+    public int $timeout = 30;
+
+    public bool $failOnTimeout = true;
 
     public function __construct(
-        private readonly int    $deliveryId,
+        private readonly int $deliveryId,
         private readonly string $traceId,
     ) {}
 
@@ -41,6 +42,7 @@ class DispatchWebhookJob implements ShouldQueue
 
         if (! $endpoint || ! $endpoint->is_active) {
             $delivery->update(['status' => 'skipped']);
+
             return;
         }
 
@@ -58,41 +60,58 @@ class DispatchWebhookJob implements ShouldQueue
         try {
             $response = Http::timeout(10)
                 ->withHeaders([
-                    'Content-Type'       => 'application/json',
-                    'X-Webhook-Event'    => $delivery->event,
-                    'X-Webhook-Delivery' => (string) $delivery->id,
+                    'Content-Type'        => 'application/json',
+                    'X-Webhook-Event'     => $delivery->event,
+                    'X-Webhook-Delivery'  => (string) $delivery->id,
                     'X-Webhook-Signature' => $signature,
-                    'X-Trace-Id'         => $this->traceId,
+                    'X-Trace-Id'          => $this->traceId,
                 ])
                 ->send('POST', $endpoint->url, ['body' => $body]);
 
             $httpStatus = $response->status();
             $success    = $response->successful();
 
+            if ($success) {
+                $delivery->update([
+                    'status'          => 'delivered',
+                    'attempt'         => $attempt,
+                    'http_status'     => $httpStatus,
+                    'response_body'   => substr($response->body(), 0, 2000),
+                    'next_attempt_at' => null,
+                ]);
+
+                Log::info('webhook.delivery.success', [
+                    'delivery_id' => $delivery->id,
+                    'event'       => $delivery->event,
+                    'attempt'     => $attempt,
+                    'http_status' => $httpStatus,
+                    'trace_id'    => $this->traceId,
+                ]);
+
+                return;
+            }
+
             $delivery->update([
-                'status'      => $success ? 'delivered' : 'failed',
-                'attempt'     => $attempt,
-                'http_status' => $httpStatus,
-                'response_body' => substr($response->body(), 0, 2000),
+                'status'          => 'failed',
+                'attempt'         => $attempt,
+                'http_status'     => $httpStatus,
+                'response_body'   => substr($response->body(), 0, 2000),
                 'next_attempt_at' => null,
             ]);
 
-            Log::info('webhook.delivery.' . ($success ? 'success' : 'failed'), [
+            Log::warning('webhook.delivery.failed_http', [
                 'delivery_id' => $delivery->id,
-                'event'       => $delivery->event,
                 'attempt'     => $attempt,
                 'http_status' => $httpStatus,
                 'trace_id'    => $this->traceId,
             ]);
 
-            if (! $success && $attempt < self::MAX_ATTEMPTS) {
-                $this->scheduleRetry($delivery, $attempt);
-            }
+            $this->failOrThrow($delivery, $attempt, 'HTTP '.$httpStatus);
         } catch (\Throwable $e) {
             $delivery->update([
-                'status'        => 'failed',
-                'attempt'       => $attempt,
-                'response_body' => $e->getMessage(),
+                'status'          => 'failed',
+                'attempt'         => $attempt,
+                'response_body'   => $e->getMessage(),
                 'next_attempt_at' => null,
             ]);
 
@@ -103,31 +122,32 @@ class DispatchWebhookJob implements ShouldQueue
                 'trace_id'    => $this->traceId,
             ]);
 
-            if ($attempt < self::MAX_ATTEMPTS) {
-                $this->scheduleRetry($delivery, $attempt);
-            }
+            $this->failOrThrow($delivery, $attempt, $e->getMessage());
         }
     }
 
-    private function scheduleRetry(WebhookDelivery $delivery, int $attempt): void
+    public function failed(?\Throwable $e): void
     {
-        $delaySeconds = self::BACKOFF_SECONDS[$attempt - 1] ?? 900;
-        $nextAt       = now()->addSeconds($delaySeconds);
+        $delivery = WebhookDelivery::find($this->deliveryId);
+        if ($delivery && $delivery->status !== 'delivered') {
+            $delivery->update(['status' => 'failed', 'next_attempt_at' => null]);
+        }
 
-        $delivery->update([
-            'status'          => 'pending',
-            'next_attempt_at' => $nextAt,
-        ]);
-
-        self::dispatch($this->deliveryId, $this->traceId)
-            ->onQueue('default')
-            ->delay($nextAt);
-
-        Log::info('webhook.delivery.retry_scheduled', [
-            'delivery_id' => $delivery->id,
-            'next_attempt' => $attempt + 1,
-            'retry_at'    => $nextAt->toIso8601String(),
+        Log::error('webhook.delivery.exhausted', [
+            'delivery_id' => $this->deliveryId,
+            'error'       => $e?->getMessage(),
             'trace_id'    => $this->traceId,
         ]);
+    }
+
+    private function failOrThrow(WebhookDelivery $delivery, int $attempt, string $detail): void
+    {
+        if ($this->attempts() >= $this->tries) {
+            $delivery->update(['status' => 'failed', 'next_attempt_at' => null]);
+
+            return;
+        }
+
+        throw new \RuntimeException('Webhook delivery will retry: '.$detail);
     }
 }

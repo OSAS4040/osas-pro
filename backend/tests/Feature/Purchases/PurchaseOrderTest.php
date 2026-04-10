@@ -45,8 +45,11 @@ class PurchaseOrderTest extends TestCase
             'created_by_user_id' => $this->tenant['user']->id,
             'name'               => 'Oil Filter',
             'sku'                => 'OF-001',
-            'product_type'       => 'product',
+            'product_type'       => 'physical',
             'unit_id'            => $unit->id,
+            'sale_price'         => 30,
+            'cost_price'         => 20,
+            'track_inventory'    => true,
             'is_active'          => true,
         ]);
 

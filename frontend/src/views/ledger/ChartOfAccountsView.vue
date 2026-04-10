@@ -8,9 +8,10 @@
     <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm">
       <p class="font-semibold text-indigo-700 mb-2">ميزان المراجعة</p>
       <div class="flex gap-4">
-        <input v-model="tbFrom" type="date" class="border rounded px-2 py-1 text-xs" placeholder="من" />
-        <input v-model="tbTo"   type="date" class="border rounded px-2 py-1 text-xs" placeholder="إلى" />
-        <button @click="loadTrialBalance" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs">عرض الميزان</button>
+        <div class="min-w-[260px]">
+          <SmartDatePicker mode="range" :from-value="tbFrom" :to-value="tbTo" @change="onTrialBalanceRangeChange" />
+        </div>
+        <button class="bg-indigo-600 text-white px-3 py-1 rounded text-xs" @click="loadTrialBalance">عرض الميزان</button>
       </div>
     </div>
 
@@ -54,6 +55,7 @@
             <th class="px-4 py-3 text-right">النوع</th>
             <th class="px-4 py-3 text-right">النوع الفرعي</th>
             <th class="px-4 py-3 text-right">الحالة</th>
+            <th class="px-4 py-3 text-right">إجراءات</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -68,6 +70,23 @@
                 {{ acc.is_active ? 'فعّال' : 'معطّل' }}
               </span>
             </td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-2">
+                <button
+                  class="px-2 py-1 text-xs rounded border border-gray-300 hover:bg-gray-100"
+                  @click="goToLedger(acc)"
+                >
+                  كشف الحساب
+                </button>
+                <button
+                  class="px-2 py-1 text-xs rounded"
+                  :class="acc.is_active ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'"
+                  @click="toggleAccountStatus(acc)"
+                >
+                  {{ acc.is_active ? 'تعطيل' : 'تفعيل' }}
+                </button>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -78,12 +97,20 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import api from '@/services/api'
+import { useRouter } from 'vue-router'
+import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
 
 const accounts     = ref<any[]>([])
 const trialBalance = ref<any[]>([])
 const search = ref('')
 const tbFrom = ref('')
 const tbTo   = ref('')
+const router = useRouter()
+
+function onTrialBalanceRangeChange(val: { from: string; to: string }) {
+  tbFrom.value = val.from
+  tbTo.value = val.to
+}
 
 async function loadAccounts() {
   const { data } = await api.get('/chart-of-accounts', { params: { search: search.value || undefined, per_page: 100 } })
@@ -99,4 +126,14 @@ onMounted(loadAccounts)
 watch(search, loadAccounts)
 
 function fmt(n: number) { return n ? Number(n).toLocaleString('ar-SA', { minimumFractionDigits: 2 }) : '0.00' }
+
+function goToLedger(acc: any) {
+  router.push({ path: '/ledger', query: { account_id: acc.id, account_code: acc.code } })
+}
+
+async function toggleAccountStatus(acc: any) {
+  if (acc?.is_system) return
+  await api.put(`/chart-of-accounts/${acc.id}`, { is_active: !acc.is_active })
+  await loadAccounts()
+}
 </script>

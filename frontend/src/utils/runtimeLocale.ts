@@ -1,3 +1,5 @@
+import { tryTranslateLaravelMessage } from '@/utils/laravelValidationAr'
+
 export type RuntimeLang = 'ar' | 'en' | 'ur' | 'bn' | 'tl' | 'hi'
 
 export function getRuntimeLang(): RuntimeLang {
@@ -23,6 +25,8 @@ export function localizeBackendMessage(message: unknown): string {
   if (!raw) return ''
 
   if (isArabicRuntime()) {
+    const generic = tryTranslateLaravelMessage(raw, true)
+    if (generic) return generic
     if (/the event factor now is older/i.test(raw)) {
       return 'وقت الحدث أقدم من الوقت الحالي. يرجى اختيار وقت حالي أو مستقبلي.'
     }

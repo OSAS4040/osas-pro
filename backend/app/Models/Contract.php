@@ -31,6 +31,11 @@ class Contract extends Model
     public function creator()       { return $this->belongsTo(User::class, 'created_by'); }
     public function notifications() { return $this->hasMany(\App\Models\ContractNotification::class); }
 
+    public function serviceItems()
+    {
+        return $this->hasMany(ContractServiceItem::class, 'contract_id');
+    }
+
     public function getDaysUntilExpiryAttribute(): int
     {
         return (int) now()->diffInDays($this->end_date, false);

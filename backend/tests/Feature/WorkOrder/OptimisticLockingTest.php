@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
+use App\Services\SensitivePreviewTokenService;
 use App\Services\WorkOrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -61,7 +62,11 @@ class OptimisticLockingTest extends TestCase
     private function createOrder(): WorkOrder
     {
         return $this->service->create(
-            ['customer_id' => $this->customer->id, 'vehicle_id' => $this->vehicle->id],
+            [
+                'customer_id' => $this->customer->id,
+                'vehicle_id' => $this->vehicle->id,
+                'items' => [$this->minimalWorkOrderLineItem()],
+            ],
             $this->company->id,
             $this->branch->id,
             $this->user->id,
@@ -75,6 +80,8 @@ class OptimisticLockingTest extends TestCase
         $snapshot1 = clone $order;
         $snapshot2 = clone $order;
 
+        $this->service->transition($snapshot1, WorkOrderStatus::Approved);
+        $snapshot1->refresh();
         $this->service->transition($snapshot1, WorkOrderStatus::InProgress);
 
         $this->expectException(\RuntimeException::class);
@@ -103,6 +110,8 @@ class OptimisticLockingTest extends TestCase
     {
         $order = $this->createOrder();
 
+        $this->service->transition($order, WorkOrderStatus::Approved);
+        $order->refresh();
         $this->service->transition($order, WorkOrderStatus::InProgress);
         $order->refresh();
 
@@ -112,10 +121,13 @@ class OptimisticLockingTest extends TestCase
                 'version' => 0,
             ]);
 
-        $response->assertStatus(409);
+        $response->assertStatus(409)
+            ->assertJsonPath('code', 'RESOURCE_VERSION_MISMATCH')
+            ->assertJsonPath('status', 409)
+            ->assertJsonStructure(['message', 'trace_id']);
     }
 
-    public function test_api_status_transition_returns_422_on_invalid_transition(): void
+    public function test_api_status_transition_returns_409_on_invalid_transition(): void
     {
         $order = $this->createOrder();
 
@@ -125,12 +137,31 @@ class OptimisticLockingTest extends TestCase
                 'version' => $order->version,
             ]);
 
-        $response->assertStatus(422);
+        $response->assertStatus(409)
+            ->assertJsonPath('code', 'TRANSITION_NOT_ALLOWED')
+            ->assertJsonPath('status', 409)
+            ->assertJsonStructure(['message', 'trace_id']);
     }
 
     public function test_successful_transition_returns_updated_version(): void
     {
         $order = $this->createOrder();
+
+        $token = $this->obtainSensitivePreviewToken(
+            $this->user,
+            SensitivePreviewTokenService::OP_STATUS_TO_APPROVED,
+            [(int) $order->id],
+        );
+
+        $this->actingAs($this->user, 'sanctum')
+            ->patchJson("/api/v1/work-orders/{$order->id}/status", [
+                'status' => 'approved',
+                'version' => $order->version,
+                'sensitive_preview_token' => $token,
+            ])
+            ->assertOk();
+
+        $order->refresh();
 
         $response = $this->actingAs($this->user, 'sanctum')
             ->patchJson("/api/v1/work-orders/{$order->id}/status", [
@@ -140,6 +171,6 @@ class OptimisticLockingTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.status', 'in_progress');
-        $response->assertJsonPath('data.version', 1);
+        $response->assertJsonPath('data.version', 2);
     }
 }

@@ -1,0 +1,250 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+2 0 obj
+<< /Length 4727 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (# 'D*B1J1 'D*FAJ0J H'D*BFJ 'D4'ED) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (## 'DED.5 'D*FAJ0J DD%/'1)) Tj
+1 0 0 1 40 760 Tm () Tj
+1 0 0 1 40 746 Tm (- 'DH69 'D-'DJ: 'DEF5) BHJ) *4:JDJK' AJ 'DFH') \(POS 'DAH'*J1 'DE.2HF #H'E1 'D9ED 'DE-'A8) Tj
+1 0 0 1 40 732 Tm (*9// 'DE3*#,1JF\) DCFG' DJ3* E:DB) CF8'E 9'DEJ E*9// 'DB7'9'* (9/.) Tj
+1 0 0 1 40 718 Tm (- E' J9ED A9DJK': E3'1'* 'D*4:JD 'D#3'3J) + 'DE-'3() 'D#3'3J) + 92D 'DE3*#,1JF + jobs/scheduler) Tj
+1 0 0 1 40 704 Tm (+ (H'('* 'D9EJD/'D#37HD.) Tj
+1 0 0 1 40 690 Tm (- E' GH ,2&J: 'D5D'-J'* 'D/BJB) 9DI CD 'D9EDJ'* 'D-1,) E5AHA'* 'D'F*B'D 'D5'1E) AJ ,EJ9) Tj
+1 0 0 1 40 676 Tm ('DH-/'* F6, 'D*C'ED'*.) Tj
+1 0 0 1 40 662 Tm (- E' GH :J1 EFA0: E1C2 'D',*E'9'* H'D*9'HF 'DE$33J/'DE1&J CEH/JHD A9DJ.) Tj
+1 0 0 1 40 648 Tm (- 'D0C'! 'D-'DJ: BH'9//*-DJD'*/*F(JG'* H-HCE) B1'1 \(Rule-based Intelligence\) HDJ3 LLM/ML) Tj
+1 0 0 1 40 634 Tm (%F*',JK'.) Tj
+1 0 0 1 40 620 Tm (- *H5JA 'D'9*E'/: JECF 'D'9*E'/ 9DI 'DFH') 'D-'DJ) AJ 'DF4'7 'D-'DJ DCF D' J,H2 'D*H39 'DC(J1) Tj
+1 0 0 1 40 606 Tm (B(D hardening DD5D'-J'* H'D@ workflows H'D*C'ED'*.) Tj
+1 0 0 1 40 592 Tm () Tj
+1 0 0 1 40 578 Tm (## F7'B 'DA-5 HE5'/1 'D#/D)) Tj
+1 0 0 1 40 564 Tm () Tj
+1 0 0 1 40 550 Tm (- Backend: `backend/routes/api.php`, `backend/app/Http/Controllers/Api/V1/**`,) Tj
+1 0 0 1 40 536 Tm (`backend/app/Services/**`, `backend/app/Models/**`) Tj
+1 0 0 1 40 522 Tm (- DB: `backend/database/migrations/**` \(-H'DJ 77 migration\)) Tj
+1 0 0 1 40 508 Tm (- 5D'-J'*: `backend/config/permissions.php`, `backend/app/Policies/**`,) Tj
+1 0 0 1 40 494 Tm (`backend/app/Http/Middleware/**`) Tj
+1 0 0 1 40 480 Tm (- Frontend: `frontend/src/router/index.ts`, `frontend/src/views/**`, `frontend/src/layouts/**`,) Tj
+1 0 0 1 40 466 Tm (`frontend/src/components/**`) Tj
+1 0 0 1 40 452 Tm (- Infra/Ops: `docker-compose.yml`, `backend/config/database.php`, `backend/config/cache.php`,) Tj
+1 0 0 1 40 438 Tm (`scripts/**`, `load-testing/reports/**`) Tj
+1 0 0 1 40 424 Tm (- '.*('1'*: `backend/tests/Feature/**`) Tj
+1 0 0 1 40 410 Tm () Tj
+1 0 0 1 40 396 Tm (## 'D,1/ 'DA9DJ DDH-/'*) Tj
+1 0 0 1 40 382 Tm () Tj
+1 0 0 1 40 368 Tm (### 1\) 'DH-/'* 'DEFA0) A9DJK') Tj
+1 0 0 1 40 354 Tm (- 'DE-'3(): Ledger + Chart of Accounts + Journal Entries) Tj
+1 0 0 1 40 340 Tm (- 'DE(J9'* HFB7) 'D(J9: POS + Invoices + Payments) Tj
+1 0 0 1 40 326 Tm (- 'DE.2HF H'DE4*1J'*: Inventory + Purchases + Goods Receipts) Tj
+1 0 0 1 40 312 Tm (- 'D*4:JD: Work Orders + Bays + Bookings) Tj
+1 0 0 1 40 298 Tm (- 'D9ED'!/CRM: Customers + Vehicles + Quotes) Tj
+1 0 0 1 40 284 Tm (- 'DEH'1/ 'D(41J) \(F7'B workshop\): Employees/Attendance/Salaries/Leaves/Tasks) Tj
+1 0 0 1 40 270 Tm (- 'D'4*1'C'* H'D('B'*: Plans + Subscription) Tj
+1 0 0 1 40 256 Tm (- 'D/9E HSLA: Support tickets + KB + SLA views) Tj
+1 0 0 1 40 242 Tm (- 'D*B'1J1 HBI: *B'1J1 *4:JDJ)/E'DJ) + Business Intelligence view) Tj
+1 0 0 1 40 228 Tm (- 'D0C'! 'D/'.DJ: Internal Command Center + Phase services + governance audit) Tj
+1 0 0 1 40 214 Tm (- 'D*C'ED'*: API keys + Webhooks + External API surfaces + ZATCA) Tj
+1 0 0 1 40 200 Tm (- 'D(H'('*: Fleet portal + Customer portal) Tj
+1 0 0 1 40 186 Tm () Tj
+1 0 0 1 40 172 Tm (### 2\) 'DH-/'* :J1 'DEFA0) A9DJK') Tj
+1 0 0 1 40 158 Tm (- E1C2 'D',*E'9'* H'D*9'HF 'DE$33J/'DE1&J \(Meeting/Video Collaboration Module\): :J1 EH,H/) Tj
+1 0 0 1 40 144 Tm (CEH/JHD E*C'ED.) Tj
+1 0 0 1 40 130 Tm () Tj
+1 0 0 1 40 116 Tm (## E5AHA) 'D1(7 \(UI/DB/API/Logic/Permissions\)) Tj
+1 0 0 1 40 102 Tm () Tj
+1 0 0 1 40 88 Tm (- POS/Invoice/Wallet: E*1'(7 BHJ H8JAJK' 'D5D'-J'* ,2&J).) Tj
+1 0 0 1 40 74 Tm (- Work Orders: EF #BHI 'DE3'1'* 'F6('7K' AJ transitions.) Tj
+1 0 0 1 40 60 Tm (- Inventory/Purchases: ,J/ E9 *A'H* AJ enforce 'D'F*B'D'*.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Length 3806 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (- HR workshop: ,2&J AJ enforce D(96 'D-'D'*.) Tj
+1 0 0 1 40 788 Tm (- Intelligence Center: E*1'(7 CBH'9/ H*-DJD'* DJ3 AI *HDJ/J.) Tj
+1 0 0 1 40 774 Tm (- Plugins Marketplace: EH,H/ H',GJK'/GJCDJK' #C+1 EF CHFG 0C'!K A9DJK' EC*EDK'.) Tj
+1 0 0 1 40 760 Tm (- Meetings: :J1 EH,H/.) Tj
+1 0 0 1 40 746 Tm () Tj
+1 0 0 1 40 732 Tm (## *-DJD 'D-'D'* H'D'F*B'D'*) Tj
+1 0 0 1 40 718 Tm () Tj
+1 0 0 1 40 704 Tm (### BHJ) Tj
+1 0 0 1 40 690 Tm (- Work Orders: transition matrix + optimistic locking.) Tj
+1 0 0 1 40 676 Tm (- Wallet/Payment: BJH/ E'DJ) BHJ) HEF9 *,'H2'*.) Tj
+1 0 0 1 40 662 Tm () Tj
+1 0 0 1 40 648 Tm (### ,2&J) Tj
+1 0 0 1 40 634 Tm (- Invoices: transitions EH,H/) DCF DJ3* E5AHA) EH-/) 5'1E) 9(1 CD 'DE3'1'*.) Tj
+1 0 0 1 40 620 Tm (- Purchases/GRN: service paths ,J/) DCF 'D'*3'B DJ3 C'EDK'.) Tj
+1 0 0 1 40 606 Tm (- Support tickets: status validation /HF transition graph 5'1E).) Tj
+1 0 0 1 40 592 Tm () Tj
+1 0 0 1 40 578 Tm (## 'D5D'-J'* H'D-HCE)) Tj
+1 0 0 1 40 564 Tm () Tj
+1 0 0 1 40 550 Tm (### EH,H/) Tj
+1 0 0 1 40 536 Tm (- Roles/permissions catalog + middleware + policies.) Tj
+1 0 0 1 40 522 Tm (- -E'J) H'6-) D(96 'DE,'D'* \(reports/api-keys/webhooks\).) Tj
+1 0 0 1 40 508 Tm () Tj
+1 0 0 1 40 494 Tm (### A,H'* -1,)) Tj
+1 0 0 1 40 480 Tm (- (96 'DE3'1'* 'D-3'3) \(E'DJ)/-HCEJ)/*4:JDJ)\) DJ3* E:7') /'&EK' (@ `permission:*` granular (4CD) Tj
+1 0 0 1 40 466 Tm (5'1E.) Tj
+1 0 0 1 40 452 Tm (- frontend J9*E/ C+J1K' 9DI guards /H1J) role-based EB'1F) ('D*-BB backend granular.) Tj
+1 0 0 1 40 438 Tm () Tj
+1 0 0 1 40 424 Tm (## 'D*-DJD 'DE-'3(J) Tj
+1 0 0 1 40 410 Tm () Tj
+1 0 0 1 40 396 Tm (### FB'7 BH)) Tj
+1 0 0 1 40 382 Tm (- LedgerService \(double-entry\) WalletService safeguards PaymentService guards.) Tj
+1 0 0 1 40 368 Tm (- Post-POS ledger path *E *+(J*G *4:JDJK' E9 afterCommit H*F8JA backlog *'1J.J.) Tj
+1 0 0 1 40 354 Tm () Tj
+1 0 0 1 40 340 Tm (### FB'7 *-*', *-3JF) Tj
+1 0 0 1 40 326 Tm (- reconciliation/failure observability J,( #F *CHF first-class /'.D 'DF8'E HDJ3 AB7 3C1(*'*) Tj
+1 0 0 1 40 312 Tm (*4:JD.) Tj
+1 0 0 1 40 298 Tm (- *H-J/ 5D'-J'* 'D9EDJ'* 'DE'DJ) 'D-3'3).) Tj
+1 0 0 1 40 284 Tm () Tj
+1 0 0 1 40 270 Tm (## 'D*B'1J1 HBI) Tj
+1 0 0 1 40 256 Tm () Tj
+1 0 0 1 40 242 Tm (- E*HA1: dashboards H*B'1J1 9EDJ'*/E'DJ) ,J/) C(/'J).) Tj
+1 0 0 1 40 228 Tm (- F'B5: *B'1J1 1B'(J) E$33J) #9EB \(approval governance reconciliation suites\).) Tj
+1 0 0 1 40 214 Tm (- :J1 E*HA1: *B'1J1 ',*E'9'*/B1'1'*/*FAJ0 \((3(( :J'( EH/JHD 'D',*E'9'*\).) Tj
+1 0 0 1 40 200 Tm () Tj
+1 0 0 1 40 186 Tm (## 'D*C'ED'* H'DH8'&A 'D.DAJ)) Tj
+1 0 0 1 40 172 Tm () Tj
+1 0 0 1 40 158 Tm (### E*HA1) Tj
+1 0 0 1 40 144 Tm (- API key auth + idempotency + webhook infrastructure + queues/scheduler.) Tj
+1 0 0 1 40 130 Tm () Tj
+1 0 0 1 40 116 Tm (### A,H'*) Tj
+1 0 0 1 40 102 Tm (- '*3'B retry semantics AJ webhooks J-*', 6(7.) Tj
+1 0 0 1 40 88 Tm (- API usage logging schema alignment J-*', *-BB/*5-J-.) Tj
+1 0 0 1 40 74 Tm (- queue monitoring /'.D 'DEF*, #BD F6,K' EF E3*HI 'D3C1(*'* 'D*4:JDJ).) Tj
+1 0 0 1 40 60 Tm () Tj
+ET
+endstream
+endobj
+4 0 obj
+<< /Length 3914 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (## E1C2 'D9EDJ'* 'D0CJ) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (- E*HA1 ,2&JK': command center /'.DJ + governance audit.) Tj
+1 0 0 1 40 760 Tm (- F'B5: ops cockpit -J 4'ED \(queue hotspots / SLA escalations / intervention tooling\).) Tj
+1 0 0 1 40 746 Tm () Tj
+1 0 0 1 40 732 Tm (## 'D0C'! 'DA9DJ) Tj
+1 0 0 1 40 718 Tm () Tj
+1 0 0 1 40 704 Tm (- 'DEH,H/: Rule-based intelligence, explainability templates, governance audit.) Tj
+1 0 0 1 40 690 Tm (- :J1 'DEH,H/: LLM/RAG/ML pipeline %F*',J).) Tj
+1 0 0 1 40 676 Tm (- 'D'3*F*',: 'D0C'! 'D-'DJ *-DJDJ/BH'9/ #C+1 EF 0C'! *HDJ/J/*F($ E*B/E.) Tj
+1 0 0 1 40 662 Tm () Tj
+1 0 0 1 40 648 Tm (## 'D,'G2J) DD*9// 'DB7'9J) Tj
+1 0 0 1 40 634 Tm () Tj
+1 0 0 1 40 620 Tm (### B'(D DD/9E 'D"F \(F3(JK'\)) Tj
+1 0 0 1 40 606 Tm (- B7'9'* B1J() EF workflow 'D*4:JDJ 'D-'DJ.) Tj
+1 0 0 1 40 592 Tm () Tj
+1 0 0 1 40 578 Tm (### J-*', F6, %6'AJ C(J1) Tj
+1 0 0 1 40 564 Tm (- Grocery/Supermarket Fashion Pharmacy \(E*7D('* domain-specific 9EJB)\).) Tj
+1 0 0 1 40 550 Tm () Tj
+1 0 0 1 40 536 Tm (### 'DE7DH( E9E'1JK') Tj
+1 0 0 1 40 522 Tm (- Core E4*1C + 7(B) Configurable -3( 'DB7'9 \(System/Company/Branch/Vertical/Plan\).) Tj
+1 0 0 1 40 508 Tm () Tj
+1 0 0 1 40 494 Tm (## 'DE.'71 'D-1,) \(E1*()\)) Tj
+1 0 0 1 40 480 Tm () Tj
+1 0 0 1 40 466 Tm (1. *:7J) 5D'-J'* :J1 EH-/) DD9EDJ'* 'D-1,) \(E1*A9 ,/K'\).) Tj
+1 0 0 1 40 452 Tm (2. 9/E *,'F3 transition enforcement 9(1 'DH-/'* \(E1*A9\).) Tj
+1 0 0 1 40 438 Tm (3. F6, ,2&J AJ 'D*C'ED'* 'D.DAJ)/retries \(E1*A9\).) Tj
+1 0 0 1 40 424 Tm (4. :J'( EH/JHD 'D',*E'9'* 'DE$33J \(E*H37-E1*A9 '3*1'*J,JK'\).) Tj
+1 0 0 1 40 410 Tm (5. A,H) (JF H5A AI H'DB/1'* 'DA9DJ) \(E*H37 'D"F E1*A9 '3*1'*J,JK'\).) Tj
+1 0 0 1 40 396 Tm () Tj
+1 0 0 1 40 382 Tm (## E' JECF 'D'9*E'/ 9DJG 'D"F) Tj
+1 0 0 1 40 368 Tm () Tj
+1 0 0 1 40 354 Tm (- 'DFH') 'D*4:JDJ) 'D-'DJ) AJ 'DF4'7 'DE3*G/A.) Tj
+1 0 0 1 40 340 Tm (- 'DE3'1'* 'DE-'3(J) 'D#3'3J) E9 E1'B() *4:JDJ).) Tj
+1 0 0 1 40 326 Tm (- 92D E3*#,1JF #3'3J H(J&) *4:JD E3*B1).) Tj
+1 0 0 1 40 312 Tm () Tj
+1 0 0 1 40 298 Tm (## E' D' JECF 'D'9*E'/ 9DJG 'D"F) Tj
+1 0 0 1 40 284 Tm () Tj
+1 0 0 1 40 270 Tm (- ,'G2J) Enterprise 9'DEJ) E*9//) 'DB7'9'* /HF *9/JD'* (FJHJ).) Tj
+1 0 0 1 40 256 Tm (- E1C2 ',*E'9'*/*9'HF E*C'ED.) Tj
+1 0 0 1 40 242 Tm (- 0C'! LLM/ML %F*',J E9 -HCE) C'ED).) Tj
+1 0 0 1 40 228 Tm () Tj
+1 0 0 1 40 214 Tm (## .'17) 71JB EB*1-)) Tj
+1 0 0 1 40 200 Tm () Tj
+1 0 0 1 40 186 Tm (### #HDK' \(%,('1J B(D 'D*H39\)) Tj
+1 0 0 1 40 172 Tm (1. Authorization hardening 4'ED endpoint-by-endpoint.) Tj
+1 0 0 1 40 158 Tm (2. *H-J/ state transitions AJ CD 'DH-/'* 'D-3'3).) Tj
+1 0 0 1 40 144 Tm (3. 6(7 'D*C'ED'* \(webhook retries/log consistency/monitoring\).) Tj
+1 0 0 1 40 130 Tm (4. (F'! DH-'* 1B'(J) /'.DJ) \(failed slope, queue health, reconciliation\).) Tj
+1 0 0 1 40 116 Tm () Tj
+1 0 0 1 40 102 Tm (### +'FJK' \(Quick Wins EF.A6) 'DE.'71\)) Tj
+1 0 0 1 40 88 Tm (1. Permission coverage report automation.) Tj
+1 0 0 1 40 74 Tm (2. Reconciliation dashboards.) Tj
+1 0 0 1 40 60 Tm (3. BI metric dictionary.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Length 1073 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (4. Meetings MVP :J1 E1&J \(minutes/actions/approvals\) B(D 'DAJ/JH.) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (### +'D+K' \('3*1'*J,J\)) Tj
+1 0 0 1 40 760 Tm (1. Approval engine EH-/ E*9// 'DE3*HJ'*.) Tj
+1 0 0 1 40 746 Tm (2. Configurable vertical profiles.) Tj
+1 0 0 1 40 732 Tm (3. LLM/RAG layer E9 governance HBJ'3 ,H/).) Tj
+1 0 0 1 40 718 Tm (4. Meetings intelligence \(summary/action extraction\) (9/ F6, 'D#3'3.) Tj
+1 0 0 1 40 704 Tm () Tj
+1 0 0 1 40 690 Tm (## 'D-'D) 'D*FAJ0J) 'DFG'&J)) Tj
+1 0 0 1 40 676 Tm () Tj
+1 0 0 1 40 662 Tm (- 'D*4:JD 'D#3'3J: ,'G2 ,2&JK' BHJ.) Tj
+1 0 0 1 40 648 Tm (- 'D*H39 'DE$33J/'D9'DEJ: J-*', E9'D,) A,H'* -1,) #HDK'.) Tj
+1 0 0 1 40 634 Tm (- 'D*H5J): 9/E 'D(F'! AHB FB'7 'D-HCE) H'D5D'-J'* :J1 'DE-CE) B(D %5D'-G'.) Tj
+1 0 0 1 40 620 Tm () Tj
+1 0 0 1 40 606 Tm () Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Pages /Count 4 /Kids [ 7 0 R 8 0 R 9 0 R 10 0 R ] >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 3 0 R >>
+endobj
+9 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+10 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 5 0 R >>
+endobj
+11 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000077 00000 n 
+0000004856 00000 n 
+0000008714 00000 n 
+0000012680 00000 n 
+0000013805 00000 n 
+0000013883 00000 n 
+0000014009 00000 n 
+0000014135 00000 n 
+0000014261 00000 n 
+0000014388 00000 n 
+trailer
+<< /Size 12 /Root 11 0 R >>
+startxref
+14438
+%%EOF

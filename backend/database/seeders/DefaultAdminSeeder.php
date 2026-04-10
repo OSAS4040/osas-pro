@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Subscription;
@@ -20,18 +22,34 @@ class DefaultAdminSeeder extends Seeder
 
     public function run(): void
     {
-        $company = Company::firstOrCreate(
-            ['name' => 'OSAS Platform'],
-            [
-                'uuid'      => (string) Str::uuid(),
-                'name_ar'   => 'منصة أواس',
-                'email'     => 'hq@osas.sa',
-                'currency'  => 'SAR',
-                'timezone'  => 'Asia/Riyadh',
-                'status'    => 'active',
-                'is_active' => true,
-            ]
-        );
+        // One default tenant: match by canonical email first, else legacy English name (any email),
+        // so we never create a second company when the old row used a different email.
+        $byEmail = Company::query()->where('email', 'hq@osas.sa')->first();
+        $byName = $byEmail ? null : Company::query()
+            ->whereIn('name', ['OSAS Platform', 'Asas Platform'])
+            ->orderBy('id')
+            ->first();
+        $company = $byEmail ?? $byName;
+
+        $attrs = [
+            'email'     => 'hq@osas.sa',
+            'name'      => 'Osas Pro',
+            'name_ar'   => 'أسس برو',
+            'currency'  => 'SAR',
+            'timezone'  => 'Asia/Riyadh',
+            'status'    => 'active',
+            'is_active' => true,
+        ];
+
+        if ($company !== null) {
+            $company->update($attrs);
+            $company->refresh();
+        } else {
+            $company = Company::create(array_merge(
+                ['uuid' => (string) Str::uuid()],
+                $attrs
+            ));
+        }
 
         $branch = Branch::firstOrCreate(
             ['company_id' => $company->id, 'is_main' => true],
@@ -60,29 +78,20 @@ class DefaultAdminSeeder extends Seeder
             ]
         );
 
-        $user = User::firstOrCreate(
-            ['email' => self::ADMIN_EMAIL],
+        User::withoutGlobalScope('tenant')->updateOrCreate(
             [
-                'uuid'       => (string) Str::uuid(),
                 'company_id' => $company->id,
-                'branch_id'  => $branch->id,
-                'name'       => 'OSAS Admin',
-                'password'   => self::ADMIN_PASSWORD,
-                'role'       => 'owner',
-                'status'     => 'active',
-                'is_active'  => true,
+                'email'      => self::ADMIN_EMAIL,
+            ],
+            [
+                'branch_id' => $branch->id,
+                'name'      => 'Osas Pro Admin',
+                'password'  => self::ADMIN_PASSWORD,
+                'role'      => UserRole::Owner,
+                'status'    => UserStatus::Active,
+                'is_active' => true,
             ]
         );
-
-        $user->forceFill([
-            'company_id' => $company->id,
-            'branch_id'  => $branch->id,
-            'name'       => 'OSAS Admin',
-            'password'   => self::ADMIN_PASSWORD,
-            'role'       => 'owner',
-            'status'     => 'active',
-            'is_active'  => true,
-        ])->save();
 
         $this->command?->info('Default admin: ' . self::ADMIN_EMAIL . ' / ' . self::ADMIN_PASSWORD);
     }

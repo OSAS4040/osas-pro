@@ -1,0 +1,534 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+2 0 obj
+<< /Length 3367 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (# 'D*B1J1 'D91(J 'DEH39 ,/K'  'D*BJJE 'D*FAJ0J H'D*BFJ 'D4'ED) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (## 1\) ED.5 *FAJ0J EH39) Tj
+1 0 0 1 40 760 Tm () Tj
+1 0 0 1 40 746 Tm (### 'D-'D) 'D9'E)) Tj
+1 0 0 1 40 732 Tm (- 'DF8'E AJ H69 **BHJ *4:JDJK'** /'.D F7'BG 'D-'DJ.) Tj
+1 0 0 1 40 718 Tm (- *H,/ (FJ) SaaS H'6-) \(E5'/B) *9// E3*#,1JF .77 (H'('*\).) Tj
+1 0 0 1 40 704 Tm (- *H,/ FH') E-'3(J) -BJBJ) E9 Ledger HBJH/.) Tj
+1 0 0 1 40 690 Tm (- *H,/ 7(B) 0C'! *4:JDJ E(FJ) 9DI BH'9/ H*-DJD'*.) Tj
+1 0 0 1 40 676 Tm () Tj
+1 0 0 1 40 662 Tm (### 'D-CE 'D*FAJ0J) Tj
+1 0 0 1 40 648 Tm (- **JECF 'D'9*E'/** 9DI 'DFH') 'D-'DJ) DDF4'7 'D-'DJ.) Tj
+1 0 0 1 40 634 Tm (- **D' JOF5-** ('D*H39 'D#ABJ 'DC(J1 B(D:) Tj
+1 0 0 1 40 620 Tm (  1. *H-J/ 'D5D'-J'* 'D/BJB).) Tj
+1 0 0 1 40 606 Tm (  2. *H-J/ -'D'* 'D'F*B'D.) Tj
+1 0 0 1 40 592 Tm (  3. *BHJ) 'D*C'ED'* H'D1B'() 'D*4:JDJ) 'D/'.DJ).) Tj
+1 0 0 1 40 578 Tm (  4. (F'! 7(B) *.5J5 E*9//) 'D#F47) (4CD 13EJ.) Tj
+1 0 0 1 40 564 Tm () Tj
+1 0 0 1 40 550 Tm (---) Tj
+1 0 0 1 40 536 Tm () Tj
+1 0 0 1 40 522 Tm (## 2\) EFG,J) 'DA-5) Tj
+1 0 0 1 40 508 Tm () Tj
+1 0 0 1 40 494 Tm (*E 'DA-5 HAB EFG,:) Tj
+1 0 0 1 40 480 Tm (1. B1'!) 'DE3'1'* H'D7(B'* 'DA9DJ) \(UI/DB/API/Logic/Permissions/Ops\).) Tj
+1 0 0 1 40 466 Tm (2. E7'(B) CD H-/) 9(1 'D#/D).) Tj
+1 0 0 1 40 452 Tm (3. *5FJA 'D,'G2J) HAB E3*HJ'*:) Tj
+1 0 0 1 40 438 Tm (   - EFA0 ('DC'ED) Tj
+1 0 0 1 40 424 Tm (   - EFA0 ,2&JK') Tj
+1 0 0 1 40 410 Tm (   - EH,H/ GJCDJK' AB7) Tj
+1 0 0 1 40 396 Tm (   - EH,H/ 4CDJK' AB7) Tj
+1 0 0 1 40 382 Tm (   - :J1 EFA0) Tj
+1 0 0 1 40 368 Tm (   - J-*', *-3JF) Tj
+1 0 0 1 40 354 Tm (   - J-*', %9'/) *5EJE) Tj
+1 0 0 1 40 340 Tm () Tj
+1 0 0 1 40 326 Tm (---) Tj
+1 0 0 1 40 312 Tm () Tj
+1 0 0 1 40 298 Tm (## 3\) ,1/ 'DH-/'* H'DEF8HE) 'D-'DJ)) Tj
+1 0 0 1 40 284 Tm () Tj
+1 0 0 1 40 270 Tm (## 3.1 'DE-'3()) Tj
+1 0 0 1 40 256 Tm (### 'DEH,H/ A9DJK') Tj
+1 0 0 1 40 242 Tm (- Ledger + Journal Entries + Chart of Accounts.) Tj
+1 0 0 1 40 228 Tm (- 1(7 E-'3(J D9EDJ'* 'D(J9 H'DE/AH9'*.) Tj
+1 0 0 1 40 214 Tm () Tj
+1 0 0 1 40 200 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 186 Tm (- 'D-'D): **EFA0 ,2&JK' BHJ**.) Tj
+1 0 0 1 40 172 Tm (- 'DE.'71: '9*E'/ C(J1 9DI 5-) E3'1 async posting HE1'B() 'D7H'(J1.) Tj
+1 0 0 1 40 158 Tm () Tj
+1 0 0 1 40 144 Tm (## 3.2 'DE(J9'* HFB7) 'D(J9) Tj
+1 0 0 1 40 130 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 116 Tm (- POS sale flow.) Tj
+1 0 0 1 40 102 Tm (- Invoices + payment posting.) Tj
+1 0 0 1 40 88 Tm () Tj
+1 0 0 1 40 74 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 60 Tm (- 'D-'D): **EFA0 ('DC'ED F3(JK'**.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Length 2995 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (- 'DE.'71: 5D'-J'* 'D9EDJ'* 'D-3'3) *-*', *:7J) #C+1 'F*8'EK'.) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (## 3.3 'DE.2HF H'DE4*1J'*) Tj
+1 0 0 1 40 760 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 746 Tm (- Products, stock movements, reservations.) Tj
+1 0 0 1 40 732 Tm (- Purchases + goods receipts.) Tj
+1 0 0 1 40 718 Tm () Tj
+1 0 0 1 40 704 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 690 Tm (- 'D-'D): **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 676 Tm (- 'DE.'71: *A'H* 51'E) transitions (JF 'DE3'1'*.) Tj
+1 0 0 1 40 662 Tm () Tj
+1 0 0 1 40 648 Tm (## 3.4 'D*4:JD) Tj
+1 0 0 1 40 634 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 620 Tm (- Work orders lifecycle.) Tj
+1 0 0 1 40 606 Tm (- Bays + bookings.) Tj
+1 0 0 1 40 592 Tm () Tj
+1 0 0 1 40 578 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 564 Tm (- 'D-'D): **BHJ**.) Tj
+1 0 0 1 40 550 Tm (- 'DE.'71: bookings transitions #BD 51'E) EF work orders.) Tj
+1 0 0 1 40 536 Tm () Tj
+1 0 0 1 40 522 Tm (## 3.5 'DEH'1/ 'D(41J)) Tj
+1 0 0 1 40 508 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 494 Tm (- Employees, attendance, leaves, salaries, tasks.) Tj
+1 0 0 1 40 480 Tm () Tj
+1 0 0 1 40 466 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 452 Tm (- 'D-'D): **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 438 Tm (- 'DE.'71: enforce (96 'D-'D'* #BD 51'E).) Tj
+1 0 0 1 40 424 Tm () Tj
+1 0 0 1 40 410 Tm (## 3.6 'D'4*1'C'* H'D('B'*) Tj
+1 0 0 1 40 396 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 382 Tm (- Plans + subscriptions + middleware enforcement.) Tj
+1 0 0 1 40 368 Tm () Tj
+1 0 0 1 40 354 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 340 Tm (- 'D-'D): **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 326 Tm (- 'DED'-8): *A'H* AJ *E+JD (96 'D-'D'* 'DEECF) J3*D2E */BJB '*3'B.) Tj
+1 0 0 1 40 312 Tm () Tj
+1 0 0 1 40 298 Tm (## 3.7 'D5D'-J'* H'D#/H'1) Tj
+1 0 0 1 40 284 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 270 Tm (- Roles/permissions config + middleware + policies.) Tj
+1 0 0 1 40 256 Tm () Tj
+1 0 0 1 40 242 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 228 Tm (- 'D-'D): **J-*', *-3JF EGE**.) Tj
+1 0 0 1 40 214 Tm (- 'DE.'71: DJ3 CD endpoint -3'3 E:7I (FA3 E3*HI 'D51'E).) Tj
+1 0 0 1 40 200 Tm () Tj
+1 0 0 1 40 186 Tm (## 3.8 'D*B'1J1 HDH-'* 'DE9DHE'*) Tj
+1 0 0 1 40 172 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 158 Tm (- *B'1J1 *4:JDJ)/E'DJ) + BI screen.) Tj
+1 0 0 1 40 144 Tm () Tj
+1 0 0 1 40 130 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 116 Tm (- 'D-'D): **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 102 Tm (- 'DE7DH(: metric governance + 1B'() E$33J) #9EB.) Tj
+1 0 0 1 40 88 Tm () Tj
+1 0 0 1 40 74 Tm (## 3.9 E1C2 'D9EDJ'* 'D0CJ) Tj
+1 0 0 1 40 60 Tm (### 'DEH,H/) Tj
+ET
+endstream
+endobj
+4 0 obj
+<< /Length 3978 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (- Command center /'.DJ E9 *H5J'* H*F(JG'* rule-based.) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 760 Tm (- 'D-'D): **,'G2 *,1J(JK'/,2&JK'**.) Tj
+1 0 0 1 40 746 Tm (- 'DE7DH(: ops cockpit -J 4'ED.) Tj
+1 0 0 1 40 732 Tm () Tj
+1 0 0 1 40 718 Tm (## 3.10 0C'! 'D#9E'D) Tj
+1 0 0 1 40 704 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 690 Tm (- *-DJD'* HE$41'* E(FJ) 9DI *,EJ9'* HBH'9/.) Tj
+1 0 0 1 40 676 Tm () Tj
+1 0 0 1 40 662 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 648 Tm (- 'D-'D): **,2&J**.) Tj
+1 0 0 1 40 634 Tm (- 'DED'-8): BI DJ3* (9/ EF5) E$33J) E*9//) 'D#(9'/ C'ED).) Tj
+1 0 0 1 40 620 Tm () Tj
+1 0 0 1 40 606 Tm (## 3.11 'D*C'ED'*) Tj
+1 0 0 1 40 592 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 578 Tm (- API keys + webhooks + idempotency + external routes.) Tj
+1 0 0 1 40 564 Tm () Tj
+1 0 0 1 40 550 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 536 Tm (- 'D-'D): **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 522 Tm (- 'DE7DH(: tightening DD*F'3B H'D'9*E'/J) AJ retries/observability.) Tj
+1 0 0 1 40 508 Tm () Tj
+1 0 0 1 40 494 Tm (## 3.12 3HB 'D#F8E) 'D0CJ)) Tj
+1 0 0 1 40 480 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 466 Tm (- H',G'* H3HB %6'A'*.) Tj
+1 0 0 1 40 452 Tm () Tj
+1 0 0 1 40 438 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 424 Tm (- 'D-'D): **EH,H/ GJCDJK'/,2&JK'**.) Tj
+1 0 0 1 40 410 Tm (- 'DED'-8): DJ3 AI marketplace %F*',J C'ED ("DJ'* -HCE) '3*./'E HAH*1) /BJB).) Tj
+1 0 0 1 40 396 Tm () Tj
+1 0 0 1 40 382 Tm (## 3.13 E1C2 'D',*E'9'* H'D*9'HF 'DE$33J/'DE1&J) Tj
+1 0 0 1 40 368 Tm (### 'DEH,H/) Tj
+1 0 0 1 40 354 Tm (- D' JH,/ EH/JHD A9DJ E*C'ED.) Tj
+1 0 0 1 40 340 Tm () Tj
+1 0 0 1 40 326 Tm (### 'D*BJJE) Tj
+1 0 0 1 40 312 Tm (- 'D-'D): **:J1 EFA0**.) Tj
+1 0 0 1 40 298 Tm () Tj
+1 0 0 1 40 284 Tm (---) Tj
+1 0 0 1 40 270 Tm () Tj
+1 0 0 1 40 256 Tm (## 4\) E5AHA) 'D1(7 'DEH39)) Tj
+1 0 0 1 40 242 Tm () Tj
+1 0 0 1 40 228 Tm (| 'DH-/) | 'DH',G) | B'9/) 'D(J'F'* | API | EF7B 'D#9E'D | 'D5D'-J'* | 'D-'D) |) Tj
+1 0 0 1 40 214 Tm (|---|---|---|---|---|---|---|) Tj
+1 0 0 1 40 200 Tm (| 'DE-'3() | EH,H/ | EH,H/ | EH,H/ | BHJ | ,2&J | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 186 Tm (| POS | EH,H/ | EH,H/ | EH,H/ | BHJ | ,2&J | EFA0 ('DC'ED F3(JK' |) Tj
+1 0 0 1 40 172 Tm (| 'DAH'*J1 | EH,H/ | EH,H/ | EH,H/ | ,J/ | ,2&J | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 158 Tm (| 'DE-'A8 | EH,H/ | EH,H/ | EH,H/ | BHJ ,/K' | ,2&J | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 144 Tm (| 'DE.2HF | EH,H/ | EH,H/ | EH,H/ | ,J/ | E*H37 | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 130 Tm (| 'DE4*1J'* | EH,H/ | EH,H/ | EH,H/ | E*H37-,J/ | E*H37 | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 116 Tm (| #H'E1 'D9ED | EH,H/ | EH,H/ | EH,H/ | BHJ | E*H37-,J/ | EFA0 ('DC'ED F3(JK' |) Tj
+1 0 0 1 40 102 Tm (| HR | EH,H/ | EH,H/ | EH,H/ | E*H37 | E*H37 | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 88 Tm (| 'D'4*1'C'* | EH,H/ | EH,H/ | EH,H/ | E*H37 | E*H37 | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 74 Tm (| 'D*B'1J1/BI | EH,H/ | EH,H/ | EH,H/ | E*H37 | ,J/ ,2&JK' | EFA0 ,2&JK' |) Tj
+1 0 0 1 40 60 Tm (| E1C2 'D0C'! | EH,H/ | EH,H/ | EH,H/ | B'9/J BHJ | /'.DJ ,J/ | ,'G2 *,1J(JK' |) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Length 3256 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (| 'D*C'ED'* | EH,H/ | EH,H/ | EH,H/ | E*H37 | ,2&J | J-*', *-3JF |) Tj
+1 0 0 1 40 788 Tm (| 'D',*E'9'* | :J1 EH,H/ | :J1 EH,H/ | :J1 EH,H/ | :J1 EH,H/ | :J1 EH,H/ | :J1 EFA0 |) Tj
+1 0 0 1 40 774 Tm () Tj
+1 0 0 1 40 760 Tm (---) Tj
+1 0 0 1 40 746 Tm () Tj
+1 0 0 1 40 732 Tm (## 5\) *-DJD 'D-'D'* H'D'F*B'D'* \(EH39\)) Tj
+1 0 0 1 40 718 Tm () Tj
+1 0 0 1 40 704 Tm (## 5.1 'DAH'*J1) Tj
+1 0 0 1 40 690 Tm (- 'D-'D): EH,H/).) Tj
+1 0 0 1 40 676 Tm (- 'D'F*B'D'*: EH,H/) ,2&JK'.) Tj
+1 0 0 1 40 662 Tm (- enforce: ,J/ ,2&JK'.) Tj
+1 0 0 1 40 648 Tm (- 'D*BJJE: **J-*', *-3JF** \(matrix #H6- HBJH/ 'F*B'D #4/\).) Tj
+1 0 0 1 40 634 Tm () Tj
+1 0 0 1 40 620 Tm (## 5.2 'DE/AH9'*) Tj
+1 0 0 1 40 606 Tm (- 'D-'D): H'6-) \(completed/refunded 9EDJK'\).) Tj
+1 0 0 1 40 592 Tm (- enforce: ,J/.) Tj
+1 0 0 1 40 578 Tm (- 'D*BJJE: **EFA0 ,2&JK' BHJ**.) Tj
+1 0 0 1 40 564 Tm () Tj
+1 0 0 1 40 550 Tm (## 5.3 #H'E1 'D9ED) Tj
+1 0 0 1 40 536 Tm (- 'D-'D): H'6-) HEO/'1).) Tj
+1 0 0 1 40 522 Tm (- enforce: BHJ.) Tj
+1 0 0 1 40 508 Tm (- 'D*BJJE: **EFA0 ('DC'ED F3(JK'**.) Tj
+1 0 0 1 40 494 Tm () Tj
+1 0 0 1 40 480 Tm (## 5.4 'D'4*1'C'*) Tj
+1 0 0 1 40 466 Tm (- 'D-'D): EH,H/).) Tj
+1 0 0 1 40 452 Tm (- enforce: ,J/ 9(1 middleware/jobs.) Tj
+1 0 0 1 40 438 Tm (- 'D*BJJE: **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 424 Tm () Tj
+1 0 0 1 40 410 Tm (## 5.5 'DEH'1/ 'D(41J)) Tj
+1 0 0 1 40 396 Tm (- 'D-'D): EH,H/).) Tj
+1 0 0 1 40 382 Tm (- enforce: E*H37.) Tj
+1 0 0 1 40 368 Tm (- 'D*BJJE: **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 354 Tm () Tj
+1 0 0 1 40 340 Tm (## 5.6 'DE4*1J'*/'D'3*D'E) Tj
+1 0 0 1 40 326 Tm (- 'D-'D): EH,H/).) Tj
+1 0 0 1 40 312 Tm (- enforce: E*A'H*.) Tj
+1 0 0 1 40 298 Tm (- 'D*BJJE: **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 284 Tm () Tj
+1 0 0 1 40 270 Tm (## 5.7 'DE-'A8/'D#+1 'DE-'3(J) Tj
+1 0 0 1 40 256 Tm (- enforce: BHJ.) Tj
+1 0 0 1 40 242 Tm (- 'D*BJJE: **EFA0 ('DC'ED F3(JK'**.) Tj
+1 0 0 1 40 228 Tm () Tj
+1 0 0 1 40 214 Tm (---) Tj
+1 0 0 1 40 200 Tm () Tj
+1 0 0 1 40 186 Tm (## 6\) E5AHA) 'D5D'-J'* \(*FAJ0JK'\)) Tj
+1 0 0 1 40 172 Tm () Tj
+1 0 0 1 40 158 Tm (## ED'-8'* 9'E)) Tj
+1 0 0 1 40 144 Tm (- F8'E 'D5D'-J'* EH,H/.) Tj
+1 0 0 1 40 130 Tm (- 'D*:7J) DJ3* E*,'F3) 9DI CD 'D9EDJ'* 'D-1,).) Tj
+1 0 0 1 40 116 Tm () Tj
+1 0 0 1 40 102 Tm (## A,H'* 1B'(J)) Tj
+1 0 0 1 40 88 Tm (1. E3'1'* -3'3) (/HF FA3 E3*HI `permission` granular.) Tj
+1 0 0 1 40 74 Tm (2. 'D'9*E'/ 9DI guards /H1J) AJ 'DH',G) #C+1 EF 5D'-J'* /BJB) (CD endpoint.) Tj
+1 0 0 1 40 60 Tm (3. 'D-',) %DI E5AHA) EH-/) \(916/%F4'!/*9/JD/'9*E'//%D:'!/-0A/*5/J1\).) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Length 2684 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm () Tj
+1 0 0 1 40 788 Tm (## 'D*BJJE) Tj
+1 0 0 1 40 774 Tm (- 'D-'D): **J-*', %9'/) 6(7 EFG,J**.) Tj
+1 0 0 1 40 760 Tm () Tj
+1 0 0 1 40 746 Tm (---) Tj
+1 0 0 1 40 732 Tm () Tj
+1 0 0 1 40 718 Tm (## 7\) 'D*-DJD 'DE-'3(J 'D*A5JDJ) Tj
+1 0 0 1 40 704 Tm () Tj
+1 0 0 1 40 690 Tm (## E' J9ED) Tj
+1 0 0 1 40 676 Tm (- Ledger posting and core accounting flows.) Tj
+1 0 0 1 40 662 Tm (- Wallet/Payment safeguards.) Tj
+1 0 0 1 40 648 Tm (- %EC'FJ) **(9 #3'3J.) Tj
+1 0 0 1 40 634 Tm () Tj
+1 0 0 1 40 620 Tm (## E' J-*', *BHJ)) Tj
+1 0 0 1 40 606 Tm (- reconciliation E/E, H/H1J /'.D 'DF8'E.) Tj
+1 0 0 1 40 592 Tm (- *B'1J1 1B'(J) E'DJ) E*B/E).) Tj
+1 0 0 1 40 578 Tm (- *4/J/ 5D'-J'* 'D%,1'!'* 'DE'DJ) 'D-1,).) Tj
+1 0 0 1 40 564 Tm () Tj
+1 0 0 1 40 550 Tm (## 'D-CE) Tj
+1 0 0 1 40 536 Tm (- 'D-'D): **,'G2 %F*',JK' ,2&JK'** AJ 'DF7'B 'D-'DJ HDJ3 %:D'BK' 9'DEJK' FG'&JK'.) Tj
+1 0 0 1 40 522 Tm () Tj
+1 0 0 1 40 508 Tm (---) Tj
+1 0 0 1 40 494 Tm () Tj
+1 0 0 1 40 480 Tm (## 8\) 'D*B'1J1 HDH-'* 'DE9DHE'*) Tj
+1 0 0 1 40 466 Tm () Tj
+1 0 0 1 40 452 Tm (## 'DEH,H/) Tj
+1 0 0 1 40 438 Tm (- *B'1J1 *4:JDJ) HE'DJ) E*9//).) Tj
+1 0 0 1 40 424 Tm (- 4'4) BI.) Tj
+1 0 0 1 40 410 Tm () Tj
+1 0 0 1 40 396 Tm (## 'DF'B5) Tj
+1 0 0 1 40 382 Tm (- *B'1J1 governance/approval/sensitivity.) Tj
+1 0 0 1 40 368 Tm (- *B'1J1 ',*E'9'* HB1'1'* \(:J1 E*'-\).) Tj
+1 0 0 1 40 354 Tm (- DH-) EH-/) D5-) 'DE3'1'* 'D-1,).) Tj
+1 0 0 1 40 340 Tm () Tj
+1 0 0 1 40 326 Tm (## 'D-'D)) Tj
+1 0 0 1 40 312 Tm (- **EFA0 ,2&JK'**.) Tj
+1 0 0 1 40 298 Tm () Tj
+1 0 0 1 40 284 Tm (---) Tj
+1 0 0 1 40 270 Tm () Tj
+1 0 0 1 40 256 Tm (## 9\) 'DH8'&A 'D.DAJ)) Tj
+1 0 0 1 40 242 Tm () Tj
+1 0 0 1 40 228 Tm (## 'DEH,H/) Tj
+1 0 0 1 40 214 Tm (- workers E*9//).) Tj
+1 0 0 1 40 200 Tm (- scheduler.) Tj
+1 0 0 1 40 186 Tm (- jobs H'39).) Tj
+1 0 0 1 40 172 Tm (- failed jobs handling.) Tj
+1 0 0 1 40 158 Tm () Tj
+1 0 0 1 40 144 Tm (## 'DF'B5) Tj
+1 0 0 1 40 130 Tm (- E1'B() /'.DJ) EH-/) DDE.'71 'D*4:JDJ).) Tj
+1 0 0 1 40 116 Tm (- *-3JF lifecycle DDA4D H%9'/) 'DE-'HD) AJ (96 'D*C'ED'*.) Tj
+1 0 0 1 40 102 Tm () Tj
+1 0 0 1 40 88 Tm (## 'D-'D)) Tj
+1 0 0 1 40 74 Tm (- **EFA0 ,2&JK' BHJ**.) Tj
+1 0 0 1 40 60 Tm () Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Length 2764 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (---) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (## 10\) 'D/JHF 'D*BFJ) H'DE9E'1J)) Tj
+1 0 0 1 40 760 Tm () Tj
+1 0 0 1 40 746 Tm (1. *A'H* 'D51'E) 9(1 'DH-/'*.) Tj
+1 0 0 1 40 732 Tm (2. *C1'1/*('JF AJ FE7 enforce.) Tj
+1 0 0 1 40 718 Tm (3. FB5 approval engine EH-/.) Tj
+1 0 0 1 40 704 Tm (4. A,H) meetings module.) Tj
+1 0 0 1 40 690 Tm (5. A,H) (JF AI claimed HAI actual.) Tj
+1 0 0 1 40 676 Tm () Tj
+1 0 0 1 40 662 Tm (---) Tj
+1 0 0 1 40 648 Tm () Tj
+1 0 0 1 40 634 Tm (## 11\) 'D*BFJ'* 'DE3*./E) A9DJK') Tj
+1 0 0 1 40 620 Tm () Tj
+1 0 0 1 40 606 Tm (- Frontend: Vue + Router + Stores) Tj
+1 0 0 1 40 592 Tm (- Backend: Laravel API) Tj
+1 0 0 1 40 578 Tm (- DB: PostgreSQL) Tj
+1 0 0 1 40 564 Tm (- Cache/Queue: Redis) Tj
+1 0 0 1 40 550 Tm (- Scheduler/Jobs: Laravel queue/schedule) Tj
+1 0 0 1 40 536 Tm (- Auth: Sanctum + API keys) Tj
+1 0 0 1 40 522 Tm (- Infra: Docker compose) Tj
+1 0 0 1 40 508 Tm (- Tests: Feature test suite) Tj
+1 0 0 1 40 494 Tm (- Observability: Sentry config + scripts/load testing) Tj
+1 0 0 1 40 480 Tm () Tj
+1 0 0 1 40 466 Tm (---) Tj
+1 0 0 1 40 452 Tm () Tj
+1 0 0 1 40 438 Tm (## 12\) *BJJE 'D0C'!: 'DA9DJ EB'(D 'DE7DH() Tj
+1 0 0 1 40 424 Tm () Tj
+1 0 0 1 40 410 Tm (## 'DA9DJ) Tj
+1 0 0 1 40 396 Tm (- *F(JG'*/*H5J'*/*D.J5'* rule-based.) Tj
+1 0 0 1 40 382 Tm (- -HCE) B1'1 /'.DJ) E9 **(9.) Tj
+1 0 0 1 40 368 Tm () Tj
+1 0 0 1 40 354 Tm (## :J1 'DEH,H/ %F*',JK') Tj
+1 0 0 1 40 340 Tm (- LLM pipelines.) Tj
+1 0 0 1 40 326 Tm (- RAG E9 %/'1) E91A).) Tj
+1 0 0 1 40 312 Tm (- ML lifecycle \(training/evaluation/deployment\).) Tj
+1 0 0 1 40 298 Tm () Tj
+1 0 0 1 40 284 Tm (## 'D*BJJE) Tj
+1 0 0 1 40 270 Tm (- 'D-'D): **0C'! *4:JDJ B'9/J ,J/** DCFG DJ3 AI 9'DEJK' (9/.) Tj
+1 0 0 1 40 256 Tm () Tj
+1 0 0 1 40 242 Tm (---) Tj
+1 0 0 1 40 228 Tm () Tj
+1 0 0 1 40 214 Tm (## 13\) 'D*9// 'DB7'9J \(*-DJD EH39\)) Tj
+1 0 0 1 40 200 Tm () Tj
+1 0 0 1 40 186 Tm (## 'D-'DJ) Tj
+1 0 0 1 40 172 Tm (- B'(DJ) #HDJ) DD*9EJE EH,H/) DCF E' *2'D E*#+1) ('DF7'B 'D-'DJ.) Tj
+1 0 0 1 40 158 Tm () Tj
+1 0 0 1 40 144 Tm (## 'DE7DH( DD*H39)) Tj
+1 0 0 1 40 130 Tm (1. Core EH-/ D' J*:J1 DCD B7'9.) Tj
+1 0 0 1 40 116 Tm (2. Configuration engine -3( 'DB7'9.) Tj
+1 0 0 1 40 102 Tm (3. Master data governance per vertical.) Tj
+1 0 0 1 40 88 Tm (4. Workflows per vertical profiles.) Tj
+1 0 0 1 40 74 Tm () Tj
+1 0 0 1 40 60 Tm (## B7'9'* /9E E(C1) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Length 3199 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (- ./E'*/(J9 B1J( EF 'DFE7 'D-'DJ.) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (## B7'9'* *-*', F6, #C(1) Tj
+1 0 0 1 40 760 Tm (- 'D(B'D)/'D3H(1E'1C*.) Tj
+1 0 0 1 40 746 Tm (- 'DED'(3 H'D#2J'!.) Tj
+1 0 0 1 40 732 Tm (- 'D5J/DJ'*.) Tj
+1 0 0 1 40 718 Tm () Tj
+1 0 0 1 40 704 Tm (---) Tj
+1 0 0 1 40 690 Tm () Tj
+1 0 0 1 40 676 Tm (## 14\) E1C2 'D',*E'9'* H'D*9'HF 'DE$33J  .7) MVP) Tj
+1 0 0 1 40 662 Tm () Tj
+1 0 0 1 40 648 Tm (## DE'0' EGE) Tj
+1 0 0 1 40 634 Tm (- J1(7 'D%/'1) ('D*FAJ0.) Tj
+1 0 0 1 40 620 Tm (- J.DB traceability DDB1'1'*.) Tj
+1 0 0 1 40 606 Tm (- J1A9 'D'F6('7 'D*4:JDJ.) Tj
+1 0 0 1 40 592 Tm () Tj
+1 0 0 1 40 578 Tm (## MVP EF.A6 'D*#+J1) Tj
+1 0 0 1 40 564 Tm (1. CJ'F ',*E'9.) Tj
+1 0 0 1 40 550 Tm (2. 'DE4'1CHF H'D-6H1.) Tj
+1 0 0 1 40 536 Tm (3. E-61 + B1'1'*.) Tj
+1 0 0 1 40 522 Tm (4. %,1'!'* E1*(7) (EG'E.) Tj
+1 0 0 1 40 508 Tm (5. 5D'-J'* .5H5J)/'9*E'/.) Tj
+1 0 0 1 40 494 Tm (6. *B'1J1 *FAJ0 'DB1'1'*.) Tj
+1 0 0 1 40 480 Tm () Tj
+1 0 0 1 40 466 Tm (## E' JO$,D) Tj
+1 0 0 1 40 452 Tm (- 'DAJ/JH 'DC'ED.) Tj
+1 0 0 1 40 438 Tm (- 'D*3,JD H'D*A1J: 'D0CJ.) Tj
+1 0 0 1 40 424 Tm (- 'D*D.J5 'D*DB'&J 'DE*B/E.) Tj
+1 0 0 1 40 410 Tm () Tj
+1 0 0 1 40 396 Tm (---) Tj
+1 0 0 1 40 382 Tm () Tj
+1 0 0 1 40 368 Tm (## 15\) E3*HJ'* 'D.7H1) HFH9 'D,G/) Tj
+1 0 0 1 40 354 Tm () Tj
+1 0 0 1 40 340 Tm (| 'DA,H) | 'D.7H1) | 'D,G/ |) Tj
+1 0 0 1 40 326 Tm (|---|---|---|) Tj
+1 0 0 1 40 312 Tm (| 5D'-J'* /BJB) DDE3'1'* 'D-3'3) | E1*A9 ,/K' | Backend + Permissions |) Tj
+1 0 0 1 40 298 Tm (| *H-J/ transitions | E1*A9 | Backend + Workflow |) Tj
+1 0 0 1 40 284 Tm (| *C'ED'*/retries/'*3'B 3,D'* | E1*A9 | Backend + Integrations |) Tj
+1 0 0 1 40 270 Tm (| :J'( meetings module | E*H37-E1*A9 | UI + DB + API |) Tj
+1 0 0 1 40 256 Tm (| :J'( approval engine EH-/ | E1*A9 | E9E'1J) + Backend + UI |) Tj
+1 0 0 1 40 242 Tm (| Multi-vertical configuration | E1*A9 '3*1'*J,JK' | E9E'1J) + DB + Config |) Tj
+1 0 0 1 40 228 Tm (| AI production layer | E*H37 'D"F/E1*A9 E3*B(DK' | Data + Platform + AI |) Tj
+1 0 0 1 40 214 Tm () Tj
+1 0 0 1 40 200 Tm (---) Tj
+1 0 0 1 40 186 Tm () Tj
+1 0 0 1 40 172 Tm (## 16\) 'D'9*E'/'* 'DE*('/D) H*1*J( 'D*FAJ0) Tj
+1 0 0 1 40 158 Tm () Tj
+1 0 0 1 40 144 Tm (1. 'D5D'-J'* #HDK'.) Tj
+1 0 0 1 40 130 Tm (2. transitions +'FJK'.) Tj
+1 0 0 1 40 116 Tm (3. 'D*C'ED'* H'D1B'() 'D*4:JDJ) +'D+K'.) Tj
+1 0 0 1 40 102 Tm (4. approval engine + config core 1'(9K'.) Tj
+1 0 0 1 40 88 Tm (5. meetings MVP .'E3K'.) Tj
+1 0 0 1 40 74 Tm (6. 0C'! E*B/E \(LLM/RAG/ML\) (9/ F6, 'D#3'3.) Tj
+1 0 0 1 40 60 Tm () Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Length 1928 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 40 802 Tm (---) Tj
+1 0 0 1 40 788 Tm () Tj
+1 0 0 1 40 774 Tm (## 17\) Quick Wins EF.A6) 'DE.'71) Tj
+1 0 0 1 40 760 Tm () Tj
+1 0 0 1 40 746 Tm (1. DH-) 5-) 'DE3'1'* 'D-1,).) Tj
+1 0 0 1 40 732 Tm (2. *B1J1 *:7J) 'D5D'-J'* "DJK'.) Tj
+1 0 0 1 40 718 Tm (3. B'EH3 KPI EH-/.) Tj
+1 0 0 1 40 704 Tm (4. reconciliation dashboard.) Tj
+1 0 0 1 40 690 Tm (5. meetings MVP F5J \((/HF AJ/JH\).) Tj
+1 0 0 1 40 676 Tm () Tj
+1 0 0 1 40 662 Tm (---) Tj
+1 0 0 1 40 648 Tm () Tj
+1 0 0 1 40 634 Tm (## 18\) FB'7 *-*', *-BB %6'AJ) Tj
+1 0 0 1 40 620 Tm () Tj
+1 0 0 1 40 606 Tm (1. route-to-permission matrix C'ED) DCD endpoint -3'3.) Tj
+1 0 0 1 40 592 Tm (2. dead/orphan analysis 4'ED.) Tj
+1 0 0 1 40 578 Tm (3. *:7J) 'D'.*('1'* EB'(D 'DE.'71 'D-1,).) Tj
+1 0 0 1 40 564 Tm (4. */BJB '*3'B enums/labels (JF 'DH',G) H'D@ backend AJ CD 'DH-/'*.) Tj
+1 0 0 1 40 550 Tm (5. profiling B7'9J E.55 \(3H(1E'1C*/5J/DJ)/#2J'!\).) Tj
+1 0 0 1 40 536 Tm () Tj
+1 0 0 1 40 522 Tm (---) Tj
+1 0 0 1 40 508 Tm () Tj
+1 0 0 1 40 494 Tm (## 19\) 'DF*J,) 'DFG'&J)) Tj
+1 0 0 1 40 480 Tm () Tj
+1 0 0 1 40 466 Tm (- **'D-'D) 'D-'DJ):** BHJ) *4:JDJK' AJ 'DF7'B 'D-'DJ.) Tj
+1 0 0 1 40 452 Tm (- **'D,'G2J) 'D9'DEJ):** :J1 EC*ED) (9/.) Tj
+1 0 0 1 40 438 Tm (- **'DB1'1 'D5-J-:** *+(J* #3'3 'D-HCE) H'D5D'-J'* H'D*.5J5 B(D 'D*H39.) Tj
+1 0 0 1 40 424 Tm (- **#C(1 A15) *F'A3J):** (F'! FH') EH-/) B'(D) DD*.5J5 + 0C'! A9DJ E-CHE + E1C2 ',*E'9'* E1*(7) Tj
+1 0 0 1 40 410 Tm (('D*FAJ0.) Tj
+1 0 0 1 40 396 Tm () Tj
+1 0 0 1 40 382 Tm () Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Pages /Count 8 /Kids [ 11 0 R 12 0 R 13 0 R 14 0 R 15 0 R 16 0 R 17 0 R 18 0 R ] >>
+endobj
+11 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+12 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 3 0 R >>
+endobj
+13 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+14 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 5 0 R >>
+endobj
+15 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+16 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 7 0 R >>
+endobj
+17 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 8 0 R >>
+endobj
+18 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 9 0 R >>
+endobj
+19 0 obj
+<< /Type /Catalog /Pages 10 0 R >>
+endobj
+xref
+0 20
+0000000000 65535 f 
+0000000009 00000 n 
+0000000077 00000 n 
+0000003496 00000 n 
+0000006543 00000 n 
+0000010573 00000 n 
+0000013881 00000 n 
+0000016617 00000 n 
+0000019433 00000 n 
+0000022684 00000 n 
+0000024664 00000 n 
+0000024774 00000 n 
+0000024902 00000 n 
+0000025030 00000 n 
+0000025158 00000 n 
+0000025286 00000 n 
+0000025414 00000 n 
+0000025542 00000 n 
+0000025670 00000 n 
+0000025798 00000 n 
+trailer
+<< /Size 20 /Root 19 0 R >>
+startxref
+25849
+%%EOF

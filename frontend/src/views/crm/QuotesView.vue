@@ -1,19 +1,19 @@
 <template>
-  <div class="space-y-5" dir="rtl">
-
-    <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-        <DocumentTextIcon class="w-6 h-6 text-primary-600" />
-        عروض الأسعار
-      </h2>
-      <button
-        @click="openCreateModal"
-        class="flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
-      >
-        <PlusIcon class="w-4 h-4" />
-        عرض جديد
-      </button>
+  <div class="app-shell-page space-y-5" dir="rtl">
+    <div class="page-head">
+      <div class="page-title-wrap">
+        <h2 class="page-title-xl flex items-center gap-2">
+          <DocumentTextIcon class="w-6 h-6 text-primary-600 dark:text-primary-400 shrink-0" />
+          عروض الأسعار
+        </h2>
+        <p class="page-subtitle">إنشاء ومتابعة العروض وحالاتها</p>
+      </div>
+      <div class="page-toolbar">
+        <button type="button" class="btn btn-primary" @click="openCreateModal">
+          <PlusIcon class="w-4 h-4" />
+          عرض جديد
+        </button>
+      </div>
     </div>
 
     <!-- Stats Bar -->
@@ -21,13 +21,13 @@
       <button
         v-for="stat in stats"
         :key="stat.key"
-        @click="filterStatus = stat.key === 'all' ? '' : stat.key"
         class="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all"
         :class="[
           (stat.key === 'all' ? filterStatus === '' : filterStatus === stat.key)
             ? `${stat.activeBg} ${stat.activeText} border-transparent shadow-sm`
             : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
         ]"
+        @click="filterStatus = stat.key === 'all' ? '' : stat.key"
       >
         {{ stat.label }}
         <span
@@ -61,21 +61,14 @@
         <option value="rejected">مرفوض</option>
         <option value="expired">منتهي الصلاحية</option>
       </select>
-      <input
-        v-model="dateFrom"
-        type="date"
-        class="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-400"
-      />
-      <input
-        v-model="dateTo"
-        type="date"
-        class="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-400"
-      />
+      <div class="min-w-[260px]">
+        <SmartDatePicker mode="range" :from-value="dateFrom" :to-value="dateTo" @change="onFilterDateRangeChange" />
+      </div>
     </div>
 
     <!-- Table -->
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-      <div v-if="loading" class="py-12 text-center text-gray-400 dark:text-gray-500 text-sm">جارٍ التحميل...</div>
+      <div v-if="loading" class="state-loading py-12">جارٍ التحميل...</div>
       <div v-else class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs text-gray-500 dark:text-gray-400 text-right">
@@ -114,35 +107,35 @@
               <td class="px-4 py-3">
                 <div class="flex items-center gap-1 flex-wrap">
                   <button
-                    @click="viewQuote(q)"
                     class="px-2.5 py-1 text-xs rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    @click="viewQuote(q)"
                   >
                     عرض
                   </button>
                   <button
                     v-if="q.status === 'draft'"
-                    @click="changeStatus(q, 'sent')"
                     class="px-2.5 py-1 text-xs rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                    @click="changeStatus(q, 'sent')"
                   >
                     إرسال
                   </button>
                   <button
                     v-if="q.status === 'sent'"
-                    @click="changeStatus(q, 'accepted')"
                     class="px-2.5 py-1 text-xs rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                    @click="changeStatus(q, 'accepted')"
                   >
                     قبول
                   </button>
                   <button
                     v-if="q.status === 'sent'"
-                    @click="changeStatus(q, 'rejected')"
                     class="px-2.5 py-1 text-xs rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                    @click="changeStatus(q, 'rejected')"
                   >
                     رفض
                   </button>
                   <button
-                    @click="deleteQuote(q)"
                     class="px-2.5 py-1 text-xs rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                    @click="deleteQuote(q)"
                   >
                     حذف
                   </button>
@@ -166,12 +159,16 @@
       class="fixed inset-0 bg-black/40 dark:bg-black/60 z-50 flex items-center justify-center p-4"
       @click.self="viewModal = false"
     >
-      <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl" dir="rtl">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+      <div
+        ref="quotePrintRoot"
+        class="print-container bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]"
+        dir="rtl"
+      >
+        <div class="no-print flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700 shrink-0">
           <h3 class="font-bold text-lg text-gray-900 dark:text-white">تفاصيل عرض السعر</h3>
-          <button @click="viewModal = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
+          <button type="button" aria-label="إغلاق" @click="viewModal = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
         </div>
-        <div class="p-6 space-y-4">
+        <div class="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
           <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p class="text-gray-400 dark:text-gray-500 text-xs mb-0.5">رقم العرض</p>
@@ -226,8 +223,38 @@
             </table>
           </div>
         </div>
-        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-          <button @click="viewModal = false" class="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">إغلاق</button>
+        <div class="no-print px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap gap-2 justify-end shrink-0 bg-white dark:bg-gray-800 rounded-b-2xl">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            @click="printQuoteDetail"
+          >
+            <PrinterIcon class="w-4 h-4" />
+            طباعة
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            @click="shareOrCopyQuote"
+          >
+            <ShareIcon class="w-4 h-4" />
+            مشاركة / نسخ
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 px-3 py-2 border border-primary-200 dark:border-primary-800 rounded-xl text-sm text-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950/40"
+            @click="downloadQuoteText"
+          >
+            <ArrowDownTrayIcon class="w-4 h-4" />
+            حفظ كنص
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            @click="viewModal = false"
+          >
+            إغلاق
+          </button>
         </div>
       </div>
     </div>
@@ -244,40 +271,41 @@
           <button @click="createModal = false"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
         </div>
 
-        <form @submit.prevent="saveQuote" class="overflow-y-auto flex-1">
-          <div class="p-6 space-y-5">
-
+        <form id="quote-create-form" class="overflow-y-auto flex-1 flex flex-col min-h-0" @submit.prevent="saveQuote">
+          <div class="p-6 space-y-5 flex-1 overflow-y-auto">
             <!-- Customer -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">العميل <span class="text-red-500">*</span></label>
-              <select
-                v-model="form.customer_id"
-                required
-                class="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-400"
-              >
-                <option value="">-- اختر عميلاً --</option>
-                <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
-              </select>
+              <div class="flex gap-2 items-stretch">
+                <select
+                  v-model="form.customer_id"
+                  required
+                  class="flex-1 min-w-0 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                >
+                  <option value="">-- اختر عميلاً --</option>
+                  <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
+                </select>
+                <button
+                  type="button"
+                  class="shrink-0 inline-flex items-center justify-center w-11 rounded-xl border border-primary-300 bg-primary-50 text-primary-700 hover:bg-primary-100 dark:border-primary-700 dark:bg-primary-950/40 dark:text-primary-200"
+                  title="إضافة عميل سريع"
+                  aria-label="إضافة عميل سريع"
+                  @click="openQuickCustomer"
+                >
+                  <UserPlusIcon class="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <!-- Dates -->
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تاريخ الإصدار <span class="text-red-500">*</span></label>
-                <input
-                  v-model="form.issue_date"
-                  type="date"
-                  required
-                  class="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-400"
-                />
+                <SmartDatePicker :model-value="form.issue_date" mode="single" @change="onIssueDateChange" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">تاريخ الانتهاء</label>
-                <input
-                  v-model="form.expiry_date"
-                  type="date"
-                  class="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-400"
-                />
+                <SmartDatePicker :model-value="form.expiry_date" mode="single" @change="onExpiryDateChange" />
               </div>
             </div>
 
@@ -298,8 +326,8 @@
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">البنود</label>
                 <button
                   type="button"
-                  @click="addItem"
                   class="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 font-medium"
+                  @click="addItem"
                 >
                   <PlusIcon class="w-3.5 h-3.5" />
                   إضافة بند
@@ -358,9 +386,9 @@
                       <td class="px-2 py-1.5 text-center">
                         <button
                           type="button"
-                          @click="removeItem(i)"
                           class="text-red-400 hover:text-red-600 transition-colors"
                           :disabled="form.items.length <= 1"
+                          @click="removeItem(i)"
                         >
                           <XMarkIcon class="w-3.5 h-3.5" />
                         </button>
@@ -404,41 +432,101 @@
             <!-- Error -->
             <p v-if="formError" class="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 rounded-xl p-3">{{ formError }}</p>
           </div>
-        </form>
 
-        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex gap-3 justify-end flex-shrink-0">
-          <button
-            type="button"
-            @click="createModal = false"
-            class="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            إلغاء
-          </button>
-          <button
-            @click="saveQuote"
-            :disabled="saving"
-            class="px-5 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
-          >
-            {{ saving ? 'جارٍ الحفظ...' : 'حفظ العرض' }}
-          </button>
-        </div>
+          <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex gap-3 justify-end flex-shrink-0 bg-white dark:bg-gray-800">
+            <button
+              type="button"
+              class="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              @click="createModal = false"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              :disabled="saving"
+              class="px-5 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
+            >
+              {{ saving ? 'جارٍ الحفظ...' : 'حفظ العرض' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
+    <!-- عميل سريع (عروض الأسعار) -->
+    <Teleport to="body">
+      <div
+        v-if="quickCustomerOpen"
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/45"
+        role="dialog"
+        aria-modal="true"
+        @click.self="quickCustomerOpen = false"
+      >
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-600 shadow-xl max-w-md w-full p-5 space-y-4" @click.stop>
+          <h4 class="text-sm font-bold text-gray-900 dark:text-slate-100">إضافة عميل سريعة</h4>
+          <div class="grid grid-cols-1 gap-3 text-sm">
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">نوع العميل</label>
+              <select v-model="quickCustomer.type" class="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-800">
+                <option value="b2c">فرد (B2C)</option>
+                <option value="b2b">شركة (B2B)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">الاسم <span class="text-red-500">*</span></label>
+              <input v-model="quickCustomer.name" class="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-800" placeholder="اسم العميل" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">الجوال</label>
+              <input v-model="quickCustomer.phone" class="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-800" placeholder="05xxxxxxxx" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">البريد</label>
+              <input v-model="quickCustomer.email" type="email" class="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-800" placeholder="اختياري" />
+            </div>
+          </div>
+          <p v-if="quickModalError" class="text-xs text-red-600">{{ quickModalError }}</p>
+          <div class="flex justify-end gap-2 pt-1">
+            <button type="button" class="px-3 py-2 text-sm border rounded-lg border-gray-300" @click="quickCustomerOpen = false">إلغاء</button>
+            <button
+              type="button"
+              class="px-4 py-2 text-sm rounded-lg bg-primary-600 text-white disabled:opacity-50"
+              :disabled="quickCustomerSaving || !quickCustomer.name.trim()"
+              @click="submitQuickCustomer"
+            >
+              {{ quickCustomerSaving ? 'جارٍ الحفظ...' : 'حفظ واختيار' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import {
+  ArrowDownTrayIcon,
   DocumentTextIcon,
-  PlusIcon,
-  XMarkIcon,
   MagnifyingGlassIcon,
+  PlusIcon,
+  PrinterIcon,
+  ShareIcon,
+  UserPlusIcon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { useApi } from '@/composables/useApi'
+import apiClient from '@/lib/apiClient'
+import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
+import { useToast } from '@/composables/useToast'
+import { appConfirm } from '@/services/appConfirmDialog'
+import { printDocument } from '@/composables/useAppPrint'
+import { summarizeAxiosError } from '@/utils/apiErrorSummary'
 
 const { get, post, put, del } = useApi()
+const toast = useToast()
+
+const quotePrintRoot = ref<HTMLElement | null>(null)
 
 // ─── State ────────────────────────────────────────────────────────────────────
 const quotes    = ref<any[]>([])
@@ -504,6 +592,48 @@ function blankForm(): QuoteForm {
 }
 
 const form = ref<QuoteForm>(blankForm())
+
+const quickCustomerOpen = ref(false)
+const quickCustomerSaving = ref(false)
+const quickModalError = ref('')
+const quickCustomer = ref({
+  type: 'b2c' as 'b2c' | 'b2b',
+  name: '',
+  phone: '',
+  email: '',
+})
+
+function openQuickCustomer() {
+  quickModalError.value = ''
+  quickCustomer.value = { type: 'b2c', name: '', phone: '', email: '' }
+  quickCustomerOpen.value = true
+}
+
+async function submitQuickCustomer() {
+  quickModalError.value = ''
+  quickCustomerSaving.value = true
+  try {
+    const { data } = await apiClient.post(
+      '/customers',
+      {
+        type: quickCustomer.value.type,
+        name: quickCustomer.value.name.trim(),
+        phone: quickCustomer.value.phone.trim() || undefined,
+        email: quickCustomer.value.email.trim() || undefined,
+      },
+      { skipGlobalErrorToast: true },
+    )
+    const c = data.data as { id: number; name?: string }
+    customers.value.push(c)
+    customers.value.sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), 'ar'))
+    form.value.customer_id = c.id
+    quickCustomerOpen.value = false
+  } catch (e: unknown) {
+    quickModalError.value = summarizeAxiosError(e)
+  } finally {
+    quickCustomerSaving.value = false
+  }
+}
 
 // ─── Computed: items totals ───────────────────────────────────────────────────
 function itemTotal(item: QuoteItem): number {
@@ -594,9 +724,99 @@ function openCreateModal() {
   createModal.value = true
 }
 
-function viewQuote(q: any) {
+function onFilterDateRangeChange(val: { from: string; to: string }) {
+  dateFrom.value = val.from
+  dateTo.value = val.to
+}
+
+function onIssueDateChange(val: { from: string; to: string }) {
+  form.value.issue_date = val.from || val.to
+}
+
+function onExpiryDateChange(val: { from: string; to: string }) {
+  form.value.expiry_date = val.from || val.to
+}
+
+function buildQuoteShareText(q: any): string {
+  const lines: string[] = []
+  const num = q.quote_number ?? `#${q.id}`
+  lines.push(`عرض سعر: ${num}`)
+  lines.push(`العميل: ${q.customer?.name ?? '—'}`)
+  lines.push(`الحالة: ${statusLabel(String(q.status ?? ''))}`)
+  lines.push(`الإصدار: ${formatDate(q.issue_date)} — الانتهاء: ${formatDate(q.expiry_date)}`)
+  lines.push(`الإجمالي: ${Number(q.total ?? 0).toFixed(2)} ر.س`)
+  if (q.notes) lines.push(`ملاحظات: ${q.notes}`)
+  const items = q.items as QuoteItem[] | undefined
+  if (items?.length) {
+    lines.push('')
+    lines.push('البنود:')
+    for (const it of items) {
+      lines.push(
+        `— ${it.name} | الكمية: ${it.qty} | سعر الوحدة: ${Number(it.unit_price).toFixed(2)} | الإجمالي: ${itemTotal(it).toFixed(2)} ر.س`,
+      )
+    }
+  }
+  lines.push('')
+  lines.push('— مُصدَر من النظام')
+  return lines.join('\n')
+}
+
+async function printQuoteDetail() {
+  if (!quotePrintRoot.value) return
+  try {
+    await printDocument({ root: quotePrintRoot.value })
+  } catch {
+    window.print()
+  }
+}
+
+async function shareOrCopyQuote() {
+  const q = selectedQuote.value
+  if (!q) return
+  const text = buildQuoteShareText(q)
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({ title: `عرض سعر ${q.quote_number ?? q.id}`, text })
+      return
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && (e as Error).name === 'AbortError') return
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(text)
+    toast.success('تم النسخ', 'تفاصيل العرض في الحافظة — يمكنك لصقها في بريد أو واتساب.')
+  } catch {
+    toast.error('تعذّر النسخ', 'انسخ النص يدوياً من ملف «حفظ كنص».')
+  }
+}
+
+function downloadQuoteText() {
+  const q = selectedQuote.value
+  if (!q) return
+  const text = buildQuoteShareText(q)
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
+  const safe = String(q.quote_number ?? `quote-${q.id}`).replace(/[^\w.-]+/g, '_')
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `${safe}.txt`
+  a.rel = 'noopener'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(a.href)
+  toast.success('تم التنزيل', 'حُفظ الملف كنص يمكن إرساله أو أرشفته.')
+}
+
+async function viewQuote(q: any) {
   selectedQuote.value = q
   viewModal.value = true
+  try {
+    const res = await get(`/quotes/${q.id}`)
+    const full = (res as any)?.data?.data ?? (res as any)?.data
+    if (full && typeof full === 'object') selectedQuote.value = full
+  } catch {
+    /* اكتفِ ببيانات القائمة */
+  }
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
@@ -626,23 +846,52 @@ async function saveQuote() {
     formError.value = 'يرجى اختيار عميل'
     return
   }
+  if (!form.value.issue_date) {
+    formError.value = 'يرجى اختيار تاريخ الإصدار'
+    return
+  }
+
+  const validItems = form.value.items
+    .filter((i) => String(i.name ?? '').trim() !== '')
+    .map((i) => ({
+      name: String(i.name).trim(),
+      quantity: Number(i.qty ?? 1),
+      unit_price: Number(i.unit_price ?? 0),
+      tax_rate: Number(i.tax_rate ?? 15),
+    }))
+
+  if (!validItems.length) {
+    formError.value = 'أضف بندًا واحدًا على الأقل مع إدخال اسم البند وسعر الوحدة.'
+    return
+  }
+
   saving.value = true
   formError.value = ''
   try {
     const payload = {
       customer_id: form.value.customer_id,
-      issue_date:  form.value.issue_date,
+      issue_date: form.value.issue_date,
       expiry_date: form.value.expiry_date,
-      notes:       form.value.notes,
-      discount:    form.value.discount,
-      total:       grandTotal.value,
-      items:       form.value.items.filter(i => i.name?.trim()),
+      notes: form.value.notes,
+      discount_amount: form.value.discount,
+      total: grandTotal.value,
+      items: validItems,
     }
     await post('/quotes', payload)
     await loadQuotes()
     createModal.value = false
   } catch (e: any) {
-    formError.value = e?.response?.data?.message ?? 'فشل الحفظ، يرجى المحاولة مجدداً'
+    const d = e?.response?.data
+    const errs = d?.errors
+    if (errs && typeof errs === 'object') {
+      const firstKey = Object.keys(errs)[0]
+      const firstVal = firstKey ? (errs as Record<string, string[]>)[firstKey] : undefined
+      const fromErrors = Array.isArray(firstVal) ? firstVal[0] : undefined
+      formError.value =
+        String(fromErrors || d?.message || '').trim() || 'فشل الحفظ، يرجى المحاولة مجدداً'
+    } else {
+      formError.value = d?.message ?? 'فشل الحفظ، يرجى المحاولة مجدداً'
+    }
   } finally {
     saving.value = false
   }
@@ -658,7 +907,13 @@ async function changeStatus(q: any, status: string) {
 }
 
 async function deleteQuote(q: any) {
-  if (!confirm(`هل أنت متأكد من حذف عرض السعر ${q.quote_number ?? '#' + q.id}؟`)) return
+  const ok = await appConfirm({
+    title: 'حذف عرض السعر',
+    message: `هل أنت متأكد من حذف عرض السعر ${q.quote_number ?? '#' + q.id}؟`,
+    variant: 'danger',
+    confirmLabel: 'حذف',
+  })
+  if (!ok) return
   try {
     await del(`/quotes/${q.id}`)
     quotes.value = quotes.value.filter(r => r.id !== q.id)

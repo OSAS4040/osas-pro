@@ -1,0 +1,21 @@
+# تحديثات تبعيات آلية (أمني تشغيلي) — PRs أسبوعية بحد أقصى معقول
+# المرجع: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - php
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 8
+    labels:
+      - dependencies
+      - javascript

@@ -1,0 +1,59 @@
+{
+    "generated_at": "2026-04-08T03:54:56+00:00",
+    "checks": {
+        "invoice_without_ledger": {
+            "detected": 1,
+            "total_examined": 1,
+            "healthy": 0,
+            "sample": [
+                {
+                    "id": 107,
+                    "uuid": "a08edfa2-9cad-490d-bc47-86e18976577d",
+                    "company_id": 52,
+                    "invoice_number": "INV-REC-IDEMP-001",
+                    "status": "pending"
+                }
+            ]
+        },
+        "unbalanced_journal_entries": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": []
+        },
+        "anomalous_reversal_settlement": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": {
+                "journal_entries": [],
+                "payments": []
+            }
+        }
+    },
+    "summary": {
+        "detected_cases": 1,
+        "healthy_cases": 0
+    },
+    "findings": {
+        "invoice_without_ledger": [
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 52,
+                "invoice_id": 107,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 107,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "a08edfa2-9cad-490d-bc47-86e18976577d",
+                    "invoice_number": "INV-REC-IDEMP-001",
+                    "status": "pending"
+                }
+            }
+        ],
+        "unbalanced_journal_entry": [],
+        "anomalous_reversal_settlement": []
+    }
+}

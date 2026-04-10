@@ -39,25 +39,43 @@ class PaymentService
             throw new \DomainException('Payment amount must be positive.');
         }
 
-        if ((float) $invoice->due_amount < $amount - 0.0001) {
-            throw new \DomainException(
-                "Payment amount {$amount} exceeds invoice due amount {$invoice->due_amount}."
-            );
-        }
-
         $payment = DB::transaction(function () use (
             $invoice, $amount, $method, $userId, $traceId, $branchId, $reference
         ) {
+            $locked = Invoice::where('id', $invoice->id)->lockForUpdate()->firstOrFail();
+
+            if (in_array($locked->status, [
+                InvoiceStatus::Paid,
+                InvoiceStatus::Cancelled,
+                InvoiceStatus::Refunded,
+                InvoiceStatus::Draft,
+            ], true)) {
+                throw new \DomainException('This invoice cannot accept a payment in its current status.');
+            }
+
+            $dueBefore  = (float) $locked->due_amount;
+            $paidBefore = (float) $locked->paid_amount;
+
+            if ($dueBefore <= 0.0001) {
+                throw new \DomainException('This invoice has no outstanding balance.');
+            }
+
+            if ($amount - $dueBefore > 0.0001) {
+                throw new \DomainException(
+                    "Payment amount {$amount} exceeds invoice due amount {$dueBefore}."
+                );
+            }
+
             $payment = Payment::create([
                 'uuid'                 => (string) Str::uuid(),
-                'company_id'           => $invoice->company_id,
-                'branch_id'            => $branchId ?? $invoice->branch_id,
-                'invoice_id'           => $invoice->id,
+                'company_id'           => $locked->company_id,
+                'branch_id'            => $branchId ?? $locked->branch_id,
+                'invoice_id'           => $locked->id,
                 'created_by_user_id'   => $userId,
                 'method'               => $method,
                 'payment_method'       => $method,
                 'amount'               => $amount,
-                'currency'             => $invoice->currency ?? 'SAR',
+                'currency'             => $locked->currency ?? 'SAR',
                 'reference'            => $reference,
                 'status'               => 'completed',
                 'external_sync_status' => null,
@@ -65,12 +83,13 @@ class PaymentService
                 'created_at'           => now(),
             ]);
 
-            $newPaid = (float) $invoice->paid_amount + $amount;
-            $newDue  = (float) $invoice->total - $newPaid;
+            // Remainder is derived from current due (not from total) so partial histories stay consistent.
+            $newPaid = $paidBefore + $amount;
+            $newDue  = max(0, $dueBefore - $amount);
 
-            DB::table('invoices')->where('id', $invoice->id)->update([
+            DB::table('invoices')->where('id', $locked->id)->update([
                 'paid_amount' => $newPaid,
-                'due_amount'  => max(0, $newDue),
+                'due_amount'  => $newDue,
                 'status'      => $newDue <= 0.0001
                     ? InvoiceStatus::Paid->value
                     : InvoiceStatus::PartialPaid->value,
@@ -78,11 +97,11 @@ class PaymentService
 
             Log::info('payment.created', [
                 'payment_id' => $payment->id,
-                'invoice_id' => $invoice->id,
+                'invoice_id' => $locked->id,
                 'method'     => $method,
                 'amount'     => $amount,
                 'trace_id'   => $traceId,
-                'company_id' => $invoice->company_id,
+                'company_id' => $locked->company_id,
             ]);
 
             return $payment;
@@ -204,14 +223,16 @@ class PaymentService
                 ->update(['status' => 'refunded', 'reversal_payment_id' => $refund->id]);
 
             if ($original->invoice_id) {
-                $inv = Invoice::find($original->invoice_id);
+                $inv = Invoice::where('id', $original->invoice_id)->lockForUpdate()->first();
                 if ($inv) {
-                    $newPaid = max(0, (float) $inv->paid_amount - $refundAmount);
-                    $newDue  = (float) $inv->total - $newPaid;
+                    $paidBefore = (float) $inv->paid_amount;
+                    $dueBefore  = (float) $inv->due_amount;
+                    $newPaid    = max(0, $paidBefore - $refundAmount);
+                    $newDue     = max(0, $dueBefore + $refundAmount);
 
                     DB::table('invoices')->where('id', $inv->id)->update([
                         'paid_amount' => $newPaid,
-                        'due_amount'  => max(0, $newDue),
+                        'due_amount'  => $newDue,
                         'status'      => $newPaid <= 0.0001
                             ? InvoiceStatus::Pending->value
                             : InvoiceStatus::PartialPaid->value,

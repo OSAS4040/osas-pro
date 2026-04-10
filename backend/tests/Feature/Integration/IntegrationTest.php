@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-class ApiKeyAuthTest extends TestCase
+class IntegrationTest extends TestCase
 {
     private array  $tenant;
     private string $rawSecret;

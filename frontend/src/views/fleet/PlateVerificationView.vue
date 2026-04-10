@@ -1,26 +1,22 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-xl font-bold text-gray-900">التحقق من لوحة المركبة</h2>
-      <p class="text-sm text-gray-500 mt-0.5">أدخل رقم اللوحة للتحقق من أهلية الخدمة</p>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-slate-100">التحقق من لوحة المركبة</h2>
+      <p class="text-sm text-gray-500 dark:text-slate-400 mt-0.5">
+        لوحات خاصة سعودية: 3 أحرف لاتينية + 4 أرقام — نفس مدخل إضافة المركبة في النظام.
+      </p>
     </div>
 
     <!-- Search Box -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-      <div class="flex gap-3">
-        <input
-          v-model="plate"
-          @keyup.enter="verify"
-          type="text"
-          placeholder="أدخل رقم اللوحة (مثال: ABC1234)"
-          class="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm font-mono uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-primary-500"
-          :disabled="loading"
-          ref="plateInput"
-        />
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm p-6 transition-colors">
+      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+        <div class="flex-1 min-w-0">
+          <PlateInput v-model="plate" label="رقم اللوحة" />
+        </div>
         <button
-          @click="verify"
           :disabled="loading || !plate.trim()"
           class="bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white px-6 rounded-xl text-sm font-medium transition-colors flex items-center gap-2"
+          @click="verify"
         >
           <span v-if="loading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           <span>{{ loading ? 'جارٍ البحث...' : 'تحقق' }}</span>
@@ -36,7 +32,6 @@
 
     <!-- Result Card -->
     <div v-if="result" class="space-y-4">
-
       <!-- Verdict Banner -->
       <div
         class="rounded-2xl p-5 flex items-start gap-4"
@@ -46,26 +41,26 @@
       >
         <div class="text-3xl">
           {{ result.verdict.can_proceed
-              ? (result.verdict.payment_mode === 'credit' ? '⚡' : '✅')
-              : '🚫' }}
+            ? (result.verdict.payment_mode === 'credit' ? '⚡' : '✅')
+            : '🚫' }}
         </div>
         <div>
           <div class="font-bold text-lg"
-            :class="result.verdict.can_proceed
-              ? (result.verdict.payment_mode === 'credit' ? 'text-amber-800' : 'text-green-800')
-              : 'text-red-800'"
+               :class="result.verdict.can_proceed
+                 ? (result.verdict.payment_mode === 'credit' ? 'text-amber-800' : 'text-green-800')
+                 : 'text-red-800'"
           >
             {{ result.verdict.can_proceed
-                ? (result.verdict.payment_mode === 'credit' ? 'متابعة — وضع الائتمان' : 'متابعة — دفع مسبق')
-                : 'مرفوض — لا يمكن تنفيذ الخدمة' }}
+              ? (result.verdict.payment_mode === 'credit' ? 'متابعة — وضع الائتمان' : 'متابعة — دفع مسبق')
+              : 'مرفوض — لا يمكن تنفيذ الخدمة' }}
           </div>
-          <div class="text-sm mt-1 text-gray-600" v-if="result.verdict.denial_message">
+          <div v-if="result.verdict.denial_message" class="text-sm mt-1 text-gray-600">
             {{ result.verdict.denial_message }}
           </div>
-          <div class="text-sm mt-1 text-gray-600" v-if="result.verdict.can_proceed && result.verdict.payment_mode === 'prepaid'">
+          <div v-if="result.verdict.can_proceed && result.verdict.payment_mode === 'prepaid'" class="text-sm mt-1 text-gray-600">
             سيتم الخصم من محفظة المركبة عند إنشاء الفاتورة.
           </div>
-          <div class="text-sm mt-1 text-amber-700" v-if="result.verdict.can_proceed && result.verdict.payment_mode === 'credit'">
+          <div v-if="result.verdict.can_proceed && result.verdict.payment_mode === 'credit'" class="text-sm mt-1 text-amber-700">
             الرصيد غير كافٍ — الخدمة ستُنفَّذ بموجب تفويض الائتمان الممنوح.
           </div>
         </div>
@@ -73,7 +68,6 @@
 
       <!-- Details Grid -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
         <!-- Vehicle Card -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
           <div class="text-xs font-semibold text-gray-400 uppercase mb-3">المركبة</div>
@@ -92,12 +86,14 @@
             <div class="font-semibold text-gray-800">{{ result.work_order.order_number }}</div>
             <div class="flex items-center gap-2">
               <span class="text-xs px-2 py-0.5 rounded-full font-medium"
-                :class="statusClass(result.work_order.status)">
-                {{ statusLabel(result.work_order.status) }}
+                    :class="workOrderStatusBadgeClass(result.work_order.status)"
+              >
+                {{ workOrderStatusLabel(result.work_order.status) }}
               </span>
               <span class="text-xs px-2 py-0.5 rounded-full"
-                :class="result.work_order.approval_status === 'approved'
-                  ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'">
+                    :class="result.work_order.approval_status === 'approved'
+                      ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'"
+              >
                 {{ result.work_order.approval_status === 'approved' ? 'معتمد' : 'غير معتمد' }}
               </span>
             </div>
@@ -107,9 +103,9 @@
             <!-- Approve Button -->
             <button
               v-if="result.work_order.approval_status !== 'approved'"
-              @click="approveWorkOrder(result.work_order.id)"
               :disabled="approving"
               class="mt-2 w-full text-xs bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg py-1.5 transition-colors"
+              @click="approveWorkOrder(result.work_order.id)"
             >
               {{ approving ? 'جارٍ الاعتماد...' : 'اعتماد أمر العمل' }}
             </button>
@@ -125,7 +121,8 @@
           </div>
           <div class="text-xs text-gray-400 mt-0.5">ر.س</div>
           <div class="mt-2 text-xs px-2 py-0.5 inline-block rounded-full"
-            :class="result.wallet?.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'">
+               :class="result.wallet?.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'"
+          >
             {{ result.wallet?.status === 'active' ? 'نشطة' : (result.wallet?.status === 'not_created' ? 'لم تُنشأ بعد' : result.wallet?.status) }}
           </div>
         </div>
@@ -133,7 +130,7 @@
 
       <!-- New Search -->
       <div class="flex justify-center">
-        <button @click="reset" class="text-sm text-primary-600 hover:underline">← البحث عن مركبة أخرى</button>
+        <button class="text-sm text-primary-600 hover:underline" @click="reset">← البحث عن مركبة أخرى</button>
       </div>
     </div>
 
@@ -142,19 +139,19 @@
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
         <h3 class="font-semibold text-gray-900">اعتماد أمر العمل</h3>
         <label class="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" v-model="approveModal.creditAuthorized" class="w-4 h-4 text-amber-600" />
+          <input v-model="approveModal.creditAuthorized" type="checkbox" class="w-4 h-4 text-amber-600" />
           <span class="text-sm text-gray-700">تفويض خدمة الائتمان (الخصم لاحقاً)</span>
         </label>
         <div v-if="approveModal.error" class="text-xs text-red-600 bg-red-50 rounded-lg p-2">{{ approveModal.error }}</div>
         <div class="flex gap-3">
           <button
-            @click="submitApprove"
             :disabled="approveModal.loading"
             class="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl py-2.5 text-sm font-medium"
+            @click="submitApprove"
           >
             {{ approveModal.loading ? 'جارٍ الاعتماد...' : 'تأكيد الاعتماد' }}
           </button>
-          <button @click="approveModal.open = false" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl py-2.5 text-sm">
+          <button class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl py-2.5 text-sm" @click="approveModal.open = false">
             إلغاء
           </button>
         </div>
@@ -165,7 +162,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, nextTick } from 'vue'
+import PlateInput from '@/components/PlateInput.vue'
 import CameraPlateScanner from '@/components/CameraPlateScanner.vue'
+import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 
 const API   = '/api/v1'
 const token = () => localStorage.getItem('auth_token') ?? ''
@@ -174,7 +173,6 @@ const plate      = ref('')
 const loading    = ref(false)
 const approving  = ref(false)
 const result     = ref<any>(null)
-const plateInput = ref<HTMLInputElement | null>(null)
 
 function onPlateScanned(scanned: string) {
   plate.value = scanned
@@ -190,32 +188,18 @@ function formatAmount(v: number): string {
   return (v ?? 0).toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function statusClass(s: string): string {
-  const m: Record<string, string> = {
-    pending: 'bg-yellow-100 text-yellow-700',
-    in_progress: 'bg-blue-100 text-blue-700',
-    completed: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700',
-  }
-  return m[s] ?? 'bg-gray-100 text-gray-600'
-}
-
-function statusLabel(s: string): string {
-  const m: Record<string, string> = {
-    pending: 'معلق', in_progress: 'جارٍ', completed: 'مكتمل', cancelled: 'ملغي', on_hold: 'موقوف'
-  }
-  return m[s] ?? s
-}
-
 async function verify() {
   if (!plate.value.trim()) return
   loading.value = true
   result.value  = null
+  const compact = plate.value.trim().toUpperCase().replace(/\s+/g, '')
+  const m       = compact.match(/^([A-Z]{3})(\d{4})$/)
+  const pn      = m ? `${m[1]} ${m[2]}` : plate.value.trim()
   try {
     const res  = await fetch(`${API}/fleet/verify-plate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-      body: JSON.stringify({ plate_number: plate.value.trim().toUpperCase() }),
+      body: JSON.stringify({ plate_number: pn }),
     })
     result.value = await res.json()
   } finally {
@@ -253,6 +237,5 @@ async function submitApprove() {
 function reset() {
   result.value = null
   plate.value  = ''
-  nextTick(() => plateInput.value?.focus())
 }
 </script>

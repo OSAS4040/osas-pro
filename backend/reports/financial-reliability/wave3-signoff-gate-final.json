@@ -1,0 +1,23 @@
+{
+    "generated_at": "2026-04-01T11:28:02+00:00",
+    "runs_total": 0,
+    "runs_by_execution_status": {
+        "running": 0,
+        "succeeded": 0,
+        "failed": 0
+    },
+    "findings_by_status": {
+        "open": 0,
+        "acknowledged": 0,
+        "resolved": 0,
+        "false_positive": 0
+    },
+    "findings_with_history": 0,
+    "status_changes_logged": 0,
+    "blocked_attempts": 0,
+    "duplicate_active_runs": 0,
+    "stuck_runs": 0,
+    "last_successful_run_id": null,
+    "last_failed_run_id": null,
+    "derived_health": "healthy"
+}

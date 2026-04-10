@@ -10,9 +10,14 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PlanSeeder::class,
+            VerticalProfilesSeeder::class,
+            ConfigSettingsSeeder::class,
             RolePermissionSeeder::class,
             DemoCompanySeeder::class,
             DefaultAdminSeeder::class,
+            IntelligenceSystemSeeder::class,
+            DemoOperationsSeeder::class,
+            PluginsCatalogSeeder::class,
         ]);
     }
 }

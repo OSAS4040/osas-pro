@@ -13,6 +13,16 @@ class UpdateProductRequest extends FormRequest
         return $this->user()?->hasPermission('products.update');
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('product_type') && $this->missing('track_inventory')) {
+            $type = ProductType::tryFrom((string) $this->input('product_type'));
+            if ($type === ProductType::Service || $type === ProductType::Labor) {
+                $this->merge(['track_inventory' => false]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         $companyId = $this->user()->company_id;

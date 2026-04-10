@@ -10,23 +10,26 @@
       </div>
 
       <div class="bg-white rounded-2xl shadow-xl p-8">
-        <form @submit.prevent="handleLogin" class="space-y-5">
+        <form class="space-y-5" @submit.prevent="handleLogin">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
             <input v-model="form.email" type="email" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            />
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
             <input v-model="form.password" type="password" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent" />
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            />
           </div>
 
           <p v-if="error" class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ error }}</p>
 
           <button type="submit" :disabled="loading"
-            class="w-full bg-teal-700 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-teal-800 transition-colors disabled:opacity-50">
+                  class="w-full bg-teal-700 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-teal-800 transition-colors disabled:opacity-50"
+          >
             {{ loading ? 'جارٍ تسجيل الدخول...' : 'دخول بوابة الأسطول' }}
           </button>
         </form>

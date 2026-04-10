@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->text('description_ar')->nullable();
             $table->string('version')->default('1.0.0');
-            $table->string('author')->default('OSAS Team');
+            $table->string('author')->default('Osas Pro Team');
             $table->string('category')->default('ai'); // ai, integration, ui, analytics
             $table->string('icon')->nullable();
             $table->json('module_scope')->nullable(); // ['vehicles', 'work_orders']

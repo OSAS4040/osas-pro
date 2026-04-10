@@ -10,7 +10,7 @@
               <h3 class="font-bold text-gray-900 dark:text-slate-100">مسح فواتير المشتريات</h3>
               <span class="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">يدعم PDF, JPG, PNG</span>
             </div>
-            <button @click="close" class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg">
+            <button class="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg" @click="close">
               <XMarkIcon class="w-5 h-5 text-gray-400" />
             </button>
           </div>
@@ -34,18 +34,20 @@
               <!-- File list -->
               <div v-if="files.length" class="mt-4 space-y-2">
                 <div v-for="(f, i) in files" :key="i"
-                  class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-xl border border-gray-200 dark:border-slate-600">
+                     class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-xl border border-gray-200 dark:border-slate-600"
+                >
                   <DocumentTextIcon class="w-8 h-8 text-primary-400 flex-shrink-0" />
                   <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">{{ f.name }}</p>
                     <p class="text-xs text-gray-400 dark:text-slate-500">{{ (f.size / 1024).toFixed(0) }} KB</p>
                   </div>
-                  <button @click="files.splice(i, 1)" class="text-gray-400 hover:text-red-500"><XMarkIcon class="w-4 h-4" /></button>
+                  <button class="text-gray-400 hover:text-red-500" @click="files.splice(i, 1)"><XMarkIcon class="w-4 h-4" /></button>
                 </div>
               </div>
 
-              <button v-if="files.length" @click="processFiles"
-                class="w-full mt-4 py-3 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 flex items-center justify-center gap-2">
+              <button v-if="files.length" class="w-full mt-4 py-3 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 flex items-center justify-center gap-2"
+                      @click="processFiles"
+              >
                 <SparklesIcon class="w-4 h-4" />
                 استخراج البيانات من {{ files.length }} {{ files.length === 1 ? 'فاتورة' : 'فواتير' }}
               </button>
@@ -72,10 +74,11 @@
               </div>
 
               <div v-for="(inv, idx) in extracted" :key="idx"
-                class="border border-gray-200 dark:border-slate-600 rounded-xl overflow-hidden">
+                   class="border border-gray-200 dark:border-slate-600 rounded-xl overflow-hidden"
+              >
                 <div class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-slate-700">
                   <p class="text-sm font-semibold text-gray-800 dark:text-slate-200">فاتورة {{ idx + 1 }}: {{ inv.fileName }}</p>
-                  <button @click="extracted.splice(idx, 1)" class="text-xs text-red-500 hover:underline">حذف</button>
+                  <button class="text-xs text-red-500 hover:underline" @click="extracted.splice(idx, 1)">حذف</button>
                 </div>
                 <div class="p-4 space-y-3">
                   <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -89,7 +92,7 @@
                     </div>
                     <div>
                       <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">تاريخ الفاتورة</label>
-                      <input v-model="inv.invoice_date" type="date" class="field" />
+                      <SmartDatePicker :model-value="inv.invoice_date" mode="single" @change="(val) => onInvoiceDateChange(inv, val)" />
                     </div>
                     <div>
                       <label class="block text-xs text-gray-500 dark:text-slate-400 mb-1">الإجمالي (قبل الضريبة)</label>
@@ -114,11 +117,12 @@
                     <p class="text-xs font-semibold text-gray-600 dark:text-slate-400 mb-2">البنود المستخرجة ({{ inv.items.length }})</p>
                     <div class="space-y-1.5 max-h-36 overflow-y-auto">
                       <div v-for="(item, j) in inv.items" :key="j"
-                        class="flex items-center gap-2 text-xs">
+                           class="flex items-center gap-2 text-xs"
+                      >
                         <input v-model="item.description" class="flex-1 px-2 py-1 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-200" />
                         <input v-model="item.qty" type="number" class="w-14 px-2 py-1 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-200 text-center" />
                         <input v-model="item.unit_price" type="number" step="0.01" class="w-20 px-2 py-1 border border-gray-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 dark:text-slate-200 font-mono" />
-                        <button @click="inv.items.splice(j, 1)" class="text-red-400"><XMarkIcon class="w-3 h-3" /></button>
+                        <button class="text-red-400" @click="inv.items.splice(j, 1)"><XMarkIcon class="w-3 h-3" /></button>
                       </div>
                     </div>
                   </div>
@@ -128,9 +132,10 @@
               <div v-if="submitError" class="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 rounded-xl p-3">{{ submitError }}</div>
 
               <div class="flex gap-3 justify-end">
-                <button @click="step = 'upload'; files = []" class="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-xl text-sm dark:text-slate-300">رفع مزيد</button>
-                <button @click="submitAll" :disabled="submitting || !extracted.length"
-                  class="px-6 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+                <button class="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-xl text-sm dark:text-slate-300" @click="step = 'upload'; files = []">رفع مزيد</button>
+                <button :disabled="submitting || !extracted.length" class="px-6 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                        @click="submitAll"
+                >
                   <CheckCircleIcon class="w-4 h-4" />
                   {{ submitting ? 'جارٍ التسجيل...' : `تسجيل ${extracted.length} فاتورة` }}
                 </button>
@@ -151,6 +156,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 import { useToast } from '@/composables/useToast'
+import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
 
 const toast = useToast()
 const open  = ref(false)
@@ -212,7 +218,7 @@ async function extractFromFile(f: File): Promise<any> {
 function parseFromFilename(f: File): any {
   const today = new Date().toISOString().split('T')[0]
   // Extract possible date/number from filename using regex
-  const dateMatch = f.name.match(/(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/)
+  const dateMatch = f.name.match(/(\d{4}[-/]\d{1,2}[-/]\d{1,2})/)
   const numMatch  = f.name.match(/(\d{4,10})/)
   return {
     fileName:       f.name,
@@ -225,6 +231,10 @@ function parseFromFilename(f: File): any {
     supplier_vat:   '',
     items: [{ description: '', qty: 1, unit_price: '' }],
   }
+}
+
+function onInvoiceDateChange(inv: any, val: { from: string; to: string }) {
+  inv.invoice_date = val.from || val.to
 }
 
 async function submitAll() {

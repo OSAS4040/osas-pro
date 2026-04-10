@@ -2,17 +2,21 @@
 .env
 .env.*
 !.env.example
+!.env.staging.example
 **/.env
 !**/.env.example
 test_credentials.json
 *.pem
 auth.json
+saas-deploy-*.zip
+/releases/
 
 # ── Logs ────────────────────────────────────────────────────
 *.log
 laravel.log
 
 # ── Laravel (backend) ───────────────────────────────────────
+backend/vendor.zip
 backend/vendor/
 backend/node_modules/
 backend/public/build
@@ -32,6 +36,9 @@ backend/yarn-error.log*
 frontend/node_modules/
 frontend/dist
 frontend/.vite
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
 frontend/.env
 frontend/.env.*
 !frontend/.env.example
@@ -43,6 +50,10 @@ frontend/.env.*
 *.swo
 .DS_Store
 Thumbs.db
+
+# ── Docs: وسائط توليد PDF (كبيرة الحجم؛ يُعاد إنشاؤها بـ build-report-pdf) ──
+docs/System_Comprehensive_Report.html
+docs/System_Comprehensive_Report.body.html
 
 # ── Misc ────────────────────────────────────────────────────
 *.local

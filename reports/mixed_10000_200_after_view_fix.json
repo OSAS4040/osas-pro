@@ -1,0 +1,194 @@
+{
+  "scenario": "mixed_10000_200_after_view_fix",
+  "captured_at": "2026-03-30T15:36:10.942Z",
+  "overall": {
+    "total_requests": 10000,
+    "completed": 10000,
+    "success": 10000,
+    "fail": 0,
+    "http_5xx": 0,
+    "network_failures": 0,
+    "avg_ms": 2740.47,
+    "p50_ms": 2544.66,
+    "p95_ms": 4240.58,
+    "p99_ms": 5298.96,
+    "max_ms": 7028.54,
+    "throughput_rps": 72.29,
+    "duration_sec": 138.33,
+    "concurrency": 200
+  },
+  "slowest_endpoints_by_p95": [
+    {
+      "endpoint": "/services?per_page=20",
+      "count": 833,
+      "avg_ms": 2754.49,
+      "p95_ms": 4362.25,
+      "p99_ms": 5470.1,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/work-orders?per_page=10",
+      "count": 833,
+      "avg_ms": 2747.64,
+      "p95_ms": 4298,
+      "p99_ms": 5261.09,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/wallet/transactions",
+      "count": 834,
+      "avg_ms": 2700.56,
+      "p95_ms": 4270.93,
+      "p99_ms": 5298.96,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/ledger?per_page=20",
+      "count": 833,
+      "avg_ms": 2754.7,
+      "p95_ms": 4267.97,
+      "p99_ms": 5284.68,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/purchases?per_page=20",
+      "count": 833,
+      "avg_ms": 2751.1,
+      "p95_ms": 4265.62,
+      "p99_ms": 5266.45,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    }
+  ],
+  "per_endpoint": [
+    {
+      "endpoint": "/services?per_page=20",
+      "count": 833,
+      "avg_ms": 2754.49,
+      "p95_ms": 4362.25,
+      "p99_ms": 5470.1,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/work-orders?per_page=10",
+      "count": 833,
+      "avg_ms": 2747.64,
+      "p95_ms": 4298,
+      "p99_ms": 5261.09,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/wallet/transactions",
+      "count": 834,
+      "avg_ms": 2700.56,
+      "p95_ms": 4270.93,
+      "p99_ms": 5298.96,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/ledger?per_page=20",
+      "count": 833,
+      "avg_ms": 2754.7,
+      "p95_ms": 4267.97,
+      "p99_ms": 5284.68,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/purchases?per_page=20",
+      "count": 833,
+      "avg_ms": 2751.1,
+      "p95_ms": 4265.62,
+      "p99_ms": 5266.45,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/dashboard/kpi",
+      "count": 834,
+      "avg_ms": 2712.24,
+      "p95_ms": 4262.75,
+      "p99_ms": 5120.22,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/customers?per_page=20",
+      "count": 833,
+      "avg_ms": 2743.42,
+      "p95_ms": 4254.87,
+      "p99_ms": 5316.44,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/inventory?per_page=20",
+      "count": 833,
+      "avg_ms": 2755.83,
+      "p95_ms": 4246.19,
+      "p99_ms": 5486.48,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/subscription",
+      "count": 833,
+      "avg_ms": 2770.9,
+      "p95_ms": 4235.57,
+      "p99_ms": 5299.17,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/invoices?per_page=20",
+      "count": 834,
+      "avg_ms": 2742.73,
+      "p95_ms": 4227.37,
+      "p99_ms": 5180.2,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/reports/sales",
+      "count": 834,
+      "avg_ms": 2710.81,
+      "p95_ms": 4122.31,
+      "p99_ms": 5218.78,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    },
+    {
+      "endpoint": "/products?per_page=20",
+      "count": 833,
+      "avg_ms": 2741.36,
+      "p95_ms": 4120.41,
+      "p99_ms": 5354.23,
+      "errors": 0,
+      "http_5xx": 0,
+      "network_failures": 0
+    }
+  ]
+}

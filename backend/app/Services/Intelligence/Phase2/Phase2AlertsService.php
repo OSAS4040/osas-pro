@@ -38,9 +38,9 @@ final class Phase2AlertsService
                 'id'          => 'event_volume_spike',
                 'severity'    => 'warning',
                 'type'        => 'volume',
-                'message'     => 'Domain event volume in the last 24h is more than double the prior 24h.',
+                'message'     => 'حجم أحداث المجال في آخر 24 ساعة أكثر من ضعف الـ 24 ساعة السابقة.',
                 'detected_at' => $now->toIso8601String(),
-                'basis'       => "last_24h={$cLast}, prior_24h={$cPrev}, threshold prev>=5 and last>2*prev",
+                'basis'       => "آخر_24س={$cLast}، سابق_24س={$cPrev}، عتبة: سابق≥5 وأخير>2×سابق",
             ];
         }
 
@@ -59,9 +59,9 @@ final class Phase2AlertsService
                 'id'          => 'event_record_failures_present',
                 'severity'    => 'warning',
                 'type'        => 'ingestion',
-                'message'     => 'There are recent rows in event_record_failures for this scope.',
+                'message'     => 'توجد سجلات حديثة في فشل تسجيل الأحداث لهذا النطاق.',
                 'detected_at' => $now->toIso8601String(),
-                'basis'       => "count(event_record_failures since {$failSince->toDateString()}) = {$failCount}",
+                'basis'       => "عدد(failures منذ {$failSince->toDateString()}) = {$failCount}",
             ];
         }
 
@@ -71,9 +71,9 @@ final class Phase2AlertsService
                 'id'          => 'zero_events_while_persist_enabled',
                 'severity'    => 'info',
                 'type'        => 'coverage',
-                'message'     => 'No domain events in the requested window while event persistence is enabled in config.',
+                'message'     => 'لا أحداث مجال في النافذة المطلوبة رغم تفعيل حفظ الأحداث في الإعدادات.',
                 'detected_at' => $now->toIso8601String(),
-                'basis'       => 'count(domain_events in window)=0 AND intelligent.events.persist.enabled=true',
+                'basis'       => 'عدد(أحداث المجال في النافذة)=0 وintelligent.events.persist.enabled=true',
             ];
         }
 

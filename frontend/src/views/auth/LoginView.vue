@@ -1,240 +1,627 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-all duration-700"
-    :style="{ background: activePortal.gradient }">
-
-    <!-- Animated bg blobs -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 blur-3xl transition-all duration-700"
-        :style="{ background: activePortal.blob1 }"></div>
-      <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full opacity-20 blur-3xl transition-all duration-700"
-        :style="{ background: activePortal.blob2 }"></div>
-    </div>
-
-    <div class="w-full max-w-md relative z-10">
-
-      <!-- ══ Platform Brand ══ -->
-      <div class="text-center mb-6">
-        <div class="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center mx-auto mb-3 backdrop-blur-sm border border-white/20">
-          <WrenchScrewdriverIcon class="w-8 h-8 text-white" />
-        </div>
-        <h1 class="text-2xl font-black text-white tracking-tight">WorkshopOS</h1>
-        <p class="text-white/60 text-xs mt-0.5">نظام إدارة الورشة الذكي</p>
+  <div
+    class="login-page flex min-h-screen flex-col bg-slate-100 transition-colors dark:bg-slate-950"
+    :dir="i18n.dir"
+  >
+    <PlatformPromoBanner class="relative z-[12] w-full shrink-0" />
+    <div
+      class="relative flex flex-1 flex-col items-center justify-center overflow-hidden p-4 sm:p-6"
+    >
+      <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div
+          class="absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full bg-primary-500 opacity-[0.12] blur-3xl"
+        />
+        <div
+          class="absolute -bottom-48 -left-32 h-[24rem] w-[24rem] rounded-full bg-teal-500 opacity-[0.08] blur-3xl"
+        />
+        <div
+          class="absolute inset-0 opacity-[0.35] dark:opacity-[0.12]"
+          style="background-image: linear-gradient(rgba(15, 118, 110, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(15, 118, 110, 0.06) 1px, transparent 1px);
+          background-size: 56px 56px;"
+        />
       </div>
 
-      <!-- ══ Portal Selector ══ -->
-      <div class="grid grid-cols-3 gap-2 mb-4">
-        <button v-for="p in portals" :key="p.id" @click="selectPortal(p.id)"
-          class="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border transition-all duration-300"
-          :class="selectedPortal === p.id
-            ? 'bg-white/20 border-white/50 shadow-lg scale-105 backdrop-blur-sm'
-            : 'bg-white/5 border-white/15 hover:bg-white/10 hover:border-white/30'">
-          <div class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
-            :class="selectedPortal === p.id ? 'bg-white/25' : 'bg-white/10'">
-            <component :is="p.icon" class="w-5 h-5 text-white" />
-          </div>
-          <span class="text-xs font-semibold text-white/90 text-center leading-tight">{{ p.label }}</span>
-          <span v-if="selectedPortal === p.id"
-            class="w-1.5 h-1.5 rounded-full bg-white"></span>
-        </button>
-      </div>
-
-      <!-- ══ Login Card ══ -->
-      <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden">
-
-        <!-- Card Header -->
-        <div class="px-7 pt-6 pb-4 border-b border-gray-100 dark:border-slate-700 transition-all duration-500"
-          :style="{ background: `linear-gradient(135deg, ${activePortal.cardHeader})` }">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center"
-              :style="{ background: 'rgba(255,255,255,0.2)' }">
-              <component :is="activePortal.icon" class="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 class="font-bold text-white text-sm">{{ activePortal.title }}</h2>
-              <p class="text-white/70 text-xs">{{ activePortal.subtitle }}</p>
-            </div>
-          </div>
+      <div class="relative z-10 w-full max-w-md login-page-unified-v2">
+        <div
+          v-if="isDevBuild"
+          class="mb-4 rounded-xl border border-amber-300/90 bg-amber-50 px-3 py-2.5 text-center text-[10px] leading-relaxed text-amber-950 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-50"
+          role="status"
+        >
+          <strong>{{ lt('devModeTitle') }}</strong>
+          <!-- eslint-disable-next-line vue/no-v-html -- locale-controlled markup -->
+          <span class="block [&_code]:text-[10px]" v-html="lt('devBuild')" />
         </div>
-
-        <!-- Form -->
-        <form @submit.prevent="handleLogin" class="px-7 py-6 space-y-4">
-          <!-- Demo hint -->
-          <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl px-3 py-2.5">
-            <p class="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1.5">بيانات تجريبية سريعة:</p>
-            <div class="flex flex-wrap gap-1.5">
-              <button v-for="d in activePortal.demos" :key="d.email" type="button"
-                @click="fillDemo(d)"
-                class="text-[10px] px-2 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/40 transition-colors font-mono">
-                {{ d.label }}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1.5">البريد الإلكتروني</label>
-            <input v-model="form.email" type="email" required autocomplete="email"
-              class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 dark:bg-slate-800 dark:text-slate-100 transition-all"
-              :class="`focus:ring-[${activePortal.accent}]`"
-              placeholder="email@example.com" />
-          </div>
-
-          <div>
-            <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1.5">كلمة المرور</label>
-            <div class="relative">
-              <input v-model="form.password" :type="showPass ? 'text' : 'password'" required autocomplete="current-password"
-                class="w-full px-3.5 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 dark:bg-slate-800 dark:text-slate-100 transition-all"
-                placeholder="••••••••" />
-              <button type="button" @click="showPass = !showPass"
-                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                <EyeIcon v-if="!showPass" class="w-4 h-4" />
-                <EyeSlashIcon v-else class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <!-- Error -->
-          <Transition name="shake">
-            <div v-if="error"
-              class="flex items-center gap-2 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 px-3.5 py-2.5 rounded-xl">
-              <ExclamationCircleIcon class="w-4 h-4 flex-shrink-0" />
-              {{ error }}
-            </div>
-          </Transition>
-
-          <!-- Submit -->
-          <button type="submit" :disabled="loading"
-            class="w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 disabled:opacity-60 relative overflow-hidden"
-            :style="{ background: `linear-gradient(135deg, ${activePortal.btnGradient})` }">
-            <span v-if="!loading">دخول {{ activePortal.title }}</span>
-            <span v-else class="flex items-center justify-center gap-2">
-              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-              </svg>
-              جارٍ التحقق...
-            </span>
-          </button>
-        </form>
-
-        <!-- Footer info -->
-        <div class="px-7 pb-5 text-center">
-          <p class="text-xs text-gray-400 dark:text-slate-500">
-            {{ activePortal.footerNote }}
+        <div class="mb-6 text-center">
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{{ lt('brand') }}</h1>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ lt('tagline') }}</p>
+          <p class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+            {{ lt('unifiedIntro') }}
           </p>
+          <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px]">
+            <RouterLink
+              to="/landing"
+              class="text-primary-700 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 underline underline-offset-2"
+            >
+              {{ lt('linkLanding') }}
+            </RouterLink>
+            <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
+            <RouterLink
+              to="/platform/login"
+              class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 underline underline-offset-2"
+            >
+              {{ lt('linkPlatformAdmin') }}
+            </RouterLink>
+          </div>
+          <div class="mt-4 flex flex-col items-center gap-2">
+            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400">{{ lt('langLabel') }}</span>
+            <div class="flex max-w-full flex-wrap justify-center gap-1">
+              <button
+                v-for="lang in i18n.SUPPORTED_LANGUAGES"
+                :key="lang.code"
+                type="button"
+                class="rounded-lg px-2 py-1 text-[10px] font-semibold transition-colors"
+                :class="
+                  i18n.currentLang === lang.code
+                    ? 'bg-primary-600 text-white shadow-sm'
+                    : 'border border-slate-200 bg-white/90 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700/80'
+                "
+                @click="i18n.setLang(lang.code)"
+              >
+                {{ lang.flag }} {{ lang.label }}
+              </button>
+            </div>
+          </div>
         </div>
+
+        <div
+          v-if="portalDisabledNotice"
+          class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-xs leading-relaxed text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
+        >
+          {{ portalDisabledNotice }}
+        </div>
+
+        <p
+          v-if="resetOkBanner"
+          class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-100"
+        >
+          {{ lt('resetPasswordOk') }}
+        </p>
+
+        <div
+          class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:shadow-none"
+        >
+          <div
+            class="border-b border-white/10 bg-gradient-to-l from-primary-800 to-primary-600 px-6 pb-4 pt-5"
+          >
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                <WrenchScrewdriverIcon class="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-white">
+                  {{ otpStep ? lt('cardTitleOtp') : lt('cardTitleUnified') }}
+                </h2>
+                <p class="text-xs text-white/80">
+                  {{ otpStep ? lt('cardSubtitleOtp') : lt('cardSubtitleUnified') }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <form class="space-y-4 px-6 py-6" @submit.prevent="handleLogin">
+            <details
+              v-if="showLoginDemo && !otpStep"
+              class="group rounded-2xl border border-primary-100 bg-primary-50/80 dark:border-primary-900/40 dark:bg-primary-950/25"
+            >
+              <summary
+                class="cursor-pointer list-none px-4 py-3 text-xs font-semibold text-primary-900 dark:text-primary-200 [&::-webkit-details-marker]:hidden"
+              >
+                <span class="flex items-center justify-between gap-2">
+                  {{ lt('demoSummary') }}
+                  <span class="text-[10px] font-normal text-primary-600/80 dark:text-primary-400/80 group-open:hidden">{{ lt('demoShow') }}</span>
+                  <span class="hidden text-[10px] font-normal text-primary-600/80 group-open:inline">{{ lt('demoHide') }}</span>
+                </span>
+              </summary>
+              <div class="space-y-2 border-t border-primary-100/80 px-4 pb-3 pt-2 dark:border-primary-900/40">
+                <p class="text-[10px] leading-relaxed text-primary-800/90 dark:text-primary-300/90">
+                  {{ lt('demoHintBefore') }}
+                  <RouterLink to="/platform/login" class="font-medium underline">{{ lt('linkPlatformAdmin') }}</RouterLink>{{ lt('demoHintAfter') }}
+                </p>
+                <div class="flex flex-wrap gap-1.5">
+                  <button
+                    v-for="d in allDemos"
+                    :key="d.email + d.label"
+                    type="button"
+                    class="rounded-lg border border-primary-200/80 bg-white px-2 py-1 text-[10px] font-mono text-primary-800 transition-colors hover:bg-primary-50 dark:border-primary-800 dark:bg-slate-900 dark:text-primary-200 dark:hover:bg-primary-950/50"
+                    @click="fillDemo(d)"
+                  >
+                    {{ d.label }}
+                  </button>
+                </div>
+              </div>
+            </details>
+
+            <template v-if="!otpStep">
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  {{ lt('emailLabel') }} <span class="font-normal text-slate-400">{{ lt('emailHint') }}</span>
+                </label>
+                <input
+                  ref="emailInputRef"
+                  v-model="form.email"
+                  type="email"
+                  required
+                  autocomplete="username"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 sm:text-sm"
+                  placeholder="you@company.com"
+                >
+              </div>
+
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">{{ lt('password') }}</label>
+                <div class="relative">
+                  <input
+                    v-model="form.password"
+                    :type="showPass ? 'text' : 'password'"
+                    required
+                    autocomplete="current-password"
+                    class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 pe-11 text-base text-slate-900 transition-all focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 sm:text-sm"
+                    placeholder="••••••••"
+                  >
+                  <button
+                    type="button"
+                    class="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-300"
+                    @click="showPass = !showPass"
+                  >
+                    <EyeIcon v-if="!showPass" class="h-4 w-4" />
+                    <EyeSlashIcon v-else class="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <label
+                class="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-[11px] leading-snug text-slate-600 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300"
+              >
+                <input
+                  v-model="rememberEmail"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-primary-600 focus:ring-primary-500 dark:border-slate-600"
+                >
+                <span>{{ lt('rememberEmailLead') }}<strong class="font-semibold text-slate-700 dark:text-slate-200">{{ lt('rememberEmailNever') }}</strong>{{ lt('rememberEmailTail') }}</span>
+              </label>
+
+              <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                <RouterLink
+                  to="/forgot-password"
+                  class="text-primary-700 underline underline-offset-2 hover:text-primary-800 dark:text-primary-400"
+                >
+                  {{ lt('forgotPassword') }}
+                </RouterLink>
+                <button
+                  type="button"
+                  class="text-slate-500 underline underline-offset-2 hover:text-slate-800 dark:text-slate-400"
+                  @click="showUsernameHelp = true"
+                >
+                  {{ lt('forgotUsername') }}
+                </button>
+              </div>
+            </template>
+
+            <template v-else>
+              <p v-if="otpMessage" class="text-xs text-slate-600 dark:text-slate-300">{{ otpMessage }}</p>
+              <div>
+                <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">{{ lt('otpCode') }}</label>
+                <input
+                  ref="otpInputRef"
+                  v-model="otpCode"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="8"
+                  autocomplete="one-time-code"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-center font-mono text-lg tracking-widest text-slate-900 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/25 dark:border-slate-600 dark:bg-slate-900"
+                  placeholder="••••••"
+                >
+              </div>
+              <button
+                type="button"
+                class="text-[11px] text-slate-500 underline"
+                @click="clearOtpStep"
+              >
+                {{ lt('otpBack') }}
+              </button>
+            </template>
+
+            <Transition name="shake">
+              <div
+                v-if="error"
+                role="alert"
+                aria-live="polite"
+                class="flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200"
+              >
+                <ExclamationCircleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                <span class="flex-1 break-words">{{ error }}</span>
+              </div>
+            </Transition>
+
+            <button
+              type="submit"
+              :disabled="loading"
+              class="flex min-h-12 w-full items-center justify-center rounded-xl bg-primary-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-2 disabled:opacity-60 dark:focus-visible:ring-offset-slate-900"
+            >
+              <span v-if="!loading">{{ otpStep ? lt('submitOtp') : lt('submit') }}</span>
+              <span v-else class="flex items-center justify-center gap-2">
+                <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {{ lt('verifying') }}
+              </span>
+            </button>
+          </form>
+
+          <div class="border-t border-gray-100 px-6 py-4 dark:border-slate-700">
+            <p class="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{{ lt('supportTitle') }}</p>
+            <ul class="mt-2 space-y-1.5 text-[11px] text-slate-600 dark:text-slate-400">
+              <li v-if="support.email">
+                <a :href="'mailto:' + support.email" class="text-primary-700 underline dark:text-primary-400">{{ support.email }}</a>
+              </li>
+              <li v-if="support.phone">
+                <a :href="'tel:' + support.phone.replace(/\s/g, '')" class="underline">{{ support.phone }}</a>
+              </li>
+              <li v-if="support.waHref">
+                <a :href="support.waHref" target="_blank" rel="noopener noreferrer" class="text-emerald-700 underline dark:text-emerald-400">
+                  {{ lt('supportWhatsApp') }}
+                </a>
+              </li>
+              <li v-if="!support.phone && !support.waHref && support.email === 'sales@asaspro.sa'">
+                {{ lt('supportTechFallback') }}
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <AppInstallHint class="mt-4" />
+
+        <p class="mt-4 text-center text-[10px] text-slate-400 dark:text-slate-600">
+          {{ displayAppName }} · v{{ appVersion }} · {{ new Date().getFullYear() }}
+        </p>
       </div>
 
-      <!-- Version tag -->
-      <p class="text-center text-white/30 text-[10px] mt-4">WorkshopOS v2.5 · {{ new Date().getFullYear() }}</p>
+      <Teleport to="body">
+        <div
+          v-if="showUsernameHelp"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          @click.self="showUsernameHelp = false"
+        >
+          <div class="max-w-sm rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800" :dir="i18n.dir">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ lt('usernameHelpTitle') }}</h3>
+            <!-- eslint-disable-next-line vue/no-v-html -- locale-controlled -->
+            <p class="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300" v-html="lt('usernameHelpBodyHtml')" />
+            <button
+              type="button"
+              class="mt-4 w-full rounded-xl bg-slate-100 py-2 text-xs font-semibold text-slate-800 dark:bg-slate-700 dark:text-slate-100"
+              @click="showUsernameHelp = false"
+            >
+              {{ lt('usernameHelpOk') }}
+            </button>
+          </div>
+        </div>
+      </Teleport>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import {
-  WrenchScrewdriverIcon, TruckIcon, UserIcon,
-  EyeIcon, EyeSlashIcon, ExclamationCircleIcon,
-} from '@heroicons/vue/24/outline'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { WrenchScrewdriverIcon, EyeIcon, EyeSlashIcon, ExclamationCircleIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
-import { useSubscriptionStore } from '@/stores/subscription'
+import { useI18nStore } from '@/stores/i18n'
+import { enabledPortals } from '@/config/portalAccess'
+import { useSupportContact } from '@/composables/useSupportContact'
+import AppInstallHint from '@/components/AppInstallHint.vue'
+import PlatformPromoBanner from '@/components/PlatformPromoBanner.vue'
 
-const auth   = useAuthStore()
-const sub    = useSubscriptionStore()
+/** بريد محفوظ محلياً فقط — لا يُرسل للخادم إلا عند تسجيل الدخول */
+const REMEMBER_EMAIL_KEY = 'asaspro_saved_login_email'
+
+const auth = useAuthStore()
+const i18n = useI18nStore()
 const router = useRouter()
-const route  = useRoute()
+const route = useRoute()
+const support = useSupportContact()
 
-// ── Portal Definitions ────────────────────────────────────────────────
-const portals = [
+function lt(key: string): string {
+  return i18n.t(`login.${key}`)
+}
+
+const appVersion = __APP_VERSION__
+const displayAppName = computed(() => import.meta.env.VITE_APP_NAME?.trim() || lt('brand'))
+const isDevBuild = import.meta.env.DEV
+
+const showLoginDemo = computed(
+  () => import.meta.env.DEV || import.meta.env.VITE_SHOW_LOGIN_DEMO_HINT === 'true',
+)
+
+const PORTAL_DEFS = [
   {
-    id:       'staff',
-    label:    'فريق العمل',
-    title:    'بوابة فريق العمل',
-    subtitle: 'مدير · كاشير · فني',
-    icon:     WrenchScrewdriverIcon,
-    gradient: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
-    blob1:    '#3b82f6',
-    blob2:    '#6366f1',
-    cardHeader: '#1d4ed8, #1e40af',
-    btnGradient: '#1d4ed8, #1e40af',
-    accent:   '#3b82f6',
-    footerNote: 'للمشاكل التقنية تواصل مع مدير النظام',
+    id: 'staff',
     demos: [
-      { label: 'owner',   email: 'owner@demo.sa',   password: 'password' },
-      { label: 'manager', email: 'manager@demo.sa',  password: 'password' },
-      { label: 'cashier', email: 'cashier@demo.sa',  password: 'password' },
+      { label: 'admin (أسس برو)', email: 'admin@osas.sa', password: '12345678' },
+      { label: 'owner', email: 'owner@demo.sa', password: 'password' },
+      { label: 'manager', email: 'manager@demo.sa', password: 'password' },
+      { label: 'cashier', email: 'cashier@demo.sa', password: 'password' },
+      { label: 'tech', email: 'tech@demo.sa', password: 'password' },
+      { label: 'simulation', email: 'simulation.owner@demo.local', password: 'SimulationDemo123!' },
     ],
   },
   {
-    id:       'fleet',
-    label:    'إدارة الأسطول',
-    title:    'بوابة الأسطول',
-    subtitle: 'متابعة المركبات والحسابات',
-    icon:     TruckIcon,
-    gradient: 'linear-gradient(135deg, #134e4a 0%, #0f2f2e 100%)',
-    blob1:    '#14b8a6',
-    blob2:    '#10b981',
-    cardHeader: '#0d9488, #0f766e',
-    btnGradient: '#0d9488, #0f766e',
-    accent:   '#14b8a6',
-    footerNote: 'خاص بمديري ومسؤولي الأساطيل',
+    id: 'fleet',
     demos: [
       { label: 'fleet.contact', email: 'fleet.contact@demo.sa', password: 'password' },
       { label: 'fleet.manager', email: 'fleet.manager@demo.sa', password: 'password' },
     ],
   },
   {
-    id:       'customer',
-    label:    'العملاء',
-    title:    'بوابة العملاء',
-    subtitle: 'تتبع سيارتك وفواتيرك',
-    icon:     UserIcon,
-    gradient: 'linear-gradient(135deg, #92400e 0%, #1c1008 100%)',
-    blob1:    '#f59e0b',
-    blob2:    '#ef4444',
-    cardHeader: '#d97706, #b45309',
-    btnGradient: '#d97706, #b45309',
-    accent:   '#f59e0b',
-    footerNote: 'للعملاء فقط — تواصل مع الورشة للتسجيل',
-    demos: [
-      { label: 'customer', email: 'customer@demo.sa', password: 'password' },
-    ],
+    id: 'customer',
+    demos: [{ label: 'customer', email: 'customer@demo.sa', password: 'password' }],
   },
-]
+] as const
 
-const selectedPortal = ref('staff')
-const activePortal   = computed(() => portals.find(p => p.id === selectedPortal.value)!)
+const allDemos = computed(() => {
+  const out: { label: string; email: string; password: string }[] = []
+  for (const p of PORTAL_DEFS) {
+    if (p.id === 'fleet' && !enabledPortals.fleet) continue
+    if (p.id === 'customer' && !enabledPortals.customer) continue
+    for (const d of p.demos) out.push(d)
+  }
+  return out
+})
 
-// ── Form State ────────────────────────────────────────────────────────
-const form     = ref({ email: '', password: '' })
-const loading  = ref(false)
-const error    = ref('')
+const portalDisabledNotice = computed(() => {
+  void i18n.currentLang
+  if (route.query.notice !== 'portal_disabled') return ''
+  const p = String(route.query.portal || '')
+  if (p === 'fleet') return i18n.t('login.portalFleetDisabled')
+  if (p === 'customer') return i18n.t('login.portalCustomerDisabled')
+  return i18n.t('login.portalGeneric')
+})
+
+const resetOkBanner = computed(() => route.query.reset === 'ok')
+
+const form = ref({ email: '', password: '' })
+const loading = ref(false)
+const error = ref('')
 const showPass = ref(false)
+const otpStep = ref(false)
+const otpChallengeId = ref('')
+const otpCode = ref('')
+const otpMessage = ref('')
+const showUsernameHelp = ref(false)
+const rememberEmail = ref(false)
+const emailInputRef = ref<HTMLInputElement | null>(null)
+const otpInputRef = ref<HTMLInputElement | null>(null)
 
-function selectPortal(id: string) {
-  selectedPortal.value = id
-  form.value = { email: '', password: '' }
-  error.value = ''
-}
+onMounted(() => {
+  try {
+    const saved = localStorage.getItem(REMEMBER_EMAIL_KEY)
+    if (saved && saved.includes('@')) {
+      form.value.email = saved
+      rememberEmail.value = true
+    }
+  } catch {
+    /* وضع خاص للمتصفح */
+  }
+  void nextTick(() => {
+    if (!otpStep.value) emailInputRef.value?.focus()
+  })
+})
+
+watch(otpStep, async (on) => {
+  await nextTick()
+  if (on) otpInputRef.value?.focus()
+  else emailInputRef.value?.focus()
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    error.value = ''
+  },
+)
 
 function fillDemo(d: { email: string; password: string }) {
-  form.value.email    = d.email
+  form.value.email = d.email
   form.value.password = d.password
   error.value = ''
 }
 
-// ── Login ─────────────────────────────────────────────────────────────
+function clearOtpStep() {
+  otpStep.value = false
+  otpChallengeId.value = ''
+  otpCode.value = ''
+  otpMessage.value = ''
+  error.value = ''
+  void nextTick(() => emailInputRef.value?.focus())
+}
+
+function flattenApiValidationErrors(errs: unknown): string[] {
+  if (!errs || typeof errs !== 'object') return []
+  const out: string[] = []
+  const walk = (node: unknown): void => {
+    if (node == null) return
+    if (typeof node === 'string' && node.trim() !== '') {
+      out.push(node)
+      return
+    }
+    if (Array.isArray(node)) {
+      for (const x of node) walk(x)
+      return
+    }
+    if (typeof node === 'object') {
+      for (const v of Object.values(node as Record<string, unknown>)) walk(v)
+    }
+  }
+  for (const v of Object.values(errs as Record<string, unknown>)) walk(v)
+  return out
+}
+
+function stripZeroWidth(s: string): string {
+  return s.replace(/[\u200B-\u200D\uFEFF]/g, '')
+}
+
+function normalizeLoginEmail(raw: string): string {
+  return stripZeroWidth(raw).trim().toLowerCase()
+}
+
+function normalizeLoginPassword(raw: string): string {
+  return stripZeroWidth(raw)
+}
+
 async function handleLogin() {
   loading.value = true
-  error.value   = ''
+  error.value = ''
+  const email = normalizeLoginEmail(form.value.email)
+  const password = normalizeLoginPassword(form.value.password)
   try {
-    await auth.login(form.value.email, form.value.password)
-    await sub.loadSubscription()
+    if (otpStep.value) {
+      const out = await auth.login(email, password, {
+        challengeId: otpChallengeId.value,
+        otp: otpCode.value.replace(/\D/g, ''),
+      })
+      if (out.kind === 'otp_required') {
+        otpChallengeId.value = out.challengeId
+        otpMessage.value = out.message
+        error.value = i18n.t('login.errOtpRefresh')
+        return
+      }
+    } else {
+      const out = await auth.login(email, password)
+      if (out.kind === 'otp_required') {
+        otpStep.value = true
+        otpChallengeId.value = out.challengeId
+        otpMessage.value = out.message
+        otpCode.value = ''
+        return
+      }
+    }
+
     const redirect = route.query.redirect as string | undefined
-    await router.push(redirect ?? auth.portalHome)
-  } catch (e: any) {
-    error.value = e.response?.data?.message ?? 'البريد أو كلمة المرور غير صحيحة'
+    const target = redirect ?? auth.portalHome
+
+    if (auth.isFleet && !enabledPortals.fleet) {
+      await auth.logout()
+      error.value = i18n.t('login.errFleetPortal')
+      return
+    }
+    if (auth.isCustomer && !enabledPortals.customer) {
+      await auth.logout()
+      error.value = i18n.t('login.errCustomerPortal')
+      return
+    }
+
+    try {
+      if (rememberEmail.value) {
+        localStorage.setItem(REMEMBER_EMAIL_KEY, email)
+      } else {
+        localStorage.removeItem(REMEMBER_EMAIL_KEY)
+      }
+    } catch {
+      /* تجاهل */
+    }
+
+    await router.push(target)
+  } catch (e: unknown) {
+    const res = (
+      e as {
+        response?: {
+          status?: number
+          data?: { message?: string; errors?: unknown; dev_hint?: unknown }
+        }
+      }
+    ).response
+    if (!res) {
+      error.value = i18n.t('login.errNetwork')
+      return
+    }
+    if (res.status === 401) {
+      const m = String(res.data?.message ?? '')
+      const bad = i18n.t('login.errBadCredentials')
+      let msg =
+        m.includes('credentials are incorrect') || m.includes('provided credentials') ? bad : m || bad
+      if (import.meta.env.DEV) {
+        msg += i18n.t('login.errBadCredentialsDevHint')
+        const dh = res.data?.dev_hint as
+          | { users_in_db?: number | null; database_error?: boolean }
+          | undefined
+        if (dh?.database_error) {
+          msg += ' ' + i18n.t('login.errDevDbUnreachable')
+        } else if (dh?.users_in_db === 0) {
+          msg += ' ' + i18n.t('login.errDevNoUsers')
+        } else if (typeof dh?.users_in_db === 'number' && dh.users_in_db > 0) {
+          msg += ' ' + i18n.t('login.errDevUsersButRejected')
+        }
+      }
+      error.value = msg
+      return
+    }
+    if (res.status === 402 && res.data?.message) {
+      error.value = String(res.data.message)
+      return
+    }
+    if (res.status === 403 && res.data?.message) {
+      error.value = String(res.data.message)
+      return
+    }
+    if (res.status === 422) {
+      const m = String(res.data?.message ?? '')
+      if (m.includes('جلسة التحقق') || m.includes('رمز التحقق')) {
+        error.value = m
+        return
+      }
+    }
+    if (res.status === 429 && res.data?.message) {
+      error.value = String(res.data.message)
+      return
+    }
+    if (res.status === 503 && res.data?.message) {
+      error.value = String(res.data.message)
+      return
+    }
+
+    if (res.status && res.status >= 500) {
+      const raw = res.data
+      const msg =
+        raw && typeof raw === 'object' && raw !== null && 'message' in raw
+          ? String((raw as { message?: unknown }).message ?? '').trim()
+          : ''
+      if (msg && msg !== 'Validation failed.') {
+        error.value = msg
+        return
+      }
+      error.value = i18n.t('login.errServer').replace(/\{status\}/g, String(res.status))
+      return
+    }
+
+    const fromFields = flattenApiValidationErrors(res.data?.errors)
+    if (fromFields.length > 0) {
+      error.value = fromFields.join(' — ')
+      return
+    }
+
+    if (res.data?.message && String(res.data.message).trim() !== '' && String(res.data.message) !== 'Validation failed.') {
+      error.value = String(res.data.message)
+      return
+    }
+
+    if (res.status === 422) {
+      error.value = i18n.t('login.errValidatePassword')
+      return
+    }
+    error.value = i18n.t('login.errHttp').replace(/\{status\}/g, String(res.status ?? ''))
   } finally {
     loading.value = false
   }
@@ -242,12 +629,25 @@ async function handleLogin() {
 </script>
 
 <style scoped>
-.shake-enter-active { animation: shake 0.4s ease; }
+.shake-enter-active {
+  animation: shake 0.4s ease;
+}
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%       { transform: translateX(-6px); }
-  40%       { transform: translateX(6px); }
-  60%       { transform: translateX(-4px); }
-  80%       { transform: translateX(4px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
 }
 </style>

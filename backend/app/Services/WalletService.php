@@ -51,12 +51,14 @@ class WalletService
         string $idempotencyKey,
         ?int $branchId,
         ?string $notes,
+        ?string $referenceType = null,
+        ?int $referenceId = null,
     ): WalletTransaction {
         $this->checkIdempotency($companyId, $idempotencyKey);
 
         $txn = DB::transaction(function () use (
             $companyId, $customerId, $vehicleId, $amount, $invoiceId, $paymentId, $userId, $traceId,
-            $idempotencyKey, $branchId, $notes
+            $idempotencyKey, $branchId, $notes, $referenceType, $referenceId
         ) {
             $wallet = $this->resolveOrCreateWallet(
                 $companyId, $customerId, null, WalletType::CustomerMain, $branchId
@@ -64,7 +66,7 @@ class WalletService
 
             return $this->creditWallet(
                 $wallet, $amount, $userId, WalletTransactionType::TopUp,
-                $vehicleId, null, null, $traceId, $idempotencyKey, null, $notes,
+                $vehicleId, $referenceType, $referenceId, $traceId, $idempotencyKey, null, $notes,
                 $invoiceId, $paymentId
             );
         });
@@ -93,12 +95,14 @@ class WalletService
         string $idempotencyKey,
         ?int $branchId,
         ?string $notes,
+        ?string $referenceType = null,
+        ?int $referenceId = null,
     ): WalletTransaction {
         $this->checkIdempotency($companyId, $idempotencyKey);
 
         $txn = DB::transaction(function () use (
             $companyId, $customerId, $vehicleId, $amount, $invoiceId, $paymentId, $userId, $traceId,
-            $idempotencyKey, $branchId, $notes
+            $idempotencyKey, $branchId, $notes, $referenceType, $referenceId
         ) {
             $wallet = $this->resolveOrCreateWallet(
                 $companyId, $customerId, null, WalletType::FleetMain, $branchId
@@ -106,7 +110,7 @@ class WalletService
 
             return $this->creditWallet(
                 $wallet, $amount, $userId, WalletTransactionType::TopUp,
-                $vehicleId, null, null, $traceId, $idempotencyKey, null, $notes,
+                $vehicleId, $referenceType, $referenceId, $traceId, $idempotencyKey, null, $notes,
                 $invoiceId, $paymentId
             );
         });
@@ -352,7 +356,7 @@ class WalletService
                 ->where('id', $workOrderId)
                 ->where('vehicle_id', $vehicleId)
                 ->whereIn('status', [
-                    WorkOrderStatus::Pending->value,
+                    WorkOrderStatus::Approved->value,
                     WorkOrderStatus::InProgress->value,
                 ])
                 ->where('approval_status', 'approved')
@@ -1148,20 +1152,31 @@ class WalletService
                 'created_at'  => now(),
             ]);
         } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-            // Race condition — another concurrent request inserted it first; check if processed
+            // Race: another request reserved this key first — never run wallet logic twice.
             $fresh = DB::table('idempotency_keys')
                 ->where('company_id', $companyId)->where('key', $key)->first();
-            if ($fresh && !empty($fresh->response_snapshot)) {
+            if ($fresh && ! empty($fresh->response_snapshot)) {
                 throw new \DomainException(
                     "Duplicate idempotency key [{$key}]. This operation was already processed."
                 );
             }
+            throw new \DomainException(
+                "Idempotency key [{$key}] is already reserved (in progress or concurrent request). Retry shortly with the same key."
+            );
         } catch (\Illuminate\Database\QueryException $e) {
             if (str_contains($e->getMessage(), 'Unique violation') ||
                 str_contains($e->getMessage(), 'unique constraint') ||
-                $e->getCode() === '23505') {
-                // Same race condition handling
-                return;
+                (string) $e->getCode() === '23505') {
+                $fresh = DB::table('idempotency_keys')
+                    ->where('company_id', $companyId)->where('key', $key)->first();
+                if ($fresh && ! empty($fresh->response_snapshot)) {
+                    throw new \DomainException(
+                        "Duplicate idempotency key [{$key}]. This operation was already processed."
+                    );
+                }
+                throw new \DomainException(
+                    "Idempotency key [{$key}] is already reserved (in progress or concurrent request). Retry shortly with the same key."
+                );
             }
             throw $e;
         }

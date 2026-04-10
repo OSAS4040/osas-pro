@@ -29,9 +29,9 @@ final class Phase2RecommendationsService
             $out[] = [
                 'id'       => 'no_events_in_window',
                 'severity' => 'info',
-                'title'    => 'No domain events in the selected window',
-                'detail'   => 'If you expect telemetry, confirm Phase 1 flags (INTELLIGENT_EVENTS_ENABLED / INTELLIGENT_EVENTS_PERSIST_ENABLED) and that traffic hits instrumented flows.',
-                'basis'    => 'count(domain_events in window) = 0',
+                'title'    => 'لا توجد أحداث مجال في النافذة المحددة',
+                'detail'   => 'إذا كنت تتوقع بيانات تتبّع، تحقق من تفعيل طبقة الأحداث (INTELLIGENT_EVENTS_ENABLED وINTELLIGENT_EVENTS_PERSIST_ENABLED) وأن العمليات تمر بالمسارات المسجّلة.',
+                'basis'    => 'عدد أحداث المجال في النافذة = 0',
             ];
 
             return $out;
@@ -48,9 +48,9 @@ final class Phase2RecommendationsService
                 $out[] = [
                     'id'       => 'customer_created_dominance',
                     'severity' => 'info',
-                    'title'    => 'CustomerCreated dominates the event mix',
-                    'detail'   => 'Most recorded events are CustomerCreated. Consider widening the window or enabling persistence on other flows if you need fuller coverage.',
-                    'basis'    => 'share(CustomerCreated) >= 75% of events in window',
+                    'title'    => 'أحداث «إنشاء عميل» تهيمن على المزيج',
+                    'detail'   => 'معظم الأحداث المسجّلة من نوع إنشاء عميل. وسّع نافذة الزمن أو فعّل التسجيل في مسارات أخرى إن احتجت تغطية أوسع.',
+                    'basis'    => 'نسبة CustomerCreated ≥ 75٪ من أحداث النافذة',
                 ];
             }
         }
@@ -61,9 +61,9 @@ final class Phase2RecommendationsService
             $out[] = [
                 'id'       => 'wallet_debit_credit_skew',
                 'severity' => 'info',
-                'title'    => 'WalletDebited events greatly outnumber WalletCredited',
-                'detail'   => 'The recorded domain-event ratio shows more debit than credit events in this window. Review whether this matches expected wallet activity (observability only).',
-                'basis'    => 'WalletDebited > 5 × WalletCredited in window',
+                'title'    => 'أحداث خصم المحفظة أكثر بكثير من أحداث الإيداع',
+                'detail'   => 'نسبة أحداث المجال تُظهر خصومات أكثر من إيداعات في هذه النافذة. راجع إن كان ذلك متوافقاً مع النشاط المتوقع (مراقبة فقط، ليس حكماً مالياً).',
+                'basis'    => 'WalletDebited > 5 × WalletCredited في النافذة',
             ];
         }
 
@@ -74,9 +74,9 @@ final class Phase2RecommendationsService
                 $out[] = [
                     'id'       => 'single_event_concentration',
                     'severity' => 'warning',
-                    'title'    => 'Very high concentration on one event type',
-                    'detail'   => 'One event_name accounts for most traffic. Validate that other critical flows are emitting domain events when persistence is enabled.',
-                    'basis'    => 'top event_name share >= 80% with total events > 10',
+                    'title'    => 'تركيز شديد على نوع حدث واحد',
+                    'detail'   => 'نوع حدث واحد يمثل معظم الحركة. تأكد أن المسارات المهمة الأخرى تُصدِر أحداث مجال عند تفعيل الحفظ.',
+                    'basis'    => 'نصيب أعلى نوع ≥ 80٪ مع إجمالي أحداث > 10',
                 ];
             }
         }
@@ -85,9 +85,9 @@ final class Phase2RecommendationsService
             $out[] = [
                 'id'       => 'no_recommendations',
                 'severity' => 'info',
-                'title'    => 'No notable patterns in the current window',
-                'detail'   => 'Heuristics did not flag skew, spikes, or gaps beyond normal variance.',
-                'basis'    => 'rule engine — no thresholds triggered',
+                'title'    => 'لا أنماط بارزة في النافذة الحالية',
+                'detail'   => 'القواعد الاستدلالية لم ترصد انحرافاً أو قفزات أو فجوات خارج التباين الطبيعي.',
+                'basis'    => 'محرك القواعد — لم تُفعَّل أي عتبة',
             ];
         }
 

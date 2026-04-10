@@ -75,6 +75,44 @@ No new persistence; **SELECT-only** on existing intelligence read path.
 * Frontend: `CommandItemCard.vue`, `NavigationSourceHint.vue`, `EntityReference` types, hints on invoice / work order / vehicle show views.
 * Tests: `Phase2ReadonlyApiTest` — structure + sample hrefs.
 
+## Phase 5+ — UX & performance (frontend)
+
+### Progressive loading (`useIntelligenceCommandCenter`)
+
+* All intelligence endpoints (**overview**, **insights**, **recommendations**, **alerts**, **command-center**) are requested **in parallel**.
+* **`loading`**: full-page blocking state only on the **first** bootstrap while **no** slice has arrived yet (`!hasAnyData`).
+* **`hasAnyData`**: becomes true as soon as **any** endpoint returns (even `null` body on failure for that slice) — the **first completed HTTP round-trip** clears the full skeleton via `unlockSkeletonOnFirstResponse()` in `finally`, so perceived latency tracks the **fastest** route, not the slowest.
+* **`refreshing`**: subsequent manual refresh sets `refreshing` (not full-page `loading`); section-level spinners are **not** re-enabled on refresh to avoid flicker — only the summary **shimmer bar** + refresh icon spin.
+* **`sectionLoading`**: on **bootstrap only** (`isBootstrap`), each section flag is toggled per request so **Insights** and **Alerts** can show **inline skeletons** until their data exists.
+
+### Partial rendering (`IntelligenceCommandCenterView`)
+
+* **Header** (title, subtitle, quick tip) is **always visible** (including above the first-load skeleton) so the user never lands on an anonymous blank.
+* **Summary strip** renders whenever **`hasAnyData`** is true.
+* **Summary fallback:** if `command-center` is not yet available, counts default to **0** and **`low_signal`** is inferred from **`insights_snapshot`**, then **`insights.totals.events`**, then **overview-only** presence. When `commandCenter` is still missing but other slices exist, **`summaryDegraded`** shows a short notice on the strip.
+* **Zones (Now / Next / Watch):** while `hasAnyData && !commandCenter && sectionLoading.commandCenter`, **`CommandZonesSkeleton`** replaces the three zone columns. After the command-center response (success or failure), real **`CommandZoneCard`**s render (possibly empty).
+* **Insights:** internal skeleton when `sectionLoading.insights && !insights`; then KPI cards, **`InsightsSparkline`**, and top event types table.
+* **Alerts:** internal skeleton when `sectionLoading.alerts && !alerts`; cards include severity, optional **`detected_at`**, basis in a monospace panel, and a **read-only `RouterLink`** (“متابعة في السياق”) using **heuristic** route from `type`/`message` (no API schema change).
+
+### Command cards & attrs
+
+* **`CommandItemCard`**: `inheritAttrs: false` and **`v-bind="$attrs"`** on the root **`article`** so **`class`** / **`style`** from **`CommandZoneCard`** (e.g. stagger animation) merge predictably with the component’s base classes.
+
+### Navigation hint
+
+* **`NavigationSourceHint`**: clearer Phase 5 copy, visual icon container, gradient border treatment, **dismiss (X)**, and **return** link to **`internal.intelligence`**. Used on **dashboard, wallet, governance, integrations, customers list**, and invoice / work order / vehicle **show** pages.
+
+### Files (Phase 5+)
+
+* `frontend/src/composables/useIntelligenceCommandCenter.ts`
+* `frontend/src/views/internal/IntelligenceCommandCenterView.vue`
+* `frontend/src/components/intelligence/IntelligenceSummaryStrip.vue`
+* `frontend/src/components/intelligence/IntelligenceCommandCenterSkeleton.vue`
+* `frontend/src/components/intelligence/CommandZonesSkeleton.vue`
+* `frontend/src/components/intelligence/InsightsSparkline.vue`
+* `frontend/src/components/intelligence/CommandZoneCard.vue` / `CommandItemCard.vue`
+* `frontend/src/components/NavigationSourceHint.vue`
+
 ## Related
 
 * Phase 4: `docs/Phase4_Smart_UX_Command_Center.md`, `docs/OSAS_Phase4_Final_Delivery_Report.md`

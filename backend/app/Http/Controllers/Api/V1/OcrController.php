@@ -8,13 +8,19 @@ use App\Services\IntelligentReading\InvoiceOcrEnricher;
 use App\Services\IntelligentReading\KsaPlateNormalizer;
 use App\Services\IntelligentReading\VehicleDocumentClassifier;
 use App\Services\IntelligentReading\VehiclePlateResolver;
+use App\Services\Ocr\TesseractOcrRunner;
 use App\Support\Media\TenantUploadDisk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class OcrController extends Controller
 {
+    public function __construct(
+        private readonly TesseractOcrRunner $tesseract,
+    ) {}
+
     /**
      * استخراج لوحة من صورة + اختياري: حلّ المركبة في النظام (preview فقط — لا حفظ).
      */
@@ -40,26 +46,36 @@ class OcrController extends Controller
             ], 422);
         }
 
-        $rawText = $this->runTesseractRaw($imgData, 'eng+ara', 7);
+        $lang = (string) config('ocr.default_lang_plate', 'eng+ara');
+        $ocr = $this->tesseract->runRaw($imgData, $lang, 7);
+        $rawText = $ocr['code'] === TesseractOcrRunner::CODE_OK ? $ocr['text'] : null;
+
         $normalized = null;
         if ($rawText !== null) {
             $normalized = KsaPlateNormalizer::normalize($rawText);
         }
 
-        $plateDisplay = $normalized['display'] ?? '';
-        $method = $normalized ? 'ocr' : ($rawText ? 'ocr_unparsed' : 'unavailable');
-
         if (! $normalized && $rawText) {
             $normalized = KsaPlateNormalizer::normalize(preg_replace('/\s+/u', ' ', $rawText) ?? '');
-            $plateDisplay = $normalized['display'] ?? '';
-            $method = $normalized ? 'ocr' : $method;
+        }
+
+        $plateDisplay = $normalized['display'] ?? '';
+
+        if ($normalized) {
+            $method = 'ocr';
+        } elseif ($rawText) {
+            $method = 'ocr_unparsed';
+        } elseif ($ocr['code'] === TesseractOcrRunner::CODE_ENGINE_MISSING || $ocr['code'] === TesseractOcrRunner::CODE_DISABLED) {
+            $method = 'unavailable';
+        } else {
+            $method = 'ocr_failed';
         }
 
         $payload = [
             'plate' => $plateDisplay,
             'plate_normalized' => $normalized,
             'success' => (bool) $normalized,
-            'error' => $normalized ? null : ($rawText ? 'لم يُستخرج نمط لوحة سعودي واضح — أدخل الرقم يدوياً.' : 'محرك OCR غير متاح على الخادم (Tesseract).'),
+            'error' => $this->plateUserError($normalized, $rawText, $ocr['code']),
             'method' => $method,
             'raw_ocr_text' => $rawText ? Str::limit($rawText, 4000, '…') : null,
             'vehicle' => null,
@@ -88,21 +104,24 @@ class OcrController extends Controller
 
         $matchProducts = $request->boolean('match_products', true);
         $companyId = (int) $request->user()->company_id;
+        $lang = (string) config('ocr.default_lang_document', 'ara+eng');
 
         $results = [];
         foreach ($request->input('images') as $idx => $base64) {
             $imgData = base64_decode((string) $base64, true);
             if (! $imgData) {
                 $results[] = ['index' => $idx, 'error' => 'صورة غير صالحة', 'success' => false];
+
                 continue;
             }
 
-            // PSM 6 = كتلة نصية موحّدة — مناسب للفواتير وإيصالات POS (ليس PSM 7 سطراً واحداً)
-            $text = $this->runTesseractRaw($imgData, 'ara+eng', 6) ?? '';
+            $ocr = $this->tesseract->runRaw($imgData, $lang, 6);
+            $text = $ocr['code'] === TesseractOcrRunner::CODE_OK ? ($ocr['text'] ?? '') : '';
+
             if ($text === '' || trim($text) === '') {
                 $results[] = [
                     'index' => $idx,
-                    'error' => 'لم يُستخرج نص من الصورة. جرّب صورة أوضح، تكبير أعلى، أو PDF. تحقق من تثبيت Tesseract على الخادم.',
+                    'error' => $this->invoiceEmptyOcrMessage($ocr['code']),
                     'success' => false,
                     'line_items' => [],
                 ];
@@ -136,7 +155,7 @@ class OcrController extends Controller
             'vehicle_id' => [
                 'required',
                 'integer',
-                \Illuminate\Validation\Rule::exists('vehicles', 'id')->where(fn ($q) => $q->where('company_id', $user->company_id)),
+                Rule::exists('vehicles', 'id')->where(fn ($q) => $q->where('company_id', $user->company_id)),
             ],
             'file' => 'required|file|max:10240|mimes:pdf,jpg,jpeg,png,webp',
             'confirm' => 'sometimes|boolean',
@@ -153,7 +172,11 @@ class OcrController extends Controller
         if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
             $bin = (string) file_get_contents($file->getRealPath() ?: '');
             if ($bin !== '') {
-                $text = strtoupper($this->runTesseractRaw($bin, 'ara+eng', 6) ?? '');
+                $lang = (string) config('ocr.default_lang_document', 'ara+eng');
+                $ocr = $this->tesseract->runRaw($bin, $lang, 6);
+                if ($ocr['code'] === TesseractOcrRunner::CODE_OK && ($ocr['text'] ?? '') !== '') {
+                    $text = strtoupper($ocr['text']);
+                }
             }
         }
 
@@ -207,62 +230,34 @@ class OcrController extends Controller
         ], 201);
     }
 
-    /**
-     * @param  int  $psm  Tesseract page segmentation (7 = سطر واحد للوحات، 6 = كتلة للفواتير)
-     */
-    private function runTesseractRaw(string $imgData, string $lang = 'eng+ara', int $psm = 7): ?string
+    private function plateUserError(?array $normalized, ?string $rawText, string $ocrCode): ?string
     {
-        $tmpIn = sys_get_temp_dir().'/'.Str::random(12).'.jpg';
-        $tmpOut = sys_get_temp_dir().'/'.Str::random(12);
-        file_put_contents($tmpIn, $imgData);
-
-        $bin = $this->findTesseractBinary();
-        if (! $bin) {
-            @unlink($tmpIn);
-
+        if ($normalized) {
             return null;
         }
-
-        $psm = max(0, min(13, $psm));
-        $cmd = sprintf(
-            '%s %s %s -l %s --oem 3 --psm %d 2>/dev/null',
-            escapeshellcmd($bin),
-            escapeshellarg($tmpIn),
-            escapeshellarg($tmpOut),
-            escapeshellarg($lang),
-            $psm
-        );
-        shell_exec($cmd);
-        @unlink($tmpIn);
-
-        $outFile = $tmpOut.'.txt';
-        if (! file_exists($outFile)) {
-            return null;
+        if ($rawText) {
+            return 'لم يُستخرج نمط لوحة سعودي واضح — أدخل الرقم يدوياً.';
+        }
+        if ($ocrCode === TesseractOcrRunner::CODE_ENGINE_MISSING || $ocrCode === TesseractOcrRunner::CODE_DISABLED) {
+            return 'محرك OCR غير متاح على الخادم (Tesseract).';
+        }
+        if ($ocrCode === TesseractOcrRunner::CODE_IMAGE_TOO_LARGE) {
+            return 'حجم الصورة كبير جداً. صغّر الصورة أو قلّل الدقة وحاول مرة أخرى، أو أدخل اللوحة يدوياً.';
         }
 
-        $text = (string) file_get_contents($outFile);
-        @unlink($outFile);
-
-        return trim($text) !== '' ? trim($text) : null;
+        return 'تعذّر قراءة اللوحة تلقائياً — أدخل الرقم يدوياً.';
     }
 
-    private function findTesseractBinary(): ?string
+    private function invoiceEmptyOcrMessage(string $ocrCode): string
     {
-        $which = PHP_OS_FAMILY === 'Windows'
-            ? trim((string) shell_exec('where tesseract 2>nul'))
-            : trim((string) shell_exec('which tesseract 2>/dev/null'));
-
-        if ($which !== '' && is_executable(explode("\n", $which)[0])) {
-            return explode("\n", $which)[0];
+        if ($ocrCode === TesseractOcrRunner::CODE_ENGINE_MISSING || $ocrCode === TesseractOcrRunner::CODE_DISABLED) {
+            return 'محرك OCR غير متاح على الخادم (Tesseract). راجع تثبيت الحزم في حاوية التطبيق أو اتصل بالمسؤول.';
+        }
+        if ($ocrCode === TesseractOcrRunner::CODE_IMAGE_TOO_LARGE) {
+            return 'حجم الصورة يتجاوز الحد المسموح. صغّر الصورة أو قلّل الدقة ثم أعد المحاولة، أو أدخل البيانات يدوياً.';
         }
 
-        foreach (['/usr/bin/tesseract', '/usr/local/bin/tesseract'] as $p) {
-            if (is_executable($p)) {
-                return $p;
-            }
-        }
-
-        return null;
+        return 'لم يُستخرج نص من الصورة. جرّب صورة أوضح أو تكبيراً أعلى، أو أدخل البيانات يدوياً.';
     }
 
     /**
@@ -270,8 +265,8 @@ class OcrController extends Controller
      */
     private function parseInvoiceText(string $text): array
     {
-        $t = $text;
-        $upper = strtoupper($t);
+        $t = preg_replace("/[\x{200E}\x{200F}\x{202A}-\x{202E}]/u", '', $text) ?? $text;
+        $upper = mb_strtoupper($t);
 
         $result = [
             'supplier_name' => null,
@@ -283,44 +278,139 @@ class OcrController extends Controller
             'subtotal' => null,
         ];
 
-        if (preg_match('/(?:FROM|SUPPLIER|البائع|المورد|الشركة)[:\s]*(.{3,120})/u', $t, $m)) {
-            $result['supplier_name'] = trim($m[1]);
+        if (preg_match('/(?:FROM|SUPPLIER|VENDOR|البائع|المورد|الشركة|بائع|مورد)[:\s]*(.{3,120})/u', $t, $m)) {
+            $c = $this->cleanSupplierNameCandidate($m[1]);
+            if ($c !== null) {
+                $result['supplier_name'] = $c;
+            }
         }
-        if (! $result['supplier_name'] && preg_match('/^(.{3,80})$/m', trim($t), $m)) {
-            $result['supplier_name'] = trim($m[1]);
+        if (! $result['supplier_name']) {
+            $result['supplier_name'] = $this->guessSupplierNameFromFirstLines($t);
         }
 
-        if (preg_match('/(?:invoice\s*(?:no|number|#)|فاتورة\s*رقم|رقم\s*الفاتورة)[:\s]*([A-Z0-9\-\/]+)/iu', $t, $m)) {
-            $result['invoice_number'] = trim($m[1]);
+        if (preg_match('/(?:invoice\s*(?:no|number|#)|فاتورة\s*رقم|رقم\s*الفاتورة|INV[\s.#\-]*|Simplified\s*Tax\s*Invoice\s*No)[:\s#]*([A-Z0-9\-\/]+)/iu', $t, $m)) {
+            $result['invoice_number'] = trim($m[1], " \t\n\r\0\x0B#:-");
         }
 
         if (preg_match('/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/', $t, $m)) {
             $result['invoice_date'] = $m[3].'-'.str_pad($m[2], 2, '0', STR_PAD_LEFT).'-'.str_pad($m[1], 2, '0', STR_PAD_LEFT);
         }
-
-        if (preg_match('/(?:SUBTOTAL|المجموع\s*الفرعي|الإجمالي\s*قبل)[:\s]*([0-9,]+\.?\d{0,2})/iu', $t, $m)) {
-            $result['subtotal'] = (float) str_replace(',', '', $m[1]);
+        if (! $result['invoice_date'] && preg_match('/(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/', $t, $m)) {
+            $result['invoice_date'] = $m[1].'-'.str_pad($m[2], 2, '0', STR_PAD_LEFT).'-'.str_pad($m[3], 2, '0', STR_PAD_LEFT);
         }
 
-        if (preg_match('/(?:^|\s)(?:TOTAL|المجموع|الإجمالي|NET\s*AMOUNT|AMOUNT\s*DUE|الصافي|المدفوع)[:\s]*([0-9٬,]+\.?\d{0,2})/im', $upper, $m)) {
-            $result['total'] = (float) str_replace([',', '٬'], '', $m[1]);
-        }
-        if ($result['total'] === null && preg_match('/([\d٫.,]+)\s*(?:SAR|ريال|ر\.س|﷼)/u', $t, $m)) {
-            $arabicIndic = ['٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4', '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9', '٫' => '.'];
-            $num = strtr(str_replace([',', '٬'], '', $m[1]), $arabicIndic);
-            if (is_numeric($num)) {
-                $result['total'] = (float) $num;
+        if (preg_match('/(?:SUBTOTAL|المجموع\s*الفرعي|الإجمالي\s*قبل|قبل\s*الضريبة)[:\s]*([0-9٠-٩,٬]+\.?\d{0,2})/iu', $t, $m)) {
+            $parsed = $this->parseMoneyToken($m[1]);
+            if ($parsed !== null) {
+                $result['subtotal'] = $parsed;
             }
         }
 
-        if (preg_match('/(?:VAT|ضريبة\s*القيمة|ضريبة|ض\.ق\.م)[:\s]*([0-9٬,]+\.?\d{0,2})/iu', $t, $m)) {
-            $result['vat_amount'] = (float) str_replace([',', '٬'], '', $m[1]);
+        if ($result['total'] === null) {
+            if (preg_match(
+                '/(?:^|\R)\s*(?:GRAND\s*)?TOTAL|المجموع\s*الكلي|الإجمالي\s*النهائي|المبلغ\s*الإجمالي|الصافي\s*الإجمالي|Invoice\s*Total|Amount\s*Due|NET\s*AMOUNT|Balance\s*Due|الصافي|المدفوع|المجموع\s*KSA|المجموع|الإجمالي)\s*[:\s]*([0-9٠-٩,٬]+\.?\d{0,2})\s*(?:SAR|ريال|ر\.?\s*س|﷼)?/iu',
+                $t,
+                $m
+            )) {
+                $parsed = $this->parseMoneyToken($m[1]);
+                if ($parsed !== null && $parsed > 0) {
+                    $result['total'] = $parsed;
+                }
+            }
         }
 
-        if (preg_match('/(?:VAT\s*(?:No|Number|Reg)|الرقم\s*الضريبي)[:\s]*(\d{10,15})/iu', $t, $m)) {
+        if ($result['total'] === null && preg_match('/(?:^|\s)(?:TOTAL|المجموع|الإجمالي|NET\s*AMOUNT|AMOUNT\s*DUE|الصافي|المدفوع)[:\s]*([0-9٠-٩,٬]+\.?\d{0,2})/im', $upper, $m)) {
+            $parsed = $this->parseMoneyToken($m[1]);
+            if ($parsed !== null) {
+                $result['total'] = $parsed;
+            }
+        }
+
+        if ($result['total'] === null) {
+            $guess = $this->extractLargestPlausibleSarAmount($t);
+            if ($guess !== null) {
+                $result['total'] = $guess;
+            }
+        }
+
+        if (preg_match('/(?:VAT|ضريبة\s*القيمة|ضريبة\s*مضافة|ضريبة|ض\.ق\.م|ض\.\s*ق\.?\s*م)[:\s]*([0-9٠-٩,٬]+\.?\d{0,2})/iu', $t, $m)) {
+            $parsed = $this->parseMoneyToken($m[1]);
+            if ($parsed !== null) {
+                $result['vat_amount'] = $parsed;
+            }
+        }
+
+        if ($result['vat_amount'] === null && $result['subtotal'] !== null && $result['total'] !== null && $result['total'] > $result['subtotal']) {
+            $result['vat_amount'] = round($result['total'] - $result['subtotal'], 2);
+        }
+
+        if (preg_match('/(?:VAT\s*(?:No|Number|Reg|ID)|الرقم\s*الضريبي|TRN|TIN)[:\s#]*(\d{10,15})/iu', $t, $m)) {
             $result['vat_number'] = $m[1];
         }
 
         return $result;
+    }
+
+    private function cleanSupplierNameCandidate(string $raw): ?string
+    {
+        $s = trim(preg_replace('/\s+/u', ' ', $raw) ?? '');
+        if (mb_strlen($s) < 3) {
+            return null;
+        }
+        if (preg_match('/^[\p{P}\p{S}\s]+$/u', $s)) {
+            return null;
+        }
+
+        return Str::limit($s, 200, '');
+    }
+
+    private function guessSupplierNameFromFirstLines(string $text): ?string
+    {
+        $lines = preg_split('/\R/u', $text) ?: [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || mb_strlen($line) < 6) {
+                continue;
+            }
+            if (preg_match('/\b(QR|ZATCA|invoice|فاتورة|tax|ضريبة|date|تاريخ|total|المجموع)\b/iu', $line)) {
+                continue;
+            }
+            if (preg_match('/^[\d\s.\-\/:]+$/', $line)) {
+                continue;
+            }
+            if (preg_match('/^[\p{P}\p{S}\s£€$]+$/u', $line)) {
+                continue;
+            }
+
+            return Str::limit($line, 200, '');
+        }
+
+        return null;
+    }
+
+    private function parseMoneyToken(string $raw): ?float
+    {
+        $arabicIndic = ['٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4', '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9', '٫' => '.'];
+        $num = strtr(str_replace([',', '٬', ' '], '', $raw), $arabicIndic);
+        if ($num === '' || ! is_numeric($num)) {
+            return null;
+        }
+
+        return (float) $num;
+    }
+
+    private function extractLargestPlausibleSarAmount(string $text): ?float
+    {
+        $best = null;
+        if (preg_match_all('/([\d٠-٩]+(?:[٫.,][\d٠-٩]+)?)\s*(?:SAR|ريال|ر\.?\s*س|﷼)/u', $text, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $v = $this->parseMoneyToken($m[1]);
+                if ($v !== null && $v > 0 && $v < 50000000 && ($best === null || $v > $best)) {
+                    $best = $v;
+                }
+            }
+        }
+
+        return $best;
     }
 }

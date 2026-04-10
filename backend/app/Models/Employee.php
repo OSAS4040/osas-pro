@@ -16,15 +16,26 @@ class Employee extends Model
         'uuid', 'company_id', 'branch_id', 'user_id', 'employee_number',
         'name', 'phone', 'email', 'national_id', 'position', 'department',
         'hire_date', 'termination_date', 'base_salary', 'status',
-        'skills', 'device_id',
+        'skills', 'device_id', 'hr_integrations', 'internal_notes',
     ];
 
     protected $casts = [
         'skills'           => 'array',
+        'hr_integrations'  => 'array',
         'base_salary'      => 'decimal:2',
         'hire_date'        => 'date',
         'termination_date' => 'date',
     ];
+
+    /**
+     * Mirrors `name` so workshop UIs using `full_name` display correctly in lists.
+     */
+    protected $appends = ['full_name'];
+
+    public function getFullNameAttribute(): string
+    {
+        return (string) ($this->name ?? '');
+    }
 
     protected static function booted(): void
     {

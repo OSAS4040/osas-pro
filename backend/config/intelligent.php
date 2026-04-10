@@ -1,7 +1,7 @@
 <?php
 
 /**
- * OSAS Intelligent layer — Phase 1 (foundation / events / observability).
+ * Osas Pro intelligent layer — Phase 1 (foundation / events / observability).
  *
  * All flags default to false in production; enable explicitly via .env when ready.
  * Core financial flows MUST remain unchanged when flags are off.

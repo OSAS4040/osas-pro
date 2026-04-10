@@ -1,16 +1,18 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">الحوكمة والسياسات</h1>
-        <p class="text-sm text-gray-500 mt-1">إدارة قواعد الأعمال، الموافقات، التدقيق، والتنبيهات</p>
+  <div class="app-shell-page space-y-6" dir="rtl">
+    <NavigationSourceHint />
+    <div class="page-head">
+      <div class="page-title-wrap">
+        <h1 class="page-title-xl">الحوكمة والسياسات</h1>
+        <p class="page-subtitle">إدارة قواعد الأعمال، الموافقات، التدقيق، والتنبيهات</p>
       </div>
     </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div v-for="stat in stats" :key="stat.label"
-           class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+           class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm"
+      >
         <div class="flex items-center gap-3">
           <div :class="stat.iconBg" class="w-10 h-10 rounded-lg flex items-center justify-center text-xl">
             {{ stat.icon }}
@@ -27,11 +29,12 @@
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div class="border-b border-gray-100 flex">
         <button v-for="tab in tabs" :key="tab.key"
-                @click="activeTab = tab.key"
                 :class="activeTab === tab.key
                   ? 'border-b-2 border-indigo-600 text-indigo-600 bg-indigo-50'
                   : 'text-gray-500 hover:text-gray-700'"
-                class="px-5 py-3 text-sm font-medium transition-colors">
+                class="px-5 py-3 text-sm font-medium transition-colors"
+                @click="activeTab = tab.key"
+        >
           {{ tab.label }}
           <span v-if="tab.badge" class="mr-1 inline-flex items-center justify-center w-5 h-5 text-xs rounded-full bg-red-100 text-red-600">
             {{ tab.badge }}
@@ -43,14 +46,13 @@
       <div v-if="activeTab === 'policies'" class="p-5">
         <div class="flex justify-between items-center mb-4">
           <h2 class="font-semibold text-gray-800">قواعد السياسات</h2>
-          <button @click="showPolicyForm = true"
-                  class="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">
+          <button class="btn btn-primary" @click="showPolicyForm = true">
             <span>＋</span> سياسة جديدة
           </button>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+        <div class="table-shell overflow-x-auto">
+          <table class="data-table">
             <thead>
               <tr class="text-right bg-gray-50">
                 <th class="px-4 py-3 text-gray-500 font-medium">الكود</th>
@@ -61,14 +63,14 @@
                 <th class="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody>
               <tr v-if="loadingPolicies">
                 <td colspan="6" class="text-center py-8 text-gray-400">جارٍ التحميل…</td>
               </tr>
               <tr v-else-if="!policies.length">
                 <td colspan="6" class="text-center py-8 text-gray-400">لا توجد سياسات بعد</td>
               </tr>
-              <tr v-else v-for="p in policies" :key="p.id" class="hover:bg-gray-50">
+              <tr v-for="p in policies" v-else :key="p.id">
                 <td class="px-4 py-3 font-mono text-indigo-700">{{ p.code }}</td>
                 <td class="px-4 py-3 text-gray-600">{{ operatorLabel(p.operator) }}</td>
                 <td class="px-4 py-3 font-semibold">{{ p.value?.join?.(', ') ?? p.value }}</td>
@@ -79,12 +81,13 @@
                 </td>
                 <td class="px-4 py-3">
                   <span :class="p.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'"
-                        class="px-2 py-0.5 rounded-full text-xs">
+                        class="px-2 py-0.5 rounded-full text-xs"
+                  >
                     {{ p.is_active ? 'فعّالة' : 'معطّلة' }}
                   </span>
                 </td>
                 <td class="px-4 py-3">
-                  <button @click="deletePolicy(p.id)" class="text-red-400 hover:text-red-600 text-xs">حذف</button>
+                  <button class="text-red-400 hover:text-red-600 text-xs" @click="deletePolicy(p.id)">حذف</button>
                 </td>
               </tr>
             </tbody>
@@ -97,22 +100,20 @@
           <div class="flex gap-3 items-end">
             <div class="flex-1">
               <label class="text-xs text-gray-600 mb-1 block">كود السياسة</label>
-              <input v-model="evalCode" type="text" placeholder="e.g. discount.max"
-                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+              <input v-model="evalCode" type="text" placeholder="e.g. discount.max" class="field" />
             </div>
             <div class="flex-1">
               <label class="text-xs text-gray-600 mb-1 block">القيمة</label>
-              <input v-model.number="evalValue" type="number"
-                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+              <input v-model.number="evalValue" type="number" class="field" />
             </div>
-            <button @click="evaluatePolicy"
-                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">
+            <button class="btn btn-primary" @click="evaluatePolicy">
               اختبر
             </button>
           </div>
           <div v-if="evalResult" class="mt-3">
             <span :class="evalResult.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-                  class="px-3 py-1.5 rounded-lg text-sm font-medium">
+                  class="px-3 py-1.5 rounded-lg text-sm font-medium"
+            >
               {{ evalResult.passed ? '✅ مقبول' : `❌ ${actionLabel(evalResult.action)}` }}
             </span>
           </div>
@@ -123,9 +124,10 @@
       <div v-if="activeTab === 'workflows'" class="p-5">
         <div class="flex gap-2 mb-4">
           <button v-for="s in ['pending','approved','rejected','all']" :key="s"
-                  @click="wfStatus = s; loadWorkflows()"
                   :class="wfStatus === s ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'"
-                  class="px-3 py-1.5 rounded-lg text-sm">
+                  class="px-3 py-1.5 rounded-lg text-sm"
+                  @click="wfStatus = s; loadWorkflows()"
+          >
             {{ { pending: 'معلقة', approved: 'معتمدة', rejected: 'مرفوضة', all: 'الكل' }[s] }}
           </button>
         </div>
@@ -134,7 +136,8 @@
         <div v-else-if="!workflows.data?.length" class="text-center py-8 text-gray-400">لا توجد طلبات</div>
         <div v-else class="space-y-3">
           <div v-for="wf in workflows.data" :key="wf.id"
-               class="border border-gray-100 rounded-lg p-4 hover:bg-gray-50">
+               class="border border-gray-100 rounded-lg p-4 hover:bg-gray-50"
+          >
             <div class="flex justify-between items-start">
               <div>
                 <div class="font-medium text-gray-800">{{ wf.subject_type?.split('\\').pop() }} #{{ wf.subject_id }}</div>
@@ -148,10 +151,16 @@
                   {{ statusLabel(wf.status) }}
                 </span>
                 <template v-if="wf.status === 'pending'">
-                  <button @click="resolveWorkflow(wf.id, 'approve')"
-                          class="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs hover:bg-green-200">موافقة</button>
-                  <button @click="resolveWorkflow(wf.id, 'reject')"
-                          class="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs hover:bg-red-200">رفض</button>
+                  <button class="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs hover:bg-green-200"
+                          @click="resolveWorkflow(wf.id, 'approve')"
+                  >
+                    موافقة
+                  </button>
+                  <button class="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs hover:bg-red-200"
+                          @click="resolveWorkflow(wf.id, 'reject')"
+                  >
+                    رفض
+                  </button>
                 </template>
               </div>
             </div>
@@ -162,17 +171,17 @@
       <!-- Audit Tab -->
       <div v-if="activeTab === 'audit'" class="p-5">
         <div class="flex gap-3 mb-4">
-          <input v-model="auditFilter.action" placeholder="نوع الفعل" @input="loadAuditLogs"
-                 class="border border-gray-200 rounded-lg px-3 py-2 text-sm w-40" />
-          <input v-model="auditFilter.from" type="date" @change="loadAuditLogs"
-                 class="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
-          <input v-model="auditFilter.to" type="date" @change="loadAuditLogs"
-                 class="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+          <input v-model="auditFilter.action" placeholder="نوع الفعل" class="border border-gray-200 rounded-lg px-3 py-2 text-sm w-40"
+                 @input="loadAuditLogs"
+          />
+          <div class="min-w-[260px]">
+            <SmartDatePicker mode="range" :from-value="auditFilter.from" :to-value="auditFilter.to" @change="onAuditDateRangeChange" />
+          </div>
         </div>
 
         <div v-if="loadingAudit" class="text-center py-8 text-gray-400">جارٍ التحميل…</div>
-        <div v-else class="overflow-x-auto">
-          <table class="w-full text-sm">
+        <div v-else class="table-shell overflow-x-auto">
+          <table class="data-table">
             <thead>
               <tr class="bg-gray-50 text-right">
                 <th class="px-4 py-2 text-gray-500 font-medium">الفعل</th>
@@ -181,16 +190,24 @@
                 <th class="px-4 py-2 text-gray-500 font-medium">التاريخ</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50">
+            <tbody>
               <tr v-if="!auditLogs.data?.length">
                 <td colspan="4" class="text-center py-6 text-gray-400">لا توجد سجلات</td>
               </tr>
-              <tr v-else v-for="log in auditLogs.data" :key="log.id" class="hover:bg-gray-50">
-                <td class="px-4 py-2 font-mono text-xs text-indigo-700">{{ log.action }}</td>
-                <td class="px-4 py-2 text-gray-600 text-xs">{{ log.subject_type?.split('\\').pop() }} #{{ log.subject_id }}</td>
-                <td class="px-4 py-2 text-gray-600">{{ log.user_id ?? '—' }}</td>
-                <td class="px-4 py-2 text-gray-400 text-xs">{{ formatDate(log.created_at) }}</td>
-              </tr>
+              <template v-else>
+                <tr v-for="log in auditLogs.data" :key="log.id">
+                  <td class="px-4 py-2 text-sm text-gray-800 dark:text-slate-200" :title="log.action">
+                    {{ formatAuditAction(log.action) }}
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-600 dark:text-slate-300">
+                    {{ formatAuditSubject(log.subject_type, log.subject_id) }}
+                  </td>
+                  <td class="px-4 py-2 text-sm text-gray-600 dark:text-slate-300">
+                    {{ formatAuditUserId(log.user_id) }}
+                  </td>
+                  <td class="px-4 py-2 text-gray-400 dark:text-slate-500 text-xs">{{ formatDate(log.created_at) }}</td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
@@ -199,17 +216,19 @@
       <!-- Alerts Tab -->
       <div v-if="activeTab === 'alerts'" class="p-5">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="font-semibold text-gray-800">التنبيهات
+          <h2 class="font-semibold text-gray-800">
+            التنبيهات
             <span v-if="unreadCount" class="mr-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">{{ unreadCount }}</span>
           </h2>
-          <button @click="markAllRead" class="text-sm text-indigo-600 hover:underline">تعليم الكل كمقروء</button>
+          <button class="text-sm text-indigo-600 hover:underline" @click="markAllRead">تعليم الكل كمقروء</button>
         </div>
 
         <div v-if="!alerts.data?.length" class="text-center py-8 text-gray-400">لا توجد تنبيهات</div>
         <div v-else class="space-y-2">
           <div v-for="a in alerts.data" :key="a.id"
                :class="a.is_read ? 'opacity-60' : 'border-r-4 border-indigo-500'"
-               class="bg-gray-50 rounded-lg p-3 text-sm">
+               class="bg-gray-50 rounded-lg p-3 text-sm"
+          >
             <div class="flex justify-between">
               <span :class="severityClass(a.severity)" class="text-xs font-medium px-2 py-0.5 rounded-full">
                 {{ ({ info: 'معلومة', warning: 'تحذير', critical: 'حرج' } as Record<string,string>)[a.severity] ?? a.severity }}
@@ -223,19 +242,20 @@
     </div>
 
     <!-- Policy Form Modal -->
-    <div v-if="showPolicyForm" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+    <div v-if="showPolicyForm" class="modal-overlay">
+      <div class="modal-box p-6 max-w-md">
         <h3 class="font-bold text-gray-900 text-lg mb-4">سياسة جديدة</h3>
-        <form @submit.prevent="savePolicy" class="space-y-4">
+        <form class="form-shell" @submit.prevent="savePolicy">
           <div>
             <label class="text-sm text-gray-600 mb-1 block">الكود <span class="text-red-500">*</span></label>
             <input v-model="policyForm.code" required placeholder="discount.max"
-                   class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+                   class="field"
+            />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-sm text-gray-600 mb-1 block">المشغّل</label>
-              <select v-model="policyForm.operator" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+              <select v-model="policyForm.operator" class="field">
                 <option value="lte">أقل من أو يساوي (≤)</option>
                 <option value="gte">أكبر من أو يساوي (≥)</option>
                 <option value="eq">يساوي (=)</option>
@@ -245,21 +265,21 @@
             <div>
               <label class="text-sm text-gray-600 mb-1 block">القيمة (أو min,max)</label>
               <input v-model="policyForm.valueRaw" required placeholder="30"
-                     class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+                     class="field"
+              />
             </div>
           </div>
           <div>
             <label class="text-sm text-gray-600 mb-1 block">الإجراء عند المخالفة</label>
-            <select v-model="policyForm.action" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+            <select v-model="policyForm.action" class="field">
               <option value="require_approval">يحتاج موافقة</option>
               <option value="block">حجب العملية</option>
               <option value="alert">تنبيه فقط</option>
             </select>
           </div>
-          <div class="flex justify-end gap-3 pt-2">
-            <button type="button" @click="showPolicyForm = false" class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-100 rounded-lg">إلغاء</button>
-            <button type="submit" :disabled="saving"
-                    class="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50">
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" @click="showPolicyForm = false">إلغاء</button>
+            <button type="submit" :disabled="saving" class="btn btn-primary disabled:opacity-50">
               {{ saving ? 'جارٍ الحفظ…' : 'حفظ' }}
             </button>
           </div>
@@ -272,6 +292,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api'
+import { appConfirm } from '@/services/appConfirmDialog'
+import NavigationSourceHint from '@/components/NavigationSourceHint.vue'
+import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
+import { formatAuditAction, formatAuditSubject, formatAuditUserId } from '@/utils/governanceAuditLabels'
 
 const activeTab  = ref<'policies'|'workflows'|'audit'|'alerts'>('policies')
 const tabs = computed((): { key: 'policies'|'workflows'|'audit'|'alerts'; label: string; badge?: number }[] => [
@@ -319,7 +343,13 @@ async function savePolicy() {
 }
 
 async function deletePolicy(id: number) {
-  if (!confirm('هل تريد حذف هذه السياسة؟')) return
+  const ok = await appConfirm({
+    title: 'حذف السياسة',
+    message: 'هل تريد حذف هذه السياسة؟',
+    variant: 'danger',
+    confirmLabel: 'حذف',
+  })
+  if (!ok) return
   await api.delete(`/governance/policies/${id}`)
   await loadPolicies()
   await loadStats()
@@ -367,6 +397,12 @@ async function loadAuditLogs() {
     const r = await api.get(`/governance/audit-logs?${params}`)
     auditLogs.value = r.data
   } finally { loadingAudit.value = false }
+}
+
+function onAuditDateRangeChange(val: { from: string; to: string }) {
+  auditFilter.value.from = val.from
+  auditFilter.value.to = val.to
+  loadAuditLogs()
 }
 
 // ── Alerts ──

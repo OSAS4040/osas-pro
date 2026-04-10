@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Services\ApprovalWorkflowService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -9,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class LeaveController extends Controller
 {
+    public function __construct(private readonly ApprovalWorkflowService $approvalWorkflowService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $companyId = $request->user()->company_id;
@@ -74,6 +79,17 @@ class LeaveController extends Controller
         ]);
 
         $leave = DB::table('leaves')->find($id);
+        $this->approvalWorkflowService->ensurePendingWorkflow(
+            $companyId,
+            'leave',
+            $id,
+            (int) $request->user()->id,
+            null,
+            'leave.approval',
+            'Leave request submitted',
+            ['module' => 'leaves'],
+            1
+        );
         return response()->json(['data' => $leave, 'message' => 'Leave request submitted'], 201);
     }
 
@@ -85,12 +101,40 @@ class LeaveController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        DB::table('leaves')
+        $affected = DB::table('leaves')
             ->where('id', $id)
             ->where('company_id', $companyId)
+            ->where('status', 'pending')
             ->update(['status' => 'approved', 'approved_by' => $request->user()->id, 'updated_at' => now()]);
 
-        return response()->json(['message' => 'Leave approved']);
+        if ($affected === 0) {
+            return response()->json([
+                'message' => 'Leave status transition current -> approved is not allowed.',
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
+        try {
+            $this->approvalWorkflowService->transitionBySubject(
+                $companyId,
+                'leave',
+                $id,
+                'approved',
+                (int) $request->user()->id,
+                (string) $request->input('note', '')
+            );
+        } catch (\DomainException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
+        return response()->json(['message' => 'Leave approved', 'trace_id' => app('trace_id')]);
     }
 
     public function reject(Request $request, int $id): JsonResponse
@@ -101,12 +145,40 @@ class LeaveController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        DB::table('leaves')
+        $affected = DB::table('leaves')
             ->where('id', $id)
             ->where('company_id', $companyId)
+            ->where('status', 'pending')
             ->update(['status' => 'rejected', 'updated_at' => now()]);
 
-        return response()->json(['message' => 'Leave rejected']);
+        if ($affected === 0) {
+            return response()->json([
+                'message' => 'Leave status transition current -> rejected is not allowed.',
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
+        try {
+            $this->approvalWorkflowService->transitionBySubject(
+                $companyId,
+                'leave',
+                $id,
+                'rejected',
+                (int) $request->user()->id,
+                (string) $request->input('note', '')
+            );
+        } catch (\DomainException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
+        return response()->json(['message' => 'Leave rejected', 'trace_id' => app('trace_id')]);
     }
 
     public function destroy(Request $request, int $id): JsonResponse

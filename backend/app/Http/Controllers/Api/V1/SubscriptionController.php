@@ -83,10 +83,20 @@ class SubscriptionController extends Controller
         $plan       = Plan::findBySlug($data['plan']);
         $months     = $data['months'] ?? 1;
 
-        $current = Subscription::where('company_id', $user->company_id)
-            ->whereIn('status', ['active', 'grace_period', 'suspended'])
-            ->latest()
-            ->first();
+        $current = Subscription::where('company_id', $user->company_id)->latest()->first();
+
+        if ($current !== null) {
+            $fromStatus   = (string) $current->status->value;
+            $renewableFrom = ['active', 'grace_period', 'suspended'];
+            if (! in_array($fromStatus, $renewableFrom, true)) {
+                return response()->json([
+                    'message'  => "Subscription status transition {$fromStatus} -> renew is not allowed.",
+                    'code'     => 'TRANSITION_NOT_ALLOWED',
+                    'status'   => 409,
+                    'trace_id' => app('trace_id'),
+                ], 409);
+            }
+        }
 
         $startsAt = ($current && $current->ends_at->isFuture()) ? $current->ends_at : now();
 

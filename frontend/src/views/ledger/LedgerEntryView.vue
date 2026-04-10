@@ -5,8 +5,9 @@
         <RouterLink :to="{ name: 'ledger' }" class="text-sm text-blue-500 hover:underline mb-1 block">← العودة لدفتر الأستاذ</RouterLink>
         <h1 class="text-2xl font-bold text-gray-800">{{ entry?.entry_number }}</h1>
       </div>
-      <button v-if="entry && !entry.reversed_by_entry_id" @click="showReversal = true"
-        class="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm hover:bg-red-100 transition">
+      <button v-if="entry && !entry.reversed_by_entry_id" class="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm hover:bg-red-100 transition"
+              @click="showReversal = true"
+      >
         إلغاء القيد (Reversal)
       </button>
     </div>
@@ -81,10 +82,10 @@
         <p class="text-sm text-gray-600">سيتم إنشاء قيد عكسي كامل. هذا الإجراء لا يمكن التراجع عنه.</p>
         <textarea v-model="reversalReason" placeholder="سبب الإلغاء..." class="w-full border rounded-lg p-3 text-sm h-24 resize-none" />
         <div class="flex gap-3">
-          <button @click="submitReversal" :disabled="!reversalReason.trim()" class="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm disabled:opacity-40">
+          <button :disabled="!reversalReason.trim()" class="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm disabled:opacity-40" @click="submitReversal">
             تأكيد الإلغاء
           </button>
-          <button @click="showReversal = false" class="flex-1 border py-2 rounded-lg text-sm">إلغاء</button>
+          <button class="flex-1 border py-2 rounded-lg text-sm" @click="showReversal = false">إلغاء</button>
         </div>
       </div>
     </div>
@@ -93,11 +94,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import api from '@/services/api'
 
 const route  = useRoute()
-const router = useRouter()
 const entry  = ref<any>(null)
 const loading = ref(false)
 const showReversal  = ref(false)

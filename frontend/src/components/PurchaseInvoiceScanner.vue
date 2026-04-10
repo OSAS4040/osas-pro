@@ -10,8 +10,8 @@
 
     <Teleport to="body">
       <Transition name="modal-fade">
-        <div v-if="visible" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" dir="rtl">
-          <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div v-if="visible" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 relative" dir="rtl">
+          <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative z-10">
             <!-- Header -->
             <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
               <div>
@@ -81,15 +81,30 @@
                   <div class="p-3 space-y-2">
                     <div>
                       <label class="text-[10px] text-gray-400">المورد (من النظام)</label>
-                      <select v-model.number="item.data.supplier_id" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white">
-                        <option :value="0">— اختر مورداً للمراجعة قبل الحفظ —</option>
-                        <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
-                      </select>
+                      <div class="flex gap-1.5 items-stretch">
+                        <select v-model.number="item.data.supplier_id" class="min-w-0 flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white">
+                          <option :value="0">— اختر مورداً للمراجعة قبل الحفظ —</option>
+                          <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
+                        </select>
+                        <button
+                          v-if="canQuickAddSupplier"
+                          type="button"
+                          class="shrink-0 inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-40"
+                          title="إضافة مورد سريعاً"
+                          :disabled="quickAddSaving"
+                          @click="openQuickAddForItem(idx)"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p v-if="item.data.supplier_name && !item.data.supplier_id" class="text-[10px] text-amber-700 mt-0.5">
+                        اسم من الفاتورة: {{ item.data.supplier_name }} — اختر مطابقة أو أضف مورداً.
+                      </p>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                       <div>
                         <label class="text-[10px] text-gray-400">رقم الفاتورة</label>
-                        <input v-model="item.data.invoice_number" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400" placeholder="تلقائي..." />
+                        <input v-model="item.data.invoice_number" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400" placeholder="يُملأ من OCR…" />
                       </div>
                       <div>
                         <label class="text-[10px] text-gray-400">التاريخ</label>
@@ -97,11 +112,25 @@
                       </div>
                       <div>
                         <label class="text-[10px] text-gray-400">الإجمالي</label>
-                        <input v-model.number="item.data.total" type="number" step="0.01" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400" placeholder="0.00" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                          placeholder="0.00"
+                          :value="item.data.total == null ? '' : item.data.total"
+                          @input="onMoneyInput(item, 'total', $event)"
+                        />
                       </div>
                       <div>
                         <label class="text-[10px] text-gray-400">ضريبة القيمة المضافة</label>
-                        <input v-model.number="item.data.vat_amount" type="number" step="0.01" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400" placeholder="0.00" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                          placeholder="0.00"
+                          :value="item.data.vat_amount == null ? '' : item.data.vat_amount"
+                          @input="onMoneyInput(item, 'vat_amount', $event)"
+                        />
                       </div>
                     </div>
                     <div>
@@ -165,6 +194,71 @@
               </div>
             </div>
           </div>
+
+          <!-- إضافة مورد سريعة -->
+          <div
+            v-if="quickAddOpen"
+            class="absolute inset-0 z-[70] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[1px]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quick-supplier-title"
+            @click.self="quickAddOpen = false"
+          >
+            <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl border border-gray-100" @click.stop>
+              <h4 id="quick-supplier-title" class="font-bold text-gray-900 mb-1">إضافة مورد</h4>
+              <p class="text-xs text-gray-500 mb-4">يُحفظ في دليل الموردين ويُربط بهذه الفاتورة.</p>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-[10px] text-gray-500 mb-0.5">اسم المورد <span class="text-red-500">*</span></label>
+                  <input
+                    v-model="quickAddForm.name"
+                    type="text"
+                    class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    placeholder="الاسم كما يظهر في الفاتورة أو التجاري"
+                    autocomplete="organization"
+                  />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-gray-500 mb-0.5">الهاتف (اختياري)</label>
+                  <input
+                    v-model="quickAddForm.phone"
+                    type="tel"
+                    dir="ltr"
+                    class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    placeholder="9665…"
+                  />
+                </div>
+                <div>
+                  <label class="block text-[10px] text-gray-500 mb-0.5">الرقم الضريبي (اختياري)</label>
+                  <input
+                    v-model="quickAddForm.tax_number"
+                    type="text"
+                    dir="ltr"
+                    class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    placeholder="15 رقماً"
+                  />
+                </div>
+              </div>
+              <div class="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  :disabled="quickAddSaving"
+                  @click="quickAddOpen = false"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-45"
+                  :disabled="quickAddSaving || !quickAddForm.name.trim()"
+                  @click="submitQuickAdd"
+                >
+                  {{ quickAddSaving ? 'جارٍ الحفظ…' : 'حفظ واختيار' }}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </Transition>
     </Teleport>
@@ -177,10 +271,13 @@ import { DocumentArrowUpIcon, XMarkIcon, DocumentMagnifyingGlassIcon, CheckCircl
 import apiClient from '@/lib/apiClient'
 import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 import { convertPdfFileToJpegFile, isPdfFile } from '@/utils/pdfToImageFile'
 
 const emit = defineEmits<{ (e: 'saved', invoices: any[]): void }>()
 const toast = useToast()
+const auth = useAuthStore()
+const canQuickAddSupplier = computed(() => auth.hasPermission('suppliers.create'))
 
 const visible   = ref(false)
 const suppliers = ref<{ id: number; name: string }[]>([])
@@ -190,6 +287,11 @@ const saving    = ref(false)
 const saveError = ref('')
 const allSaved  = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
+
+const quickAddOpen = ref(false)
+const quickAddSaving = ref(false)
+const quickAddItemIdx = ref<number | null>(null)
+const quickAddForm = ref({ name: '', phone: '', tax_number: '' })
 
 interface ScanItem {
   file: File
@@ -236,39 +338,133 @@ function hasUsefulExtraction(data: ScanItem['data']): boolean {
   )
 }
 
+function coalesceNumber(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  const s = String(v).trim().replace(/[^\d.\-٫٬,]/g, '').replace(/٫/g, '.').replace(/[٬,]/g, '')
+  const n = parseFloat(s)
+  return Number.isFinite(n) ? n : null
+}
+
 function deriveTotalFromLineItems(item: ScanItem): void {
   if (item.data.total != null && Number(item.data.total) > 0) return
   const lines = item.data.line_items
   if (!lines?.length) return
   let sum = 0
+  let any = false
   for (const L of lines) {
     const q = Number(L.qty ?? 1) || 1
     const p = Number(L.unit_price ?? 0) || 0
-    sum += q * p
+    if (p > 0) {
+      sum += q * p
+      any = true
+    }
   }
-  if (sum > 0) {
+  if (any && sum > 0) {
     item.data.total = Math.round(sum * 100) / 100
   }
 }
 
-function applyOcrResultToItem(item: ScanItem, extracted: Record<string, unknown>): void {
-  item.data.invoice_number = (extracted.invoice_number as string) ?? ''
-  item.data.invoice_date = (extracted.invoice_date as string) ?? ''
-  item.data.total = (extracted.total as number | null | undefined) ?? null
-  item.data.vat_amount = (extracted.vat_amount as number | null | undefined) ?? null
-  item.data.supplier_name = (extracted.supplier_name as string) ?? ''
-  item.data.vat_number = (extracted.vat_number as string) ?? ''
+function normalizeOcrRow(row: Record<string, unknown>): Record<string, unknown> {
+  if (row.data && typeof row.data === 'object' && row.data !== null) {
+    return { ...row, ...(row.data as Record<string, unknown>) }
+  }
+  return row
+}
+
+function applyOcrResultToItem(item: ScanItem, raw: Record<string, unknown>): void {
+  const extracted = normalizeOcrRow(raw)
+  item.data.invoice_number = String(extracted.invoice_number ?? '').trim()
+  const invDate = extracted.invoice_date
+  item.data.invoice_date = typeof invDate === 'string' ? invDate.trim() : invDate != null ? String(invDate) : ''
+  item.data.total = coalesceNumber(extracted.total)
+  item.data.vat_amount = coalesceNumber(extracted.vat_amount)
+  item.data.supplier_name = String(extracted.supplier_name ?? '').trim()
+  item.data.vat_number = String(extracted.vat_number ?? '').trim()
   item.data.line_items = Array.isArray(extracted.line_items)
     ? (extracted.line_items as ScanItem['data']['line_items'])
     : []
   deriveTotalFromLineItems(item)
-  if (!item.data.line_items.length && item.data.total != null) {
+  if (!item.data.line_items.length && item.data.total != null && item.data.total > 0) {
     item.data.line_items = [{
       description: 'بند موحّد من الفاتورة',
       qty: 1,
       unit_price: Number(item.data.total),
       matched: false,
     }]
+  }
+  tryMatchSupplierForItem(item)
+}
+
+function normName(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[^\p{L}\p{N}\s]+/gu, '')
+}
+
+function tryMatchSupplierForItem(item: ScanItem): void {
+  if (item.data.supplier_id) return
+  const ocrName = item.data.supplier_name.trim()
+  if (ocrName.length < 2) return
+  const n = normName(ocrName)
+  for (const s of suppliers.value) {
+    const sn = normName(s.name)
+    if (!sn) continue
+    if (sn === n || n.includes(sn) || sn.includes(n)) {
+      item.data.supplier_id = s.id
+      return
+    }
+  }
+}
+
+function onMoneyInput(item: ScanItem, key: 'total' | 'vat_amount', e: Event) {
+  const raw = (e.target as HTMLInputElement).value
+  item.data[key] = raw === '' ? null : Number(raw)
+}
+
+function openQuickAddForItem(idx: number) {
+  const it = items.value[idx]
+  quickAddItemIdx.value = idx
+  quickAddForm.value = {
+    name: (it?.data.supplier_name || '').trim() || '',
+    phone: '',
+    tax_number: (it?.data.vat_number || '').trim() || '',
+  }
+  quickAddOpen.value = true
+}
+
+async function submitQuickAdd() {
+  const name = quickAddForm.value.name.trim()
+  if (!name) return
+  quickAddSaving.value = true
+  try {
+    const { data } = await apiClient.post('/suppliers', {
+      name,
+      phone: quickAddForm.value.phone.trim() || undefined,
+      tax_number: quickAddForm.value.tax_number.trim() || undefined,
+    })
+    const row = data?.data ?? data
+    const id = Number(row?.id)
+    if (!Number.isFinite(id)) {
+      toast.error('استجابة غير متوقعة من الخادم')
+      return
+    }
+    const label = String(row?.name ?? name)
+    if (!suppliers.value.some((s) => s.id === id)) {
+      suppliers.value = [...suppliers.value, { id, name: label }].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
+    }
+    const idx = quickAddItemIdx.value
+    if (idx != null && items.value[idx]) {
+      items.value[idx].data.supplier_id = id
+    }
+    quickAddOpen.value = false
+    toast.success('تم إنشاء المورد')
+  } catch {
+    toast.error('تعذّر إنشاء المورد — تحقق من الصلاحيات (suppliers.create)')
+  } finally {
+    quickAddSaving.value = false
   }
 }
 
@@ -295,6 +491,18 @@ async function loadSuppliers() {
 }
 
 watch(visible, v => { if (v) loadSuppliers() })
+
+watch(
+  suppliers,
+  () => {
+    for (const item of items.value) {
+      if (item.scanComplete && !item.saved && !item.data.supplier_id) {
+        tryMatchSupplierForItem(item)
+      }
+    }
+  },
+  { deep: true },
+)
 
 async function toBase64(file: File): Promise<string> {
   return new Promise((res, rej) => {
@@ -441,7 +649,8 @@ async function saveAll() {
 }
 
 function close() {
-  if (saving.value) return
+  if (saving.value || quickAddSaving.value) return
+  quickAddOpen.value = false
   visible.value  = false
   allSaved.value = false
   saveError.value = ''

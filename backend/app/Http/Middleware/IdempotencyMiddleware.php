@@ -4,8 +4,9 @@ namespace App\Http\Middleware;
 
 use App\Models\IdempotencyKey;
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class IdempotencyMiddleware
@@ -21,9 +22,18 @@ class IdempotencyMiddleware
             ], 422);
         }
 
-        $companyId   = app('tenant_company_id');
-        $endpoint    = $request->path();
-        $payload = $request->except(['idempotency_key']);
+        $companyId = app('tenant_company_id');
+        $endpoint  = $request->path();
+        $payload   = $request->except(['idempotency_key']);
+        foreach ($request->route()?->parameters() ?? [] as $name => $value) {
+            if ($value instanceof Model) {
+                $value = $value->getKey();
+            }
+            if (! is_scalar($value) && $value !== null) {
+                continue;
+            }
+            $payload[Str::snake((string) $name)] = $this->normalizeHashScalar($value);
+        }
         ksort($payload);
         $requestHash = hash('sha256', json_encode($payload));
 
@@ -86,5 +96,20 @@ class IdempotencyMiddleware
         }
 
         return $response;
+    }
+
+    private function normalizeHashScalar(mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (is_string($value) && $value !== '' && ctype_digit($value)) {
+            return (int) $value;
+        }
+        if (is_float($value)) {
+            return round($value, 10);
+        }
+
+        return $value;
     }
 }

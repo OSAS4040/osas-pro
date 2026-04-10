@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Services\ApprovalWorkflowService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -9,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class SalaryController extends Controller
 {
+    public function __construct(private readonly ApprovalWorkflowService $approvalWorkflowService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $companyId = $request->user()->company_id;
@@ -83,6 +88,17 @@ class SalaryController extends Controller
         ]);
 
         $salary = DB::table('salaries')->find($id);
+        $this->approvalWorkflowService->ensurePendingWorkflow(
+            $companyId,
+            'salary',
+            $id,
+            (int) $request->user()->id,
+            null,
+            'salary.approval',
+            'Salary draft created',
+            ['module' => 'salaries'],
+            1
+        );
         return response()->json(['data' => $salary, 'message' => 'Salary record created'], 201);
     }
 
@@ -94,12 +110,40 @@ class SalaryController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        DB::table('salaries')
+        $affected = DB::table('salaries')
             ->where('id', $id)
             ->where('company_id', $companyId)
+            ->where('status', 'draft')
             ->update(['status' => 'approved', 'approved_by' => $request->user()->id, 'updated_at' => now()]);
 
-        return response()->json(['message' => 'Salary approved']);
+        if ($affected === 0) {
+            return response()->json([
+                'message' => 'Salary status transition current -> approved is not allowed.',
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
+        try {
+            $this->approvalWorkflowService->transitionBySubject(
+                $companyId,
+                'salary',
+                $id,
+                'approved',
+                (int) $request->user()->id,
+                (string) $request->input('note', '')
+            );
+        } catch (\DomainException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
+        return response()->json(['message' => 'Salary approved', 'trace_id' => app('trace_id')]);
     }
 
     public function pay(Request $request, int $id): JsonResponse

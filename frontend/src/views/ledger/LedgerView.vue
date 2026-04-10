@@ -12,8 +12,9 @@
           <option value="reversal">إلغاء</option>
           <option value="adjustment">تسوية</option>
         </select>
-        <input v-model="fromDate" type="date" class="border rounded-lg px-3 py-2 text-sm" />
-        <input v-model="toDate"   type="date" class="border rounded-lg px-3 py-2 text-sm" />
+        <div class="min-w-[260px]">
+          <SmartDatePicker mode="range" :from-value="fromDate" :to-value="toDate" @change="onDateRangeChange" />
+        </div>
       </div>
     </div>
 
@@ -58,8 +59,8 @@
     <div class="flex justify-between items-center text-sm text-gray-500">
       <span>إجمالي {{ meta?.total ?? 0 }} قيد</span>
       <div class="flex gap-2">
-        <button :disabled="page <= 1"       @click="page--" class="px-3 py-1 border rounded disabled:opacity-40">السابق</button>
-        <button :disabled="page >= lastPage" @click="page++" class="px-3 py-1 border rounded disabled:opacity-40">التالي</button>
+        <button :disabled="page <= 1" class="px-3 py-1 border rounded disabled:opacity-40" @click="page--">السابق</button>
+        <button :disabled="page >= lastPage" class="px-3 py-1 border rounded disabled:opacity-40" @click="page++">التالي</button>
       </div>
     </div>
   </div>
@@ -69,6 +70,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '@/services/api'
+import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
 
 const entries   = ref<any[]>([])
 const meta      = ref<any>(null)
@@ -79,6 +81,11 @@ const fromDate  = ref('')
 const toDate    = ref('')
 const page      = ref(1)
 const lastPage  = ref(1)
+
+function onDateRangeChange(val: { from: string; to: string }) {
+  fromDate.value = val.from
+  toDate.value = val.to
+}
 
 async function load() {
   loading.value = true

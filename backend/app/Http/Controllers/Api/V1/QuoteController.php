@@ -3,11 +3,15 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Quote;
 use App\Models\QuoteItem;
+use App\Models\Company;
+use App\Services\Config\ConfigResolverService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
 class QuoteController extends Controller {
+    public function __construct(private readonly ConfigResolverService $configResolver) {}
+
     public function index(Request $r) {
         $q = Quote::with(['customer','createdBy'])
             ->where('company_id', $r->user()->company_id)
@@ -19,22 +23,55 @@ class QuoteController extends Controller {
     }
 
     public function store(Request $r) {
-        $r->validate([
-            'customer_id' => 'nullable|integer',
-            'issue_date'  => 'required|date',
-            'expiry_date' => 'nullable|date',
-            'notes'       => 'nullable|string',
-            'items'       => 'required|array|min:1',
-            'items.*.name'       => 'required|string',
-            'items.*.quantity'   => 'required|numeric|min:0',
-            'items.*.unit_price' => 'required|numeric|min:0',
-        ]);
+        if (! $this->isEnabled($r, 'quotes.enabled', true)) {
+            return response()->json(['message' => 'عروض الأسعار غير مفعّلة في إعدادات النظام.', 'trace_id' => app('trace_id')], 403);
+        }
+
+        $r->validate(
+            [
+                'customer_id' => 'nullable|integer',
+                'issue_date'  => 'required|date',
+                'expiry_date' => 'nullable|date',
+                'notes'       => 'nullable|string',
+                'items'       => 'required|array|min:1',
+                'items.*.name'       => 'required|string',
+                'items.*.quantity'   => 'required|numeric|min:0',
+                'items.*.unit_price' => 'required|numeric|min:0',
+            ],
+            [
+                'customer_id.integer'         => 'معرّف العميل غير صالح.',
+                'issue_date.required'        => 'تاريخ إصدار العرض مطلوب.',
+                'issue_date.date'          => 'تاريخ الإصدار غير صالح.',
+                'expiry_date.date'         => 'تاريخ الانتهاء غير صالح.',
+                'items.required'           => 'أضف بندًا واحدًا على الأقل باسم وسعر.',
+                'items.min'                => 'أضف بندًا واحدًا على الأقل باسم وسعر.',
+                'items.*.name.required'    => 'اسم البند مطلوب.',
+                'items.*.quantity.required'=> 'كمية البند مطلوبة.',
+                'items.*.quantity.numeric' => 'الكمية يجب أن تكون رقمًا.',
+                'items.*.quantity.min'     => 'الكمية لا يمكن أن تكون سالبة.',
+                'items.*.unit_price.required'=> 'سعر وحدة البند مطلوب.',
+                'items.*.unit_price.numeric' => 'سعر الوحدة يجب أن يكون رقمًا.',
+                'items.*.unit_price.min'     => 'سعر الوحدة لا يمكن أن يكون سالبًا.',
+            ],
+            [
+                'customer_id' => 'العميل',
+                'issue_date'  => 'تاريخ الإصدار',
+                'expiry_date' => 'تاريخ الانتهاء',
+                'notes'       => 'ملاحظات',
+                'items'       => 'البنود',
+                'items.*.name'       => 'اسم البند',
+                'items.*.quantity'   => 'الكمية',
+                'items.*.unit_price' => 'سعر الوحدة',
+            ],
+        );
 
         $cid = $r->user()->company_id;
         $last = Quote::where('company_id',$cid)->max('id') ?? 0;
         $num  = sprintf('QUO-%d-%05d', $cid, $last+1);
 
-        $subtotal = 0; $taxTotal = 0; $discount = floatval($r->discount_amount ?? 0);
+        $subtotal = 0;
+        $taxTotal = 0;
+        $discount = floatval($r->discount_amount ?? $r->input('discount') ?? 0);
         $itemsData = [];
         foreach($r->items as $item) {
             $qty  = floatval($item['quantity']);
@@ -70,5 +107,18 @@ class QuoteController extends Controller {
     public function destroy(Quote $quote) {
         $quote->delete();
         return response()->json(['message'=>'تم الحذف'], 200);
+    }
+
+    private function isEnabled(Request $request, string $key, bool $default): bool
+    {
+        $user = $request->user();
+        $vertical = Company::query()->where('id', $user->company_id)->value('vertical_profile_code');
+
+        return $this->configResolver->resolveBool($key, [
+            'plan' => null,
+            'vertical' => $vertical,
+            'company_id' => $user->company_id,
+            'branch_id' => $user->branch_id,
+        ], $default);
     }
 }

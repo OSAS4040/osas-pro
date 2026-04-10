@@ -85,6 +85,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import apiClient from '@/lib/apiClient'
+import { appConfirm } from '@/services/appConfirmDialog'
+import { useToast } from '@/composables/useToast'
+
+const toast = useToast()
 
 interface Unit {
   id: number
@@ -133,12 +137,18 @@ async function submitCreate() {
 }
 
 async function deleteUnit(unit: Unit) {
-  if (!confirm(`هل تريد حذف الوحدة "${unit.name}"؟`)) return
+  const ok = await appConfirm({
+    title: 'حذف الوحدة',
+    message: `هل تريد حذف الوحدة «${unit.name}»؟`,
+    variant: 'danger',
+    confirmLabel: 'حذف',
+  })
+  if (!ok) return
   try {
     await apiClient.delete(`/units/${unit.id}`)
     await load()
   } catch (e: any) {
-    alert(e.response?.data?.message ?? 'فشل حذف الوحدة.')
+    toast.error('تعذّر الحذف', e.response?.data?.message ?? 'فشل حذف الوحدة.')
   }
 }
 

@@ -1,53 +1,81 @@
 <template>
-  <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-900">أوامر العمل</h2>
-      <RouterLink to="/work-orders/new" class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700">
-        + أمر عمل جديد
-      </RouterLink>
+  <div class="app-shell-page">
+    <div class="page-head" :class="{ 'gap-2': staffUi.compactMode }">
+      <div class="page-title-wrap">
+        <h2 class="page-title-xl" :class="{ '!text-xl': staffUi.compactMode }">أوامر العمل</h2>
+        <p v-if="!staffUi.compactMode" class="page-subtitle">متابعة حالة التنفيذ، الأولويات، وتوزيع الفنيين</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <RouterLink to="/work-orders/batch" class="btn border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800">
+          دفعة مركبات
+        </RouterLink>
+        <RouterLink to="/work-orders/new" class="btn btn-primary">
+          + أمر عمل جديد
+        </RouterLink>
+      </div>
     </div>
 
-    <div class="flex gap-2 flex-wrap">
-      <button v-for="s in statuses" :key="s.value"
+    <div class="table-toolbar" :class="{ '!py-2 !gap-1.5': staffUi.compactMode }">
+      <input
+        v-model="search"
+        type="search"
+        placeholder="بحث برقم الأمر أو العميل أو اللوحة..."
+        class="table-search"
+        :class="{ '!py-1.5 !text-sm': staffUi.compactMode }"
+      />
+      <button
+        v-for="s in statuses"
+        :key="s.value"
+        class="rounded-xl font-medium transition-colors"
+        :class="[
+          filterStatus === s.value ? 'bg-primary-600 text-white border-primary-600' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-300 dark:border-slate-600',
+          staffUi.compactMode ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-xs',
+        ]"
         @click="filterStatus = filterStatus === s.value ? '' : s.value; load()"
-        :class="filterStatus === s.value ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 border border-gray-300'"
-        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
+      >
         {{ s.label }}
       </button>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div v-if="store.loading" class="p-8 text-center text-gray-400 text-sm">جارٍ التحميل...</div>
-      <table v-else class="w-full text-sm">
-        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+    <div class="table-shell">
+      <div class="panel-head" :class="{ '!py-2': staffUi.compactMode }">
+        <span class="panel-title" :class="{ '!text-sm': staffUi.compactMode }">قائمة أوامر العمل</span>
+        <span v-if="!store.loading" class="panel-muted" :class="{ '!text-xs': staffUi.compactMode }">{{ filteredOrders.length }} عنصر</span>
+      </div>
+      <div v-if="store.loading" class="state-loading">جارٍ التحميل...</div>
+      <table v-else class="data-table" :class="{ 'text-sm': staffUi.compactMode }">
+        <thead>
           <tr>
-            <th class="px-4 py-3 text-right">رقم الأمر</th>
-            <th class="px-4 py-3 text-right">العميل</th>
-            <th class="px-4 py-3 text-right">المركبة</th>
-            <th class="px-4 py-3 text-right">الفني</th>
-            <th class="px-4 py-3 text-right">الحالة</th>
-            <th class="px-4 py-3 text-right">الأولوية</th>
-            <th class="px-4 py-3"></th>
+            <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">رقم الأمر</th>
+            <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">العميل</th>
+            <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">المركبة</th>
+            <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">الفني</th>
+            <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">الحالة</th>
+            <th v-if="!staffUi.compactMode">الأولوية</th>
+            <th class="px-4 py-3" :class="{ '!py-2': staffUi.compactMode }"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
-          <tr v-for="wo in store.orders" :key="wo.id" class="hover:bg-gray-50">
-            <td class="px-4 py-3 font-medium text-gray-900 text-right">{{ wo.order_number }}</td>
-            <td class="px-4 py-3 text-gray-600 text-right">{{ wo.customer?.name }}</td>
-            <td class="px-4 py-3 font-mono text-xs text-gray-500 text-right">{{ wo.vehicle?.plate_number }}</td>
-            <td class="px-4 py-3 text-gray-600 text-right">{{ wo.assigned_technician?.name ?? '—' }}</td>
-            <td class="px-4 py-3 text-right">
-              <span :class="statusClass(wo.status)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ statusLabel(wo.status) }}</span>
+        <tbody>
+          <tr v-for="wo in filteredOrders" :key="wo.id">
+            <td class="font-medium text-gray-900 dark:text-slate-100" :class="{ '!py-2': staffUi.compactMode }">{{ wo.order_number }}</td>
+            <td :class="{ '!py-2': staffUi.compactMode }">{{ wo.customer?.name }}</td>
+            <td class="font-mono text-xs" :class="{ '!py-2': staffUi.compactMode }">{{ wo.vehicle?.plate_number }}</td>
+            <td :class="{ '!py-2': staffUi.compactMode }">{{ wo.assigned_technician?.name ?? '—' }}</td>
+            <td :class="{ '!py-2': staffUi.compactMode }">
+              <span :class="workOrderStatusBadgeClass(wo.status)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ workOrderStatusLabel(wo.status) }}</span>
             </td>
-            <td class="px-4 py-3 text-right">
+            <td v-if="!staffUi.compactMode">
               <span :class="priorityClass(wo.priority)" class="px-2 py-0.5 rounded-full text-xs">{{ priorityLabel(wo.priority) }}</span>
             </td>
-            <td class="px-4 py-3 text-left">
+            <td class="px-4 py-3 text-left" :class="{ '!py-2': staffUi.compactMode }">
               <RouterLink :to="`/work-orders/${wo.id}`" class="text-primary-600 hover:underline text-xs">عرض</RouterLink>
             </td>
           </tr>
-          <tr v-if="!store.orders.length">
-            <td colspan="7" class="px-4 py-8 text-center text-gray-400">لا توجد أوامر عمل.</td>
+          <tr v-if="!filteredOrders.length">
+            <td :colspan="staffUi.compactMode ? 6 : 7" class="table-empty">
+              <p class="table-empty-title">لا توجد أوامر عمل</p>
+              <p class="table-empty-sub">غيّر المرشحات أو أنشئ أمر عمل جديد</p>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -56,20 +84,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useWorkOrderStore } from '@/stores/workOrder'
+import { useStaffUiStore } from '@/stores/staffUi'
+import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 
 const store        = useWorkOrderStore()
+const staffUi      = useStaffUiStore()
 const filterStatus = ref('')
+const search = ref('')
 
-const statuses = [
-  { value: 'pending',     label: 'معلق' },
-  { value: 'in_progress', label: 'قيد التنفيذ' },
-  { value: 'on_hold',     label: 'موقوف' },
-  { value: 'completed',   label: 'مكتمل' },
-  { value: 'delivered',   label: 'مسلّم' },
-]
+const statusFilterValues = [
+  'draft',
+  'pending_manager_approval',
+  'approved',
+  'cancellation_requested',
+  'in_progress',
+  'on_hold',
+  'completed',
+  'delivered',
+] as const
+const statuses = statusFilterValues.map((value) => ({ value, label: workOrderStatusLabel(value) }))
 
 async function load(): Promise<void> {
   await store.fetchOrders({ status: filterStatus.value || undefined })
@@ -77,23 +113,14 @@ async function load(): Promise<void> {
 
 onMounted(load)
 
-function statusClass(s: string): string {
-  const m: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-500', pending: 'bg-yellow-100 text-yellow-700',
-    in_progress: 'bg-blue-100 text-blue-700', on_hold: 'bg-orange-100 text-orange-700',
-    completed: 'bg-green-100 text-green-700', delivered: 'bg-teal-100 text-teal-700',
-    cancelled: 'bg-red-100 text-red-600',
-  }
-  return m[s] ?? 'bg-gray-100 text-gray-600'
-}
-
-function statusLabel(s: string): string {
-  const m: Record<string, string> = {
-    draft: 'مسودة', pending: 'معلق', in_progress: 'قيد التنفيذ',
-    on_hold: 'موقوف', completed: 'مكتمل', delivered: 'مسلّم', cancelled: 'ملغي',
-  }
-  return m[s] ?? s
-}
+const filteredOrders = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return store.orders
+  return store.orders.filter((wo: any) => {
+    const hay = `${wo.order_number ?? ''} ${wo.customer?.name ?? ''} ${wo.vehicle?.plate_number ?? ''}`.toLowerCase()
+    return hay.includes(q)
+  })
+})
 
 function priorityClass(p: string): string {
   const m: Record<string, string> = {

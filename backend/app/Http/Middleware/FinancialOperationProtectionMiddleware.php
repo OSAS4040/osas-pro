@@ -53,7 +53,8 @@ class FinancialOperationProtectionMiddleware
         $path = $request->path();
 
         foreach (self::FINANCIAL_PATH_PREFIXES as $prefix) {
-            if (str_starts_with($path, $prefix)) {
+            // Require segment boundary so e.g. api/v1/wallet-top-up-requests is not treated as api/v1/wallet
+            if ($path === $prefix || str_starts_with($path, $prefix.'/')) {
                 return true;
             }
         }

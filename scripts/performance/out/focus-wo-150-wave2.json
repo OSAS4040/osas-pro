@@ -1,0 +1,167 @@
+{
+    "metrics": {
+        "data_received": {
+            "count": 23324849,
+            "rate": 68886.2332233184
+        },
+        "iterations": {
+            "count": 8185,
+            "rate": 24.173096208805514
+        },
+        "http_req_duration{expected_response:true}": {
+            "min": 212.605282,
+            "med": 4753.427577,
+            "max": 11683.015842,
+            "p(90)": 7324.0021471,
+            "p(95)": 8284.630263799998,
+            "p(99)": 10693.756198230003,
+            "avg": 4377.093364067059
+        },
+        "http_req_receiving": {
+            "min": -3.387222,
+            "med": 0.4263835,
+            "max": 98.341073,
+            "p(90)": 3.2055848000000005,
+            "p(95)": 5.695358499999992,
+            "p(99)": 12.939814300000009,
+            "avg": 1.371272809843676
+        },
+        "data_sent": {
+            "count": 3470505,
+            "rate": 10249.584759699523
+        },
+        "wo_status_2xx": {
+            "count": 8185,
+            "rate": 24.173096208805514
+        },
+        "http_req_sending": {
+            "avg": 0.1624971223742065,
+            "min": 0.013368,
+            "med": 0.060575500000000004,
+            "max": 43.093315,
+            "p(90)": 0.1816635,
+            "p(95)": 0.3156406,
+            "p(99)": 1.700914230000001
+        },
+        "http_reqs": {
+            "count": 8188,
+            "rate": 24.181956231850894
+        },
+        "http_req_duration{name:work_order_create}": {
+            "avg": 4378.569067320596,
+            "min": 271.254276,
+            "med": 4755.605128,
+            "max": 11683.015842,
+            "p(90)": 7324.162961200001,
+            "p(95)": 8285.412230599995,
+            "p(99)": 10694.438061359997,
+            "thresholds": {
+                "p(99)<60000": false
+            }
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 8188,
+            "thresholds": {
+                "rate<0.02": false
+            },
+            "value": 0
+        },
+        "vus_max": {
+            "value": 150,
+            "min": 150,
+            "max": 150
+        },
+        "vus": {
+            "value": 36,
+            "min": 0,
+            "max": 150
+        },
+        "http_req_blocked": {
+            "p(99)": 6.254076670000011,
+            "avg": 0.20650990828041071,
+            "min": 0.002435,
+            "med": 0.014299,
+            "max": 64.536463,
+            "p(90)": 0.030931100000000007,
+            "p(95)": 0.0767248
+        },
+        "http_req_duration": {
+            "p(90)": 7324.0021471,
+            "p(95)": 8284.630263799998,
+            "p(99)": 10693.756198230003,
+            "avg": 4377.093364067059,
+            "min": 212.605282,
+            "med": 4753.427577,
+            "max": 11683.015842
+        },
+        "http_req_connecting": {
+            "avg": 0.16073641218856866,
+            "min": 0,
+            "med": 0,
+            "max": 59.192803,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 5.597288550000006
+        },
+        "http_req_waiting": {
+            "min": 211.869157,
+            "med": 4751.4508945,
+            "max": 11682.282454,
+            "p(90)": 7322.9154931,
+            "p(95)": 8279.044581199996,
+            "p(99)": 10692.974288770003,
+            "avg": 4375.559594134836
+        },
+        "checks": {
+            "passes": 8185,
+            "fails": 0,
+            "value": 1
+        },
+        "iteration_duration": {
+            "p(90)": 7609.425444800001,
+            "p(95)": 8597.866523599983,
+            "p(99)": 10964.688190199997,
+            "avg": 4656.7971516618,
+            "min": 436.757016,
+            "med": 5022.479621,
+            "max": 12031.113278
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0
+        }
+    },
+    "setup_data": {
+        "customerId": 2,
+        "headers": {
+            "Accept": "application/json",
+            "Authorization": "Bearer 26|jc4lBeJvGQVIuKNL5JZfeJXZ6iE25MggqJQhW8rob5460243",
+            "Content-Type": "application/json"
+        },
+        "vehicleId": 1,
+        "vehiclePlate": "ABL 0112",
+        "writeEnabled": true,
+        "baseUrl": "http://host.docker.internal"
+    },
+    "root_group": {
+        "groups": {},
+        "checks": {
+                "wo_create 2xx": {
+                    "name": "wo_create 2xx",
+                    "path": "::wo_create 2xx",
+                    "id": "14a2fa3afbe92f8fbb5bc918dbaddee1",
+                    "passes": 8185,
+                    "fails": 0
+                }
+            },
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e"
+    }
+}

@@ -44,7 +44,7 @@
         </div>
       </div>
       <div class="flex items-center gap-3 pt-1">
-        <button @click="saveProfile" :disabled="savingProfile" class="px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors">
+        <button :disabled="savingProfile" class="px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors" @click="saveProfile">
           {{ savingProfile ? 'جارٍ الحفظ...' : 'حفظ المعلومات' }}
         </button>
         <Transition name="fade"><span v-if="profileSaved" class="text-sm text-green-600 flex items-center gap-1"><CheckCircleIcon class="w-4 h-4" />تم الحفظ</span></Transition>
@@ -59,7 +59,7 @@
           <label class="block text-xs text-gray-500 mb-1">كلمة المرور الحالية</label>
           <div class="relative">
             <input v-model="pwd.current" :type="showPwd.current ? 'text' : 'password'" class="field pr-10" />
-            <button @click="showPwd.current = !showPwd.current" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" @click="showPwd.current = !showPwd.current">
               <EyeIcon v-if="!showPwd.current" class="w-4 h-4" />
               <EyeSlashIcon v-else class="w-4 h-4" />
             </button>
@@ -69,7 +69,7 @@
           <label class="block text-xs text-gray-500 mb-1">كلمة المرور الجديدة</label>
           <div class="relative">
             <input v-model="pwd.new" :type="showPwd.new ? 'text' : 'password'" class="field pr-10" />
-            <button @click="showPwd.new = !showPwd.new" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" @click="showPwd.new = !showPwd.new">
               <EyeIcon v-if="!showPwd.new" class="w-4 h-4" />
               <EyeSlashIcon v-else class="w-4 h-4" />
             </button>
@@ -78,7 +78,8 @@
           <div v-if="pwd.new" class="mt-2 space-y-1">
             <div class="flex gap-1">
               <div v-for="i in 4" :key="i" class="h-1 flex-1 rounded-full transition-colors"
-                :class="i <= pwdStrength ? strengthColor : 'bg-gray-200'" />
+                   :class="i <= pwdStrength ? strengthColor : 'bg-gray-200'"
+              />
             </div>
             <p class="text-xs" :class="strengthColor.replace('bg-','text-')">{{ strengthLabel }}</p>
           </div>
@@ -91,8 +92,9 @@
       </div>
       <div v-if="pwdError" class="text-sm text-red-600 bg-red-50 rounded-lg p-3">{{ pwdError }}</div>
       <div class="flex items-center gap-3 pt-1">
-        <button @click="changePassword" :disabled="savingPwd || pwd.new !== pwd.confirm || !pwd.current || !pwd.new"
-          class="px-5 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 disabled:opacity-50 transition-colors">
+        <button :disabled="savingPwd || pwd.new !== pwd.confirm || !pwd.current || !pwd.new" class="px-5 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 disabled:opacity-50 transition-colors"
+                @click="changePassword"
+        >
           {{ savingPwd ? 'جارٍ التغيير...' : 'تغيير كلمة المرور' }}
         </button>
         <Transition name="fade"><span v-if="pwdSaved" class="text-sm text-green-600 flex items-center gap-1"><CheckCircleIcon class="w-4 h-4" />تم التغيير</span></Transition>
@@ -108,10 +110,44 @@
             <p class="text-sm text-gray-800">{{ n.label }}</p>
             <p class="text-xs text-gray-400">{{ n.desc }}</p>
           </div>
-          <button @click="n.enabled = !n.enabled" class="relative w-10 h-5 rounded-full transition-colors" :class="n.enabled ? 'bg-primary-600' : 'bg-gray-200'">
+          <button class="relative w-10 h-5 rounded-full transition-colors" :class="n.enabled ? 'bg-primary-600' : 'bg-gray-200'" @click="n.enabled = !n.enabled">
             <span class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" :class="n.enabled ? 'translate-x-5' : 'translate-x-0.5'" />
           </button>
         </label>
+      </div>
+    </div>
+
+    <!-- UX Preferences -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+      <h3 class="text-sm font-semibold text-gray-700">تفضيلات إضافية</h3>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">لغة الواجهة المفضلة</label>
+          <select v-model="prefs.lang" class="field">
+            <option value="ar">العربية</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">الوضع الافتراضي بعد الدخول</label>
+          <select v-model="prefs.defaultLanding" class="field">
+            <option value="/">الرئيسية</option>
+            <option value="/pos">نقطة البيع</option>
+            <option value="/reports">التقارير</option>
+            <option value="/workshop/tasks">المهام</option>
+          </select>
+        </div>
+      </div>
+      <label class="flex items-center justify-between py-2 border-b border-gray-50">
+        <span class="text-sm text-gray-700">إظهار المساعد الذكي</span>
+        <input v-model="prefs.aiAssistant" type="checkbox" class="rounded" />
+      </label>
+      <label class="flex items-center justify-between py-2">
+        <span class="text-sm text-gray-700">تنبيهات صوتية للعمليات الهامة</span>
+        <input v-model="prefs.soundAlerts" type="checkbox" class="rounded" />
+      </label>
+      <div class="pt-1">
+        <button class="px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700" @click="savePrefs">حفظ التفضيلات</button>
       </div>
     </div>
   </div>
@@ -137,6 +173,12 @@ const pwdError      = ref('')
 const form = reactive({ name: auth.user?.name ?? '', email: auth.user?.email ?? '', phone: '' })
 const pwd  = reactive({ current: '', new: '', confirm: '' })
 const showPwd = reactive({ current: false, new: false })
+const prefs = reactive({
+  lang: 'ar',
+  defaultLanding: '/',
+  aiAssistant: true,
+  soundAlerts: false,
+})
 
 const roleLabels: Record<string, string> = {
   owner: 'المالك', manager: 'مدير', cashier: 'كاشير',
@@ -161,6 +203,11 @@ const strengthLabel = computed(() => ['','ضعيفة','مقبولة','جيدة',
 function onAvatarChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (file) avatarPreview.value = URL.createObjectURL(file)
+}
+
+function savePrefs() {
+  localStorage.setItem('user_prefs_v1', JSON.stringify(prefs))
+  toast.success('تم حفظ التفضيلات')
 }
 
 const notifications = reactive([
@@ -204,6 +251,12 @@ onMounted(async () => {
     const u = r.data?.data
     if (u) { form.name = u.name; form.email = u.email; form.phone = u.phone ?? '' }
   } catch { /* silent */ }
+  try {
+    const raw = localStorage.getItem('user_prefs_v1')
+    if (raw) Object.assign(prefs, JSON.parse(raw))
+  } catch {
+    // ignore
+  }
 })
 </script>
 

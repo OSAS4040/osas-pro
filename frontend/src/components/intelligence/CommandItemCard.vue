@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, useAttrs } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { CommandZoneItem, EntityReference } from '@/composables/useIntelligenceCommandCenter'
 import SeverityBadge from './SeverityBadge.vue'
 import SuggestedActionBlock from './SuggestedActionBlock.vue'
+import { signalLabel, thresholdKeyLabel } from '@/utils/intelUiLabels'
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -11,9 +12,13 @@ import {
   QuestionMarkCircleIcon,
 } from '@heroicons/vue/24/outline'
 
+defineOptions({ inheritAttrs: false })
+
 const props = defineProps<{
   item: CommandZoneItem
 }>()
+
+const attrs = useAttrs()
 
 const expanded = ref(false)
 const whyOpen = ref(false)
@@ -56,11 +61,18 @@ const ruleId = computed(() => {
   const t = thresholds.value
   return typeof t.rule_id === 'string' ? t.rule_id : null
 })
+
+/** Backend placeholder rows — not operational errors */
+const isSyntheticItem = computed(() => {
+  const id = String(props.item.id ?? '')
+  return /no_recommendations|no_events_in_window|no_alert/i.test(id)
+})
 </script>
 
 <template>
   <article
-    class="rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800/80 shadow-sm hover:shadow-md transition-shadow"
+    class="rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800/80 shadow-sm hover:shadow-md hover:border-primary-200/80 dark:hover:border-primary-800/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary-400/40 focus-within:ring-offset-2 focus-within:ring-offset-white dark:focus-within:ring-offset-slate-900"
+    v-bind="attrs"
   >
     <div class="p-4">
       <div class="flex flex-wrap items-start justify-between gap-2 mb-3">
@@ -100,7 +112,7 @@ const ruleId = computed(() => {
 
           <div
             v-show="whyOpen"
-            class="mt-3 space-y-3 rounded-lg bg-slate-50/90 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-600 p-3 text-xs text-gray-700 dark:text-slate-300"
+            class="mt-3 space-y-3 rounded-lg bg-slate-50/90 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-600 p-3 text-xs text-gray-700 dark:text-slate-300 max-h-[min(70vh,28rem)] overflow-y-auto overscroll-contain"
           >
             <div v-if="whyDetails.length">
               <p class="text-[11px] font-semibold text-gray-500 dark:text-slate-400 mb-1.5">شرح مبسّط</p>
@@ -115,27 +127,34 @@ const ruleId = computed(() => {
                 <span
                   v-for="(sig, j) in signalsUsed"
                   :key="j"
-                  class="font-mono text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-400"
+                  class="text-[11px] leading-snug px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-right"
+                  :title="sig"
                 >
-                  {{ sig }}
+                  {{ signalLabel(sig) }}
                 </span>
               </div>
             </div>
 
             <div v-if="thresholdEntries.length">
               <p class="text-[11px] font-semibold text-gray-500 dark:text-slate-400 mb-1">العتبات / القواعد</p>
-              <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1">
+              <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2 text-right">
                 <template v-for="([k, v], idx) in thresholdEntries" :key="idx">
-                  <dt class="text-gray-500 dark:text-slate-500 truncate" :title="k">{{ k }}</dt>
-                  <dd class="font-mono text-[11px] text-gray-800 dark:text-slate-200 break-all">
+                  <dt class="text-gray-500 dark:text-slate-400 text-[11px] leading-snug break-words" :title="k">
+                    {{ thresholdKeyLabel(k) }}
+                  </dt>
+                  <dd
+                    class="text-[11px] text-gray-800 dark:text-slate-200 break-words whitespace-pre-wrap"
+                    dir="auto"
+                  >
                     {{ typeof v === 'object' ? JSON.stringify(v) : v }}
                   </dd>
                 </template>
               </dl>
             </div>
 
-            <p v-if="ruleId" class="text-[10px] text-gray-400 dark:text-slate-500 font-mono">
-              rule: {{ ruleId }}
+            <p v-if="ruleId" class="text-[10px] text-gray-500 dark:text-slate-400">
+              <span class="font-medium">القاعدة:</span>
+              <code class="font-mono ms-1 opacity-90" dir="ltr">{{ ruleId }}</code>
             </p>
 
             <div v-if="confidence !== null" class="pt-1">
@@ -160,7 +179,7 @@ const ruleId = computed(() => {
               v-for="(r, idx) in refsList"
               :key="`${r.href}-${r.type}-${idx}`"
               :to="refToLocation(r)"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary-50 dark:bg-primary-900/25 text-primary-800 dark:text-primary-200 border border-primary-200/80 dark:border-primary-800/50 hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
+              class="group/ref inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary-50 dark:bg-primary-900/25 text-primary-800 dark:text-primary-200 border border-primary-200/80 dark:border-primary-800/50 hover:bg-primary-100 dark:hover:bg-primary-900/40 active:scale-[0.98] transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             >
               {{ r.label }}
               <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5 opacity-70" aria-hidden="true" />
@@ -169,9 +188,12 @@ const ruleId = computed(() => {
         </div>
 
         <div class="flex flex-wrap items-center gap-2 pt-2 text-xs text-gray-400 dark:text-slate-500">
-          <span class="font-mono">{{ item.id }}</span>
-          <span>·</span>
-          <span>{{ item.source }}</span>
+          <span v-if="isSyntheticItem" class="text-gray-500 dark:text-slate-400">حالة افتراضية — لا تنبيه تشغيلي</span>
+          <template v-else>
+            <span class="font-mono">{{ item.id }}</span>
+            <span>·</span>
+            <span>{{ item.source }}</span>
+          </template>
           <button
             type="button"
             class="ms-auto inline-flex items-center gap-1 text-primary-600 dark:text-primary-400 hover:underline font-medium"

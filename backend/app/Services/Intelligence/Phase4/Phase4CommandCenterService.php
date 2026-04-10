@@ -81,11 +81,9 @@ final class Phase4CommandCenterService
 
         $totalSignals = count($now) + count($next) + count($watch);
 
-        $govOn = (bool) config('intelligent.command_center_governance.enabled');
-
         return [
             'read_only'     => true,
-            'phase'         => $govOn ? 7 : 6,
+            'phase'         => 6,
             'generated_at'  => $snapshotGeneratedAt,
             'window'        => $insights['window'],
             'summary'       => [
@@ -487,9 +485,9 @@ final class Phase4CommandCenterService
     private function impactForSeverity(string $severity): string
     {
         return match ($severity) {
-            'warning' => 'Operational blind spots may persist; anomalies or ingestion issues can go unnoticed.',
-            'critical' => 'Elevated risk of missed incidents or compliance gaps if not reviewed.',
-            default => 'Lower urgency; monitoring coverage or signal richness may stay limited.',
+            'warning' => 'قد تبقى نقاط عمياء تشغيلية؛ قد تمر الشذوذات أو مشاكل الالتقاط دون ملاحظة.',
+            'critical' => 'خطر أعلى لتفويت حوادث أو فجوات امتثال إن لم تُراجع.',
+            default => 'أولوية أقل؛ قد يبقى عمق المراقبة أو غنى الإشارة محدوداً.',
         };
     }
 

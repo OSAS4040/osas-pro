@@ -1,0 +1,63 @@
+{
+    "generated_at": "2026-04-08T03:54:55+00:00",
+    "checks": {
+        "invoice_without_ledger": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": []
+        },
+        "unbalanced_journal_entries": {
+            "detected": 1,
+            "total_examined": 1,
+            "healthy": 0,
+            "sample": [
+                {
+                    "id": 3,
+                    "uuid": "844fe21f-3a55-4468-bcef-be840ed0b385",
+                    "company_id": 50,
+                    "entry_number": "JE-REC-UNBAL-001",
+                    "type": "adjustment",
+                    "total_debit": "100.0000",
+                    "total_credit": "90.0000",
+                    "trace_id": "ec89cf7e-dd14-4ba2-965e-9b809151e060"
+                }
+            ]
+        },
+        "anomalous_reversal_settlement": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": {
+                "journal_entries": [],
+                "payments": []
+            }
+        }
+    },
+    "summary": {
+        "detected_cases": 1,
+        "healthy_cases": 0
+    },
+    "findings": {
+        "invoice_without_ledger": [],
+        "unbalanced_journal_entry": [
+            {
+                "finding_type": "unbalanced_journal_entry",
+                "company_id": 50,
+                "invoice_id": null,
+                "journal_entry_id": 3,
+                "payment_id": null,
+                "reference_type": "journal_entry",
+                "reference_id": 3,
+                "trace_reference": "ec89cf7e-dd14-4ba2-965e-9b809151e060",
+                "details": {
+                    "entry_number": "JE-REC-UNBAL-001",
+                    "entry_type": "adjustment",
+                    "total_debit": 100,
+                    "total_credit": 90
+                }
+            }
+        ],
+        "anomalous_reversal_settlement": []
+    }
+}

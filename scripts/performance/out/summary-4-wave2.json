@@ -1,0 +1,202 @@
+{
+    "metrics": {
+        "http_req_connecting": {
+            "med": 0,
+            "max": 81.757344,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.018174142152623588,
+            "min": 0
+        },
+        "data_received": {
+            "count": 860835829,
+            "rate": 1192452.8194750533
+        },
+        "http_req_waiting": {
+            "p(95)": 1408.0560603999982,
+            "avg": 684.2947993417083,
+            "min": 94.96756,
+            "med": 603.299176,
+            "max": 3763.152841,
+            "p(90)": 1128.3947064
+        },
+        "http_req_blocked": {
+            "avg": 0.04279159195979894,
+            "min": 0.001281,
+            "med": 0.011676,
+            "max": 82.002912,
+            "p(90)": 0.018797999999999992,
+            "p(95)": 0.03437599999999989
+        },
+        "http_req_receiving": {
+            "avg": 4.374561223910251,
+            "min": -3.417727,
+            "med": 1.839495,
+            "max": 221.145922,
+            "p(90)": 11.096993999999997,
+            "p(95)": 16.0676804
+        },
+        "vus_max": {
+            "value": 100,
+            "min": 100,
+            "max": 100
+        },
+        "vus": {
+            "min": 0,
+            "max": 100,
+            "value": 4
+        },
+        "http_req_duration": {
+            "avg": 688.7420335565259,
+            "min": 95.233018,
+            "med": 607.31761,
+            "max": 3766.24602,
+            "p(90)": 1136.4261973999999,
+            "p(95)": 1418.9326037999979
+        },
+        "http_reqs": {
+            "count": 42785,
+            "rate": 59.26692658750866
+        },
+        "http_req_sending": {
+            "avg": 0.0726729909080283,
+            "min": 0.00528,
+            "med": 0.040038,
+            "max": 18.964147,
+            "p(90)": 0.092232,
+            "p(95)": 0.14699059999999964
+        },
+        "iterations": {
+            "count": 42782,
+            "rate": 59.26277090725244
+        },
+        "http_req_duration{name:work_orders_list}": {
+            "avg": 746.9162917289466,
+            "min": 137.344222,
+            "med": 662.598584,
+            "max": 3737.632455,
+            "p(90)": 1209.3656345,
+            "p(95)": 1502.271332,
+            "thresholds": {
+                "p(99)<30000": false
+            }
+        },
+        "checks": {
+            "passes": 42782,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_tls_handshaking": {
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0
+        },
+        "data_sent": {
+            "rate": 13375.1233955397,
+            "count": 9655548
+        },
+        "http_req_duration{expected_response:true}": {
+            "min": 95.233018,
+            "med": 607.31761,
+            "max": 3766.24602,
+            "p(90)": 1136.4261973999999,
+            "p(95)": 1418.9326037999979,
+            "avg": 688.7420335565259
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 42785,
+            "thresholds": {
+                "rate<0.15": false
+            },
+            "value": 0
+        },
+        "iteration_duration": {
+            "med": 1099.421993,
+            "max": 4283.526938,
+            "p(90)": 1634.8129443,
+            "p(95)": 1914.8225228,
+            "avg": 1166.5080569332777,
+            "min": 375.805457
+        }
+    },
+    "setup_data": {
+        "writeEnabled": true,
+        "baseUrl": "http://host.docker.internal",
+        "customerId": 2,
+        "headers": {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": "Bearer 32|WZzwb2ClEVo0tPYKw1ve15pFqd72JlKnNQVMxS6B35136df7"
+        },
+        "vehicleId": 1,
+        "vehiclePlate": "ABL 0112"
+    },
+    "root_group": {
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "dash 200": {
+                    "name": "dash 200",
+                    "path": "::dash 200",
+                    "id": "680344fb7e1e19132031a3e16c7a94ee",
+                    "passes": 4383,
+                    "fails": 0
+                },
+                "wo_list 200": {
+                    "path": "::wo_list 200",
+                    "id": "3b287f434d42b986db0f28bdd71d6639",
+                    "passes": 20616,
+                    "fails": 0,
+                    "name": "wo_list 200"
+                },
+                "me 200": {
+                    "name": "me 200",
+                    "path": "::me 200",
+                    "id": "30e7556edf82eff0e3762598c402eb40",
+                    "passes": 1698,
+                    "fails": 0
+                },
+                "inv_list 200": {
+                    "name": "inv_list 200",
+                    "path": "::inv_list 200",
+                    "id": "4db332fb87ab2a7b2ff013405d65fb53",
+                    "passes": 10632,
+                    "fails": 0
+                },
+                "version 200": {
+                    "name": "version 200",
+                    "path": "::version 200",
+                    "id": "b3dc38c67f719bd3cedf746a39b9d2c9",
+                    "passes": 1711,
+                    "fails": 0
+                },
+                "batch_neg expected 4xx": {
+                    "id": "ff8263bbe4af0f1b30cab73f85e6b76d",
+                    "passes": 657,
+                    "fails": 0,
+                    "name": "batch_neg expected 4xx",
+                    "path": "::batch_neg expected 4xx"
+                },
+                "health 200": {
+                    "name": "health 200",
+                    "path": "::health 200",
+                    "id": "8e4f90a842a57472549a6b2cf699032d",
+                    "passes": 2476,
+                    "fails": 0
+                },
+                "wo_create 2xx": {
+                    "fails": 0,
+                    "name": "wo_create 2xx",
+                    "path": "::wo_create 2xx",
+                    "id": "14a2fa3afbe92f8fbb5bc918dbaddee1",
+                    "passes": 609
+                }
+            },
+        "name": ""
+    }
+}

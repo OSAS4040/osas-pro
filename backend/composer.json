@@ -5,11 +5,15 @@
     "require": {
         "php": "^8.2",
         "aws/aws-sdk-php": "^3.0",
+        "barryvdh/laravel-dompdf": "^3.0",
         "darkaonline/l5-swagger": "^8.0",
+        "endroid/qr-code": "^5.0",
         "guzzlehttp/guzzle": "^7.0",
+        "khaled.alshamaa/ar-php": "^6.0",
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "predis/predis": "^2.0",
         "sentry/sentry-laravel": "^4.0"
     },

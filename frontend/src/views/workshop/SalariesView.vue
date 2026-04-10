@@ -1,19 +1,32 @@
 <template>
-  <div class="space-y-6" dir="rtl">
+  <div class="space-y-6 print-container" dir="rtl">
     <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <h2 class="text-2xl font-bold text-gray-900">مسير الرواتب</h2>
-      <div class="flex items-center gap-2">
-        <button @click="exportExcel"
-          class="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+    <div class="flex items-center justify-between flex-wrap gap-3 no-print">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-slate-100">مسير الرواتب</h2>
+      <div class="flex items-center flex-wrap gap-2">
+        <button type="button" class="flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                @click="saveSnapshot"
+        >
+          <BookmarkIcon class="w-4 h-4" /> حفظ لقطة
+        </button>
+        <button type="button" class="flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                @click="sharePayroll"
+        >
+          <ShareIcon class="w-4 h-4" /> مشاركة
+        </button>
+        <button class="flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                @click="exportExcel"
+        >
           <TableCellsIcon class="w-4 h-4" /> Excel
         </button>
-        <button @click="exportPdf"
-          class="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-          <DocumentArrowDownIcon class="w-4 h-4" /> PDF
+        <button class="flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                @click="exportPdf"
+        >
+          <DocumentArrowDownIcon class="w-4 h-4" /> طباعة / PDF
         </button>
-        <button @click="openGenerateModal"
-          class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+        <button class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                @click="openGenerateModal"
+        >
           <PlusIcon class="w-4 h-4" />
           إنشاء مسير شهري
         </button>
@@ -21,84 +34,85 @@
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white rounded-xl p-4 border border-gray-200 text-center">
-        <p class="text-2xl font-bold text-primary-600">{{ formatNum(totalNetSalaries) }}</p>
-        <p class="text-xs text-gray-500 mt-1">إجمالي الرواتب (ر.س)</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
+      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 text-center transition-colors">
+        <p class="text-2xl font-bold text-primary-600 dark:text-primary-400">{{ formatNum(totalNetSalaries) }}</p>
+        <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">إجمالي الرواتب (ر.س)</p>
       </div>
-      <div class="bg-white rounded-xl p-4 border border-gray-200 text-center">
-        <p class="text-2xl font-bold text-blue-600">{{ payroll.length }}</p>
-        <p class="text-xs text-gray-500 mt-1">عدد الموظفين</p>
+      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 text-center transition-colors">
+        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ payroll.length }}</p>
+        <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">عدد الموظفين</p>
       </div>
-      <div class="bg-white rounded-xl p-4 border border-gray-200 text-center">
-        <p class="text-2xl font-bold text-green-600">{{ disbursementRate }}%</p>
-        <p class="text-xs text-gray-500 mt-1">نسبة الصرف</p>
+      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 text-center transition-colors">
+        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ disbursementRate }}%</p>
+        <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">نسبة الصرف</p>
       </div>
     </div>
 
     <!-- Month / Year Filter -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 flex gap-3 flex-wrap items-end">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 flex gap-3 flex-wrap items-end no-print transition-colors">
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">الشهر</label>
-        <select v-model="filterMonth" @change="load" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
+        <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">الشهر</label>
+        <select v-model="filterMonth" class="border border-gray-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none text-gray-900 dark:text-slate-100" @change="load">
           <option v-for="m in months" :key="m.value" :value="m.value">{{ m.label }}</option>
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">السنة</label>
-        <select v-model="filterYear" @change="load" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
+        <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">السنة</label>
+        <select v-model="filterYear" class="border border-gray-300 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm focus:outline-none text-gray-900 dark:text-slate-100" @change="load">
           <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
         </select>
       </div>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
+    <div v-if="loading" class="no-print flex justify-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
     </div>
 
     <!-- Table -->
-    <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div v-else class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden transition-colors">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="bg-gray-50 border-b border-gray-200">
+          <thead class="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-200 dark:border-slate-700">
             <tr>
-              <th class="px-4 py-3 text-right font-semibold text-gray-700">الموظف</th>
-              <th class="px-4 py-3 text-right font-semibold text-gray-700">الراتب الأساسي</th>
-              <th class="px-4 py-3 text-right font-semibold text-gray-700">العلاوات</th>
-              <th class="px-4 py-3 text-right font-semibold text-gray-700">الخصومات</th>
-              <th class="px-4 py-3 text-right font-semibold text-gray-700">العمولات</th>
-              <th class="px-4 py-3 text-right font-semibold text-gray-700">صافي الراتب</th>
-              <th class="px-4 py-3 text-right font-semibold text-gray-700">الحالة</th>
-              <th class="px-4 py-3 text-right font-semibold text-gray-700">طباعة</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">الموظف</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">الراتب الأساسي</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">العلاوات</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">الخصومات</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">العمولات</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">صافي الراتب</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300">الحالة</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300 no-print">طباعة</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            <tr v-for="row in payroll" :key="row.id" class="hover:bg-gray-50 transition-colors">
+            <tr v-for="row in payroll" :key="row.id" class="hover:bg-gray-50 dark:hover:bg-slate-900/40 transition-colors">
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xs flex-shrink-0">
+                  <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-primary-700 dark:text-primary-300 font-bold text-xs flex-shrink-0">
                     {{ row.employee_name?.charAt(0) ?? '؟' }}
                   </div>
                   <div>
-                    <p class="font-medium text-gray-900">{{ row.employee_name ?? `#${row.employee_id}` }}</p>
-                    <p v-if="row.employee_code" class="text-xs text-gray-400">{{ row.employee_code }}</p>
+                    <p class="font-medium text-gray-900 dark:text-slate-100">{{ row.employee_name ?? `#${row.employee_id}` }}</p>
+                    <p v-if="row.employee_code" class="text-xs text-gray-400 dark:text-slate-500">{{ row.employee_code }}</p>
                   </div>
                 </div>
               </td>
-              <td class="px-4 py-3 text-gray-700">{{ formatNum(row.base_salary) }} <span class="text-gray-400 text-xs">ر.س</span></td>
-              <td class="px-4 py-3 text-green-700 font-medium">{{ formatNum(row.allowances ?? 0) }} <span class="text-gray-400 text-xs">ر.س</span></td>
-              <td class="px-4 py-3 text-red-600 font-medium">{{ formatNum(row.deductions ?? 0) }} <span class="text-gray-400 text-xs">ر.س</span></td>
-              <td class="px-4 py-3 text-blue-700 font-medium">{{ formatNum(row.commissions ?? 0) }} <span class="text-gray-400 text-xs">ر.س</span></td>
-              <td class="px-4 py-3 font-bold text-primary-700">{{ formatNum(row.net_salary ?? calcNet(row)) }} <span class="text-gray-400 text-xs font-normal">ر.س</span></td>
+              <td class="px-4 py-3 text-gray-700 dark:text-slate-300">{{ formatNum(row.base_salary) }} <span class="text-gray-400 text-xs">ر.س</span></td>
+              <td class="px-4 py-3 text-green-700 dark:text-green-400 font-medium">{{ formatNum(row.allowances ?? 0) }} <span class="text-gray-400 text-xs">ر.س</span></td>
+              <td class="px-4 py-3 text-red-600 dark:text-red-400 font-medium">{{ formatNum(row.deductions ?? 0) }} <span class="text-gray-400 text-xs">ر.س</span></td>
+              <td class="px-4 py-3 text-blue-700 dark:text-blue-400 font-medium">{{ formatNum(row.commissions ?? 0) }} <span class="text-gray-400 text-xs">ر.س</span></td>
+              <td class="px-4 py-3 font-bold text-primary-700 dark:text-primary-400">{{ formatNum(row.net_salary ?? calcNet(row)) }} <span class="text-gray-400 text-xs font-normal">ر.س</span></td>
               <td class="px-4 py-3">
                 <span :class="payrollStatusBadge(row.status)" class="px-2 py-0.5 rounded-full text-xs font-medium">
                   {{ payrollStatusLabel(row.status) }}
                 </span>
               </td>
-              <td class="px-4 py-3">
-                <button @click="printRow(row)"
-                  class="p-1.5 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              <td class="px-4 py-3 no-print">
+                <button class="p-1.5 text-gray-500 dark:text-slate-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
+                        @click="printRow(row)"
+                >
                   <PrinterIcon class="w-4 h-4" />
                 </button>
               </td>
@@ -112,11 +126,11 @@
     </div>
 
     <!-- Modal: إنشاء مسير شهري -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" @click.self="showModal = false">
-      <div class="bg-white rounded-2xl w-full max-w-md shadow-xl">
-        <div class="flex items-center justify-between px-6 py-4 border-b">
-          <h3 class="font-bold text-lg">إنشاء مسير رواتب شهري</h3>
-          <button @click="showModal = false" class="text-gray-400 hover:text-gray-700"><XMarkIcon class="w-5 h-5" /></button>
+    <div v-if="showModal" class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 no-print" @click.self="showModal = false">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-xl border border-gray-200 dark:border-slate-700">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
+          <h3 class="font-bold text-lg text-gray-900 dark:text-slate-100">إنشاء مسير رواتب شهري</h3>
+          <button class="text-gray-400 hover:text-gray-700" @click="showModal = false"><XMarkIcon class="w-5 h-5" /></button>
         </div>
         <div class="p-6 space-y-4">
           <div class="grid grid-cols-2 gap-4">
@@ -143,9 +157,10 @@
           </div>
           <div v-if="genError" class="text-red-600 text-sm bg-red-50 rounded-lg p-3">{{ genError }}</div>
           <div class="flex gap-3 justify-end pt-1">
-            <button type="button" @click="showModal = false" class="px-4 py-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50">إلغاء</button>
-            <button @click="generate" :disabled="generating"
-              class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50">
+            <button type="button" class="px-4 py-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50" @click="showModal = false">إلغاء</button>
+            <button :disabled="generating" class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50"
+                    @click="generate"
+            >
               {{ generating ? 'جاري الإنشاء...' : 'إنشاء المسير' }}
             </button>
           </div>
@@ -157,8 +172,18 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { PlusIcon, XMarkIcon, PrinterIcon, TableCellsIcon, DocumentArrowDownIcon } from '@heroicons/vue/24/outline'
+import {
+  PlusIcon,
+  XMarkIcon,
+  PrinterIcon,
+  TableCellsIcon,
+  DocumentArrowDownIcon,
+  BookmarkIcon,
+  ShareIcon,
+} from '@heroicons/vue/24/outline'
 import { useApi } from '@/composables/useApi'
+import { PRINT_HTML_FONT_LINKS, PRINT_HTML_FONT_FAMILY } from '@/design/printHtml'
+import { printDocument } from '@/composables/useAppPrint'
 
 const { get, post } = useApi()
 
@@ -255,7 +280,8 @@ async function generate() {
 
 function printRow(row: any) {
   const content = `
-    <html dir="rtl"><head><title>مسير راتب</title></head><body style="font-family:Arial;padding:20px">
+    <!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"/><title>مسير راتب</title>${PRINT_HTML_FONT_LINKS}
+    <style>body{margin:0;padding:20px;font-family:${PRINT_HTML_FONT_FAMILY}}</style></head><body>
     <h2>مسير راتب - ${row.employee_name ?? ''}</h2>
     <p>الشهر: ${months.find(m => m.value === filterMonth.value)?.label} ${filterYear.value}</p>
     <table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">
@@ -268,32 +294,67 @@ function printRow(row: any) {
     </body></html>
   `
   const w = window.open('', '_blank')
-  if (w) { w.document.write(content); w.document.close(); w.print() }
+  if (!w) return
+  w.document.write(content)
+  w.document.close()
+  void (async () => {
+    try {
+      await w.document.fonts?.ready
+    } catch {
+      /* ignore */
+    }
+    w.print()
+  })()
 }
 
-function exportExcel() {
-  const rows = payroll.value.map(r => [
-    r.employee_name ?? r.employee_id,
-    r.base_salary,
-    r.allowances ?? 0,
-    r.deductions ?? 0,
-    r.commissions ?? 0,
-    r.net_salary ?? calcNet(r),
-    payrollStatusLabel(r.status),
-  ])
-  const header = ['الموظف', 'الراتب الأساسي', 'العلاوات', 'الخصومات', 'العمولات', 'صافي الراتب', 'الحالة']
-  const csv = [header, ...rows].map(r => r.join(',')).join('\n')
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `payroll-${filterYear.value}-${filterMonth.value}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+async function exportExcel() {
+  const rows = payroll.value.map((r) => ({
+    الموظف: r.employee_name ?? r.employee_id,
+    'الراتب الأساسي': Number(r.base_salary ?? 0),
+    العلاوات: Number(r.allowances ?? 0),
+    الخصومات: Number(r.deductions ?? 0),
+    العمولات: Number(r.commissions ?? 0),
+    'صافي الراتب': Number(r.net_salary ?? calcNet(r)),
+    الحالة: payrollStatusLabel(r.status),
+  }))
+  const { downloadExcelFromRows } = await import('@/utils/exportExcel')
+  await downloadExcelFromRows(rows, 'مسير الرواتب', `payroll-${filterYear.value}-${filterMonth.value}.xlsx`)
 }
 
-function exportPdf() {
-  window.print()
+async function exportPdf() {
+  await printDocument()
+}
+
+const SNAP_PREFIX = 'payroll_snapshot_'
+
+function saveSnapshot() {
+  const key = `${SNAP_PREFIX}${filterYear.value}_${filterMonth.value}`
+  const payload = {
+    savedAt: new Date().toISOString(),
+    year: filterYear.value,
+    month: filterMonth.value,
+    rows: payroll.value,
+  }
+  localStorage.setItem(key, JSON.stringify(payload))
+}
+
+async function sharePayroll() {
+  const title = `مسير رواتب ${filterMonth.value}/${filterYear.value}`
+  const text = `إجمالي صافي: ${formatNum(totalNetSalaries.value)} ر.س — ${payroll.value.length} موظفاً`
+  const url = typeof window !== 'undefined' ? window.location.href : ''
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text, url })
+      return
+    } catch {
+      /* user cancelled or unsupported */
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(`${title}\n${text}\n${url}`)
+  } catch {
+    /* ignore */
+  }
 }
 
 onMounted(load)

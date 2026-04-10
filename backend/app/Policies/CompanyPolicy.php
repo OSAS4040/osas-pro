@@ -7,6 +7,21 @@ use App\Models\User;
 
 class CompanyPolicy
 {
+    private function roleValue(User $user): string
+    {
+        $role = $user->role;
+
+        if ($role instanceof \BackedEnum) {
+            return (string) $role->value;
+        }
+
+        if ($role instanceof \UnitEnum) {
+            return $role->name;
+        }
+
+        return (string) $role;
+    }
+
     public function viewAny(User $user): bool
     {
         return true;
@@ -19,18 +34,18 @@ class CompanyPolicy
 
     public function create(User $user): bool
     {
-        return $user->role === 'owner';
+        return $this->roleValue($user) === 'owner';
     }
 
     public function update(User $user, Company $company): bool
     {
         return $user->company_id === $company->id
-            && in_array($user->role, ['owner', 'manager']);
+            && in_array($this->roleValue($user), ['owner', 'manager'], true);
     }
 
     public function delete(User $user, Company $company): bool
     {
         return $user->company_id === $company->id
-            && $user->role === 'owner';
+            && $this->roleValue($user) === 'owner';
     }
 }

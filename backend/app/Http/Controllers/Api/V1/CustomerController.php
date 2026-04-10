@@ -90,6 +90,8 @@ class CustomerController extends Controller
     {
         $customer = Customer::findOrFail($id);
 
+        $companyId = (int) $request->user()->company_id;
+
         $data = $request->validate([
             'name'         => 'sometimes|string|max:255',
             'name_ar'      => 'nullable|string',
@@ -99,6 +101,9 @@ class CustomerController extends Controller
             'city'         => 'nullable|string',
             'credit_limit' => 'nullable|numeric|min:0',
             'is_active'    => 'nullable|boolean',
+            'customer_group_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('customer_groups', 'id')->where('company_id', $companyId)],
+            'pricing_contract_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('contracts', 'id')->where('company_id', $companyId)],
+            'customer_pricing_profile' => 'nullable|string|max:32|in:standard,contract,special_pricing,group_pricing,cash,credit',
         ]);
 
         $customer->update($data);

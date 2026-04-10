@@ -51,7 +51,8 @@
             <td class="px-4 py-3 text-gray-700 font-medium">{{ formatAmount(txn.balance_after) }}</td>
             <td class="px-4 py-3">
               <span v-if="txn.payment_mode" class="text-xs px-2 py-0.5 rounded-full"
-                :class="txn.payment_mode === 'credit' ? 'bg-amber-100 text-amber-700' : 'bg-blue-50 text-blue-600'">
+                    :class="txn.payment_mode === 'credit' ? 'bg-amber-100 text-amber-700' : 'bg-blue-50 text-blue-600'"
+              >
                 {{ txn.payment_mode === 'credit' ? 'ائتمان' : 'مسبق' }}
               </span>
             </td>
@@ -63,16 +64,20 @@
       <!-- Pagination -->
       <div v-if="meta?.last_page > 1" class="flex items-center justify-between px-4 py-3 border-t border-gray-100">
         <button
-          @click="loadPage(meta.current_page - 1)"
           :disabled="meta.current_page <= 1"
           class="text-xs text-primary-600 disabled:text-gray-300 hover:underline"
-        >السابق</button>
+          @click="loadPage(meta.current_page - 1)"
+        >
+          السابق
+        </button>
         <span class="text-xs text-gray-400">صفحة {{ meta.current_page }} من {{ meta.last_page }}</span>
         <button
-          @click="loadPage(meta.current_page + 1)"
           :disabled="meta.current_page >= meta.last_page"
           class="text-xs text-primary-600 disabled:text-gray-300 hover:underline"
-        >التالي</button>
+          @click="loadPage(meta.current_page + 1)"
+        >
+          التالي
+        </button>
       </div>
     </div>
   </div>

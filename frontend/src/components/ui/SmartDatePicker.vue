@@ -1,8 +1,7 @@
 <template>
-  <div class="relative" ref="containerRef">
+  <div ref="containerRef" class="relative">
     <!-- Input Field -->
     <div
-      @click="open = !open"
       class="flex items-center gap-2 w-full border rounded-lg px-3 py-2 text-sm cursor-pointer transition-all"
       :class="[
         open
@@ -10,6 +9,7 @@
           : 'border-gray-300 dark:border-gray-600 hover:border-primary-400',
         'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200'
       ]"
+      @click="open = !open"
     >
       <CalendarDaysIcon class="w-4 h-4 text-gray-400 flex-shrink-0" />
       <span class="flex-1 truncate">{{ displayValue }}</span>
@@ -32,11 +32,11 @@
             <button
               v-for="preset in presets"
               :key="preset.key"
-              @click="selectPreset(preset)"
               class="text-right px-3 py-1.5 text-xs rounded-lg transition-all"
               :class="activePreset === preset.key
                 ? 'bg-primary-600 text-white'
                 : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'"
+              @click="selectPreset(preset)"
             >
               {{ preset.label }}
             </button>
@@ -50,8 +50,8 @@
             <div>
               <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">من</label>
               <input
-                type="date"
                 v-model="customFrom"
+                type="date"
                 :max="customTo || undefined"
                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm dark:bg-gray-700 dark:text-white outline-none focus:border-primary-500"
               />
@@ -59,16 +59,16 @@
             <div>
               <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">إلى</label>
               <input
-                type="date"
                 v-model="customTo"
+                type="date"
                 :min="customFrom || undefined"
                 class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm dark:bg-gray-700 dark:text-white outline-none focus:border-primary-500"
               />
             </div>
             <button
-              @click="applyCustom"
               :disabled="!customFrom || !customTo"
               class="w-full py-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-40 text-white rounded-lg text-sm font-medium transition-all"
+              @click="applyCustom"
             >
               تطبيق
             </button>

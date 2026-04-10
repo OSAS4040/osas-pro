@@ -62,18 +62,22 @@ class ImportController extends Controller
             if (!$name) { $errors[] = "السطر " . ($i + 2) . ": الاسم مطلوب"; continue; }
 
             try {
+                $nid = trim((string) ($row['national_id'] ?? $row['رقم الهوية'] ?? ''));
+                if ($nid === '') {
+                    $nid = 'import-'.Str::lower(Str::random(12));
+                }
                 Employee::updateOrCreate(
-                    ['national_id' => $row['national_id'] ?? $row['رقم الهوية'] ?? Str::uuid(), 'company_id' => $company],
+                    ['national_id' => $nid, 'company_id' => $company],
                     [
-                        'name'         => $name,
-                        'role'         => $row['role']          ?? $row['الوظيفة'] ?? 'technician',
-                        'phone'        => $row['phone']         ?? $row['الجوال'] ?? null,
-                        'email'        => $row['email']         ?? $row['البريد'] ?? null,
-                        'department'   => $row['department']    ?? $row['القسم'] ?? null,
-                        'salary'       => (float) ($row['salary'] ?? $row['الراتب'] ?? 0),
-                        'hire_date'    => $row['hire_date']     ?? $row['تاريخ التعيين'] ?? now()->toDateString(),
-                        'status'       => 'active',
-                        'company_id'   => $company,
+                        'name'        => $name,
+                        'position'    => $row['position'] ?? $row['role'] ?? $row['الوظيفة'] ?? $row['التخصص'] ?? null,
+                        'phone'       => $row['phone'] ?? $row['الجوال'] ?? null,
+                        'email'       => $row['email'] ?? $row['البريد'] ?? null,
+                        'department'  => $row['department'] ?? $row['القسم'] ?? null,
+                        'base_salary' => (float) ($row['base_salary'] ?? $row['salary'] ?? $row['الراتب'] ?? 0),
+                        'hire_date'   => $row['hire_date'] ?? $row['تاريخ التعيين'] ?? now()->toDateString(),
+                        'status'      => 'active',
+                        'company_id'  => $company,
                     ]
                 );
                 $imported++;

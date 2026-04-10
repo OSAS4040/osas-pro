@@ -71,17 +71,8 @@ class Phase2IntelligenceController extends Controller
 
     private function assertPhase2Feature(string $feature): void
     {
-        $canonical = match ($feature) {
-            'overview'        => (bool) config('intelligent.overview_api.enabled'),
-            'insights'        => (bool) config('intelligent.insights.enabled'),
-            'recommendations' => (bool) config('intelligent.recommendations.enabled'),
-            'alerts'          => (bool) config('intelligent.alerts.enabled'),
-            default           => false,
-        };
-
-        $legacy = (bool) config("intelligent.phase2.features.{$feature}");
-
-        if (! $canonical && ! $legacy) {
+        $enabled = (bool) config("intelligent.phase2.features.{$feature}");
+        if (! $enabled) {
             abort(404);
         }
     }

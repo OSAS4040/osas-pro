@@ -1,54 +1,68 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-gray-900">المخزون</h2>
-      <div class="flex gap-2">
-        <RouterLink to="/inventory/units" class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+  <div class="app-shell-page space-y-6">
+    <div class="page-head">
+      <div class="page-title-wrap">
+        <h2 class="page-title-xl">المخزون</h2>
+        <p class="page-subtitle">عرض الكميات والحجوزات وحدود إعادة الطلب لكل فرع</p>
+      </div>
+      <div class="page-toolbar">
+        <RouterLink
+          to="/inventory/units"
+          class="btn btn-outline border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+        >
           وحدات القياس
         </RouterLink>
-        <RouterLink to="/inventory/reservations" class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+        <RouterLink
+          to="/inventory/reservations"
+          class="btn btn-outline border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
+        >
           الحجوزات
         </RouterLink>
       </div>
     </div>
 
     <div class="flex gap-3">
-      <label class="flex items-center gap-2 text-sm">
-        <input v-model="filters.low_stock" type="checkbox" class="rounded" @change="load" />
+      <label class="flex items-center gap-2 body-text">
+        <input v-model="filters.low_stock" type="checkbox" class="rounded border-gray-300 dark:border-slate-600" @change="load" />
         المخزون المنخفض فقط
       </label>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+    <div class="panel overflow-hidden p-0">
+      <table class="data-table">
+        <thead>
           <tr>
-            <th class="px-4 py-3 text-right">المنتج</th>
-            <th class="px-4 py-3 text-right">الفرع</th>
-            <th class="px-4 py-3 text-right">الوحدة</th>
-            <th class="px-4 py-3 text-right">الكمية</th>
-            <th class="px-4 py-3 text-right">محجوز</th>
-            <th class="px-4 py-3 text-right">المتاح</th>
-            <th class="px-4 py-3 text-right">إعادة الطلب</th>
+            <th class="text-right">المنتج</th>
+            <th class="text-right">الفرع</th>
+            <th class="text-right">الوحدة</th>
+            <th class="text-right">الكمية</th>
+            <th class="text-right">محجوز</th>
+            <th class="text-right">المتاح</th>
+            <th class="text-right">إعادة الطلب</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="px-4 py-8 text-center text-gray-400">جارٍ التحميل...</td>
+            <td colspan="7" class="table-empty py-10">
+              <p class="empty-state-description">جارٍ التحميل...</p>
+            </td>
           </tr>
-          <tr v-for="inv in inventory" :key="inv.id" :class="{ 'bg-red-50': isLow(inv) }">
-            <td class="px-4 py-3 font-medium text-right">{{ inv.product?.name }}</td>
-            <td class="px-4 py-3 text-gray-500 text-right">{{ inv.branch?.name }}</td>
-            <td class="px-4 py-3 text-gray-500 text-right">{{ inv.product?.unit?.symbol }}</td>
-            <td class="px-4 py-3 text-right">{{ inv.quantity }}</td>
-            <td class="px-4 py-3 text-right text-yellow-600">{{ inv.reserved_quantity }}</td>
-            <td class="px-4 py-3 text-right font-semibold" :class="isLow(inv) ? 'text-red-600' : 'text-green-600'">
+          <tr v-for="inv in inventory" :key="inv.id" :class="{ 'bg-red-50 dark:bg-red-950/20': isLow(inv) }">
+            <td class="font-medium text-right text-gray-900 dark:text-slate-100">{{ inv.product?.name }}</td>
+            <td class="text-right text-sm text-gray-500 dark:text-slate-400">{{ inv.branch?.name }}</td>
+            <td class="text-right text-sm text-gray-500 dark:text-slate-400">{{ inv.product?.unit?.symbol }}</td>
+            <td class="text-right">{{ inv.quantity }}</td>
+            <td class="text-right text-yellow-600 dark:text-yellow-400">{{ inv.reserved_quantity }}</td>
+            <td class="text-right font-semibold" :class="isLow(inv) ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
               {{ (inv.quantity - inv.reserved_quantity).toFixed(2) }}
             </td>
-            <td class="px-4 py-3 text-right text-gray-400">{{ inv.reorder_point }}</td>
+            <td class="text-right text-gray-400 dark:text-slate-500">{{ inv.reorder_point }}</td>
           </tr>
           <tr v-if="!loading && !inventory.length">
-            <td colspan="7" class="px-4 py-8 text-center text-gray-400">لا توجد بيانات مخزون.</td>
+            <td colspan="7" class="table-empty">
+              <p class="empty-state-title">لا توجد بيانات مخزون</p>
+              <p class="empty-state-description">جرّب إلغاء تصفية المخزون المنخفض أو راجع الفروع</p>
+            </td>
           </tr>
         </tbody>
       </table>

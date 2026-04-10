@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\StockMovementType;
+use App\Intelligence\Events\StockMovementRecorded;
 use App\Models\Inventory;
 use App\Models\StockMovement;
 use App\Models\Unit;
@@ -11,6 +12,10 @@ use Illuminate\Support\Str;
 
 class InventoryService
 {
+    public function __construct(
+        private readonly IntelligentEventEmitter $intelligentEvents,
+    ) {}
+
     public function deductStock(
         int    $companyId,
         int    $branchId,
@@ -23,24 +28,26 @@ class InventoryService
         ?int   $unitId = null,
         ?float $unitCost = null,
         ?string $note = null,
+        bool $allowNegativeStock = false,
     ): StockMovement {
         return DB::transaction(function () use (
             $companyId, $branchId, $productId, $quantity,
             $userId, $referenceType, $referenceId, $traceId,
-            $unitId, $unitCost, $note
+            $unitId, $unitCost, $note, $allowNegativeStock
         ) {
             $inventory = Inventory::firstOrCreate(
-                ['company_id' => $companyId, 'product_id' => $productId],
-                ['branch_id' => $branchId, 'quantity' => 0, 'reserved_quantity' => 0, 'reorder_point' => 0]
+                ['company_id' => $companyId, 'branch_id' => $branchId, 'product_id' => $productId],
+                ['quantity' => 0, 'reserved_quantity' => 0, 'reorder_point' => 0]
             );
             $inventory = Inventory::where('company_id', $companyId)
+                ->where('branch_id', $branchId)
                 ->where('product_id', $productId)
                 ->lockForUpdate()
                 ->firstOrFail();
 
             $baseQty = $this->toBaseQuantity($quantity, $unitId, $productId);
 
-            if ($inventory->available_quantity < $baseQty) {
+            if (! $allowNegativeStock && $inventory->available_quantity < $baseQty) {
                 throw new \DomainException(
                     "Insufficient stock for product #{$productId}. " .
                     "Available: {$inventory->available_quantity}, Requested: {$baseQty}."
@@ -53,7 +60,7 @@ class InventoryService
             $inventory->decrement('quantity', $baseQty);
             $inventory->increment('version');
 
-            return StockMovement::create([
+            $movement = StockMovement::create([
                 'uuid'               => Str::uuid(),
                 'company_id'         => $companyId,
                 'branch_id'          => $branchId,
@@ -71,6 +78,11 @@ class InventoryService
                 'note'               => $note,
                 'created_at'         => now(),
             ]);
+            DB::afterCommit(function () use ($movement): void {
+                $this->emitStockMovement($movement, 'InventoryService::deductStock');
+            });
+
+            return $movement;
         });
     }
 
@@ -118,7 +130,7 @@ class InventoryService
             $inventory->increment('quantity', $baseQty);
             $inventory->increment('version');
 
-            return StockMovement::create([
+            $movement = StockMovement::create([
                 'uuid'               => Str::uuid(),
                 'company_id'         => $companyId,
                 'branch_id'          => $branchId,
@@ -136,6 +148,11 @@ class InventoryService
                 'note'               => $note,
                 'created_at'         => now(),
             ]);
+            DB::afterCommit(function () use ($movement): void {
+                $this->emitStockMovement($movement, 'InventoryService::addStock');
+            });
+
+            return $movement;
         });
     }
 
@@ -235,5 +252,24 @@ class InventoryService
         }
 
         return $fromUnit->convertTo($toUnit, $quantity);
+    }
+
+    private function emitStockMovement(StockMovement $movement, string $sourceContext): void
+    {
+        $type = $movement->type;
+        $typeStr = $type instanceof \BackedEnum ? (string) $type->value : (string) $type;
+
+        $this->intelligentEvents->emit(new StockMovementRecorded(
+            companyId: (int) $movement->company_id,
+            branchId: $movement->branch_id ? (int) $movement->branch_id : null,
+            causedByUserId: $movement->created_by_user_id ? (int) $movement->created_by_user_id : null,
+            stockMovementId: (int) $movement->id,
+            productId: (int) $movement->product_id,
+            movementType: $typeStr,
+            quantityDelta: (float) $movement->quantity,
+            referenceType: $movement->reference_type,
+            referenceId: $movement->reference_id !== null ? (int) $movement->reference_id : null,
+            sourceContext: $sourceContext,
+        ));
     }
 }

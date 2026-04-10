@@ -2,40 +2,46 @@
   <div class="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors" :dir="locale.langInfo.value.dir">
     <!-- Mobile Sidebar Overlay -->
     <Transition name="overlay-fade">
-      <div v-if="mobileOpen" class="fixed inset-0 bg-black/50 z-40 lg:hidden" @click="mobileOpen = false"></div>
+      <div
+        v-if="mobileOpen"
+        data-print-chrome
+        class="print:hidden fixed inset-0 bg-black/50 z-40 lg:hidden"
+        @click="mobileOpen = false"
+      ></div>
     </Transition>
 
     <!-- Sidebar -->
     <aside
+      data-print-chrome
+      class="print:hidden"
       :class="[
-        'flex flex-col flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out bg-white dark:bg-slate-800 border-l dark:border-slate-700 border-gray-200 shadow-sm',
+        'flex flex-col flex-shrink-0 overflow-hidden bg-white dark:bg-slate-800 border-l dark:border-slate-700 border-gray-200 shadow-sm',
         'fixed lg:relative inset-y-0 right-0 z-50 lg:z-auto',
         mobileOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0',
         collapsed ? 'w-[60px]' : 'w-64',
+        'transition-[width,transform] duration-200 ease-out',
       ]"
     >
-      <!-- Logo + Collapse Toggle -->
-      <div class="h-16 flex items-center border-b border-gray-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 z-10 flex-shrink-0 transition-colors"
-           :class="collapsed ? 'justify-center px-2' : 'justify-between px-4'"
+      <!-- عنوان المنصّة (متعدد اللغات) + طيّ -->
+      <div
+        v-if="!collapsed"
+        class="flex min-h-14 items-center justify-between gap-2 border-b border-gray-200 px-4 py-2.5 dark:border-slate-700 sticky top-0 z-10 flex-shrink-0 bg-white transition-colors dark:bg-slate-800"
       >
-        <div class="flex items-center gap-2 overflow-hidden">
-          <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <WrenchScrewdriverIcon class="w-4 h-4 text-white" />
-          </div>
-          <span v-show="!collapsed" class="text-base font-bold text-gray-900 whitespace-nowrap">WorkshopOS</span>
-        </div>
+        <span class="min-w-0 flex-1 text-sm font-bold leading-snug text-gray-900 dark:text-slate-100">
+          {{ locale.t('app.sidebarTitle') }}
+        </span>
         <button
-          v-show="!collapsed"
-          class="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors flex-shrink-0"
+          type="button"
+          class="flex-shrink-0 rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
           title="طيّ القائمة"
           @click="collapsed = true"
         >
-          <ChevronRightIcon class="w-4 h-4" />
+          <ChevronRightIcon class="h-4 w-4" />
         </button>
       </div>
 
       <!-- Expand Button when collapsed -->
-      <div v-if="collapsed" class="flex justify-center py-2 border-b border-gray-100">
+      <div v-if="collapsed" class="flex justify-center border-b border-gray-100 py-2 dark:border-slate-700">
         <button class="p-2 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="توسيع القائمة" @click="collapsed = false">
           <ChevronLeftIcon class="w-4 h-4" />
         </button>
@@ -52,7 +58,7 @@
           <div class="space-y-1.5 sticky top-0 z-[5] -mx-1 px-1 pb-2 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-b border-gray-100 dark:border-slate-700/80">
             <div class="relative">
               <MagnifyingGlassIcon class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
-            <input
+              <input
                 v-model="navQuickFilter"
                 type="search"
                 enterkeyhint="search"
@@ -88,13 +94,19 @@
             <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
             <NavItem to="/bays" :icon="BuildingOfficeIcon" label="مناطق العمل" />
             <NavItem to="/bookings" :icon="CalendarDaysIcon" label="الحجوزات" />
+            <NavItem
+              v-if="auth.hasPermission('meetings.update')"
+              to="/meetings"
+              :icon="CalendarIcon"
+              label="الاجتماعات"
+            />
             <NavItem to="/bays/heatmap" :icon="FireIcon" label="الخريطة الحرارية" />
             <NavItem to="/customers" :icon="UsersIcon" :label="locale.t('nav.customers')" />
             <NavItem v-if="sectionEnabled('crm')" to="/crm/quotes" :icon="DocumentTextIcon" label="عروض الأسعار" />
             <NavItem v-if="sectionEnabled('crm')" to="/crm/relations" :icon="HeartIcon" label="علاقات العملاء" />
             <NavItem to="/vehicles" :icon="TruckIcon" :label="locale.t('nav.vehicles')" />
-            <NavItem v-if="sectionEnabled('fleet')" to="/fleet/verify-plate" :icon="MagnifyingGlassIcon" label="التحقق من اللوحة" />
-            <NavItem v-if="sectionEnabled('fleet')" to="/fleet/wallet" :icon="CreditCardIcon" label="محافظ الأسطول" />
+            <NavItem v-if="enabledPortals.fleet && sectionEnabled('fleet')" to="/fleet/verify-plate" :icon="MagnifyingGlassIcon" label="التحقق من اللوحة" />
+            <NavItem v-if="enabledPortals.fleet && sectionEnabled('fleet')" to="/fleet/wallet" :icon="CreditCardIcon" label="محافظ الأسطول" />
           </NavSection>
 
           <NavSection v-if="sectionEnabled('hr')" section-key="hr" label="الموارد البشرية">
@@ -106,29 +118,52 @@
             <NavItem to="/workshop/commissions" :icon="CurrencyDollarIcon" label="العمولات" />
             <NavItem to="/workshop/commission-policies" :icon="AdjustmentsHorizontalIcon" label="سياسات العمولات" />
             <NavItem to="/workshop/hr-comms" :icon="ChatBubbleLeftRightIcon" label="اتصالات إدارية" />
-            <NavItem to="/workshop/hr-archive" :icon="DocumentDuplicateIcon" label="أرشفة إلكترونية" />
-            <NavItem to="/workshop/hr-signatures" :icon="PencilSquareIcon" label="توقيع إلكتروني" />
-            <NavItem to="/workshop/wage-protection" :icon="ShieldCheckIcon" label="حماية الأجور (WPS)" />
           </NavSection>
 
-          <NavSection v-if="sectionEnabled('finance')" section-key="finance" :label="l('مالي', 'Finance')">
-            <NavItem to="/invoices" :icon="DocumentTextIcon" :label="locale.t('nav.invoices')" />
-            <NavItem to="/wallet" :icon="CreditCardIcon" label="المحفظة" />
-            <NavSubGroup group-key="purchases" label="المشتريات">
-              <NavItem to="/purchases" :icon="ShoppingBagIcon" label="قائمة المشتريات" />
-              <NavItem to="/purchases/new" :icon="ClipboardDocumentIcon" label="أوامر شراء" />
-              <NavItem to="/suppliers" :icon="TruckIcon" label="سندات الموردين" />
-            </NavSubGroup>
-          </NavSection>
-
-          <NavSection v-if="sectionEnabled('accounting')" section-key="accounting" label="محاسبي">
-            <NavSubGroup group-key="accountant" label="المحاسب">
-              <NavItem to="/ledger" :icon="BookOpenIcon" label="القيود اليومية" />
-              <NavItem to="/chart-of-accounts" :icon="TableCellsIcon" label="شجرة الحسابات" />
-              <NavItem to="/zatca" :icon="BuildingOffice2Icon" label="الضرائب" />
-              <NavItem to="/fixed-assets" :icon="ArchiveBoxIcon" label="الأصول الثابتة" />
-            </NavSubGroup>
-            <NavItem to="/compliance/labor-law" :icon="BookOpenIcon" label="مكتبة أنظمة العمل" />
+          <NavSection
+            v-if="sectionEnabled('finance') || sectionEnabled('accounting')"
+            section-key="finance_accounting"
+            :label="l('المالية والمحاسبة', 'Finance & Accounting')"
+          >
+            <template v-if="sectionEnabled('finance')">
+              <NavItem to="/invoices" :icon="DocumentTextIcon" :label="locale.t('nav.invoices')" />
+              <NavItem
+                v-if="sectionEnabled('crm')"
+                to="/crm/quotes"
+                :icon="ClipboardDocumentIcon"
+                label="عروض الأسعار"
+              />
+              <NavItem
+                v-if="auth.hasPermission('reports.financial.view')"
+                to="/financial-reconciliation"
+                :icon="ArrowsRightLeftIcon"
+                label="المطابقة المالية"
+              />
+              <NavItem to="/wallet" :icon="CreditCardIcon" label="المحفظة" />
+              <NavItem
+                v-if="
+                  auth.hasPermission('wallet.top_up_requests.create')
+                    || auth.hasPermission('wallet.top_up_requests.view')
+                    || auth.hasPermission('wallet.top_up_requests.review')
+                "
+                to="/wallet/top-up-requests"
+                :icon="QueueListIcon"
+                label="طلبات شحن الرصيد"
+              />
+              <NavSubGroup group-key="purchases" label="المشتريات">
+                <NavItem to="/purchases" :icon="ShoppingBagIcon" label="قائمة المشتريات" />
+                <NavItem to="/purchases/new" :icon="ClipboardDocumentIcon" label="أوامر شراء" />
+                <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
+              </NavSubGroup>
+            </template>
+            <template v-if="sectionEnabled('accounting')">
+              <NavSubGroup group-key="accountant" label="المحاسب">
+                <NavItem to="/ledger" :icon="BookOpenIcon" label="القيود اليومية" />
+                <NavItem to="/chart-of-accounts" :icon="TableCellsIcon" label="شجرة الحسابات" />
+                <NavItem to="/zatca" :icon="BuildingOffice2Icon" label="الضرائب" />
+                <NavItem to="/fixed-assets" :icon="ArchiveBoxIcon" label="الأصول الثابتة" />
+              </NavSubGroup>
+            </template>
           </NavSection>
 
           <NavSection v-if="sectionEnabled('inventory')" section-key="inventory" :label="l('المخزون', 'Inventory')">
@@ -138,11 +173,29 @@
           </NavSection>
 
           <NavSection v-if="sectionEnabled('reports') || sectionEnabled('intelligence')" section-key="analytics" :label="l('التحليلات وذكاء الأعمال', 'Analytics & Intelligence')">
-            <NavItem v-if="sectionEnabled('intelligence')" to="/business-intelligence" :icon="PresentationChartLineIcon" label="ذكاء الأعمال" />
+            <NavItem
+              v-if="
+                canAccessStaffBusinessIntelligence({
+                  buildFlagOn: featureFlags.intelligenceCommandCenter,
+                  isOwner: auth.isOwner,
+                  isEnabled: (k) => biz.isEnabled(k),
+                })
+              "
+              to="/business-intelligence"
+              :icon="PresentationChartLineIcon"
+              label="ذكاء الأعمال"
+            />
             <NavItem v-if="sectionEnabled('reports')" to="/reports" :icon="ChartBarIcon" :label="locale.t('nav.reports')" />
             <NavItem to="/governance" :icon="ShieldCheckIcon" label="السياسات والموافقات" />
             <NavItem
-              v-if="featureFlags.intelligenceCommandCenter"
+              v-if="
+                canAccessStaffCommandCenter({
+                  buildFlagOn: featureFlags.intelligenceCommandCenter,
+                  isOwner: auth.isOwner,
+                  isEnabled: (k) => biz.isEnabled(k),
+                  hasIntelligenceReportPermission: auth.hasPermission('reports.intelligence.view'),
+                })
+              "
               to="/internal/intelligence"
               :icon="SignalIcon"
               label="مركز العمليات الذكي"
@@ -156,13 +209,30 @@
             <NavItem to="/documents/company" :icon="FolderOpenIcon" label="مستندات المنشأة" />
             <NavItem to="/activity" :icon="ClipboardDocumentListIcon" label="سجل العمليات" />
             <NavItem to="/settings" :icon="Cog6ToothIcon" :label="locale.t('nav.settings')" />
+            <NavItem
+              v-if="auth.isManager"
+              to="/settings/team-users"
+              :icon="UserGroupIcon"
+              :label="teamUsersNavLabel"
+            />
+            <NavItem
+              v-if="auth.isManager && biz.isEnabled('org_structure')"
+              to="/settings/org-units"
+              :icon="BuildingOffice2Icon"
+              :label="orgUnitsNavLabel"
+            />
             <NavItem to="/settings/integrations" :icon="WrenchScrewdriverIcon" label="التكاملات" />
-            <NavItem to="/settings/api-keys" :icon="LockClosedIcon" label="مفاتيح API" />
+            <NavItem
+              v-if="auth.hasPermission('api_keys.manage')"
+              to="/settings/api-keys"
+              :icon="LockClosedIcon"
+              label="مفاتيح API"
+            />
             <NavItem to="/referrals" :icon="GiftIcon" label="الإحالات والولاء" />
             <NavItem to="/support" :icon="LifebuoyIcon" label="مركز الدعم الفني" />
           </NavSection>
 
-          <NavSection v-if="auth.isOwner" section-key="platform" label="إدارة المنصة">
+          <NavSection v-if="auth.isOwner && enabledPortals.admin" section-key="platform" label="إدارة المنصة">
             <NavItem to="/admin" :icon="CpuChipIcon" label="لوحة الأدمن" />
             <NavItem to="/admin/qa" :icon="BeakerIcon" label="التحقق من النظام (QA)" />
           </NavSection>
@@ -218,6 +288,26 @@
           >
             {{ l('تفاصيل النشر ومقارنة الخادم', 'Deployment details and server parity') }}
           </RouterLink>
+          <RouterLink
+            to="/about/taxonomy"
+            class="mt-1 block text-center text-[10px] font-medium text-gray-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 hover:underline"
+          >
+            {{ l('مسرد المنصة والعميل والمستأجر', 'Platform / tenant / customer glossary') }}
+          </RouterLink>
+          <RouterLink
+            to="/about/capabilities"
+            class="mt-1 block text-center text-[10px] font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+          >
+            {{ l('قدرات النظام (حسب نشاطك ودورك)', 'System capabilities (profile & role)') }}
+          </RouterLink>
+          <RouterLink
+            to="/landing"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mt-1 block text-center text-[10px] font-medium text-gray-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 hover:underline"
+          >
+            {{ l('صفحة أسس برو التعريفية (نافذة جديدة)', 'Osas Pro marketing page (new tab)') }}
+          </RouterLink>
         </div>
         <button
           v-else
@@ -230,26 +320,15 @@
           <span class="text-[9px] font-bold font-mono text-gray-500 dark:text-slate-400 tabular-nums">v{{ appVersionShort }}</span>
         </button>
       </div>
-
-      <!-- Logout -->
-      <div class="border-t border-gray-200 dark:border-slate-700 sticky bottom-0 bg-white dark:bg-slate-800 flex-shrink-0 transition-colors"
-           :class="collapsed ? 'p-1.5' : 'p-3'"
-      >
-        <button class="w-full flex items-center rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                :class="collapsed ? 'justify-center p-2' : 'gap-3 px-3 py-2'"
-                :title="collapsed ? locale.t('nav.logout') : ''"
-                @click="auth.logout()"
-        >
-          <ArrowLeftOnRectangleIcon class="w-5 h-5 flex-shrink-0" />
-          <span v-show="!collapsed">{{ locale.t('nav.logout') }}</span>
-        </button>
-      </div>
     </aside>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden min-w-0">
       <!-- Header -->
-      <header class="h-16 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10 gap-3 transition-colors">
+      <header
+        data-print-chrome
+        class="print:hidden h-16 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10 gap-3 transition-colors"
+      >
         <div class="flex items-center gap-3 min-w-0">
           <!-- Mobile Hamburger -->
           <button class="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex-shrink-0" @click="mobileOpen = !mobileOpen">
@@ -271,6 +350,22 @@
             <kbd class="text-xs bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1 text-gray-400">Ctrl+K</kbd>
           </button>
 
+          <button
+            v-if="showStaffCompactToggle"
+            type="button"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+            :class="
+              staffUi.compactMode
+                ? 'border-amber-400 bg-amber-100 text-amber-950 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100'
+                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+            "
+            :title="l('وضع مركز الخدمة السريع: إخفاء تفاصيل ثانوية', 'Compact service center mode: fewer secondary details')"
+            @click="staffUi.toggleCompact()"
+          >
+            <BoltIcon class="w-4 h-4 flex-shrink-0" />
+            <span class="hidden sm:inline max-w-[7rem] truncate">{{ l('وضع سريع', 'Compact') }}</span>
+          </button>
+
           <!-- Language Switcher -->
           <div ref="langMenuRef" class="relative">
             <button class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
@@ -284,14 +379,14 @@
                  class="absolute top-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg z-50 py-1 min-w-[160px]"
                  :class="locale.langInfo.value.dir === 'rtl' ? 'left-0' : 'right-0'"
             >
-              <button v-for="l in LANGUAGES" :key="l.code"
+              <button v-for="lang in LANGUAGES" :key="lang.code"
                       class="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-                      :class="locale.lang.value === l.code ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-gray-700 dark:text-slate-300'"
-                      @click="locale.setLang(l.code); langMenuOpen = false"
+                      :class="locale.lang.value === lang.code ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-gray-700 dark:text-slate-300'"
+                      @click="locale.setLang(lang.code); langMenuOpen = false"
               >
-                <span class="text-base leading-none">{{ l.flag }}</span>
-                <span>{{ l.native }}</span>
-                <CheckIcon v-if="locale.lang.value === l.code" class="w-3.5 h-3.5 mr-auto text-primary-600 dark:text-primary-400" />
+                <span class="text-base leading-none">{{ lang.flag }}</span>
+                <span>{{ lang.native }}</span>
+                <CheckIcon v-if="locale.lang.value === lang.code" class="w-3.5 h-3.5 mr-auto text-primary-600 dark:text-primary-400" />
               </button>
             </div>
           </div>
@@ -305,26 +400,21 @@
             <MoonIcon v-else class="w-5 h-5" />
           </button>
 
-          <!-- Notifications Bell -->
-          <div class="relative">
-            <button class="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors relative"
-                    title="الإشعارات"
-                    @click="notifOpen = !notifOpen"
-            >
-              <BellIcon class="w-5 h-5" />
-              <span v-if="unreadCount > 0"
-                    class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-800 animate-pulse"
-              >
-              </span>
-              <span
-                v-if="apiSecurityNotice"
-                class="absolute -top-0.5 -left-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-red-600 text-white text-[9px] leading-[14px] text-center font-bold ring-2 ring-white dark:ring-slate-800"
-                title="تنبيه أمني API"
-              >
-                !
-              </span>
-            </button>
-          </div>
+          <NotificationCenter class="flex-shrink-0" :api-security-notice="apiSecurityNotice" />
+
+          <!-- تسجيل الخروج — أعلى الصفحة، نقرة واحدة + إعادة توجيه فورية -->
+          <button
+            type="button"
+            data-testid="app-header-logout"
+            class="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 disabled:opacity-50 disabled:pointer-events-none"
+            :title="locale.t('nav.logout')"
+            :aria-label="locale.t('nav.logout')"
+            :disabled="loggingOut"
+            @click="handleLogout"
+          >
+            <ArrowLeftOnRectangleIcon class="h-5 w-5 flex-shrink-0" />
+            <span class="hidden sm:inline max-w-[7rem] truncate">{{ locale.t('nav.logout') }}</span>
+          </button>
 
           <!-- Portal Switcher -->
           <PortalSwitcher />
@@ -351,10 +441,13 @@
         </div>
       </header>
 
+      <PlatformPromoBanner class="relative z-[10] print:hidden" data-print-chrome />
+
       <!-- رجوع + فتات خبز -->
       <div
         v-if="route.name !== 'dashboard'"
-        class="px-6 py-2 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800"
+        data-print-chrome
+        class="no-print print:hidden px-6 py-2 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800"
       >
         <PageBackButton :fallback-to="breadcrumbParentPath" />
         <nav
@@ -374,7 +467,8 @@
       <main class="flex-1 overflow-auto p-4 md:p-6 bg-gray-50 dark:bg-slate-900 transition-colors">
         <div
           v-if="billingNotice"
-          class="max-w-[1600px] mx-auto mb-4 rounded-xl border px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2"
+          data-print-chrome
+          class="no-print print:hidden max-w-[1600px] mx-auto mb-4 rounded-xl border px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2"
           :class="billingNotice.boxClass"
           role="status"
         >
@@ -389,7 +483,8 @@
         </div>
         <div
           v-if="apiSecurityNotice"
-          class="max-w-[1600px] mx-auto mb-4 rounded-xl border border-red-300 bg-red-50 text-red-900 px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100"
+          data-print-chrome
+          class="no-print print:hidden max-w-[1600px] mx-auto mb-4 rounded-xl border border-red-300 bg-red-50 text-red-900 px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2 dark:border-red-900 dark:bg-red-950/40 dark:text-red-100"
           role="status"
         >
           <span>{{ apiSecurityNotice }}</span>
@@ -404,11 +499,11 @@
     </div>
 
     <!-- Global Overlays -->
-    <CommandPalette ref="paletteRef" />
+    <CommandPalette ref="paletteRef" class="print:hidden" data-print-chrome />
     <ToastContainer />
+    <SystemConfirmModal />
   </div>
-  <AiAssistant />
-  <NotificationCenter />
+  <AiAssistant class="print:hidden" data-print-chrome />
 </template>
 
 <script setup lang="ts">
@@ -416,7 +511,8 @@
 import { ref, computed, defineComponent, h, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import router from '@/router'
-import { NAV_SEARCH_ITEMS, itemMatchesNavQuery, normNavSearch } from '@/config/navSearchItems'
+import { NAV_SEARCH_ITEMS, itemMatchesNavQuery, normNavSearch, navSearchItemVisibleForPortals } from '@/config/navSearchItems'
+import { enabledPortals } from '@/config/portalAccess'
 import {
   HomeIcon, DocumentTextIcon, CubeIcon, UsersIcon, ChartBarIcon, Cog6ToothIcon,
   ArrowLeftOnRectangleIcon, TruckIcon, ShoppingCartIcon, ClipboardDocumentIcon,
@@ -426,24 +522,34 @@ import {
   MagnifyingGlassIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, WrenchScrewdriverIcon, DocumentCheckIcon,
   LockClosedIcon, ChevronRightIcon, ChevronLeftIcon,
   SunIcon, MoonIcon, CheckIcon, ChevronDownIcon,
-  BuildingOffice2Icon, CpuChipIcon, GiftIcon, Bars3Icon, BellIcon, SparklesIcon,
+  BuildingOffice2Icon, CpuChipIcon, GiftIcon, Bars3Icon, SparklesIcon,
   SignalIcon, PresentationChartLineIcon, BeakerIcon,
-  ChatBubbleLeftRightIcon, DocumentDuplicateIcon, PencilSquareIcon, FolderOpenIcon,
+  ChatBubbleLeftRightIcon, FolderOpenIcon,
   AdjustmentsHorizontalIcon, HeartIcon, InformationCircleIcon,
-  BuildingLibraryIcon, MapPinIcon,
+  BuildingLibraryIcon, MapPinIcon, BoltIcon, ArrowsRightLeftIcon, CalendarIcon,
+  QueueListIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
+import { useStaffUiStore } from '@/stores/staffUi'
 import { useSubscriptionStore } from '@/stores/subscription'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { featureFlags } from '@/config/featureFlags'
+import {
+  canAccessStaffBusinessIntelligence,
+  canAccessStaffCommandCenter,
+  canAccessWorkshopArea,
+  tenantSectionOpen,
+} from '@/config/staffFeatureGate'
 import { useLocale, LANGUAGES } from '@/composables/useLocale'
 import { useDarkMode } from '@/composables/useDarkMode'
 import PortalSwitcher from '@/components/PortalSwitcher.vue'
 import CommandPalette from '@/components/CommandPalette.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
+import SystemConfirmModal from '@/components/SystemConfirmModal.vue'
 import AiAssistant from '@/components/AiAssistant.vue'
 import NotificationCenter from '@/components/NotificationCenter.vue'
 import PageBackButton from '@/components/PageBackButton.vue'
+import PlatformPromoBanner from '@/components/PlatformPromoBanner.vue'
 import {
   APP_VERSION,
   APP_BUILD_TIME,
@@ -458,6 +564,7 @@ import { useToast } from '@/composables/useToast'
 import apiClient from '@/lib/apiClient'
 
 const auth = useAuthStore()
+const staffUi = useStaffUiStore()
 const sub  = useSubscriptionStore()
 const biz = useBusinessProfileStore()
 const route = useRoute()
@@ -466,6 +573,15 @@ const darkMode = useDarkMode()
 const toast = useToast()
 const paletteRef = ref<InstanceType<typeof CommandPalette> | null>(null)
 const l = (ar: string, en: string) => (locale.lang.value === 'ar' ? ar : en)
+
+const teamUsersNavLabel = computed(() => {
+  void locale.lang.value
+  return locale.t('teamUsers.nav')
+})
+const orgUnitsNavLabel = computed(() => {
+  void locale.lang.value
+  return locale.t('orgUnits.nav')
+})
 
 const appVersion = APP_VERSION
 const gitCommit = GIT_COMMIT
@@ -495,13 +611,34 @@ async function copyReleaseInfo() {
     toast.warning('تعذّر النسخ', line)
   }
 }
+
 const langMenuOpen = ref(false)
 const langMenuRef = ref<HTMLElement | null>(null)
-const notifOpen = ref(false)
-const unreadCount = ref(0)
 const apiSecurityNotice = ref('')
+const loggingOut = ref(false)
+
+/** وعد واحد فقط: يمنع عدة نقرات سريعة من إطلاق أكثر من طلب خروج قبل اكتمال الأول */
+let logoutInFlight: Promise<void> | null = null
+
+function handleLogout(): void {
+  if (logoutInFlight) return
+  loggingOut.value = true
+  logoutInFlight = (async () => {
+    try {
+      await auth.logout()
+      await router.replace({ name: 'login' })
+    } finally {
+      loggingOut.value = false
+      logoutInFlight = null
+    }
+  })()
+}
 
 const greeting = computed(() => locale.greeting.value)
+
+const showStaffCompactToggle = computed(
+  () => auth.isStaff && !auth.isFleet && !auth.isCustomer && route.path.startsWith('/work-orders'),
+)
 
 /** تنبيه فوترة خفيف: فترة سماح / انتهاء قريب — بدون تعقيد إضافي */
 const BILLING_STATE_AR: Record<string, string> = {
@@ -561,7 +698,11 @@ const billingNotice = computed((): { text: string; boxClass: string; showPlanLin
 const collapsed  = ref(localStorage.getItem('sidebar_collapsed') === 'true')
 const mobileOpen = ref(false)
 const navQuickFilter = ref('')
-const openNavSection = ref(localStorage.getItem('open_nav_section') || 'operations')
+const openNavSection = ref((() => {
+  const raw = localStorage.getItem('open_nav_section') || 'operations'
+  if (raw === 'finance' || raw === 'accounting') return 'finance_accounting'
+  return raw
+})())
 const openNavGroups = ref<Record<string, boolean>>(
   (() => {
     try {
@@ -571,41 +712,147 @@ const openNavGroups = ref<Record<string, boolean>>(
     }
   })(),
 )
-watch(collapsed, v => localStorage.setItem('sidebar_collapsed', String(v)))
-watch(openNavSection, (v) => localStorage.setItem('open_nav_section', v))
-watch(openNavGroups, (v) => localStorage.setItem('open_nav_groups', JSON.stringify(v)), { deep: true })
-watch(() => route.path, () => {
-  mobileOpen.value = false
-  const p = route.path
-  if (p.startsWith('/workshop') || p.startsWith('/hr') || p.startsWith('/compliance')) openNavSection.value = 'hr'
-  else if (p.startsWith('/invoices') || p.startsWith('/wallet') || p.startsWith('/contracts') || p.startsWith('/purchases')) openNavSection.value = 'finance'
-  else if (p.startsWith('/ledger') || p.startsWith('/chart-of-accounts') || p.startsWith('/zatca')) openNavSection.value = 'accounting'
-  else if (p.startsWith('/products') || p.startsWith('/inventory') || p.startsWith('/suppliers')) openNavSection.value = 'inventory'
-  else if (p.startsWith('/reports') || p.startsWith('/business-intelligence') || p.startsWith('/governance') || p.startsWith('/internal/intelligence')) openNavSection.value = 'analytics'
-  else if (p.startsWith('/settings') || p.startsWith('/branches') || p.startsWith('/documents') || p.startsWith('/support') || p.startsWith('/activity')) openNavSection.value = 'admin'
-  else if (p.startsWith('/admin')) openNavSection.value = 'platform'
-  else if (p.startsWith('/referrals')) openNavSection.value = 'admin'
-  else if (p.startsWith('/subscription') || p.startsWith('/plans') || p.startsWith('/plugins')) openNavSection.value = 'subscription'
-  else openNavSection.value = 'operations'
-})
-
-const navQuickFilterTrimmed = computed(() => normNavSearch(navQuickFilter.value))
-const filteredNavQuick = computed(() => {
-  const q = navQuickFilterTrimmed.value
-  if (!q) return []
-  return NAV_SEARCH_ITEMS.filter((item) => {
-    if (item.requiresManager && !auth.isManager) return false
-    if (item.requiresStaff && !auth.isStaff) return false
-    if (item.requiresOwner && !auth.isOwner) return false
-    if (item.requiresIntelligence && !featureFlags.intelligenceCommandCenter) return false
-    return itemMatchesNavQuery(item, q)
-  }).slice(0, 14)
-})
 
 function sectionEnabled(key: string): boolean {
   if (auth.isOwner) return true
   return biz.isEnabled(key)
 }
+
+watch(collapsed, v => localStorage.setItem('sidebar_collapsed', String(v)))
+watch(openNavSection, (v) => localStorage.setItem('open_nav_section', v))
+watch(openNavGroups, (v) => localStorage.setItem('open_nav_groups', JSON.stringify(v)), { deep: true })
+watch(
+  () => route.path,
+  () => {
+    mobileOpen.value = false
+    const p = route.path
+
+    if (p.startsWith('/workshop') || p.startsWith('/hr')) {
+      openNavSection.value = 'hr'
+    } else if (
+      p.startsWith('/invoices')
+      || p.startsWith('/wallet')
+      || p.startsWith('/purchases')
+      || p.startsWith('/goods-receipts')
+      || p.startsWith('/ledger')
+      || p.startsWith('/chart-of-accounts')
+      || p.startsWith('/zatca')
+      || p.startsWith('/fixed-assets')
+      || p.startsWith('/compliance')
+      || p.startsWith('/financial-reconciliation')
+    ) {
+      openNavSection.value = 'finance_accounting'
+    } else if (p.startsWith('/crm/')) {
+      // نفس الرابط تحت «تشغيلي» و«المالية»؛ نفتح المالية فقط إن وُجدت فيها عناصر CRM (وحدة المالية مفعّلة).
+      openNavSection.value = sectionEnabled('finance') ? 'finance_accounting' : 'operations'
+    } else if (p.startsWith('/suppliers')) {
+      openNavSection.value = sectionEnabled('finance') ? 'finance_accounting' : 'inventory'
+    } else if (p.startsWith('/products') || p.startsWith('/inventory')) {
+      openNavSection.value = 'inventory'
+    } else if (
+      p.startsWith('/reports')
+      || p.startsWith('/business-intelligence')
+      || p.startsWith('/governance')
+      || p.startsWith('/internal/intelligence')
+    ) {
+      openNavSection.value = 'analytics'
+    } else if (
+      p.startsWith('/settings')
+      || p.startsWith('/branches')
+      || p.startsWith('/documents')
+      || p.startsWith('/support')
+      || p.startsWith('/activity')
+      || p.startsWith('/contracts')
+      || p.startsWith('/referrals')
+    ) {
+      openNavSection.value = 'admin'
+    } else if (p.startsWith('/admin')) {
+      openNavSection.value = 'platform'
+    } else if (p.startsWith('/meetings')) {
+      openNavSection.value = 'operations'
+    } else if (p.startsWith('/subscription') || p.startsWith('/plans') || p.startsWith('/plugins')) {
+      openNavSection.value = 'subscription'
+    } else {
+      openNavSection.value = 'operations'
+    }
+
+    // توسيع المجموعة الفرعية التي تحتوي الصفحة الحالية (أسرع من البحث يدوياً داخل القسم)
+    if (p.startsWith('/purchases') || p.startsWith('/goods-receipts') || (p.startsWith('/suppliers') && sectionEnabled('finance'))) {
+      openNavGroups.value = { ...openNavGroups.value, purchases: true }
+    }
+    if (
+      p.startsWith('/ledger')
+      || p.startsWith('/chart-of-accounts')
+      || p.startsWith('/zatca')
+      || p.startsWith('/fixed-assets')
+    ) {
+      openNavGroups.value = { ...openNavGroups.value, accountant: true }
+    }
+  },
+  { immediate: true },
+)
+
+const navQuickFilterTrimmed = computed(() => normNavSearch(navQuickFilter.value))
+const filteredNavQuick = computed(() => {
+  void locale.lang.value
+  void biz.loaded
+  void biz.effectiveFeatureMatrix
+  const q = navQuickFilterTrimmed.value
+  if (!q) return []
+  const labelFor = (to: string, fallback: string) => {
+    if (to === '/settings/team-users') return locale.t('teamUsers.nav')
+    if (to === '/settings/org-units') return locale.t('orgUnits.nav')
+    return fallback
+  }
+  return NAV_SEARCH_ITEMS.filter((item) => {
+    if (!navSearchItemVisibleForPortals(item, enabledPortals)) return false
+    if (item.requiresManager && !auth.isManager) return false
+    if (item.requiresStaff && !auth.isStaff) return false
+    if (item.requiresOwner && !auth.isOwner) return false
+    if (item.requiresIntelligence && !featureFlags.intelligenceCommandCenter) return false
+    if (item.to === '/business-intelligence') {
+      if (
+        !canAccessStaffBusinessIntelligence({
+          buildFlagOn: featureFlags.intelligenceCommandCenter,
+          isOwner: auth.isOwner,
+          isEnabled: (k) => biz.isEnabled(k),
+        })
+      ) {
+        return false
+      }
+    }
+    if (item.to === '/internal/intelligence') {
+      if (
+        !canAccessStaffCommandCenter({
+          buildFlagOn: featureFlags.intelligenceCommandCenter,
+          isOwner: auth.isOwner,
+          isEnabled: (k) => biz.isEnabled(k),
+          hasIntelligenceReportPermission: auth.hasPermission('reports.intelligence.view'),
+        })
+      ) {
+        return false
+      }
+    }
+    if (item.to === '/settings/org-units' && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'org_structure')) {
+      return false
+    }
+    if (
+      (item.to.startsWith('/bays') || item.to.startsWith('/bookings') || item.to.startsWith('/meetings')) &&
+      !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
+    ) {
+      return false
+    }
+    if (item.to.startsWith('/workshop') && !canAccessWorkshopArea(auth.isOwner, (k) => biz.isEnabled(k))) return false
+    if (item.requiresPermission && !auth.hasPermission(item.requiresPermission)) return false
+    if (item.requiresAnyPermission?.length) {
+      const ok = item.requiresAnyPermission.some((p) => auth.hasPermission(p))
+      if (!ok) return false
+    }
+    return itemMatchesNavQuery(item, q)
+  })
+    .slice(0, 14)
+    .map((item) => ({ ...item, label: labelFor(item.to, item.label) }))
+})
 
 function handleClickOutside(e: MouseEvent) {
   if (langMenuRef.value && !langMenuRef.value.contains(e.target as Node)) {
@@ -620,18 +867,18 @@ onMounted(() => {
 onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 
 watch(() => route.fullPath, () => {
-  if (!auth.isManager) return
+  if (!auth.hasPermission('api_keys.manage')) return
   loadApiSecurityNotice().catch(() => {})
 })
 
 async function loadApiSecurityNotice() {
-  if (!auth.isManager) {
+  if (!auth.hasPermission('api_keys.manage')) {
     apiSecurityNotice.value = ''
     return
   }
   const [{ data: keysRes }, { data: logsRes }] = await Promise.all([
-    apiClient.get('/api-keys'),
-    apiClient.get('/api-usage-logs', { params: { per_page: 50 } }),
+    apiClient.get('/api-keys', { skipGlobalErrorToast: true }),
+    apiClient.get('/api-usage-logs', { params: { per_page: 50 }, skipGlobalErrorToast: true }),
   ])
   const keys = keysRes?.data?.data ?? keysRes?.data ?? []
   const logs = logsRes?.data?.data ?? logsRes?.data ?? []
@@ -680,32 +927,52 @@ function prefetchRoute(path?: string) {
 }
 
 const flatItems = computed(() => {
+  void biz.loaded
+  void biz.effectiveFeatureMatrix
+  const opsOpen = tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
   const items: { to: string; icon: object; label: string; locked: boolean }[] = [
     { to: '/',                     icon: HomeIcon,                label: 'الرئيسية',          locked: false },
     { to: '/pos',                  icon: ShoppingCartIcon,        label: 'نقطة البيع',         locked: false },
     { to: '/invoices',             icon: DocumentTextIcon,        label: 'الفواتير',           locked: false },
+    ...(auth.hasPermission('reports.financial.view')
+      ? [{ to: '/financial-reconciliation', icon: ArrowsRightLeftIcon, label: 'مطابقة مالية', locked: false }]
+      : []),
     { to: '/work-orders',          icon: ClipboardDocumentIcon,   label: 'أوامر العمل',        locked: false },
-    { to: '/bays',                 icon: BuildingOfficeIcon,      label: 'مناطق العمل',        locked: false },
-    { to: '/bookings',             icon: CalendarDaysIcon,        label: 'الحجوزات',           locked: false },
+    ...(opsOpen ? [{ to: '/bays', icon: BuildingOfficeIcon, label: 'مناطق العمل', locked: false }] : []),
+    ...(opsOpen ? [{ to: '/bookings', icon: CalendarDaysIcon, label: 'الحجوزات', locked: false }] : []),
+    ...(opsOpen && auth.hasPermission('meetings.update')
+      ? [{ to: '/meetings', icon: CalendarIcon, label: 'الاجتماعات', locked: false }]
+      : []),
     ...(auth.isManager ? [{ to: '/branches', icon: BuildingLibraryIcon, label: 'الفروع', locked: false }] : []),
     ...(auth.isStaff ? [{ to: '/branches/map', icon: MapPinIcon, label: 'خريطة الفروع', locked: false }] : []),
     { to: '/customers',            icon: UsersIcon,               label: 'العملاء',            locked: false },
     { to: '/vehicles',             icon: TruckIcon,               label: 'المركبات',           locked: false },
     { to: '/wallet',               icon: CreditCardIcon,          label: 'المحفظة',            locked: false },
+    ...(auth.hasPermission('wallet.top_up_requests.create')
+      || auth.hasPermission('wallet.top_up_requests.view')
+      || auth.hasPermission('wallet.top_up_requests.review')
+      ? [{ to: '/wallet/top-up-requests', icon: QueueListIcon, label: 'طلبات شحن الرصيد', locked: false }]
+      : []),
     { to: '/products',             icon: CubeIcon,                label: 'المنتجات',           locked: false },
-    ...(featureFlags.intelligenceCommandCenter
+    ...(canAccessStaffBusinessIntelligence({
+      buildFlagOn: featureFlags.intelligenceCommandCenter,
+      isOwner: auth.isOwner,
+      isEnabled: (k) => biz.isEnabled(k),
+    })
       ? [{ to: '/business-intelligence', icon: PresentationChartLineIcon, label: 'ذكاء الأعمال', locked: false }]
       : []),
     { to: '/reports',              icon: ChartBarIcon,            label: 'التقارير',           locked: false },
     { to: '/settings',             icon: Cog6ToothIcon,           label: 'الإعدادات',          locked: false },
-    {
-      to:      '/internal/intelligence',
-      icon:    SignalIcon,
-      label:   'مركز العمليات',
-      locked:  !featureFlags.intelligenceCommandCenter,
-    },
+    ...(canAccessStaffCommandCenter({
+      buildFlagOn: featureFlags.intelligenceCommandCenter,
+      isOwner: auth.isOwner,
+      isEnabled: (k) => biz.isEnabled(k),
+      hasIntelligenceReportPermission: auth.hasPermission('reports.intelligence.view'),
+    })
+      ? [{ to: '/internal/intelligence', icon: SignalIcon, label: 'مركز العمليات', locked: false }]
+      : []),
   ]
-  if (auth.isOwner) {
+  if (auth.isOwner && enabledPortals.admin) {
     items.push({ to: '/admin/qa', icon: BeakerIcon, label: 'التحقق من النظام', locked: false })
   }
   return items
@@ -785,7 +1052,7 @@ const NavSection = defineComponent({
         [
           h('span', { class: 'inline-flex h-1.5 w-1.5 rounded-full bg-primary-500/80' }),
           h('p', { class: 'flex-1 text-[12px] font-bold text-gray-600 dark:text-slate-300 tracking-wide' }, props.label),
-          h(ChevronDownIcon, { class: `w-3.5 h-3.5 text-gray-400 transition-transform ${isOpen.value ? 'rotate-180' : ''}` }),
+          h(ChevronDownIcon, { class: `w-3.5 h-3.5 text-gray-400 transition-transform duration-150 ease-out ${isOpen.value ? 'rotate-180' : ''}` }),
         ],
       ),
       ...(isOpen.value ? (slots.default?.() ?? []) : []),
@@ -824,6 +1091,8 @@ const pageTitles: Record<string, string> = {
   vehicles: 'المركبات', 'vehicles.show': 'تفاصيل المركبة',
   'work-orders': 'أوامر العمل', 'work-orders.show': 'تفاصيل أمر العمل',
   'work-orders.create': 'أمر عمل جديد', invoices: 'الفواتير',
+  'financial-reconciliation': 'المطابقة المالية',
+  meetings: 'الاجتماعات',
   'invoices.show': 'تفاصيل الفاتورة', products: 'المنتجات',
   'products.create': 'منتج جديد', inventory: 'المخزون',
   'inventory.units': 'وحدات القياس', 'inventory.reservations': 'الحجوزات',
@@ -832,6 +1101,7 @@ const pageTitles: Record<string, string> = {
   referrals: 'الإحالات والولاء',
   ledger: 'دفتر الأستاذ العام', 'ledger.show': 'تفاصيل القيد',
   'chart-of-accounts': 'دليل الحسابات', 'fixed-assets': 'الأصول الثابتة', wallet: 'المحفظة',
+  'wallet.top-up-requests': 'طلبات شحن الرصيد',
   'wallet-transactions': 'معاملات المحفظة',
   'fleet.wallet': 'محافظ الأسطول', 'fleet.verify-plate': 'التحقق من اللوحة',
   'fleet.transactions': 'سجل المعاملات', governance: 'الحوكمة والسياسات',
@@ -840,29 +1110,38 @@ const pageTitles: Record<string, string> = {
   'workshop.leaves': 'الإجازات', 'workshop.commissions': 'العمولات',
   bays: 'مناطق العمل', 'bays.heatmap': 'الخريطة الحرارية',
   bookings: 'الحجوزات', plans: 'باقات الاشتراك', subscription: 'اشتراكي',
-  settings: 'الإعدادات', 'settings.integrations': 'التكاملات', 'settings.api-keys': 'مفاتيح API', activity: 'سجل العمليات',
+  settings: 'الإعدادات', 'settings.team-users': 'حسابات الفريق', 'settings.org-units': 'هيكل القطاعات', 'settings.integrations': 'التكاملات', 'settings.api-keys': 'مفاتيح API', activity: 'سجل العمليات',
   'internal.intelligence': 'مركز العمليات الذكي',
   admin: 'لوحة الأدمن', AdminQA: 'التحقق من النظام (QA)',
   'workshop.hr-comms': 'الاتصالات الإدارية',
-  'workshop.hr-archive': 'الأرشفة الإلكترونية',
-  'workshop.hr-signatures': 'التوقيع الإلكتروني',
-  'workshop.wage-protection': 'حماية الأجور',
   'workshop.commission-policies': 'سياسات العمولات',
   'crm.relations': 'علاقات العملاء',
-  'compliance.labor-law': 'مكتبة أنظمة العمل',
   'documents.company': 'مستندات المنشأة',
+  'electronic-archive': 'الأرشفة الإلكترونية',
+  'workshop.hr-archive': 'الأرشفة الإلكترونية',
   branches: 'إدارة الفروع',
   'branches.map': 'خريطة الفروع',
   'about.deployment': 'بيانات النشر',
 }
 
-const pageTitle = computed(() => pageTitles[route.name as string] ?? 'WorkshopOS')
+const pageTitle = computed(() => {
+  void locale.lang.value
+  const name = route.name as string
+  if (name === 'settings.team-users') return locale.t('teamUsers.title')
+  if (name === 'settings.org-units') return locale.t('orgUnits.title')
+  if (name === 'access-denied') return locale.t('pages.accessDenied')
+  if (name === 'about.capabilities') return locale.t('pages.capabilities')
+  if (name === 'about.taxonomy') return locale.t('pages.taxonomy')
+  return pageTitles[name] ?? locale.t('app.name')
+})
 
 const breadcrumbMap: Record<string, { label: string; parent?: string }> = {
   admin:                  { label: 'لوحة الأدمن', parent: 'dashboard' },
   dashboard:              { label: 'الرئيسية' },
   pos:                    { label: 'نقطة البيع', parent: 'dashboard' },
   invoices:               { label: 'الفواتير', parent: 'dashboard' },
+  'financial-reconciliation': { label: 'المطابقة المالية', parent: 'dashboard' },
+  meetings:               { label: 'الاجتماعات', parent: 'dashboard' },
   'invoices.show':        { label: 'تفاصيل الفاتورة', parent: 'invoices' },
   'work-orders':          { label: 'أوامر العمل', parent: 'dashboard' },
   'work-orders.show':     { label: 'تفاصيل أمر العمل', parent: 'work-orders' },
@@ -872,6 +1151,8 @@ const breadcrumbMap: Record<string, { label: string; parent?: string }> = {
   'vehicles.show':        { label: 'تفاصيل المركبة', parent: 'vehicles' },
   vehicles:               { label: 'المركبات', parent: 'customers' },
   settings:               { label: 'الإعدادات', parent: 'dashboard' },
+  'settings.team-users':  { label: 'حسابات الفريق', parent: 'settings' },
+  'settings.org-units':   { label: 'هيكل القطاعات', parent: 'settings' },
   'settings.integrations':{ label: 'التكاملات', parent: 'settings' },
   'settings.api-keys':    { label: 'مفاتيح API', parent: 'settings' },
   bays:                   { label: 'مناطق العمل', parent: 'dashboard' },
@@ -883,12 +1164,20 @@ const breadcrumbMap: Record<string, { label: string; parent?: string }> = {
   ledger:                 { label: 'دفتر الأستاذ', parent: 'dashboard' },
   'fixed-assets':         { label: 'الأصول الثابتة', parent: 'dashboard' },
   'internal.intelligence': { label: 'مركز العمليات الذكي', parent: 'dashboard' },
+  'about.capabilities':      { label: 'قدرات النظام', parent: 'dashboard' },
+  'about.taxonomy':          { label: 'مسرد المنصة', parent: 'dashboard' },
+  'access-denied':           { label: 'لا صلاحية', parent: 'dashboard' },
+  wallet:                    { label: 'المحفظة', parent: 'dashboard' },
+  'wallet.top-up-requests':  { label: 'طلبات شحن الرصيد', parent: 'wallet' },
 }
 
 const routePaths: Record<string, string> = {
-  dashboard: '/', admin: '/admin', AdminQA: '/admin/qa', pos: '/pos', invoices: '/invoices', 'work-orders': '/work-orders',
+  dashboard: '/', admin: '/admin', AdminQA: '/admin/qa', pos: '/pos', invoices: '/invoices',
+  'financial-reconciliation': '/financial-reconciliation',
+  meetings: '/meetings',
+  'work-orders': '/work-orders',
   products: '/products', customers: '/customers', vehicles: '/vehicles',
-  settings: '/settings', 'settings.integrations': '/settings/integrations',
+  settings: '/settings', 'settings.team-users': '/settings/team-users', 'settings.org-units': '/settings/org-units', 'settings.integrations': '/settings/integrations',
   'settings.api-keys': '/settings/api-keys',
   bays: '/bays', 'bays.heatmap': '/bays/heatmap', bookings: '/bookings',
   'business-intelligence': '/business-intelligence',
@@ -897,16 +1186,30 @@ const routePaths: Record<string, string> = {
   'internal.intelligence': '/internal/intelligence',
   branches: '/branches',
   'branches.map': '/branches/map',
+  'about.capabilities': '/about/capabilities',
+  'about.taxonomy': '/about/taxonomy',
+  'access-denied': '/access-denied',
+  wallet: '/wallet',
+  'wallet.top-up-requests': '/wallet/top-up-requests',
 }
 
 const breadcrumbs = computed(() => {
+  void locale.lang.value
   const current = route.name as string
   const chain: { label: string; path: string }[] = []
   let key: string | undefined = current
+  const labelFor = (routeKey: string, fallback: string) => {
+    if (routeKey === 'settings.team-users') return locale.t('teamUsers.nav')
+    if (routeKey === 'settings.org-units') return locale.t('orgUnits.nav')
+    if (routeKey === 'about.capabilities') return locale.t('pages.capabilities')
+    if (routeKey === 'about.taxonomy') return locale.t('pages.taxonomy')
+    if (routeKey === 'access-denied') return locale.t('pages.accessDenied')
+    return fallback
+  }
   while (key) {
     const entry: { label: string; parent?: string } | undefined = breadcrumbMap[key]
     if (!entry) break
-    chain.unshift({ label: entry.label, path: routePaths[key] ?? '/' })
+    chain.unshift({ label: labelFor(key, entry.label), path: routePaths[key] ?? '/' })
     key = entry.parent
   }
   return chain

@@ -113,22 +113,60 @@ class GovernanceController extends Controller
     {
         $user = $request->user();
         $note = $request->input('note', '');
+        $workflow = ApprovalWorkflow::where('company_id', $user->company_id)->findOrFail($id);
 
-        $workflow = app(ApprovalWorkflowService::class)->approve($id, $user->id, $note);
+        if (! in_array((string) $workflow->status, ['pending'], true)) {
+            return response()->json([
+                'message' => "Workflow status transition {$workflow->status} -> approved is not allowed.",
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
+        try {
+            $workflow = app(ApprovalWorkflowService::class)->approve($id, $user->id, $note);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
         app(AuditLogger::class)->log('workflow.approved', ApprovalWorkflow::class, $id, ['status' => 'pending'], ['status' => 'approved', 'note' => $note]);
 
-        return response()->json(['data' => $workflow, 'message' => 'تمت الموافقة.']);
+        return response()->json(['data' => $workflow, 'message' => 'تمت الموافقة.', 'trace_id' => app('trace_id')]);
     }
 
     public function rejectWorkflow(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
         $note = $request->input('note', '');
+        $workflow = ApprovalWorkflow::where('company_id', $user->company_id)->findOrFail($id);
 
-        $workflow = app(ApprovalWorkflowService::class)->reject($id, $user->id, $note);
+        if (! in_array((string) $workflow->status, ['pending'], true)) {
+            return response()->json([
+                'message' => "Workflow status transition {$workflow->status} -> rejected is not allowed.",
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
+
+        try {
+            $workflow = app(ApprovalWorkflowService::class)->reject($id, $user->id, $note);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
+                'trace_id' => app('trace_id'),
+            ], 409);
+        }
         app(AuditLogger::class)->log('workflow.rejected', ApprovalWorkflow::class, $id, ['status' => 'pending'], ['status' => 'rejected', 'note' => $note]);
 
-        return response()->json(['data' => $workflow, 'message' => 'تم الرفض.']);
+        return response()->json(['data' => $workflow, 'message' => 'تم الرفض.', 'trace_id' => app('trace_id')]);
     }
 
     // ────────────────────────────────────────────────────────

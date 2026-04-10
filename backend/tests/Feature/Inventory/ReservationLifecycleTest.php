@@ -19,6 +19,19 @@ class ReservationLifecycleTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function statusValue(mixed $status): string
+    {
+        if ($status instanceof \BackedEnum) {
+            return (string) $status->value;
+        }
+
+        if ($status instanceof \UnitEnum) {
+            return $status->name;
+        }
+
+        return (string) $status;
+    }
+
     private Company $company;
     private Branch $branch;
     private User $user;
@@ -79,7 +92,7 @@ class ReservationLifecycleTest extends TestCase
             traceId:       'trace-res-001',
         );
 
-        $this->assertEquals('pending', $reservation->status);
+        $this->assertEquals('pending', $this->statusValue($reservation->status));
         $this->assertEquals(10, $reservation->quantity);
 
         $inventory = Inventory::where([
@@ -107,7 +120,7 @@ class ReservationLifecycleTest extends TestCase
         $this->reservationService->consume($reservation, 'trace-res-003');
 
         $reservation->refresh();
-        $this->assertEquals('consumed', $reservation->status);
+        $this->assertEquals('consumed', $this->statusValue($reservation->status));
 
         $inventory = Inventory::where([
             'company_id' => $this->company->id,
@@ -135,7 +148,7 @@ class ReservationLifecycleTest extends TestCase
         $this->reservationService->release($reservation);
 
         $reservation->refresh();
-        $this->assertEquals('released', $reservation->status);
+        $this->assertEquals('released', $this->statusValue($reservation->status));
 
         $inventory = Inventory::where([
             'company_id' => $this->company->id,
@@ -163,7 +176,7 @@ class ReservationLifecycleTest extends TestCase
         $this->reservationService->cancel($reservation);
 
         $reservation->refresh();
-        $this->assertEquals('canceled', $reservation->status);
+        $this->assertEquals('canceled', $this->statusValue($reservation->status));
 
         $inventory = Inventory::where([
             'company_id' => $this->company->id,
@@ -223,26 +236,31 @@ class ReservationLifecycleTest extends TestCase
 
     public function test_expire_overdue_updates_status(): void
     {
+        $inventory = Inventory::where([
+            'company_id' => $this->company->id,
+            'branch_id'  => $this->branch->id,
+            'product_id' => $this->product->id,
+        ])->firstOrFail();
+
         $reservation = InventoryReservation::create([
+            'inventory_id'        => $inventory->id,
             'company_id'         => $this->company->id,
             'branch_id'          => $this->branch->id,
             'product_id'         => $this->product->id,
             'created_by_user_id' => $this->user->id,
+            'reference_type'     => 'work_order',
+            'reference_id'       => 99,
             'quantity'           => 5,
             'status'             => 'pending',
             'expires_at'         => now()->subHour(),
         ]);
 
-        Inventory::where([
-            'company_id' => $this->company->id,
-            'branch_id'  => $this->branch->id,
-            'product_id' => $this->product->id,
-        ])->increment('reserved_quantity', 5);
+        $inventory->increment('reserved_quantity', 5);
 
-        $count = $this->reservationService->expireOverdue();
+        $count = $this->reservationService->expireOverdue($this->company->id);
 
         $this->assertGreaterThanOrEqual(1, $count);
         $reservation->refresh();
-        $this->assertEquals('expired', $reservation->status);
+        $this->assertEquals('expired', $this->statusValue($reservation->status));
     }
 }
