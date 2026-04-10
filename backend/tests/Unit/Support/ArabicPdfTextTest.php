@@ -18,13 +18,23 @@ final class ArabicPdfTextTest extends TestCase
     }
 
     #[Test]
-    public function as_dompdf_html_uses_ltr_isolate_span_for_dompdf_rtl_documents(): void
+    public function as_dompdf_html_wraps_arabic_in_rtl_embed_span(): void
     {
         $html = ArabicPdfText::asDompdfHtml('أمر عمل')->toHtml();
 
         $this->assertStringContainsString('class="dompdf-ar-shape"', $html);
+        $this->assertStringContainsString('dir="rtl"', $html);
+        $this->assertStringContainsString('lang="ar"', $html);
+        $this->assertStringContainsString('unicode-bidi:embed', $html);
+    }
+
+    #[Test]
+    public function as_dompdf_html_wraps_ascii_in_ltr_isolate_span(): void
+    {
+        $html = ArabicPdfText::asDompdfHtml('WO-1')->toHtml();
+
+        $this->assertStringContainsString('class="dompdf-ar-ascii"', $html);
         $this->assertStringContainsString('dir="ltr"', $html);
-        $this->assertStringContainsString('unicode-bidi:isolate', $html);
     }
 
     #[Test]

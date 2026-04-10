@@ -62,11 +62,6 @@ final class WorkOrderPdfService
         $weekdayAr = $this->weekdayAr($created);
         $createdFormatted = $created->copy()->locale('ar')->translatedFormat('l j F Y');
 
-        $linesGrandTotal = 0.0;
-        foreach ($order->items as $line) {
-            $linesGrandTotal += (float) $line->total;
-        }
-
         $pdf->loadView('pdf.work-order-ar', [
             'order' => $order,
             'qrDataUri' => $qrDataUri,
@@ -75,7 +70,6 @@ final class WorkOrderPdfService
             'statusLabel' => $statusAr,
             'createdFormatted' => $createdFormatted,
             'weekdayAr' => $weekdayAr,
-            'linesGrandTotal' => $linesGrandTotal,
             'useArabicPdfFont' => $arabicFontOk,
             'shape' => static fn (?string $text): HtmlString => ArabicPdfText::asDompdfHtml($text),
         ]);

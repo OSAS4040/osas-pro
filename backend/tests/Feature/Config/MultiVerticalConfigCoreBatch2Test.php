@@ -21,7 +21,7 @@ class MultiVerticalConfigCoreBatch2Test extends TestCase
         $this->setConfig('company', (string) $company->id, 'quotes.enabled', false);
 
         $response = $this->postJson('/api/v1/quotes', []);
-        $response->assertStatus(403)->assertJsonFragment(['message' => 'Quotes are disabled by configuration.']);
+        $response->assertStatus(403)->assertJsonFragment(['message' => 'عروض الأسعار غير مفعّلة في إعدادات النظام.']);
     }
 
     public function test_wallet_enabled_toggle_changes_behavior(): void

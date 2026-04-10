@@ -16,12 +16,23 @@
       <section class="form-section">
         <h3 class="form-section-title">بيانات أمر الشراء</h3>
         <div class="form-grid-2">
-          <div>
+          <div class="min-w-0">
             <label class="block text-xs font-medium text-gray-600 mb-1">المورد <span class="text-red-500">*</span></label>
-            <select v-model="form.supplier_id" class="field" required>
-              <option value="">اختر موردًا...</option>
-              <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
-            </select>
+            <div class="flex flex-wrap items-stretch gap-2">
+              <select v-model="form.supplier_id" class="field min-w-0 flex-1 basis-[12rem]" required>
+                <option value="">اختر موردًا...</option>
+                <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
+              </select>
+              <button
+                v-if="auth.hasPermission('suppliers.create')"
+                type="button"
+                class="shrink-0 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-xs font-semibold text-primary-800 hover:bg-primary-100 dark:border-primary-500/40 dark:bg-primary-950/40 dark:text-primary-200 dark:hover:bg-primary-900/50"
+                title="إضافة مورد جديد دون مغادرة الصفحة"
+                @click="openQuickSupplierModal"
+              >
+                + مورد سريع
+              </button>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">تاريخ التسليم المتوقع</label>
@@ -118,6 +129,69 @@
         </button>
       </div>
     </form>
+
+    <!-- إضافة سريعة للمورد -->
+    <Teleport to="body">
+      <div
+        v-if="quickSupplierOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        dir="rtl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-supplier-title"
+        @click.self="!quickSupplierSaving && closeQuickSupplierModal()"
+      >
+        <div class="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-slate-800 dark:text-slate-100">
+          <h3 id="quick-supplier-title" class="mb-1 text-base font-semibold text-gray-900 dark:text-white">مورد جديد (سريع)</h3>
+          <p class="mb-4 text-xs text-gray-500 dark:text-slate-400">يُحفظ المورد ويُحدَّد تلقائياً في أمر الشراء الحالي.</p>
+          <form class="space-y-3" @submit.prevent="submitQuickSupplier">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">الاسم <span class="text-red-500">*</span></label>
+              <input
+                v-model="quickSupplierForm.name"
+                type="text"
+                class="field w-full"
+                required
+                autocomplete="organization"
+                placeholder="اسم المورد أو المنشأة"
+              />
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">الهاتف</label>
+                <input v-model="quickSupplierForm.phone" type="text" class="field w-full" placeholder="05xxxxxxxx" />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">البريد</label>
+                <input v-model="quickSupplierForm.email" type="email" class="field w-full" placeholder="اختياري" />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">المدينة</label>
+                <input v-model="quickSupplierForm.city" type="text" class="field w-full" />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">الرقم الضريبي</label>
+                <input v-model="quickSupplierForm.tax_number" type="text" class="field w-full font-mono text-sm" />
+              </div>
+            </div>
+            <p v-if="quickSupplierError" class="text-sm text-red-600 dark:text-red-400">{{ quickSupplierError }}</p>
+            <div class="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                class="btn btn-outline text-sm"
+                :disabled="quickSupplierSaving"
+                @click="closeQuickSupplierModal"
+              >
+                إلغاء
+              </button>
+              <button type="submit" class="btn btn-primary text-sm" :disabled="quickSupplierSaving">
+                {{ quickSupplierSaving ? 'جارٍ الحفظ…' : 'حفظ واختيار' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -141,6 +215,87 @@ const suppliersLoadError = ref('')
 const ocrFileInput = ref<HTMLInputElement | null>(null)
 const ocrLoading = ref(false)
 const ocrHint = ref('')
+
+const quickSupplierOpen = ref(false)
+const quickSupplierSaving = ref(false)
+const quickSupplierError = ref('')
+const quickSupplierForm = ref({
+  name: '',
+  phone: '',
+  email: '',
+  city: '',
+  tax_number: '',
+})
+
+function emptyQuickSupplier() {
+  quickSupplierForm.value = { name: '', phone: '', email: '', city: '', tax_number: '' }
+}
+
+function openQuickSupplierModal() {
+  quickSupplierError.value = ''
+  emptyQuickSupplier()
+  quickSupplierOpen.value = true
+}
+
+function closeQuickSupplierModal() {
+  quickSupplierOpen.value = false
+  quickSupplierError.value = ''
+}
+
+async function loadSuppliers() {
+  suppliersLoadError.value = ''
+  try {
+    const { data } = await apiClient.get('/suppliers', {
+      params: { is_active: true, per_page: 200 },
+      skipGlobalErrorToast: true,
+    })
+    suppliers.value = data.data.data ?? data.data
+  } catch (e: unknown) {
+    suppliersLoadError.value = summarizeAxiosError(e)
+  }
+}
+
+async function submitQuickSupplier() {
+  if (quickSupplierSaving.value) return
+  quickSupplierSaving.value = true
+  quickSupplierError.value = ''
+  const payload: Record<string, string> = {
+    name: quickSupplierForm.value.name.trim(),
+  }
+  if (quickSupplierForm.value.phone.trim()) payload.phone = quickSupplierForm.value.phone.trim()
+  if (quickSupplierForm.value.email.trim()) payload.email = quickSupplierForm.value.email.trim()
+  if (quickSupplierForm.value.city.trim()) payload.city = quickSupplierForm.value.city.trim()
+  if (quickSupplierForm.value.tax_number.trim()) payload.tax_number = quickSupplierForm.value.tax_number.trim()
+  if (!payload.name) {
+    quickSupplierError.value = 'اسم المورد مطلوب.'
+    quickSupplierSaving.value = false
+    return
+  }
+  try {
+    const { data } = await apiClient.post('/suppliers', payload, { skipGlobalErrorToast: true })
+    const created = data?.data
+    if (!created?.id) {
+      quickSupplierError.value = 'استجابة غير متوقعة من الخادم.'
+      return
+    }
+    const id = Number(created.id)
+    const exists = suppliers.value.some((s) => Number(s.id) === id)
+    if (!exists) {
+      suppliers.value = [...suppliers.value, created].sort((a, b) =>
+        String(a.name ?? '').localeCompare(String(b.name ?? ''), 'ar'),
+      )
+    } else {
+      await loadSuppliers()
+    }
+    form.value.supplier_id = String(id)
+    toast.success('تم إنشاء المورد', created.name ?? '')
+    closeQuickSupplierModal()
+  } catch (e: unknown) {
+    quickSupplierError.value = summarizeAxiosError(e)
+  } finally {
+    quickSupplierSaving.value = false
+  }
+}
 
 const form = ref({
   supplier_id: '',
@@ -234,16 +389,7 @@ function onPurchaseScannerSaved(saved: unknown) {
 }
 
 onMounted(async () => {
-  suppliersLoadError.value = ''
-  try {
-    const { data } = await apiClient.get('/suppliers', {
-      params: { is_active: true, per_page: 200 },
-      skipGlobalErrorToast: true,
-    })
-    suppliers.value = data.data.data ?? data.data
-  } catch (e: unknown) {
-    suppliersLoadError.value = summarizeAxiosError(e)
-  }
+  await loadSuppliers()
   addItem()
 })
 

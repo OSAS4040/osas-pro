@@ -36,6 +36,10 @@
         </div>
         <span class="text-xs text-gray-400 dark:text-slate-500">#{{ vehicle.id }}</span>
       </div>
+      <p class="text-[11px] leading-relaxed text-gray-500 dark:text-slate-400 max-w-2xl">
+        من «البطاقة الرقمية» تُنشأ بطاقة بمظهر محفظة مع رمز مسح عام (OSAS Pro) للتحقق من المركبة دون كشف التفاصيل الكاملة؛ يُدار الرابط من نفس صفحة البطاقة (تدوير / إبطال / إصدار جديد).
+        في الإنتاج اضبط <code class="rounded bg-gray-100 px-1 py-0.5 text-[10px] dark:bg-slate-700">APP_PUBLIC_URL</code> ليطابق نطاق الواجهة التي يفتحها من يمسح الرمز.
+      </p>
 
       <!-- Tabs -->
       <div

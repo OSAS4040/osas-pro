@@ -7,9 +7,11 @@ use App\Intelligence\Events\VehicleCreated;
 use App\Models\Vehicle;
 use App\Services\IntelligentEventEmitter;
 use App\Services\IntelligentReading\VehiclePlateResolver;
+use App\Services\VehicleIdentityService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
@@ -20,6 +22,7 @@ class VehicleController extends Controller
 {
     public function __construct(
         private readonly IntelligentEventEmitter $intelligentEvents,
+        private readonly VehicleIdentityService $vehicleIdentity,
     ) {}
 
     /**
@@ -169,27 +172,51 @@ class VehicleController extends Controller
             ->limit(10)
             ->get(['id', 'order_number', 'status', 'customer_complaint as description', 'created_at']);
 
-        // Wallet balance
+        // Wallet balance — customer_wallets (مركبة) ثم نموذج wallets القديم حسب العميل (لا أعمدة morph في الجدول)
         $walletBalance = 0;
         $transactions = [];
         try {
-            $wallet = \DB::table('wallets')
-                ->where('walletable_type', 'App\\Models\\Vehicle')
-                ->where('walletable_id', $id)
-                ->first();
-            if ($wallet) {
-                $walletBalance = (float) $wallet->balance;
-                $transactions = \DB::table('wallet_transactions')
-                    ->where('wallet_id', $wallet->id)
-                    ->orderByDesc('created_at')
-                    ->limit(10)
-                    ->get();
+            $resolvedVehicleWallet = false;
+            if (Schema::hasTable('customer_wallets')) {
+                $cw = \DB::table('customer_wallets')
+                    ->where('company_id', $vehicle->company_id)
+                    ->where('vehicle_id', $id)
+                    ->where('wallet_type', 'vehicle_wallet')
+                    ->first();
+                if ($cw) {
+                    $resolvedVehicleWallet = true;
+                    $walletBalance = (float) $cw->balance;
+                    $txQuery = \DB::table('wallet_transactions')
+                        ->where('company_id', $vehicle->company_id);
+                    if (Schema::hasColumn('wallet_transactions', 'customer_wallet_id')) {
+                        $txQuery->where('customer_wallet_id', $cw->id);
+                    } elseif (Schema::hasColumn('wallet_transactions', 'vehicle_id')) {
+                        $txQuery->where('vehicle_id', $id);
+                    } else {
+                        $txQuery->where('wallet_id', $cw->id);
+                    }
+                    $transactions = $txQuery->orderByDesc('created_at')->limit(10)->get();
+                }
+            }
+            if (! $resolvedVehicleWallet && Schema::hasTable('wallets')) {
+                $legacy = \DB::table('wallets')
+                    ->where('company_id', $vehicle->company_id)
+                    ->where('customer_id', $vehicle->customer_id)
+                    ->first();
+                if ($legacy) {
+                    $walletBalance = (float) $legacy->balance;
+                    $transactions = \DB::table('wallet_transactions')
+                        ->where('wallet_id', $legacy->id)
+                        ->orderByDesc('created_at')
+                        ->limit(10)
+                        ->get();
+                }
             }
         } catch (\Throwable $e) {
-            // wallet tables may not exist
+            report($e);
         }
 
-        // Loyalty points
+        // Loyalty points (الأعمدة: points / points_used)
         $loyaltyPoints = 0;
         $pointsRedeemed = 0;
         try {
@@ -198,16 +225,24 @@ class VehicleController extends Controller
                 ->where('company_id', $vehicle->company_id)
                 ->first();
             if ($loyalty) {
-                $loyaltyPoints = (int) ($loyalty->balance ?? 0);
-                $pointsRedeemed = (int) ($loyalty->redeemed ?? 0);
+                $loyaltyPoints = (int) ($loyalty->points ?? 0);
+                $pointsRedeemed = (int) ($loyalty->points_used ?? 0);
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         // Total spent
-        $totalSpent = \DB::table('invoices')
-            ->where('company_id', $vehicle->company_id)
-            ->where('customer_id', $vehicle->customer_id)
-            ->sum('total') ?? 0;
+        $totalSpent = 0.0;
+        try {
+            $totalSpent = (float) (\DB::table('invoices')
+                ->where('company_id', $vehicle->company_id)
+                ->where('customer_id', $vehicle->customer_id)
+                ->sum('total') ?? 0);
+        } catch (\Throwable $e) {
+            report($e);
+            $totalSpent = 0.0;
+        }
 
         $vehicleData = $vehicle->toArray();
         $vehicleData['work_orders_count'] = $workOrdersCount;
@@ -219,6 +254,8 @@ class VehicleController extends Controller
         $vehicleData['tracking_url'] = $vehicle->tracking_url ?? null;
         $vehicleData['dashcam_id'] = $vehicle->dashcam_id ?? null;
         $vehicleData['dashcam_url'] = $vehicle->dashcam_url ?? null;
+
+        $vehicleData['identity'] = $this->vehicleIdentity->identityPayloadForDigitalCard($vehicle);
 
         return response()->json([
             'data' => $vehicleData,

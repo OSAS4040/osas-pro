@@ -37,6 +37,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/public/landing-plans', [\App\Http\Controllers\Api\V1\PublicContentController::class, 'landingPlans']);
     Route::get('/public/platform-announcement-banner', [\App\Http\Controllers\Api\V1\PublicContentController::class, 'platformAnnouncementBanner']);
 
+    Route::get('/public/vehicle-identity/{token}', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'publicShow'])
+        ->where('token', '[a-f0-9]{64}')
+        ->middleware('throttle:120,1');
+
     Route::post('/auth/login',    [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'login']);
     Route::post('/auth/register', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'register']);
     Route::post('/auth/forgot-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'forgotPassword']);
@@ -144,6 +148,13 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:vehicles.delete');
         Route::apiResource('vehicles',  \App\Http\Controllers\Api\V1\VehicleController::class)->only(['index', 'show']);
         Route::get('vehicles/{id}/digital-card', [\App\Http\Controllers\Api\V1\VehicleController::class, 'digitalCard']);
+        Route::post('/vehicle-identity/resolve', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'resolve']);
+        Route::post('/vehicles/{id}/identity/rotate', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'rotate'])
+            ->middleware('permission:vehicles.update');
+        Route::post('/vehicles/{id}/identity/revoke', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'revoke'])
+            ->middleware('permission:vehicles.update');
+        Route::post('/vehicles/{id}/identity/issue', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'issue'])
+            ->middleware('permission:vehicles.update');
         Route::delete('/services/{service}', [\App\Http\Controllers\Api\V1\ServiceController::class, 'destroy'])
             ->middleware('permission:users.update');
         Route::apiResource('services',  \App\Http\Controllers\Api\V1\ServiceController::class)->except(['destroy']);

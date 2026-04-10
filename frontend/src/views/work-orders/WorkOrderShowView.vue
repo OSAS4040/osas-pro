@@ -137,10 +137,6 @@
               <dt class="text-gray-500">العداد</dt>
               <dd>{{ order.odometer_reading }} كم</dd>
             </div>
-            <div v-if="staffUi.compactMode" class="flex justify-between">
-              <dt class="text-gray-500">الإجمالي التقديري</dt>
-              <dd class="font-semibold">{{ Number(order.estimated_total).toFixed(2) }} ر.س</dd>
-            </div>
             <div v-if="staffUi.compactMode" class="pt-2 border-t border-gray-100 text-xs text-gray-500 flex flex-wrap gap-x-3 gap-y-1">
               <span>{{ order.branch?.name ?? '—' }}</span>
               <span>·</span>
@@ -174,10 +170,6 @@
               <dt class="text-gray-500">تاريخ الإنهاء</dt>
               <dd>{{ formatDate(order.completed_at) }}</dd>
             </div>
-            <div class="flex justify-between">
-              <dt class="text-gray-500">الإجمالي التقديري</dt>
-              <dd class="font-semibold">{{ Number(order.estimated_total).toFixed(2) }} ر.س</dd>
-            </div>
           </dl>
         </div>
       </div>
@@ -201,43 +193,29 @@
         </div>
       </div>
 
-      <!-- البنود -->
-      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <!-- البنود — عرض المنتج/الخدمة فقط (بدون أعمدة أسعار) مع اتجاه RTL -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden" dir="rtl">
         <div class="border-b border-gray-100" :class="staffUi.compactMode ? 'px-3 py-2' : 'px-5 py-3'">
-          <h3 class="font-medium text-gray-800" :class="{ '!text-sm': staffUi.compactMode }">البنود والخدمات</h3>
+          <h3 class="font-medium text-gray-800 text-right" :class="{ '!text-sm': staffUi.compactMode }">البنود والخدمات</h3>
         </div>
         <table class="w-full" :class="staffUi.compactMode ? 'text-xs' : 'text-sm'">
           <thead class="bg-gray-50 text-xs text-gray-500">
             <tr>
-              <th class="px-4 py-3 text-right">الاسم</th>
+              <th class="px-4 py-3 text-right">المنتج / الخدمة</th>
               <th class="px-4 py-3 text-right">النوع</th>
               <th class="px-4 py-3 text-right">الكمية</th>
-              <th class="px-4 py-3 text-right">سعر الوحدة</th>
-              <th class="px-4 py-3 text-right">الضريبة</th>
-              <th class="px-4 py-3 text-right">الإجمالي</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
             <tr v-for="item in order.items" :key="item.id">
               <td class="px-4 py-3 font-medium text-right">{{ item.name }}</td>
               <td class="px-4 py-3 text-gray-500 text-right">{{ itemTypeLabel(item.item_type) }}</td>
-              <td class="px-4 py-3 text-right">{{ item.quantity }}</td>
-              <td class="px-4 py-3 text-right">{{ Number(item.unit_price).toFixed(2) }}</td>
-              <td class="px-4 py-3 text-right">{{ Number(item.tax_amount).toFixed(2) }}</td>
-              <td class="px-4 py-3 text-right font-semibold">{{ Number(item.total).toFixed(2) }} ر.س</td>
+              <td class="px-4 py-3 text-right tabular-nums">{{ item.quantity }}</td>
             </tr>
             <tr v-if="!order.items?.length">
-              <td colspan="6" class="px-4 py-4 text-center text-gray-400">لا توجد بنود.</td>
+              <td colspan="3" class="px-4 py-4 text-center text-gray-400">لا توجد بنود.</td>
             </tr>
           </tbody>
-          <tfoot class="border-t-2 border-gray-200 bg-gray-50">
-            <tr>
-              <td colspan="5" class="px-4 py-3 text-right font-semibold text-gray-700">الإجمالي التقديري</td>
-              <td class="px-4 py-3 text-right font-bold text-gray-900">
-                {{ Number(order.estimated_total).toFixed(2) }} ر.س
-              </td>
-            </tr>
-          </tfoot>
         </table>
       </div>
 

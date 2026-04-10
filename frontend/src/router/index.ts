@@ -317,6 +317,12 @@ const routes: RouteRecordRaw[] = [
     alias: ['/asas-pro', '/asaspro'],
     meta: { publicPage: true /** صفحة عامة — لا يوجد حارس في beforeEach يعتمد على هذا المفتاح حالياً */ },
   },
+  {
+    path: '/v/:token',
+    name: 'vehicle-identity-public',
+    component: () => import('@/views/public/VehicleIdentityPublicView.vue'),
+    meta: { publicPage: true },
+  },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
 ]
 
@@ -506,6 +512,7 @@ router.afterEach((to) => {
     to.name === 'reset-password' ||
     to.name === 'not-found' ||
     to.name === 'landing' ||
+    to.name === 'vehicle-identity-public' ||
     to.name === 'access-denied'
   )
     return

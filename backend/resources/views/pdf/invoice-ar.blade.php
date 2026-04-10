@@ -13,9 +13,10 @@
             padding: 0;
             direction: rtl;
             text-align: right;
-            unicode-bidi: embed;
+            unicode-bidi: normal;
             line-height: 1.45;
         }
+        .dompdf-ar-shape, .dompdf-ar-ascii { vertical-align: baseline; }
         .header {
             display: table;
             width: 100%;

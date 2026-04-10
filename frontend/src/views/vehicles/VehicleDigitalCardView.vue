@@ -87,6 +87,69 @@
     </div>
 
     <template v-else-if="vehicle">
+      <!-- إدارة رابط الهوية العام (مسح QR) — صلاحية تحديث المركبات -->
+      <div
+        v-if="canManageIdentity"
+        class="no-print rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 shadow-sm dark:border-slate-600 dark:bg-slate-800/80"
+      >
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <p class="text-xs font-semibold text-gray-800 dark:text-slate-100">الرابط العام للمسح (OSAS Pro)</p>
+            <p v-if="identityHasActiveLink" class="mt-1 font-mono text-[11px] text-teal-700 dark:text-teal-300">
+              {{ vehicle.identity?.public_code }}
+            </p>
+            <p
+              v-else-if="vehicle.identity?.status === 'unavailable'"
+              class="mt-1 text-xs leading-relaxed text-amber-800/95 dark:text-amber-200/90"
+            >
+              رمز المسح غير مُهيّأ على الخادم (جدول الهوية غير موجود). نفّذ ترقية قاعدة البيانات ثم أعد المحاولة.
+            </p>
+            <p v-else class="mt-1 text-xs leading-relaxed text-amber-800/95 dark:text-amber-200/90">
+              لا يوجد رابط نشط. أي QR أو بطاقة مطبوعة سابقة تتوقف عن العمل بعد الإبطال حتى تُصدر رابطاً جديداً.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 sm:shrink-0">
+            <button
+              v-if="identityHasActiveLink"
+              type="button"
+              class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              :disabled="identityBusy"
+              @click="copyIdentityUrl"
+            >
+              نسخ الرابط
+            </button>
+            <button
+              v-if="!identityHasActiveLink && vehicle.identity?.status !== 'unavailable'"
+              type="button"
+              class="rounded-lg bg-teal-600 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-500 disabled:opacity-50"
+              :disabled="identityBusy"
+              @click="issueVehicleIdentity"
+            >
+              إصدار رابط جديد
+            </button>
+            <button
+              v-if="identityHasActiveLink"
+              type="button"
+              class="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-medium text-violet-800 hover:bg-violet-100 disabled:opacity-50 dark:border-violet-500/40 dark:bg-violet-950/50 dark:text-violet-200 dark:hover:bg-violet-900/40"
+              :disabled="identityBusy"
+              title="إلغاء الرمز الحالي وإنشاء رمز جديد — يُبطل الطباعات السابقة"
+              @click="rotateVehicleIdentity"
+            >
+              تدوير الرمز
+            </button>
+            <button
+              v-if="identityHasActiveLink"
+              type="button"
+              class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-800 hover:bg-red-100 disabled:opacity-50 dark:border-red-500/35 dark:bg-red-950/40 dark:text-red-200 dark:hover:bg-red-950/60"
+              :disabled="identityBusy"
+              @click="revokeVehicleIdentity"
+            >
+              إبطال الرابط
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ محفظة رقمية (مظهر مقارب لـ Apple Wallet) ═══ -->
       <div class="wallet-phone-surface mx-auto max-w-[400px] rounded-[2rem] bg-[#f2f2f7] dark:bg-slate-900/80 px-4 pt-6 pb-5 shadow-inner border border-black/[0.06] dark:border-white/10">
         <div
@@ -225,7 +288,9 @@
               </div>
             </div>
 
-            <p class="mt-2 text-center text-[8px] font-medium tracking-wide text-white/35">بطاقة خاصة — لا تشاركها مع غير المخوّلين</p>
+            <p class="mt-2 text-center text-[8px] font-medium tracking-wide text-white/35">
+              بطاقة خاصة — لا تشاركها مع غير المخوّلين · OSAS Pro
+            </p>
           </div>
         </div>
 
@@ -255,33 +320,42 @@
         </div>
       </div>
 
-      <!-- ═══ Active Work Orders ═══ -->
-      <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
-        <div class="px-5 py-3 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
+      <!-- ═══ Active Work Orders (RTL: من اليمين لليسار) ═══ -->
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden"
+        dir="rtl"
+      >
+        <div class="px-5 py-3 border-b border-gray-100 dark:border-slate-700 flex flex-row-reverse items-center justify-between gap-2">
           <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
-            <ClipboardDocumentIcon class="w-4 h-4 text-primary-600" /> أوامر العمل
+            <ClipboardDocumentIcon class="w-4 h-4 text-primary-600 shrink-0" /> أوامر العمل
           </h3>
-          <RouterLink :to="`/work-orders?vehicle=${vehicleId}`" class="text-xs text-primary-600 hover:underline">عرض الكل</RouterLink>
+          <RouterLink :to="`/work-orders?vehicle=${vehicleId}`" class="text-xs text-primary-600 hover:underline shrink-0">عرض الكل</RouterLink>
         </div>
         <div v-if="workOrders.length" class="divide-y divide-gray-50 dark:divide-slate-700">
-          <div v-for="wo in workOrders" :key="wo.id"
-               class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+          <div
+            v-for="wo in workOrders"
+            :key="wo.id"
+            class="flex flex-row-reverse items-center justify-between gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors text-right"
           >
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                   :class="woIconBg(wo.status)"
+            <div class="min-w-0 flex flex-row-reverse items-center gap-3 flex-1">
+              <div
+                class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                :class="woIconBg(wo.status)"
               >
                 <component :is="woIcon(wo.status)" class="w-4 h-4" :class="woIconColor(wo.status)" />
               </div>
-              <div>
-                <RouterLink :to="`/work-orders/${wo.id}`" class="text-sm font-medium text-gray-900 dark:text-slate-100 hover:text-primary-600">
+              <div class="min-w-0 flex-1">
+                <RouterLink
+                  :to="`/work-orders/${wo.id}`"
+                  class="block text-sm font-medium text-gray-900 dark:text-slate-100 hover:text-primary-600"
+                >
                   {{ wo.order_number }}
                 </RouterLink>
-                <p class="text-xs text-gray-400">{{ wo.description?.substring(0, 40) || 'بدون وصف' }}</p>
+                <p class="text-xs text-gray-400 break-words">{{ wo.description?.substring(0, 40) || 'بدون وصف' }}</p>
               </div>
             </div>
-            <div class="text-left">
-              <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="workOrderStatusBadgeClass(wo.status)">{{ workOrderStatusLabel(wo.status) }}</span>
+            <div class="shrink-0 text-right">
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full inline-block" :class="workOrderStatusBadgeClass(wo.status)">{{ workOrderStatusLabel(wo.status) }}</span>
               <p class="text-xs text-gray-400 mt-0.5">{{ formatDate(wo.created_at) }}</p>
             </div>
           </div>
@@ -432,6 +506,7 @@ import {
   ClockIcon, CheckCircleIcon, WrenchScrewdriverIcon, ExclamationCircleIcon,
 } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
+import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { ensurePrintFontsReady } from '@/composables/useAppPrint'
 import ShareModal from '@/components/ShareModal.vue'
@@ -440,6 +515,7 @@ import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrd
 
 const route = useRoute()
 const toast = useToast()
+const auth = useAuthStore()
 const vehicleId = Number(route.params.id)
 const loading = ref(true)
 const loadError = ref<string | null>(null)
@@ -448,9 +524,21 @@ const workOrders = ref<any[]>([])
 const transactions = ref<any[]>([])
 const cardRef = ref<HTMLElement | null>(null)
 const shareImageBusy = ref(false)
+const identityBusy = ref(false)
 
-const qrUrl = computed(() => `${window.location.origin}/v/${vehicleId}`)
+const canManageIdentity = computed(() => auth.hasPermission('vehicles.update'))
+const identityHasActiveLink = computed(() => {
+  const i = vehicle.value?.identity as { public_url?: string; status?: string } | undefined
+  return !!(i?.public_url && i?.status === 'active')
+})
+
+const qrUrl = computed(() => {
+  const u = vehicle.value?.identity?.public_url
+  if (typeof u === 'string' && u.trim() !== '') return u.trim()
+  return ''
+})
 const qrUrlDisplay = computed(() => {
+  if (!qrUrl.value) return '—'
   try {
     const u = new URL(qrUrl.value)
     return u.host + u.pathname
@@ -458,7 +546,7 @@ const qrUrlDisplay = computed(() => {
     return qrUrl.value
   }
 })
-const qrImageUrl = computed(() => getQRImageUrl(qrUrl.value, 200))
+const qrImageUrl = computed(() => (qrUrl.value ? getQRImageUrl(qrUrl.value, 200) : ''))
 const trackingUrl = computed(() => vehicle.value?.tracking_url || '#')
 const dashcamUrl = computed(() => vehicle.value?.dashcam_url || '#')
 const lastDashcamEvent = computed(() => vehicle.value?.last_dashcam_event || 'غير معروف')
@@ -592,11 +680,15 @@ async function downloadCard() {
     a.click()
     toast.success('تم التنزيل', 'تم حفظ صورة البطاقة.')
   } catch {
-    try {
-      await navigator.clipboard.writeText(qrUrl.value)
-      toast.info('نسخ الرابط', 'تعذّر إنشاء الصورة — تم نسخ رابط البطاقة للحافظة.')
-    } catch {
-      toast.warning('تعذّر التصدير', 'جرّب لقطة شاشة يدوية أو افتح الرابط من المتصفح.')
+    if (qrUrl.value) {
+      try {
+        await navigator.clipboard.writeText(qrUrl.value)
+        toast.info('نسخ الرابط', 'تعذّر إنشاء الصورة — تم نسخ رابط البطاقة للحافظة.')
+      } catch {
+        toast.warning('تعذّر التصدير', 'جرّب لقطة شاشة يدوية أو افتح الرابط من المتصفح.')
+      }
+    } else {
+      toast.warning('تعذّر التصدير', 'لا يوجد رابط عام للنسخ — تحقق من إعداد الواجهة العامة.')
     }
   }
 }
@@ -604,6 +696,10 @@ async function downloadCard() {
 async function shareCardQuick() {
   const v = vehicle.value
   const url = qrUrl.value
+  if (!url) {
+    toast.warning('لا يوجد رابط عام', 'تأكد من تحميل البطاقة أو من إعداد عنوان الواجهة العامة (APP_PUBLIC_URL).')
+    return
+  }
   const title = v ? `${v.make} ${v.model} — ${v.plate_number}` : 'بطاقة مركبة'
   const text = v ? `بطاقتي الرقمية: ${v.plate_number}\n${url}` : url
   if (typeof navigator !== 'undefined' && navigator.share) {
@@ -624,6 +720,10 @@ async function shareCardQuick() {
 
 async function shareCardAsImage() {
   if (!cardRef.value) return
+  if (!qrUrl.value) {
+    toast.warning('لا يوجد رابط عام', 'تأكد من تحميل البطاقة أو من إعداد عنوان الواجهة العامة (APP_PUBLIC_URL).')
+    return
+  }
   shareImageBusy.value = true
   try {
     await ensurePrintFontsReady()
@@ -658,6 +758,73 @@ async function shareCardAsImage() {
     await downloadCard()
   } finally {
     shareImageBusy.value = false
+  }
+}
+
+async function copyIdentityUrl() {
+  if (!qrUrl.value) {
+    toast.warning('لا يوجد رابط', 'أصدر رابطاً جديداً أو تحقق من الإعدادات.')
+    return
+  }
+  try {
+    await navigator.clipboard.writeText(qrUrl.value)
+    toast.success('تم النسخ', 'رابط المسح في الحافظة.')
+  } catch {
+    toast.error('تعذّر النسخ', 'انسخ الرابط يدوياً من شريط العنوان إن وُجد.')
+  }
+}
+
+async function rotateVehicleIdentity() {
+  if (!canManageIdentity.value) return
+  identityBusy.value = true
+  try {
+    const { data } = await apiClient.post(`/vehicles/${vehicleId}/identity/rotate`)
+    const block = data?.data
+    if (vehicle.value && block) {
+      vehicle.value.identity = block
+    }
+    toast.success('تم التدوير', 'تم إنشاء رمز جديد — أي QR أو طباعة قديمة تتوقف عن العمل.')
+  } catch {
+    toast.error('تعذّر التدوير', 'تحقق من الصلاحيات ثم أعد المحاولة.')
+  } finally {
+    identityBusy.value = false
+  }
+}
+
+async function revokeVehicleIdentity() {
+  if (!canManageIdentity.value) return
+  if (!window.confirm('سيتم إبطال الرابط الحالي. أي QR مطبوع أو محفوظ سيتوقف عن العمل حتى تُصدر رابطاً جديداً. متابعة؟')) {
+    return
+  }
+  identityBusy.value = true
+  try {
+    const { data } = await apiClient.post(`/vehicles/${vehicleId}/identity/revoke`)
+    const block = data?.data
+    if (vehicle.value && block) {
+      vehicle.value.identity = block
+    }
+    toast.success('تم الإبطال', 'يمكنك لاحقاً إصدار رابط جديد من هنا.')
+  } catch {
+    toast.error('تعذّر الإبطال', 'تحقق من الصلاحيات ثم أعد المحاولة.')
+  } finally {
+    identityBusy.value = false
+  }
+}
+
+async function issueVehicleIdentity() {
+  if (!canManageIdentity.value) return
+  identityBusy.value = true
+  try {
+    const { data } = await apiClient.post(`/vehicles/${vehicleId}/identity/issue`)
+    const block = data?.data
+    if (vehicle.value && block) {
+      vehicle.value.identity = block
+    }
+    toast.success('تم الإصدار', 'رابط المسح جاهز — يمكنك الطباعة أو المشاركة.')
+  } catch {
+    toast.error('تعذّر الإصدار', 'تحقق من الصلاحيات ثم أعد المحاولة.')
+  } finally {
+    identityBusy.value = false
   }
 }
 

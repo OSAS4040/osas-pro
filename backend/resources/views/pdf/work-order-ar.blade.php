@@ -14,9 +14,12 @@
             padding: 0;
             direction: rtl;
             text-align: right;
-            unicode-bidi: embed;
+            /* لا تستخدم unicode-bidi: embed على الجذر — يتعارض مع spans الداخلية في Dompdf 3 */
+            unicode-bidi: normal;
             line-height: 1.35;
         }
+        /* عزل اتجاه كل مقطع عربي/لاتيني — يُولَّد من ArabicPdfText::asDompdfHtml */
+        .dompdf-ar-shape, .dompdf-ar-ascii { vertical-align: baseline; }
         .header {
             display: table;
             width: 100%;
@@ -75,7 +78,6 @@
         }
         table.lines td { border: 1px solid #e2e8f0; padding: 4px; }
         table.lines tr:nth-child(even) td { background: #f8fafc; }
-        .totals { margin-top: 6px; text-align: left; font-size: 11px; font-weight: 700; color: #0f172a; }
         .signatures { width: 100%; margin-top: 10px; border-top: 1px dashed #94a3b8; padding-top: 6px; }
         .sig-col { display: table-cell; width: 50%; vertical-align: top; padding: 0 6px; }
         .sig-row { display: table; width: 100%; }
@@ -86,9 +88,22 @@
             border: 1px solid #0f766e;
             border-radius: 3px;
             background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%);
+            direction: rtl;
+            text-align: right;
+            unicode-bidi: isolate;
         }
-        .issuer h3 { margin: 0 0 4px 0; font-size: 11px; color: #0f766e; }
-        .issuer-grid { width: 100%; font-size: 9px; color: #334155; line-height: 1.45; }
+        .issuer h3 {
+            margin: 0 0 6px 0;
+            font-size: 11px;
+            color: #0f766e;
+            direction: rtl;
+            text-align: right;
+            font-weight: 700;
+        }
+        .issuer-grid { width: 100%; font-size: 9px; color: #334155; line-height: 1.45; direction: rtl; }
+        .issuer-row { display: table; width: 100%; table-layout: fixed; }
+        .issuer-cell { display: table-cell; width: 50%; padding: 3px 0 3px 8px; vertical-align: top; text-align: right; }
+        .issuer-address-line { margin: 5px 0 0 0; font-size: 9px; color: #334155; line-height: 1.45; text-align: right; }
         .muted { color: #64748b; font-size: 9px; }
         .footer-note { margin-top: 6px; font-size: 8px; color: #94a3b8; text-align: center; line-height: 1.5; }
         .footer-note .verify-url { display: block; margin-top: 2px; word-break: break-all; }
@@ -184,19 +199,12 @@
 @endif
 
 <div class="section-title">{{ $s('البنود والخدمات') }}</div>
-@php
-    $currency = $company?->currency ?? 'SAR';
-    $currencyPretty = $currency === 'SAR' ? 'ر.س' : $currency;
-@endphp
 <table class="lines">
     <thead>
     <tr>
         <th style="width:5%;">#</th>
-        <th>{{ $s('البند') }}</th>
-        <th style="width:9%;">{{ $s('الكمية') }}</th>
-        <th style="width:12%;">{{ $s('سعر الوحدة (بدون ضريبة)') }}</th>
-        <th style="width:11%;">{{ $s('الضريبة') }}</th>
-        <th style="width:12%;">{{ $s('الإجمالي (شامل الضريبة)') }}</th>
+        <th>{{ $s('المنتج / الخدمة') }}</th>
+        <th style="width:14%;">{{ $s('الكمية') }}</th>
     </tr>
     </thead>
     <tbody>
@@ -210,27 +218,17 @@
                     ?: $line->service?->name
                     ?: '—';
             }
-            $taxRate = (float) ($line->tax_rate ?? 0);
-            $taxLabel = number_format((float) $line->tax_amount, 2);
-            if ($taxRate > 0) {
-                $taxLabel .= ' ('.rtrim(rtrim(number_format($taxRate, 2), '0'), '.').'%)';
-            }
         @endphp
         <tr>
             <td class="center">{{ $i + 1 }}</td>
-            <td>{{ $s($lineLabel) }}</td>
+            <td style="text-align:right;">{{ $s($lineLabel) }}</td>
             <td class="center">{{ $line->quantity }}</td>
-            <td class="ltr">{{ number_format((float) $line->unit_price, 2) }}</td>
-            <td class="ltr">{{ $taxLabel }}</td>
-            <td class="ltr">{{ number_format((float) $line->total, 2) }}</td>
         </tr>
     @empty
-        <tr><td colspan="6" style="text-align:center;color:#94a3b8;">{{ $s('لا توجد بنود') }}</td></tr>
+        <tr><td colspan="3" style="text-align:center;color:#94a3b8;">{{ $s('لا توجد بنود') }}</td></tr>
     @endforelse
     </tbody>
 </table>
-<p class="muted" style="margin:4px 0 2px 0;font-size:8px;">{{ $s('عمود سعر الوحدة بدون ضريبة؛ عمود الإجمالي يشمل ضريبة القيمة المضافة.') }}</p>
-<div class="totals">{{ $s('إجمالي أمر العمل (مجموع البنود، شامل الضريبة): '.number_format((float) ($linesGrandTotal ?? 0), 2).' '.$currencyPretty) }}</div>
 
 <div class="signatures">
     <div class="sig-row">
@@ -249,23 +247,21 @@
 
 <div class="issuer">
     <h3>{{ $s('بيانات الجهة المصدّرة للأمر (مقدّم الخدمة)') }}</h3>
-    <table class="issuer-grid" style="width:100%;border-collapse:collapse;">
-        <tr>
-            <td style="width:50%;padding:2px 0;">{{ $s('الاسم التجاري: '.$issuerDisplayAr) }}</td>
-            <td style="width:50%;padding:2px 0;">{{ $s('الفرع: '.$branchLabel) }}</td>
-        </tr>
-        <tr>
-            <td style="padding:2px 0;">{{ $s('السجل التجاري: '.($company?->cr_number ?: '—')) }}</td>
-            <td style="padding:2px 0;">{{ $s('الرقم الضريبي: '.($company?->tax_number ?: '—')) }}</td>
-        </tr>
-        <tr>
-            <td style="padding:2px 0;">{{ $s('الهاتف: '.($branch?->phone ?: $company?->phone ?: '—')) }}</td>
-            <td style="padding:2px 0;">{{ $s('البريد: '.($company?->email ?: '—')) }}</td>
-        </tr>
-        <tr>
-            <td colspan="2" style="padding:2px 0;">{{ $s('العنوان: '.(trim(implode(' — ', array_filter([$branch?->address, $branch?->city, $company?->address, $company?->city]))) ?: '—')) }}</td>
-        </tr>
-    </table>
+    <div class="issuer-grid">
+        <div class="issuer-row">
+            <div class="issuer-cell">{{ $s('الاسم التجاري: '.$issuerDisplayAr) }}</div>
+            <div class="issuer-cell">{{ $s('الفرع: '.$branchLabel) }}</div>
+        </div>
+        <div class="issuer-row">
+            <div class="issuer-cell">{{ $s('السجل التجاري: '.($company?->cr_number ?: '—')) }}</div>
+            <div class="issuer-cell">{{ $s('الرقم الضريبي: '.($company?->tax_number ?: '—')) }}</div>
+        </div>
+        <div class="issuer-row">
+            <div class="issuer-cell">{{ $s('الهاتف: '.($branch?->phone ?: $company?->phone ?: '—')) }}</div>
+            <div class="issuer-cell">{{ $s('البريد: '.($company?->email ?: '—')) }}</div>
+        </div>
+        <p class="issuer-address-line">{{ $s('العنوان: '.(trim(implode(' — ', array_filter([$branch?->address, $branch?->city, $company?->address, $company?->city]))) ?: '—')) }}</p>
+    </div>
 </div>
 
 <p class="footer-note">{{ $s('رابط التحقق:') }}<br/><span class="ltr verify-url">{{ e($verifyUrl) }}</span></p>

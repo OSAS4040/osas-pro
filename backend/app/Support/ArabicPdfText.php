@@ -9,12 +9,14 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
 
 /**
- * تشكيل النص العربي لـ Dompdf.
+ * تجهيز النص العربي لـ Dompdf 3 + Noto Naskh Arabic.
  *
- * Dompdf (محرك CPDF) لا يطبّق ربط الحروف ولا اتجاه ثنائي الاتجاه كالمتصفحات؛ إرجاع النص
- * الخام مع خط Noto يُظهر الحروف منفصلة ومرتبة بصريًا بشكل خاطئ. الحل المعتمد: دائمًا
- * utf8Glyphs من ar-php، وعرض النتيجة داخل span باتجاه ltr وunicode-bidi:isolate حتى لا
- * يعيد مستند dir="rtl" قلب الترتيب البصري لسلسلة «الترتيب البصري».
+ * سابقاً: utf8Glyphs من ar-php + span بـ dir=ltr — على Dompdf 3 يؤدي غالباً إلى **انعكاس بصري**
+ * للنص داخل مستند RTL (يظهر عنوان مثل «بيانات الجهة…» مقلوباً حرفياً).
+ *
+ * المعتمد الآن: **النص المنطقي UTF-8 كما هو** داخل span بـ `dir="rtl"` و`unicode-bidi: embed`
+ * و`display: inline-block` حتى يحترم محرك التخطيط اتجاه العربية دون قلب إضافي.
+ * السلاسل بلا حروف عربية تُلف بـ `dir="ltr"` + isolate حتى لا تنعكس الأرقام/المراجع داخل فقرة RTL.
  */
 final class ArabicPdfText
 {
@@ -27,13 +29,20 @@ final class ArabicPdfText
             return new HtmlString('');
         }
 
-        $shaped = self::shape($text);
+        if (! preg_match('/\p{Arabic}/u', $text)) {
+            return new HtmlString(
+                '<span class="dompdf-ar-ascii" dir="ltr" style="unicode-bidi:isolate;display:inline-block;">'.e($text).'</span>'
+            );
+        }
 
         return new HtmlString(
-            '<span class="dompdf-ar-shape" dir="ltr" style="unicode-bidi:isolate">'.e($shaped).'</span>'
+            '<span class="dompdf-ar-shape" dir="rtl" lang="ar" style="unicode-bidi:embed;display:inline-block;text-align:right;">'.e($text).'</span>'
         );
     }
 
+    /**
+     * إعادة ترتيب الحروف للعرض على محركات قديمة لا تدعم ربط العربية (اختياري / اختبارات).
+     */
     public static function shape(?string $text): string
     {
         if ($text === null || $text === '') {
