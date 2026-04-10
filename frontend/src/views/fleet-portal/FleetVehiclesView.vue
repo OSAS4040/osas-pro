@@ -54,7 +54,13 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
-            <tr v-for="v in filtered" :key="v.id" class="hover:bg-gray-50 transition-colors">
+            <tr
+              v-for="v in filtered"
+              :id="'fleet-v-' + v.id"
+              :key="v.id"
+              class="hover:bg-gray-50 transition-colors"
+              :class="highlightId === String(v.id) ? 'bg-teal-50/90 ring-2 ring-inset ring-teal-400/80' : ''"
+            >
               <td class="px-4 py-3 font-bold text-teal-700">{{ v.plate_number }}</td>
               <td class="px-4 py-3 text-gray-700">{{ v.make }} {{ v.model }}</td>
               <td class="px-4 py-3 text-gray-500">{{ v.year }}</td>
@@ -144,12 +150,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 import { useToast } from '@/composables/useToast'
 
+const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const loading = ref(true)
@@ -208,6 +215,19 @@ const filtered = computed(() =>
   vehicles.value.filter(v => !search.value || v.plate_number?.toLowerCase().includes(search.value.toLowerCase())
     || v.make?.toLowerCase().includes(search.value.toLowerCase())))
 
+const highlightId = computed(() => {
+  const h = route.query.highlight
+  if (h === undefined || h === null || h === '') return null
+  return String(h)
+})
+
+function scrollToHighlighted() {
+  const id = highlightId.value
+  if (!id) return
+  const el = document.getElementById(`fleet-v-${id}`)
+  el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
+
 async function load() {
   loading.value = true
   try {
@@ -221,7 +241,16 @@ function requestService(v: any) {
   router.push({ path: '/fleet-portal/new-order', query: { vehicle_id: v.id, plate: v.plate_number } })
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  await nextTick()
+  scrollToHighlighted()
+})
+
+watch(highlightId, async () => {
+  await nextTick()
+  scrollToHighlighted()
+})
 </script>
 
 <style scoped>

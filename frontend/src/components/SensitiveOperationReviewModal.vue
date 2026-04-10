@@ -30,6 +30,7 @@
           <div v-if="loading" class="py-8 text-center text-gray-500 dark:text-slate-400">جارٍ تحميل ملخص المراجعة...</div>
 
           <template v-else-if="summary">
+            <div role="region" aria-live="polite" class="space-y-4">
             <dl class="grid grid-cols-1 gap-2">
               <div class="flex justify-between gap-2">
                 <dt class="text-gray-500 dark:text-slate-400">نوع العملية</dt>
@@ -75,6 +76,10 @@
                 <span class="text-gray-500 dark:text-slate-400">ذمم (بعد — تقديري)</span>
                 <span class="font-mono text-gray-900 dark:text-slate-100">{{ formatMoney(summary.credit_net_receivable_exposure_after_estimate) }}</span>
               </div>
+              <div v-if="summary.credit_limit != null && summary.credit_limit !== ''" class="flex justify-between text-xs">
+                <span class="text-gray-500 dark:text-slate-400">حد ائتمان الشركة</span>
+                <span class="font-mono font-medium text-gray-900 dark:text-slate-100">{{ formatMoney(summary.credit_limit) }}</span>
+              </div>
               <div class="flex justify-between text-xs">
                 <span class="text-gray-500 dark:text-slate-400">إجمالي تقديري للأمر / الدفعة</span>
                 <span class="font-mono font-semibold text-gray-900 dark:text-slate-100">{{ formatMoney(summary.work_orders_estimated_total) }}</span>
@@ -90,6 +95,7 @@
             </ul>
 
             <slot name="footer-extra" />
+            </div>
           </template>
 
           <div
@@ -238,7 +244,9 @@ const operationLabel = computed(() => {
     work_order_cancellation_request: 'طلب إلغاء أمر عمل',
     work_order_batch_create: 'إنشاء دفعة أوامر عمل',
   }
-  return map[op] ?? (op || '—')
+  if (op && map[op]) return map[op]
+  if (typeof op === 'string' && op.trim() !== '') return `عملية حساسة (${op})`
+  return '—'
 })
 
 function formatMoney(v: string | number | null | undefined): string {

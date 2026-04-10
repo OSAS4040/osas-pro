@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Company;
 use App\Models\WorkOrder;
 use App\Services\BillingModelPolicyService;
@@ -123,6 +124,14 @@ class SensitiveOperationPreviewController extends Controller
 
         $company = Company::query()->find($companyId);
 
+        $branchName = null;
+        if ($branchId !== null) {
+            $branchName = Branch::query()
+                ->where('company_id', $companyId)
+                ->where('id', $branchId)
+                ->value('name');
+        }
+
         $token = $this->previewTokens->issue(
             $companyId,
             $userId,
@@ -140,6 +149,7 @@ class SensitiveOperationPreviewController extends Controller
                     'name' => $company?->name,
                 ],
                 'branch_id' => $branchId,
+                'branch_name' => $branchName,
                 'user' => [
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,

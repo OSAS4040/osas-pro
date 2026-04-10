@@ -256,5 +256,6 @@ final class WorkOrderBatchApiTest extends TestCase
         $tok = $res->json('data.sensitive_preview_token');
         $this->assertNotEmpty($tok);
         $this->assertSame(SensitivePreviewTokenService::OP_BATCH_CREATE, $res->json('data.operation'));
+        $this->assertSame($branch->name, $res->json('data.branch_name'));
     }
 }
