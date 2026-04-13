@@ -34,7 +34,7 @@ class AuthApiContractTest extends TestCase
         ]);
 
         $response->assertOk()
-            ->assertJsonStructure(['token', 'user', 'trace_id']);
+            ->assertJsonStructure(['token', 'user', 'account_context', 'trace_id']);
 
         $this->assertNotEmpty($response->json('token'));
     }
@@ -55,9 +55,33 @@ class AuthApiContractTest extends TestCase
             ->getJson('/api/v1/auth/me');
 
         $response->assertOk()
-            ->assertJsonStructure(['data', 'permissions', 'trace_id']);
+            ->assertJsonStructure([
+                'data',
+                'permissions',
+                'account_context' => [
+                    'principal_kind',
+                    'home_route_hint',
+                    'guard_hint',
+                    'user_id',
+                    'platform_role',
+                ],
+                'trace_id',
+            ]);
 
         $this->assertSame($tenant['user']->email, $response->json('data.email'));
+        $this->assertSame('tenant_user', $response->json('account_context.principal_kind'));
+    }
+
+    public function test_login_wrong_password_returns_message_key_and_reason_code(): void
+    {
+        $tenant = $this->createTenant('owner');
+
+        $this->postJson('/api/v1/auth/login', [
+            'email'    => $tenant['user']->email,
+            'password' => 'WrongPassword!',
+        ])->assertUnauthorized()
+            ->assertJsonPath('message_key', 'auth.login.invalid_credentials')
+            ->assertJsonPath('reason_code', 'INVALID_CREDENTIALS');
     }
 
     public function test_me_without_token_returns_401_json(): void

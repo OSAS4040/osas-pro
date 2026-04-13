@@ -1,0 +1,292 @@
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: saas_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    env_file:
+      - ./backend/.env
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      # APP_KEY يُحمّل من backend/.env (env_file) — لا تثبّت مفتاحاً في المستودع
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_URL=${APP_URL:-http://localhost}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-saas_db}
+      - DB_USERNAME=${DB_USERNAME:-saas_user}
+      - DB_PASSWORD=${DB_PASSWORD:-saas_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - CACHE_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - SESSION_DRIVER=redis
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
+      - SENTRY_LARAVEL_DSN=${SENTRY_LARAVEL_DSN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - saas_network
+
+  queue_high:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: saas_queue_high
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    env_file:
+      - ./backend/.env
+    command: php artisan queue:work redis --queue=high_priority --sleep=3 --tries=6 --timeout=120
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-saas_db}
+      - DB_USERNAME=${DB_USERNAME:-saas_user}
+      - DB_PASSWORD=${DB_PASSWORD:-saas_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - QUEUE_CONNECTION=redis
+      - CACHE_DRIVER=redis
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
+    depends_on:
+      - app
+    networks:
+      - saas_network
+
+  queue_default:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: saas_queue_default
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    env_file:
+      - ./backend/.env
+    command: php artisan queue:work redis --queue=default --sleep=3 --tries=6 --timeout=120
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-saas_db}
+      - DB_USERNAME=${DB_USERNAME:-saas_user}
+      - DB_PASSWORD=${DB_PASSWORD:-saas_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - QUEUE_CONNECTION=redis
+      - CACHE_DRIVER=redis
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
+    depends_on:
+      - app
+    networks:
+      - saas_network
+
+  queue_low:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: saas_queue_low
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    env_file:
+      - ./backend/.env
+    command: php artisan queue:work redis --queue=low_priority --sleep=5 --tries=6 --timeout=300
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-saas_db}
+      - DB_USERNAME=${DB_USERNAME:-saas_user}
+      - DB_PASSWORD=${DB_PASSWORD:-saas_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - QUEUE_CONNECTION=redis
+      - CACHE_DRIVER=redis
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
+    depends_on:
+      - app
+    networks:
+      - saas_network
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: saas_scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    env_file:
+      - ./backend/.env
+    command: php artisan schedule:work
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-saas_db}
+      - DB_USERNAME=${DB_USERNAME:-saas_user}
+      - DB_PASSWORD=${DB_PASSWORD:-saas_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+      - QUEUE_CONNECTION=redis
+      - CACHE_DRIVER=redis
+      - RC_ISOLATE_RECURRING_JOBS=${RC_ISOLATE_RECURRING_JOBS:-false}
+    depends_on:
+      - app
+    networks:
+      - saas_network
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: saas_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./backend:/var/www
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+      - frontend
+    networks:
+      - saas_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: saas_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      # Leave unset for same-origin `/api/v1` (Vite proxy → nginx). Browser may still set VITE_API_BASE_URL to http://localhost/api/v1 via frontend/.env.
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-}
+      - VITE_APP_NAME=${VITE_APP_NAME:-SaaS POS}
+      # ثابت داخل الحاوية — لا يُستبدل من جذر المشروع .env (تجنّباً لحقن 127.0.0.1:8000 الخاص بـ artisan على المضيف).
+      - VITE_DEV_PROXY_TARGET=http://nginx
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+      - VITE_INTELLIGENCE_COMMAND_CENTER=${VITE_INTELLIGENCE_COMMAND_CENTER:-true}
+    networks:
+      - saas_network
+
+  # نفق عام → خدمة frontend:5173. يتطلب NGROK_AUTHTOKEN في `.env` عند جذر المشروع.
+  # NGROK_DOMAIN (اختياري): دومين محجوز (مثلاً xxx.ngrok-free.dev) ليبقى الرابط ثابتاً — يقلل ERR_NGROK_3200 عند إعادة تشغيل الوكيل.
+  # تشغيل: make up-ngrok  أو  docker compose --profile ngrok up -d
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: saas_ngrok
+    profiles:
+      - ngrok
+    restart: unless-stopped
+    entrypoint: ['/bin/sh', '/etc/ngrok/entrypoint.sh']
+    volumes:
+      - ./docker/ngrok/entrypoint.sh:/etc/ngrok/entrypoint.sh:ro
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+      NGROK_DOMAIN: ${NGROK_DOMAIN:-}
+    depends_on:
+      - frontend
+    ports:
+      - '4040:4040'
+    networks:
+      - saas_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: saas_postgres
+    restart: unless-stopped
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c pg_stat_statements.max=10000
+      -c pg_stat_statements.save=on
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-saas_db}
+      POSTGRES_USER: ${DB_USERNAME:-saas_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-saas_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-saas_user} -d ${DB_DATABASE:-saas_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas_network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: saas_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-redis_password}
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --tcp-keepalive 60
+      --hz 20
+      --aof-rewrite-incremental-fsync yes
+      --lazyfree-lazy-eviction yes
+      --lazyfree-lazy-expire yes
+      --lazyfree-lazy-server-del yes
+      --activerehashing yes
+      --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - saas_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  saas_network:
+    driver: bridge

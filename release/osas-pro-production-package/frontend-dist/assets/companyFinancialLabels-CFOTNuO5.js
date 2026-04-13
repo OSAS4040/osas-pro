@@ -1,0 +1,1 @@
+const r={prepaid:"شحن مسبق",credit:"ائتمان"},t={pending_platform_review:"قيد مراجعة المنصة",approved_prepaid:"معتمد — شحن مسبق",approved_credit:"معتمد — ائتمان",rejected:"مرفوض",suspended:"معلّق"};function a(n){const e=String(n??"").trim();return e?r[e]??e:"—"}function i(n){const e=String(n??"").trim();return e?t[e]??e.replace(/_/g," "):"—"}export{i as a,a as c};

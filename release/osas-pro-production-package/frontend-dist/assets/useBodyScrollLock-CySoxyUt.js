@@ -1,0 +1,1 @@
+let o=0;function e(){typeof document>"u"||(o++,o===1&&(document.body.style.overflow="hidden"))}function n(){typeof document>"u"||(o=Math.max(0,o-1),o===0&&(document.body.style.overflow=""))}export{e as l,n as u};

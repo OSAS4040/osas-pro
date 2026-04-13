@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 
 /**
  * Idempotent: payments for paid demo invoices + mirrored domain_events for Phase 2 / Command Center.
- * Requires DemoCompanySeeder + DemoDataSeeder (demo@autocenter.sa).
+ * يدعم أكثر من مستأجر: مركز ديمو + أسس برو (بعد {@see DemoEndToEndScenarioSeeder}).
  */
 class IntelligenceTelemetrySeeder extends Seeder
 {
@@ -25,35 +25,52 @@ class IntelligenceTelemetrySeeder extends Seeder
 
     public function run(): void
     {
-        $company = Company::where('email', 'demo@autocenter.sa')->first();
-        if (! $company) {
-            $this->command?->warn('IntelligenceTelemetrySeeder: demo company missing; skip.');
+        $targets = [
+            ['company_email' => 'demo@autocenter.sa', 'owner_email' => 'owner@demo.sa'],
+            ['company_email' => 'hq@osas.sa', 'owner_email' => 'admin@osas.sa'],
+        ];
 
-            return;
+        foreach ($targets as $spec) {
+            $company = Company::withoutGlobalScope('tenant')->where('email', $spec['company_email'])->first();
+            if (! $company) {
+                $this->command?->warn('IntelligenceTelemetrySeeder: company '.$spec['company_email'].' missing; skip.');
+
+                continue;
+            }
+
+            $branch = $company->branches()->where('is_main', true)->first();
+            if (! $branch) {
+                $this->command?->error('IntelligenceTelemetrySeeder: main branch missing for '.$spec['company_email'].'.');
+
+                continue;
+            }
+
+            $owner = User::withoutGlobalScope('tenant')
+                ->where('company_id', $company->id)
+                ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower($spec['owner_email'])])
+                ->first();
+            $userId = $owner?->id;
+
+            DomainEvent::where('company_id', $company->id)
+                ->where('source_context', self::SOURCE_CONTEXT)
+                ->delete();
+
+            $this->ensurePaymentsForPaidInvoices($company->id, $branch->id, $userId);
+
+            $this->seedDomainEventsForCompany($company, $branch->id, $userId);
         }
 
-        $branch = $company->branches()->where('is_main', true)->first();
-        if (! $branch) {
-            $this->command?->error('IntelligenceTelemetrySeeder: main branch missing.');
+        $this->command?->info('IntelligenceTelemetrySeeder: payments + domain_events synced for demo + Osas companies.');
+    }
 
-            return;
-        }
-
-        $owner = User::where('company_id', $company->id)->where('email', 'owner@demo.sa')->first();
-        $userId = $owner?->id;
-
-        DomainEvent::where('company_id', $company->id)
-            ->where('source_context', self::SOURCE_CONTEXT)
-            ->delete();
-
-        $this->ensurePaymentsForPaidInvoices($company->id, $branch->id, $userId);
-
+    private function seedDomainEventsForCompany(Company $company, int $branchId, ?int $userId): void
+    {
         $base = now()->subDays(10)->startOfDay();
 
-        foreach (Customer::where('company_id', $company->id)->orderBy('id')->get() as $i => $customer) {
+        foreach (Customer::withoutGlobalScope('tenant')->where('company_id', $company->id)->orderBy('id')->get() as $i => $customer) {
             $this->insertEvent(
                 $company->id,
-                $branch->id,
+                $branchId,
                 $userId,
                 'customer',
                 (string) $customer->id,
@@ -66,10 +83,10 @@ class IntelligenceTelemetrySeeder extends Seeder
             );
         }
 
-        foreach (Vehicle::where('company_id', $company->id)->orderBy('id')->get() as $i => $vehicle) {
+        foreach (Vehicle::withoutGlobalScope('tenant')->where('company_id', $company->id)->orderBy('id')->get() as $i => $vehicle) {
             $this->insertEvent(
                 $company->id,
-                $branch->id,
+                $branchId,
                 $userId,
                 'vehicle',
                 (string) $vehicle->id,
@@ -83,10 +100,10 @@ class IntelligenceTelemetrySeeder extends Seeder
             );
         }
 
-        foreach (WorkOrder::where('company_id', $company->id)->orderBy('id')->get() as $i => $wo) {
+        foreach (WorkOrder::withoutGlobalScope('tenant')->where('company_id', $company->id)->orderBy('id')->get() as $i => $wo) {
             $this->insertEvent(
                 $company->id,
-                $branch->id,
+                $branchId,
                 $userId,
                 'work_order',
                 (string) $wo->id,
@@ -100,11 +117,11 @@ class IntelligenceTelemetrySeeder extends Seeder
             );
         }
 
-        foreach (Invoice::where('company_id', $company->id)->orderBy('id')->get() as $i => $invoice) {
+        foreach (Invoice::withoutGlobalScope('tenant')->where('company_id', $company->id)->orderBy('id')->get() as $i => $invoice) {
             $status = $invoice->status instanceof InvoiceStatus ? $invoice->status->value : (string) $invoice->status;
             $this->insertEvent(
                 $company->id,
-                $branch->id,
+                $branchId,
                 $userId,
                 'invoice',
                 (string) $invoice->id,
@@ -123,7 +140,7 @@ class IntelligenceTelemetrySeeder extends Seeder
                 if ($payment) {
                     $this->insertEvent(
                         $company->id,
-                        $branch->id,
+                        $branchId,
                         $userId,
                         'invoice',
                         (string) $invoice->id,
@@ -140,20 +157,18 @@ class IntelligenceTelemetrySeeder extends Seeder
                 }
             }
         }
-
-        $this->command?->info('IntelligenceTelemetrySeeder: payments + domain_events synced for demo company.');
     }
 
     private function ensurePaymentsForPaidInvoices(int $companyId, int $branchId, ?int $createdByUserId): void
     {
-        $uid = $createdByUserId ?? User::where('company_id', $companyId)->value('id');
+        $uid = $createdByUserId ?? User::withoutGlobalScope('tenant')->where('company_id', $companyId)->value('id');
         if (! $uid) {
             $this->command?->error('IntelligenceTelemetrySeeder: no user for payment rows.');
 
             return;
         }
 
-        $invoices = Invoice::where('company_id', $companyId)
+        $invoices = Invoice::withoutGlobalScope('tenant')->where('company_id', $companyId)
             ->where('status', InvoiceStatus::Paid)
             ->where('paid_amount', '>', 0)
             ->get();
@@ -163,7 +178,7 @@ class IntelligenceTelemetrySeeder extends Seeder
                 continue;
             }
 
-            Payment::create([
+            Payment::withoutGlobalScope('tenant')->create([
                 'uuid'               => (string) Str::uuid(),
                 'company_id'         => $companyId,
                 'branch_id'          => $branchId,

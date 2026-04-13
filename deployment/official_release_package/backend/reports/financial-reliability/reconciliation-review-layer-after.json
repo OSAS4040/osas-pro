@@ -1,0 +1,35 @@
+{
+    "generated_at": "2026-04-01T10:24:38+00:00",
+    "checks": {
+        "invoice_without_ledger": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": []
+        },
+        "unbalanced_journal_entries": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": []
+        },
+        "anomalous_reversal_settlement": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": {
+                "journal_entries": [],
+                "payments": []
+            }
+        }
+    },
+    "summary": {
+        "detected_cases": 0,
+        "healthy_cases": 0
+    },
+    "findings": {
+        "invoice_without_ledger": [],
+        "unbalanced_journal_entry": [],
+        "anomalous_reversal_settlement": []
+    }
+}

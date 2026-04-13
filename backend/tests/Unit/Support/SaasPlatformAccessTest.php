@@ -10,55 +10,97 @@ class SaasPlatformAccessTest extends TestCase
 {
     public function test_platform_operator_when_email_in_allowlist(): void
     {
-        config(['saas.platform_admin_emails' => ['ops@platform.example']]);
+        config([
+            'saas.platform_admin_emails' => ['ops@platform.example'],
+            'saas.platform_admin_phones' => [],
+        ]);
 
-        $user = new User(['email' => 'Ops@Platform.example']);
+        $user = new User(['email' => 'Ops@Platform.example', 'company_id' => null]);
 
         $this->assertTrue(SaasPlatformAccess::isPlatformOperator($user));
     }
 
+    public function test_platform_operator_false_when_email_allowlisted_but_user_has_company(): void
+    {
+        config([
+            'saas.platform_admin_emails' => ['ops@platform.example'],
+            'saas.platform_admin_phones' => [],
+        ]);
+
+        $user = new User(['email' => 'ops@platform.example', 'company_id' => 1]);
+
+        $this->assertFalse(SaasPlatformAccess::isPlatformOperator($user));
+    }
+
     public function test_platform_operator_false_when_list_empty(): void
     {
-        config(['saas.platform_admin_emails' => []]);
+        config([
+            'saas.platform_admin_emails' => [],
+            'saas.platform_admin_phones' => [],
+        ]);
 
         $user = new User(['email' => 'ops@platform.example']);
 
         $this->assertFalse(SaasPlatformAccess::isPlatformOperator($user));
     }
 
-    public function test_can_manage_global_plan_catalog_when_tenant_edit_allowed(): void
+    public function test_platform_operator_when_phone_allowlisted_and_no_company(): void
     {
         config([
-            'saas.allow_tenant_plan_catalog_edit' => true,
             'saas.platform_admin_emails' => [],
+            'saas.platform_admin_phones' => ['0504644804'],
         ]);
 
-        $user = new User(['email' => 'any@test.sa']);
+        $user = new User([
+            'company_id' => null,
+            'phone'      => '966504644804',
+        ]);
 
-        $this->assertTrue(SaasPlatformAccess::canManageGlobalPlanCatalog($user));
+        $this->assertTrue(SaasPlatformAccess::isPlatformOperator($user));
     }
 
-    public function test_can_manage_global_plan_catalog_when_platform_operator_and_tenant_edit_off(): void
+    public function test_platform_operator_false_when_phone_allowlisted_but_user_has_company(): void
     {
         config([
-            'saas.allow_tenant_plan_catalog_edit' => false,
-            'saas.platform_admin_emails' => ['ops@platform.example'],
+            'saas.platform_admin_emails' => [],
+            'saas.platform_admin_phones' => ['0504644804'],
         ]);
 
-        $user = new User(['email' => 'ops@platform.example']);
+        $user = new User([
+            'company_id' => 99,
+            'phone'      => '966504644804',
+        ]);
 
-        $this->assertTrue(SaasPlatformAccess::canManageGlobalPlanCatalog($user));
+        $this->assertFalse(SaasPlatformAccess::isPlatformOperator($user));
     }
 
-    public function test_can_manage_global_plan_catalog_false_for_regular_owner_when_tenant_edit_off(): void
+    public function test_platform_operator_when_is_platform_user_without_allowlist(): void
     {
         config([
-            'saas.allow_tenant_plan_catalog_edit' => false,
-            'saas.platform_admin_emails' => ['ops@platform.example'],
+            'saas.platform_admin_emails' => [],
+            'saas.platform_admin_phones' => [],
         ]);
 
-        $user = new User(['email' => 'owner@tenant.sa']);
+        $user = new User([
+            'company_id'       => null,
+            'is_platform_user' => true,
+        ]);
 
-        $this->assertFalse(SaasPlatformAccess::canManageGlobalPlanCatalog($user));
+        $this->assertTrue(SaasPlatformAccess::isPlatformOperator($user));
+    }
+
+    public function test_platform_operator_when_is_platform_user_with_company_anchor(): void
+    {
+        config([
+            'saas.platform_admin_emails' => [],
+            'saas.platform_admin_phones' => [],
+        ]);
+
+        $user = new User([
+            'company_id'       => 42,
+            'is_platform_user' => true,
+        ]);
+
+        $this->assertTrue(SaasPlatformAccess::isPlatformOperator($user));
     }
 }

@@ -202,7 +202,12 @@ async function openCreateIfQuery() {
 }
 
 async function load(): Promise<void> {
-  await store.fetchVehicles({ search: search.value })
+  const cid = route.query.customer_id
+  const params: Record<string, unknown> = { search: search.value }
+  if (cid !== undefined && cid !== null && String(cid).match(/^\d+$/)) {
+    params.customer_id = Number(cid)
+  }
+  await store.fetchVehicles(params)
 }
 
 async function loadCustomers() {
@@ -253,6 +258,13 @@ onMounted(async () => {
 watch(
   () => route.query.add,
   () => openCreateIfQuery(),
+)
+
+watch(
+  () => route.query.customer_id,
+  () => {
+    void load()
+  },
 )
 </script>
 

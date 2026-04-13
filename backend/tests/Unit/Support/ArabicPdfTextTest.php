@@ -25,7 +25,8 @@ final class ArabicPdfTextTest extends TestCase
         $this->assertStringContainsString('class="dompdf-ar-shape"', $html);
         $this->assertStringContainsString('dir="rtl"', $html);
         $this->assertStringContainsString('lang="ar"', $html);
-        $this->assertStringContainsString('unicode-bidi:embed', $html);
+        $this->assertStringNotContainsString('unicode-bidi:embed', $html);
+        $this->assertStringNotContainsString('display:inline-block', $html);
     }
 
     #[Test]

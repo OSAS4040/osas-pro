@@ -28,9 +28,9 @@
           بوابة آمنة لإدارة الاشتراكات والباقات على مستوى المنصة
         </h2>
         <p class="text-sm text-slate-300/90 leading-relaxed">
-          يُسمح باستخدام واجهات المنصة (مثل المشتركين وكتالوج الباقات) للحسابات التي يكون بريدها مضبوطاً في
-          <span class="font-mono text-xs text-violet-200" dir="ltr">SAAS_PLATFORM_ADMIN_EMAILS</span>
-          على الخادم، مع دور <strong class="text-white">مالك (Owner)</strong> في النظام.
+          يُسمح بدخول لوحة المنصة لحسابات <strong class="text-white">بلا شركة</strong> مع
+          <span class="font-mono text-xs text-violet-200" dir="ltr">is_platform_user</span>
+          أو بريد/جوال مدرج في إعدادات المنصة، ودور <strong class="text-white">مالك (Owner)</strong> في النظام.
         </p>
         <ul class="text-xs text-slate-400 space-y-2 border-r-2 border-violet-500/40 pr-3">
           <li>لا تستخدم نفس كلمة مرور الإنتاج في بيئات تجريبية مكشوفة.</li>
@@ -70,10 +70,12 @@
             >
               <p class="text-[11px] font-semibold text-violet-900 dark:text-violet-200">بيانات تجريبية (محلي / بعد الـ seed)</p>
               <p class="text-[10px] text-violet-800/90 dark:text-violet-300/80 leading-relaxed">
-                من seeder: <span class="font-mono" dir="ltr">DefaultAdminSeeder</span> — نفّذ على الخادم
-                <span class="font-mono" dir="ltr">php artisan db:seed --class=Database\\Seeders\\DefaultAdminSeeder</span>
-                واضبط في <span class="font-mono" dir="ltr">.env</span> أن يتضمّن بريدك ضمن
-                <span class="font-mono" dir="ltr">SAAS_PLATFORM_ADMIN_EMAILS</span>.
+                من seeder: <span class="font-mono" dir="ltr">DemoPlatformAdminSeeder</span> — يُشغَّل مع
+                <span class="font-mono" dir="ltr">php artisan db:seed</span>
+                أو
+                <span class="font-mono" dir="ltr">php artisan db:seed --class=Database\\Seeders\\DemoPlatformAdminSeeder</span>.
+                لا حاجة لـ <span class="font-mono" dir="ltr">SAAS_PLATFORM_ADMIN_EMAILS</span> لأن الحساب
+                <span class="font-mono" dir="ltr">is_platform_user</span>.
               </p>
               <button
                 type="button"
@@ -193,15 +195,23 @@ import { RouterLink } from 'vue-router'
 import { ShieldCheckIcon, CpuChipIcon, EyeIcon, EyeSlashIcon, ExclamationCircleIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { enabledPortals } from '@/config/portalAccess'
+import { useI18nStore } from '@/stores/i18n'
+import { resolvePostLoginTarget } from '@/utils/postLoginRedirect'
+import { loginErrorMessageFromPayload } from '@/utils/loginApiErrors'
 
-/** يطابق DefaultAdminSeeder — للعرض التجريبي فقط */
-const DEMO_EMAIL = 'admin@osas.sa'
+/** يطابق DemoPlatformAdminSeeder — للعرض التجريبي فقط */
+const DEMO_EMAIL = 'platform-demo@osas.sa'
 const DEMO_PASSWORD = '12345678'
+
+/** عند 401 إذا لم يُرجع الـ API platform_demo_hint (مثلاً APP_ENV=production على الخادم) */
+const FALLBACK_401_PLATFORM_SEED_HINT =
+  'تأكد أن المستخدم موجود في نفس قاعدة بيانات الـ API: docker compose exec app php artisan db:seed --class=Database\\Seeders\\DemoPlatformAdminSeeder — إن كان APP_ENV=production فعّل APP_DEMO_PLATFORM_ADMIN=true في backend/.env ثم أعد الـ seed.'
 
 const appVersion = __APP_VERSION__
 
 const auth = useAuthStore()
 const router = useRouter()
+const i18n = useI18nStore()
 
 const showDemoHint = computed(
   () => import.meta.env.DEV || import.meta.env.VITE_SHOW_PLATFORM_LOGIN_HINT === 'true',
@@ -284,10 +294,10 @@ async function handleLogin() {
       }
     }
 
-    if (!auth.isOwner) {
+    if (!auth.isPlatform) {
       await auth.logout()
       error.value =
-        'هذا الحساب ليس بدور مالك (Owner). صفحة مشغّل المنصة مخصّصة لحسابات المالك المصرّح بها على مستوى المنصة.'
+        'هذا الحساب ليس مشغّل منصة (حساب بلا شركة ومفعّل is_platform_user). استخدم /login لفريق العمل، أو شغّل DemoPlatformAdminSeeder.'
       return
     }
 
@@ -298,28 +308,49 @@ async function handleLogin() {
       return
     }
 
-    await router.push('/admin')
+    const target = resolvePostLoginTarget({
+      accountContext: auth.accountContext,
+      registrationFlow: null,
+      registrationStage: undefined,
+      accountType: undefined,
+      portalHomeFromRole: '/admin',
+      redirectQuery: undefined,
+    })
+    await router.push(target)
   } catch (e: unknown) {
     const res = (e as { response?: { status?: number; data?: { message?: string; errors?: unknown } } }).response
     if (!res) {
-      error.value =
-        'تعذّر الاتصال بالخادم. تحقق من تشغيل الـ API وإعداد VITE_API_BASE_URL أو البروكسي.'
+      error.value = i18n.t('login.errNetwork')
       return
     }
     if (res.status === 401) {
-      const m = String(res.data?.message ?? '')
-      error.value =
-        m.includes('credentials are incorrect') || m.includes('provided credentials')
-          ? 'البريد أو كلمة المرور غير صحيحة.'
-          : m || 'البريد أو كلمة المرور غير صحيحة.'
+      let msg = loginErrorMessageFromPayload((res.data ?? {}) as Record<string, unknown>, i18n.t)
+      const apiHint = (res.data as { platform_demo_hint?: string } | undefined)?.platform_demo_hint
+      if (typeof apiHint === 'string' && apiHint.trim() !== '') {
+        msg += `\n\n${apiHint.trim()}`
+      } else if (import.meta.env.DEV) {
+        const dh = (res.data as { dev_hint?: Record<string, unknown> } | undefined)?.dev_hint
+        const step = dh && typeof dh.platform_demo_next_step === 'string' ? dh.platform_demo_next_step.trim() : ''
+        if (step !== '') {
+          msg += `\n\n${step}`
+        }
+      }
+      if (
+        email === DEMO_EMAIL &&
+        (typeof apiHint !== 'string' || apiHint.trim() === '') &&
+        !msg.includes('db:seed')
+      ) {
+        msg += `\n\n${FALLBACK_401_PLATFORM_SEED_HINT}`
+      }
+      error.value = msg
       return
     }
     if (res.status === 402 && res.data?.message) {
       error.value = String(res.data.message)
       return
     }
-    if (res.status === 403 && res.data?.message) {
-      error.value = String(res.data.message)
+    if (res.status === 403) {
+      error.value = loginErrorMessageFromPayload((res.data ?? {}) as Record<string, unknown>, i18n.t)
       return
     }
     if (res.status === 503 && res.data?.message) {

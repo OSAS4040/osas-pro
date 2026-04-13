@@ -7,6 +7,7 @@ import {
   THRESHOLDS_SOAK,
   PROFILE_LABELS,
 } from './acceptance.js';
+import { getEnterpriseGateOptions } from './enterprise-gate.js';
 
 export { PROFILE_LABELS };
 
@@ -18,6 +19,10 @@ const GRACEFUL = '30s';
 export function getProfileOptions(profile) {
   const p = (profile || 'smoke').toLowerCase();
   switch (p) {
+    case 'enterprise_smoke':
+    case 'enterprise_normal':
+    case 'enterprise_peak':
+      return getEnterpriseGateOptions(p);
     case 'peak_pos_short':
       return buildPeakPosShort();
     case 'peak_pos_raw_short':

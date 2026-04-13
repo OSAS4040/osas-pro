@@ -1,0 +1,59 @@
+{
+    "generated_at": "2026-04-08T03:54:54+00:00",
+    "checks": {
+        "invoice_without_ledger": {
+            "detected": 1,
+            "total_examined": 1,
+            "healthy": 0,
+            "sample": [
+                {
+                    "id": 105,
+                    "uuid": "e9a5578b-2c0c-4d6f-b1da-91faeca10c6c",
+                    "company_id": 49,
+                    "invoice_number": "INV-REC-MISS-001",
+                    "status": "pending"
+                }
+            ]
+        },
+        "unbalanced_journal_entries": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": []
+        },
+        "anomalous_reversal_settlement": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": {
+                "journal_entries": [],
+                "payments": []
+            }
+        }
+    },
+    "summary": {
+        "detected_cases": 1,
+        "healthy_cases": 0
+    },
+    "findings": {
+        "invoice_without_ledger": [
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 49,
+                "invoice_id": 105,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 105,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "e9a5578b-2c0c-4d6f-b1da-91faeca10c6c",
+                    "invoice_number": "INV-REC-MISS-001",
+                    "status": "pending"
+                }
+            }
+        ],
+        "unbalanced_journal_entry": [],
+        "anomalous_reversal_settlement": []
+    }
+}

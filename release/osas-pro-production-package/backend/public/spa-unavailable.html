@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>الواجهة غير جاهزة</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.6; color: #1e293b; background: #f8fafc; }
+    h1 { font-size: 1.25rem; }
+    code { background: #e2e8f0; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.9em; }
+    ul { padding-right: 1.25rem; }
+    a { color: #0d9488; }
+  </style>
+</head>
+<body>
+  <h1>خادم الواجهة (Vite) غير متاح على المنفذ المتوقع</h1>
+  <p>nginx يوجّه الجذر <code>/</code> إلى حاوية التطوير. إذا كانت الحاوية متوقفة أو المنفذ مختلفاً، يظهر هذا الإشعار بدل 502 الخام.</p>
+  <p><strong>محلياً (Docker):</strong></p>
+  <ul>
+    <li>تأكد أن خدمة <code>frontend</code> تعمل: <code>docker compose up -d frontend</code></li>
+    <li>أو افتح الواجهة مباشرة: <a href="http://127.0.0.1:5173">http://127.0.0.1:5173</a></li>
+    <li>لواجهة مبنية للإنتاج، اضبط nginx لخدمة <code>dist</code> بدل البروكسي إلى Vite.</li>
+  </ul>
+  <p>API: <a href="/api/v1/health">/api/v1/health</a></p>
+</body>
+</html>

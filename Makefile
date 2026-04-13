@@ -1,5 +1,5 @@
 # ترتيب التنفيذ الرسمي (مرقم): docs/Execution_Order_Asas_Pro.md
-.PHONY: up down build fresh logs logs-all shell migrate seed seed-simulate key tinker queue-restart swagger dompdf-arabic-check test test-filter test-coverage test-frontend-full test-project-gate staging-gate policy-env-example github-branch-protection-status verify release-gate monitoring-gate integrity-verify load-test load-test-preflight load-test-matrix load-test-release-gate load-test-rc-secure-gate ps install ngrok-up ngrok-down ngrok-url up-ngrok dev-bootstrap
+.PHONY: up down build fresh logs logs-all shell migrate seed seed-simulate key tinker queue-restart swagger dompdf-arabic-check test test-filter test-coverage test-frontend-full test-project-gate staging-gate production-readiness-gate policy-env-example github-branch-protection-status verify release-gate monitoring-gate integrity-verify load-test load-test-preflight load-test-matrix load-test-release-gate load-test-rc-secure-gate ps install ngrok-up ngrok-down ngrok-url up-ngrok dev-bootstrap
 
 up:
 	docker compose up -d
@@ -94,7 +94,12 @@ test-project-gate: test-frontend-full
 # نفس المنطق: scripts/staging-gate.sh (لـ CI/Linux)
 staging-gate:
 	docker compose exec -T frontend sh -lc "cd /app && npm ci && npm test"
-	docker compose exec -T app sh -lc "cd /var/www && ./vendor/bin/phpunit tests/Unit/Support/SaasPlatformAccessTest.php tests/Feature/Saas/"
+	docker compose exec -T app sh -lc "cd /var/www && ./vendor/bin/phpunit tests/Unit/Support/SaasPlatformAccessTest.php tests/Feature/Saas/ tests/Feature/Auth/PhoneRegistrationFlowTest.php"
+
+# بوابة جاهزية إنتاج آلية كاملة (تنظيف، بناء، اختبارات، k6 enterprise، integrity، artifact no-dev).
+# على Windows: pwsh -File scripts/osas-pro-production-readiness-gate.ps1
+production-readiness-gate:
+	bash scripts/osas-pro-production-readiness-gate.sh
 
 # تحقق سياسة أمثلة الإعداد — لا يحتاج Docker (Node فقط)
 policy-env-example:
@@ -108,6 +113,10 @@ github-branch-protection-status:
 # واجهة المستخدم: تحقق يدوي (زمن تحميل <1.5s، لا شاشات بيضاء) — لا يغطيه PHPUnit.
 test-preprod:
 	docker compose exec -T app php artisan test --group=pre-production
+
+# فحص سريع: اتصال DB + أعمدة IAM المنصة + جدول platform_audit_logs
+integrity-sanity:
+	docker compose exec -T app php artisan integrity:sanity
 
 # فحص سلامة البيانات (فاتورة↔قيود، مخزون، محفظة، تكرار) — يخرج 1 عند وجود مخالفات
 integrity-verify:

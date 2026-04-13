@@ -1,0 +1,28 @@
+<template>
+  <div class="space-y-4 py-2" dir="rtl">
+    <div class="rounded-2xl border border-amber-200/90 bg-amber-50/90 dark:border-amber-800/60 dark:bg-amber-950/30 px-4 py-3">
+      <p class="text-sm font-semibold text-amber-950 dark:text-amber-100">وضع الإشعارات</p>
+      <p class="text-xs text-amber-900/85 dark:text-amber-200/90 mt-1 leading-relaxed">
+        لا يوجد حالياً مركز إشعارات فوري مربوط بحسابك في هذه الواجهة. هذه الصفحة مخصصة لاحقاً لعرض تنبيهات الفواتير والحجوزات
+        والمحفظة عند تفعيل الخدمة على الخادم. لن تُرسل أي بيانات حساسة إلى المتصفح قبل اكتمال التكامل.
+      </p>
+    </div>
+    <div class="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 p-4 text-sm text-gray-600 dark:text-slate-400">
+      <p class="font-medium text-gray-800 dark:text-slate-200 mb-2">ماذا يمكنك فعله الآن؟</p>
+      <ul class="list-disc list-inside space-y-1 text-xs">
+        <li>متابعة الفواتير والحجوزات من القوائم المخصصة في الأسفل.</li>
+        <li>التواصل مع مركز الخدمة عند الحاجة لتفاصيل الطلب.</li>
+      </ul>
+    </div>
+    <RouterLink
+      to="/customer/dashboard"
+      class="inline-flex text-sm font-medium text-orange-600 dark:text-orange-400 hover:underline"
+    >
+      ← العودة للوحة التحكم
+    </RouterLink>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { RouterLink } from 'vue-router'
+</script>

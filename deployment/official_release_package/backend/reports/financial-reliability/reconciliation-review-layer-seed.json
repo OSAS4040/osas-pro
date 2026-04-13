@@ -1,0 +1,86 @@
+{
+    "generated_at": "2026-04-08T22:07:23+00:00",
+    "checks": {
+        "invoice_without_ledger": {
+            "detected": 1,
+            "total_examined": 1,
+            "healthy": 0,
+            "sample": [
+                {
+                    "id": 56,
+                    "uuid": "ea69a8ed-b1bb-43fa-8d11-cbc59460c834",
+                    "company_id": 52,
+                    "invoice_number": "INV-REV-LAYER-001",
+                    "status": "pending"
+                }
+            ]
+        },
+        "unbalanced_journal_entries": {
+            "detected": 0,
+            "total_examined": 0,
+            "healthy": 0,
+            "sample": []
+        },
+        "anomalous_reversal_settlement": {
+            "detected": 1,
+            "total_examined": 1,
+            "healthy": 0,
+            "sample": {
+                "journal_entries": [],
+                "payments": [
+                    {
+                        "id": 51,
+                        "uuid": "4ef3efc2-66a3-4beb-8b10-79fc81c4e32d",
+                        "company_id": 52,
+                        "invoice_id": 56,
+                        "status": "refunded",
+                        "original_payment_id": null,
+                        "reversal_payment_id": null,
+                        "trace_id": "ce185080-9a0c-47ea-8f0c-401efe99724c"
+                    }
+                ]
+            }
+        }
+    },
+    "summary": {
+        "detected_cases": 2,
+        "healthy_cases": 0
+    },
+    "findings": {
+        "invoice_without_ledger": [
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 52,
+                "invoice_id": 56,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 56,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "ea69a8ed-b1bb-43fa-8d11-cbc59460c834",
+                    "invoice_number": "INV-REV-LAYER-001",
+                    "status": "pending"
+                }
+            }
+        ],
+        "unbalanced_journal_entry": [],
+        "anomalous_reversal_settlement": [
+            {
+                "finding_type": "anomalous_reversal_settlement",
+                "company_id": 52,
+                "invoice_id": 56,
+                "journal_entry_id": null,
+                "payment_id": 51,
+                "reference_type": "payment",
+                "reference_id": 51,
+                "trace_reference": "ce185080-9a0c-47ea-8f0c-401efe99724c",
+                "details": {
+                    "payment_status": "refunded",
+                    "original_payment_id": null,
+                    "reversal_payment_id": null
+                }
+            }
+        ]
+    }
+}

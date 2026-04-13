@@ -19,6 +19,13 @@
         <div class="page-title-wrap">
           <h2 class="page-title-xl">{{ l('إعدادات الشركة', 'Company settings') }}</h2>
           <p class="page-subtitle">{{ l('المعلومات والهوية البصرية — تظهر في الفواتير والوثائق الرسمية', 'Business profile and visual identity — shown on invoices and official documents') }}</p>
+          <RouterLink
+            v-if="auth.user?.company_id"
+            :to="{ name: 'companies.profile', params: { companyId: String(auth.user.company_id) } }"
+            class="inline-flex mt-2 text-xs font-semibold text-primary-600 hover:underline"
+          >
+            {{ l('مركز تشغيل الشركة', 'Company operational hub') }} →
+          </RouterLink>
           <p class="text-[11px] text-primary-700 dark:text-primary-300 mt-2 font-medium">
             {{ l('تبويب «إعدادات الفاتورة» يتضمّن نسبة VAT الافتراضية وطرق الدفع المقبولة (تُحفظ مع خيارات الفاتورة).', 'The invoice tab includes default VAT and accepted payment methods (saved with invoice options).') }}
           </p>

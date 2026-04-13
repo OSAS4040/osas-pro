@@ -1,0 +1,10 @@
+{
+    "meetings_total": 2,
+    "decisions_total": 2,
+    "decisions_with_approval": 1,
+    "approval_workflows_linked_to_meeting_decisions": 1,
+    "actions_total": 2,
+    "open_actions": 1,
+    "done_actions": 1,
+    "linked_execution_entities_count": 2
+}

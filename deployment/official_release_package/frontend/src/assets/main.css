@@ -1,0 +1,399 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Heroicons default sizes (optional utilities; prefer @heroicons/vue/24/outline or /solid) */
+@layer utilities {
+  .icon-inline {
+    width: var(--icon-size-inline);
+    height: var(--icon-size-inline);
+    flex-shrink: 0;
+  }
+  .icon-nav {
+    width: var(--icon-size-nav);
+    height: var(--icon-size-nav);
+    flex-shrink: 0;
+  }
+  .icon-card {
+    width: var(--icon-size-card);
+    height: var(--icon-size-card);
+    flex-shrink: 0;
+  }
+}
+
+/* ─── CSS Variables for Dark Mode ──────────────────────────────────────── */
+@layer base {
+  :root {
+    /* Typography — single UI stack (Arabic-first; Latin via Inter). Tenant themes do not override. */
+    --font-sans: 'Tajawal', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    /* Heroicons @ 24px outline = 1.5rem; use for nav / dense UI */
+    --icon-size-nav: 1.25rem;
+    --icon-size-inline: 1.125rem;
+    --icon-size-card: 1.5rem;
+
+    --bg-base:       #f4f7f6;
+    --bg-card:       #ffffff;
+    --bg-sidebar:    #fafcfb;
+    --bg-header:     #ffffff;
+    --border-color:  #e2e8e4;
+    --text-primary:  #0f172a;
+    --text-secondary:#475569;
+    --text-muted:    #94a3b8;
+    --shadow:        0 1px 3px rgba(13,148,136,.06);
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --ring-focus: 0 0 0 3px rgba(20, 184, 166, 0.22);
+  }
+
+  .dark {
+    --bg-base:       #0c1222;
+    --bg-card:       #152238;
+    --bg-sidebar:    #111c2a;
+    --bg-header:     #152238;
+    --border-color:  #2d3a4d;
+    --text-primary:  #f1f5f9;
+    --text-secondary:#94a3b8;
+    --text-muted:    #64748b;
+    --shadow:        0 1px 3px rgba(0,0,0,.35);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  body {
+    @apply antialiased;
+    font-family: inherit;
+  }
+
+  [dir='rtl'],
+  [dir='ltr'] {
+    font-family: var(--font-sans);
+  }
+
+  /* Font support for extra languages */
+  .font-urdu   { font-family: 'Noto Nastaliq Urdu', 'Tajawal', sans-serif; }
+  .font-bengali { font-family: 'Noto Sans Bengali', sans-serif; }
+  .font-hindi  { font-family: 'Noto Sans Devanagari', sans-serif; }
+}
+
+/* ─── Utility classes ────────────────────────────────────────────────────── */
+@layer components {
+  /* Enterprise shell */
+  .app-shell-page { @apply max-w-[1600px] mx-auto space-y-5; }
+  .page-head { @apply flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between; }
+  .page-title-wrap { @apply min-w-0; }
+  /**
+   * عناوين الصفحة — مستوى واحد موحّد (يتفاعل مع md)
+   * page-title و page-title-xl مترادفان لتفادي التفاوت التاريخي
+   */
+  .page-title { @apply text-xl md:text-2xl font-bold tracking-tight; color: var(--text-primary); }
+  .page-title-xl { @apply page-title; }
+  .page-subtitle { @apply text-xs md:text-sm mt-1 leading-relaxed; color: var(--text-secondary); }
+  .page-toolbar { @apply flex flex-wrap items-center gap-2; }
+
+  /** عنوان قسم داخل الصفحة (أسفل العنوان الرئيسي) */
+  .section-title { @apply text-base md:text-lg font-semibold tracking-tight text-gray-900 dark:text-slate-100; }
+
+  .panel { @apply rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm; }
+  .panel-head { @apply px-4 py-3 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between gap-2; }
+  .panel-title { @apply text-sm font-semibold text-gray-800 dark:text-slate-100; }
+  .panel-body { @apply p-4; }
+  .panel-muted { @apply text-xs text-gray-500 dark:text-slate-400 leading-relaxed; }
+
+  /** عنوان بطاقة / كرت في شبكة أو قائمة */
+  .card-title { @apply text-sm font-semibold text-gray-900 dark:text-slate-100 leading-snug; }
+
+  .page-container  { @apply max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6; }
+
+  /* Light + Dark aware card */
+  .card            { @apply bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-6 shadow-sm transition-colors; }
+  .card-header     { @apply flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-slate-700; }
+
+  .form            { @apply space-y-4; }
+  .form-row        { @apply grid grid-cols-1 sm:grid-cols-2 gap-4; }
+  .form-group      { @apply flex flex-col gap-1; }
+  .form-label      { @apply text-sm font-medium text-gray-700 dark:text-slate-300; }
+  /** نص توضيحي تحت الحقل — لا يُستخدم uppercase (يتعارض مع العربية) */
+  .form-helper     { @apply text-xs leading-relaxed mt-1; color: var(--text-secondary); }
+  /** تسمية مرشح/حقل ثانوي في شريط أدوات (أصغر من form-label) */
+  .filter-field-label { @apply block text-xs font-semibold mb-1; color: var(--text-muted); }
+  .form-input      { @apply w-full border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors; }
+  .form-select     { @apply w-full border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors; }
+  .form-textarea   { @apply w-full border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none transition-colors; }
+  .field           { @apply w-full border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors; }
+  .field-sm        { @apply w-full border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors; }
+
+  .btn             { @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-sm          { @apply px-3 py-1.5 text-xs; }
+  .btn-primary     { @apply bg-primary-600 text-white hover:bg-primary-700; }
+  .btn-outline     { @apply border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700; }
+  .btn-secondary   { @apply bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600; }
+  .btn-ghost       { @apply bg-transparent text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700; }
+  .btn-danger      { @apply bg-red-600 text-white hover:bg-red-700; }
+  .btn-success     { @apply bg-green-600 text-white hover:bg-green-700; }
+  .btn-back        { @apply inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 font-medium; }
+  .spinner         { @apply animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600; }
+  .label           { @apply block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1; }
+
+  .badge           { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium; }
+  .badge-green     { @apply bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300; }
+  .badge-red       { @apply bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300; }
+  .badge-yellow    { @apply bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300; }
+  .badge-blue      { @apply bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300; }
+  .badge-gray      { @apply bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300; }
+  .badge-purple    { @apply bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300; }
+  /** نص داخل شارة/وسم */
+  .badge-text      { @apply text-xs font-medium leading-tight; }
+
+  /** نص جسم عادي */
+  .body-text       { @apply text-sm leading-relaxed text-gray-700 dark:text-slate-300; }
+  .body-text-sm    { @apply text-xs leading-relaxed text-gray-700 dark:text-slate-300; }
+  /** نص ثانوي / توضيحي عام */
+  .muted-text      { @apply text-xs leading-relaxed; color: var(--text-muted); }
+
+  .data-table      { @apply w-full text-sm border-collapse; }
+  .data-table th   { @apply px-4 py-3 text-right font-semibold text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700; }
+  .data-table td   { @apply px-4 py-3 text-gray-700 dark:text-slate-300 border-b border-gray-100 dark:border-slate-700/50; }
+  .data-table tbody tr:hover { @apply bg-gray-50 dark:bg-slate-700/30; }
+  /** رأس/خلية لجدول مخصّص (بدون class data-table على الجدول) */
+  .table-header { @apply px-4 py-3 text-right text-xs font-semibold text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700; }
+  .table-cell { @apply px-4 py-3 text-sm text-gray-700 dark:text-slate-300 border-b border-gray-100 dark:border-slate-700/50; }
+  .data-table-wrap { @apply overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700; }
+  .table-shell { @apply panel overflow-hidden; }
+  .table-toolbar { @apply panel p-4 flex flex-wrap items-end gap-3; }
+  .table-search { @apply field min-w-[220px]; }
+  .table-filter { @apply field min-w-[140px]; }
+  .table-empty { @apply px-4 py-16 text-center; }
+  /** حالات فارغة — قوائم وجداول ولوحات */
+  .empty-state-title { @apply text-sm font-medium text-gray-600 dark:text-slate-300; }
+  .empty-state-description { @apply text-xs text-gray-400 dark:text-slate-500 mt-1 leading-relaxed max-w-md mx-auto; }
+  .table-empty-title { @apply empty-state-title; }
+  .table-empty-sub { @apply empty-state-description; }
+  .table-pagination { @apply flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500 dark:text-slate-400; }
+
+  .page-header     { @apply flex items-center justify-between mb-6 flex-wrap gap-3; }
+  .loading-state   { @apply flex justify-center items-center py-12; }
+  .error-state     { @apply bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-xl p-4 text-sm; }
+  .empty-state     { @apply text-center py-12 text-sm leading-relaxed text-gray-400 dark:text-slate-500; }
+  .state-loading   { @apply flex items-center justify-center py-12 text-gray-400 dark:text-slate-500 text-sm; }
+  .state-error     { @apply rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 p-3 text-sm; }
+  .state-empty     { @apply text-center py-12 text-gray-400 dark:text-slate-500; }
+  .filters         { @apply bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 flex gap-3 flex-wrap items-end transition-colors; }
+  .pagination      { @apply flex items-center justify-between pt-4 text-sm text-gray-500 dark:text-slate-400; }
+  /* فوق الشريط العلوي والتنبيهات (z-50) وتحت لوحة الأوامر (9998) عند الحاجة */
+  .modal-overlay   { @apply fixed inset-0 bg-black/40 dark:bg-black/60 z-[9997] flex items-center justify-center p-4; }
+  .modal-box       { @apply bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg shadow-xl transition-colors; }
+  .modal-header    { @apply flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700; }
+  .modal-body      { @apply p-6 space-y-4; }
+  .modal-footer    { @apply flex gap-3 justify-end pt-2; }
+  .form-shell { @apply panel p-6 space-y-6; }
+  .form-section { @apply space-y-3; }
+  .form-section-title { @apply text-sm font-bold text-primary-700 dark:text-primary-300 border-b border-primary-100 dark:border-primary-900/50 pb-2; }
+  .form-grid-2 { @apply grid sm:grid-cols-2 gap-4; }
+  .field-error { @apply text-xs text-red-600 dark:text-red-400 mt-1; }
+  .form-actions { @apply flex flex-wrap justify-end gap-2 pt-2 border-t border-gray-100 dark:border-slate-700; }
+
+  /* Wallet */
+  .wallet-summary  { @apply grid grid-cols-2 md:grid-cols-4 gap-4; }
+  .wallet-info     { @apply bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 text-center transition-colors; }
+  .wallet-balance  { @apply text-2xl font-bold text-primary-700 dark:text-primary-300; }
+
+  /* حقول التاريخ والوقت — أوضح في الوضعين */
+  input[type='date'],
+  input[type='datetime-local'],
+  input[type='month'],
+  input[type='time'] {
+    min-height: 2.5rem;
+    color-scheme: light dark;
+    border-radius: 0.65rem;
+    padding-inline-start: 0.75rem;
+    padding-inline-end: 0.75rem;
+    border: 1px solid rgb(209 213 219);
+    background-color: white;
+  }
+  .dark input[type='date'],
+  .dark input[type='datetime-local'],
+  .dark input[type='month'],
+  .dark input[type='time'] {
+    color-scheme: dark;
+    border-color: rgb(71 85 105);
+    background-color: rgb(15 23 42);
+  }
+  .wallet-label    { @apply text-xs text-gray-500 dark:text-slate-400 mt-1; }
+  .wallets-grid    { @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4; }
+
+  /* Transaction types */
+  .type-badge      { @apply badge; }
+  .type--credit    { @apply badge-green; }
+  .type--debit     { @apply badge-red; }
+  .type--transfer  { @apply badge-blue; }
+  .type--reserve   { @apply badge-yellow; }
+  .type--release   { @apply badge-gray; }
+  .amount--credit  { @apply text-green-600 dark:text-green-400 font-semibold; }
+  .amount--debit   { @apply text-red-600 dark:text-red-400 font-semibold; }
+  .txn-table       { @apply data-table; }
+
+  /* Smart hover hint */
+  [data-smart-tip] { position: relative; }
+  [data-smart-tip]::after {
+    content: attr(data-smart-tip);
+    position: absolute;
+    inset-inline-end: 0;
+    bottom: calc(100% + 8px);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px) scale(0.98);
+    transition: opacity .18s ease, transform .18s ease;
+    background: rgba(15, 23, 42, 0.9);
+    color: #f8fafc;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    padding: 6px 8px;
+    border-radius: 8px;
+    white-space: nowrap;
+    z-index: 60;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.22);
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  [data-smart-tip]:hover::after,
+  [data-smart-tip]:focus-visible::after {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── Print system: content-only (see useAppPrint / .print-container) ─────── */
+@layer components {
+  /**
+   * Printable document root — one primary block per view (tables, reports, slips).
+   * Nested `.print-container` is allowed; isolation shows all matching roots — prefer a single root per route.
+   */
+  .print-container {
+    position: relative;
+  }
+}
+
+@media print {
+  @page {
+    margin: 14mm 12mm;
+    size: auto;
+  }
+
+  html,
+  body {
+    font-family: var(--font-sans) !important;
+    background: #fff !important;
+    color: #0f172a !important;
+    height: auto !important;
+    overflow: visible !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Hide app chrome if user prints without our composable (e.g. Ctrl+P) */
+  [data-print-chrome],
+  .no-print {
+    display: none !important;
+  }
+
+  /* Popup / teleported UI */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Programmatic content-only: only .print-container tree is visible */
+  body.print-content-isolated * {
+    visibility: hidden !important;
+  }
+
+  body.print-content-isolated .print-container,
+  body.print-content-isolated .print-container * {
+    visibility: visible !important;
+  }
+
+  /* Strip in-document chrome (charts, filters) even inside the printable root */
+  body.print-content-isolated .print-container .no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Invoice views: formal template is screen-hidden (display:none) until print isolation */
+  body.print-content-isolated #invoice-print-template,
+  body.print-content-isolated #smart-invoice-print-template {
+    display: block !important;
+  }
+
+  body.print-content-isolated .print-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding-block: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+  }
+
+  /*
+   * Invoice formal PDF: template is teleported to body. Hiding #app removes min-h-screen / tall layout
+   * that otherwise kept document height ≈ full viewport and produced a blank second print page.
+   */
+  body.print-content-isolated:has(> #invoice-print-template) #app,
+  body.print-content-isolated:has(> #smart-invoice-print-template) #app {
+    display: none !important;
+  }
+
+  body.print-content-isolated:has(> #invoice-print-template),
+  body.print-content-isolated:has(> #smart-invoice-print-template) {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  body.print-content-isolated:has(> #invoice-print-template) > #invoice-print-template,
+  body.print-content-isolated:has(> #smart-invoice-print-template) > #smart-invoice-print-template {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  /* No container registered: strip chrome only (may still include in-page buttons — add .print-container to views) */
+  body.print-fallback-no-container [data-print-chrome],
+  body.print-fallback-no-container .no-print {
+    display: none !important;
+  }
+
+  a[href]::after {
+    content: none !important;
+  }
+
+  .break-inside-avoid-print {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* ─── Scrollbar Dark ─────────────────────────────────────────────────────── */
+.dark ::-webkit-scrollbar       { width: 6px; height: 6px; }
+.dark ::-webkit-scrollbar-track { background: #1e293b; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* ─── Number Ticker animation ────────────────────────────────────────────── */
+@keyframes ticker { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.ticker-enter { animation: ticker 0.4s ease-out; }

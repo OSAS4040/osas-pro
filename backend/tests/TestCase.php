@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Subscription;
@@ -140,6 +142,31 @@ abstract class TestCase extends BaseTestCase
         $subscription = $this->createActiveSubscription($company);
 
         return compact('company', 'branch', 'user', 'subscription');
+    }
+
+    /**
+     * مستخدم منصة مستقل (company_id = null) — يُطابق شرط SaasPlatformAccess عند ضبط البريد/الجوال في config.
+     */
+    protected function createStandalonePlatformOperator(string $email, array $overrides = []): User
+    {
+        return User::withoutGlobalScopes()->create(array_merge([
+            'uuid'               => (string) Str::uuid(),
+            'company_id'         => null,
+            'branch_id'          => null,
+            'org_unit_id'        => null,
+            'customer_id'        => null,
+            'name'               => 'Platform Operator',
+            'email'              => $email,
+            'password'           => 'Password123!',
+            'phone'              => null,
+            'role'               => UserRole::Owner,
+            'status'             => UserStatus::Active,
+            'is_active'          => true,
+            'is_platform_user'   => true,
+            'platform_role'      => 'super_admin',
+            'account_type'       => null,
+            'registration_stage' => 'phone_verified',
+        ], $overrides));
     }
 
     protected function actingAsUser(User $user): static

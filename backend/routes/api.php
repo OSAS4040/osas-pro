@@ -41,15 +41,114 @@ Route::prefix('v1')->group(function () {
         ->where('token', '[a-f0-9]{64}')
         ->middleware('throttle:120,1');
 
-    Route::post('/auth/login',    [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'login']);
+    Route::post('/auth/login', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'login'])
+        ->middleware('throttle:login');
     Route::post('/auth/register', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'register']);
     Route::post('/auth/forgot-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'resetPassword']);
 
+    Route::post('/auth/phone/request-otp', [\App\Http\Controllers\Api\V1\Auth\PhoneOtpAuthController::class, 'requestOtp'])
+        ->middleware('throttle:otp-resend');
+    Route::post('/auth/phone/verify-otp', [\App\Http\Controllers\Api\V1\Auth\PhoneOtpAuthController::class, 'verifyOtp'])
+        ->middleware('throttle:otp-verify');
+
     /** Identity-only: no tenant/subscription/branch gates (Bearer must resolve). */
     Route::middleware(['auth:sanctum'])->group(function () {
-        Route::post('/auth/logout', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'logout']);
-        Route::get('/auth/me',      [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'me']);
+        Route::post('/auth/logout',       [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'logout']);
+        Route::post('/auth/logout-all',   [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'logoutAll']);
+        Route::post('/auth/push-device',  [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'registerPushDevice']);
+        Route::get('/auth/me',            [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'me']);
+        Route::get('/auth/sessions',      [\App\Http\Controllers\Api\V1\Auth\AuthSessionController::class, 'index']);
+        Route::delete('/auth/sessions/{id}', [\App\Http\Controllers\Api\V1\Auth\AuthSessionController::class, 'destroy'])
+            ->whereNumber('id');
+        Route::post('/auth/sessions/revoke-others', [\App\Http\Controllers\Api\V1\Auth\AuthSessionController::class, 'revokeOthers']);
+        Route::get('/auth/registration-status', [\App\Http\Controllers\Api\V1\Auth\PhoneRegistrationFlowController::class, 'registrationStatus']);
+    });
+
+    /**
+     * مشغّلو المنصة — Bearer يمر عبر EnsurePlatformAdmin (SaasPlatformAccess).
+     * لا يُطبَّق GlobalTenantGuard هنا؛ يمكن للحساب المرتبط بشركة استدعاء هذه المسارات إن كان مشغّل منصة.
+     */
+    Route::middleware(['auth:sanctum', 'platform.admin'])->group(function () {
+        Route::middleware(['platform.permission:platform.ops.read'])->group(function () {
+            Route::get('/platform/ops-summary', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'opsSummary'])
+                ->middleware('throttle:120,1');
+        });
+
+        Route::middleware(['platform.permission:platform.audit.read'])->group(function () {
+            Route::get('/platform/audit-logs', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'auditLogs'])
+                ->middleware('throttle:60,1');
+        });
+
+        Route::middleware(['platform.permission:platform.companies.read'])->group(function () {
+            Route::get('/platform/companies/{id}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'showCompany']);
+            Route::get('/platform/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
+            Route::get('/admin/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
+            Route::get('/admin/overview', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'dashboardOverview'])
+                ->middleware('throttle:60,1');
+        });
+
+        Route::middleware(['platform.permission:platform.companies.operational'])->group(function () {
+            Route::patch('/platform/companies/{id}/operational', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateOperational'])
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware(['platform.permission:platform.subscription.manage'])->group(function () {
+            Route::patch('/platform/companies/{id}/subscription', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateSubscription'])
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware(['platform.permission:platform.vertical.assign'])->group(function () {
+            Route::patch('/platform/companies/{id}/vertical-profile', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'assignVerticalProfile'])
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware(['platform.permission:platform.financial_model.manage'])->group(function () {
+            Route::patch('/platform/companies/{id}/financial-model', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateFinancialModel']);
+        });
+
+        Route::middleware(['platform.permission:platform.cancellations.read'])->group(function () {
+            Route::get('/platform/work-order-cancellation-requests', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'workOrderCancellationRequests']);
+        });
+
+        Route::middleware(['platform.permission:platform.cancellations.manage'])->group(function () {
+            Route::post('/platform/work-order-cancellation-requests/{id}/approve', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'approveWorkOrderCancellation']);
+            Route::post('/platform/work-order-cancellation-requests/{id}/reject', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'rejectWorkOrderCancellation']);
+        });
+
+        Route::middleware(['platform.permission:platform.announcement.read'])->group(function () {
+            Route::get('/platform/announcement-banner/admin', [\App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController::class, 'adminShow']);
+        });
+
+        Route::middleware(['platform.permission:platform.announcement.manage'])->group(function () {
+            Route::put('/platform/announcement-banner', [\App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController::class, 'update']);
+        });
+
+        Route::middleware(['platform.permission:platform.registration.read'])->group(function () {
+            Route::get('/platform/registration-profiles', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'index']);
+        });
+
+        Route::middleware(['platform.permission:platform.registration.manage'])->group(function () {
+            Route::post('/platform/registration-profiles/{id}/approve', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'approve']);
+            Route::post('/platform/registration-profiles/{id}/reject', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'reject']);
+            Route::post('/platform/registration-profiles/{id}/request-more-info', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'requestMoreInfo']);
+            Route::post('/platform/registration-profiles/{id}/suspend', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'suspend']);
+        });
+
+        Route::prefix('reporting')->group(function () {
+            Route::middleware(['platform.permission:platform.reporting.read'])->group(function () {
+                Route::get('/v1/platform/pulse-summary', [\App\Http\Controllers\Api\V1\Reporting\PlatformReportingController::class, 'pulseSummary']);
+            });
+            Route::middleware(['platform.permission:platform.reporting.export'])->group(function () {
+                Route::get('/v1/platform/pulse-summary/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'platformPulseSummary']);
+            });
+        });
+    });
+
+    Route::middleware(['auth:sanctum', 'permission:phone_registration.flow'])->group(function () {
+        Route::post('/auth/complete-account-type', [\App\Http\Controllers\Api\V1\Auth\PhoneRegistrationFlowController::class, 'completeAccountType']);
+        Route::post('/auth/complete-individual-profile', [\App\Http\Controllers\Api\V1\Auth\PhoneRegistrationFlowController::class, 'completeIndividualProfile']);
+        Route::post('/auth/complete-company-profile', [\App\Http\Controllers\Api\V1\Auth\PhoneRegistrationFlowController::class, 'completeCompanyProfile']);
     });
 
     /**
@@ -58,6 +157,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription', 'permission:users.update'])->group(function () {
         Route::post('/internal/run-tests', [\App\Http\Controllers\Api\V1\Internal\QaValidationController::class, 'run'])->name('internal.qa.run-tests');
         Route::get('/internal/test-results', [\App\Http\Controllers\Api\V1\Internal\QaValidationController::class, 'results'])->name('internal.qa.test-results');
+        Route::get('/internal/auth/suspicious-login-signals', [\App\Http\Controllers\Api\V1\Internal\AuthSuspiciousLoginSignalsController::class, 'index'])
+            ->name('internal.auth.suspicious-login-signals');
     });
 
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->group(function () {
@@ -84,6 +185,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/intelligence/command-center/governance/history', [\App\Http\Controllers\Api\V1\Internal\CommandCenterGovernanceController::class, 'history']);
         });
 
+        Route::get('/companies/{id}/profile', [\App\Http\Controllers\Api\V1\CompanyProfileController::class, 'show'])
+            ->whereNumber('id');
+        Route::get('/platform/announcement-banner', [\App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController::class, 'show']);
         Route::apiResource('companies', \App\Http\Controllers\Api\V1\CompanyController::class);
         Route::post('/companies/{id}/logo',           [\App\Http\Controllers\Api\V1\CompanyController::class, 'uploadLogo']);
         Route::post('/companies/{id}/signature',      [\App\Http\Controllers\Api\V1\CompanyController::class, 'uploadSignature']);
@@ -136,6 +240,9 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:customers.update');
         Route::delete('/customers/{customer}', [\App\Http\Controllers\Api\V1\CustomerController::class, 'destroy'])
             ->middleware('permission:customers.delete');
+        Route::get('/customers/{id}/profile', [\App\Http\Controllers\Api\V1\CustomerProfileController::class, 'show'])
+            ->whereNumber('id')
+            ->middleware('permission:customers.view');
         Route::apiResource('customers', \App\Http\Controllers\Api\V1\CustomerController::class)->only(['index', 'show']);
 
         Route::post('/vehicles', [\App\Http\Controllers\Api\V1\VehicleController::class, 'store'])
@@ -181,6 +288,8 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:pricing_policies.manage');
 
         Route::prefix('work-orders')->group(function () {
+            Route::post('/line-pricing-preview', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'linePricingPreview'])
+                ->middleware('permission:work_orders.view');
             Route::get('/',              [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'index']);
             Route::post('/',             [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'store'])
                 ->middleware('permission:work_orders.create');
@@ -454,6 +563,20 @@ Route::prefix('v1')->group(function () {
             Route::get('/smart-tasks',          [\App\Http\Controllers\Api\V1\ReportController::class, 'smartTasksReport'])->middleware('permission:reports.operations.view');
         });
 
+        /** WAVE 2 / PR7–PR8 — read-only reporting API (query layer; not legacy /reports/*). */
+        Route::prefix('reporting')->group(function () {
+            Route::middleware(['permission:reports.view', 'permission:reports.operations.view'])->group(function () {
+                Route::get('/v1/operations/work-order-summary', [\App\Http\Controllers\Api\V1\Reporting\ReportingController::class, 'workOrderSummary']);
+                Route::get('/v1/operations/work-order-summary/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'workOrderSummary']);
+                Route::get('/v1/company/pulse-summary', [\App\Http\Controllers\Api\V1\Reporting\CompanyReportingController::class, 'pulseSummary']);
+                Route::get('/v1/company/pulse-summary/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'companyPulseSummary']);
+                Route::get('/v1/customer/pulse-summary', [\App\Http\Controllers\Api\V1\Reporting\CustomerReportingController::class, 'pulseSummary']);
+                Route::get('/v1/customer/pulse-summary/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'customerPulseSummary']);
+                Route::get('/v1/operations/global-feed', [\App\Http\Controllers\Api\V1\Reporting\GlobalOperationsFeedController::class, 'index']);
+                Route::get('/v1/operations/global-feed/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'globalOperationsFeed']);
+            });
+        });
+
         // Wave 3 Batch-3: lightweight operational review layer for reconciliation
         Route::prefix('financial-reconciliation')->middleware('permission:reports.financial.view')->group(function () {
             Route::get('/latest', [\App\Http\Controllers\Api\V1\FinancialReconciliationController::class, 'latest']);
@@ -579,30 +702,6 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:subscriptions.view');
         Route::put('/plans/{slug}',         [\App\Http\Controllers\Api\V1\SaasController::class, 'updatePlan'])
             ->middleware('permission:subscriptions.manage');
-    });
-
-    /** قراءة المشتركين لمشغّلي المنصة (بريد في SAAS_PLATFORM_ADMIN_EMAILS) */
-    Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->group(function () {
-        Route::get('/platform/ops-summary', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'opsSummary'])
-            ->middleware('throttle:120,1');
-        Route::get('/platform/audit-logs', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'auditLogs'])
-            ->middleware('throttle:60,1');
-        Route::get('/platform/companies/{id}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'showCompany']);
-        Route::patch('/platform/companies/{id}/operational', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateOperational'])
-            ->middleware('throttle:30,1');
-        Route::patch('/platform/companies/{id}/subscription', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateSubscription'])
-            ->middleware('throttle:30,1');
-        Route::patch('/platform/companies/{id}/vertical-profile', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'assignVerticalProfile'])
-            ->middleware('throttle:30,1');
-        Route::get('/platform/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
-        Route::patch('/platform/companies/{id}/financial-model', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateFinancialModel']);
-        Route::get('/platform/work-order-cancellation-requests', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'workOrderCancellationRequests']);
-        Route::post('/platform/work-order-cancellation-requests/{id}/approve', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'approveWorkOrderCancellation']);
-        Route::post('/platform/work-order-cancellation-requests/{id}/reject', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'rejectWorkOrderCancellation']);
-        Route::get('/admin/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
-        Route::get('/platform/announcement-banner', [\App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController::class, 'show']);
-        Route::get('/platform/announcement-banner/admin', [\App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController::class, 'adminShow']);
-        Route::put('/platform/announcement-banner', [\App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController::class, 'update']);
     });
 
     // ── Bays & Bookings (Phase 6) ────────────────────────────────────

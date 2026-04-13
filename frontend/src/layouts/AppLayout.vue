@@ -50,11 +50,30 @@
       <!-- Nav -->
       <nav class="flex-1 overflow-y-auto" :class="collapsed ? 'p-1.5 space-y-1' : 'p-3 space-y-4 pb-6'">
         <template v-if="collapsed">
-          <!-- Icon-only mode -->
-          <NavIconItem v-for="item in flatItems" :key="item.to" v-bind="item" />
+          <div v-if="!staffShellReady" class="space-y-2 p-1" aria-busy="true" aria-label="جاري تهيئة القائمة">
+            <div v-for="sk in 9" :key="'skc-'+sk" class="mx-auto h-10 w-10 rounded-xl bg-gray-100 dark:bg-slate-700 animate-pulse" />
+          </div>
+          <NavIconItem v-for="item in flatItems" v-else :key="item.to" v-bind="item" />
         </template>
         <template v-else>
+          <div
+            v-if="!staffShellReady"
+            class="space-y-3 px-1 pb-4"
+            aria-busy="true"
+            aria-label="جاري تهيئة القائمة والصلاحيات"
+          >
+            <div class="h-10 w-full rounded-xl bg-gray-100 dark:bg-slate-700 animate-pulse" />
+            <div class="space-y-2 rounded-2xl border border-gray-100/90 dark:border-slate-700/80 bg-gray-50/60 dark:bg-slate-900/35 p-3">
+              <div class="h-3 w-24 rounded bg-gray-200 dark:bg-slate-600 animate-pulse" />
+              <div v-for="j in 5" :key="'skn-'+j" class="h-9 w-full rounded-xl bg-white/80 dark:bg-slate-800/50 animate-pulse" />
+            </div>
+            <div class="space-y-2 rounded-2xl border border-gray-100/90 dark:border-slate-700/80 bg-gray-50/60 dark:bg-slate-900/35 p-3">
+              <div class="h-3 w-28 rounded bg-gray-200 dark:bg-slate-600 animate-pulse" />
+              <div v-for="k in 4" :key="'skn2-'+k" class="h-9 w-full rounded-xl bg-white/80 dark:bg-slate-800/50 animate-pulse" />
+            </div>
+          </div>
           <!-- بحث سريع في أقسام القائمة -->
+          <template v-else>
           <div class="space-y-1.5 sticky top-0 z-[5] -mx-1 px-1 pb-2 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-b border-gray-100 dark:border-slate-700/80">
             <div class="relative">
               <MagnifyingGlassIcon class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
@@ -88,19 +107,19 @@
             </p>
           </div>
 
-          <NavSection v-if="sectionEnabled('operations')" section-key="operations" :label="l('تشغيلي', 'Operations')">
+          <NavSection section-key="operations" :label="l('تشغيلي', 'Operations')">
             <NavItem to="/" :icon="HomeIcon" :label="locale.t('nav.dashboard')" :exact="true" />
             <NavItem to="/pos" :icon="ShoppingCartIcon" :label="locale.t('nav.pos')" />
             <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
-            <NavItem to="/bays" :icon="BuildingOfficeIcon" label="مناطق العمل" />
-            <NavItem to="/bookings" :icon="CalendarDaysIcon" label="الحجوزات" />
+            <NavItem v-if="opsNavOpen" to="/bays" :icon="BuildingOfficeIcon" label="مناطق العمل" />
+            <NavItem v-if="opsNavOpen" to="/bookings" :icon="CalendarDaysIcon" label="الحجوزات" />
             <NavItem
-              v-if="auth.hasPermission('meetings.update')"
+              v-if="opsNavOpen && auth.hasPermission('meetings.update')"
               to="/meetings"
               :icon="CalendarIcon"
               label="الاجتماعات"
             />
-            <NavItem to="/bays/heatmap" :icon="FireIcon" label="الخريطة الحرارية" />
+            <NavItem v-if="opsNavOpen" to="/bays/heatmap" :icon="FireIcon" label="الخريطة الحرارية" />
             <NavItem to="/customers" :icon="UsersIcon" :label="locale.t('nav.customers')" />
             <NavItem v-if="sectionEnabled('crm')" to="/crm/quotes" :icon="DocumentTextIcon" label="عروض الأسعار" />
             <NavItem v-if="sectionEnabled('crm')" to="/crm/relations" :icon="HeartIcon" label="علاقات العملاء" />
@@ -208,6 +227,7 @@
             <NavItem to="/contracts" :icon="DocumentCheckIcon" label="العقود" />
             <NavItem to="/documents/company" :icon="FolderOpenIcon" label="مستندات المنشأة" />
             <NavItem to="/activity" :icon="ClipboardDocumentListIcon" label="سجل العمليات" />
+            <NavItem v-if="auth.isStaff" to="/account/sessions" :icon="DevicePhoneMobileIcon" label="الأجهزة والجلسات" />
             <NavItem to="/settings" :icon="Cog6ToothIcon" :label="locale.t('nav.settings')" />
             <NavItem
               v-if="auth.isManager"
@@ -232,7 +252,7 @@
             <NavItem to="/support" :icon="LifebuoyIcon" label="مركز الدعم الفني" />
           </NavSection>
 
-          <NavSection v-if="auth.isOwner && enabledPortals.admin" section-key="platform" label="إدارة المنصة">
+          <NavSection v-if="auth.isPlatform && enabledPortals.admin" section-key="platform" label="إدارة المنصة">
             <NavItem to="/admin" :icon="CpuChipIcon" label="لوحة الأدمن" />
             <NavItem to="/admin/qa" :icon="BeakerIcon" label="التحقق من النظام (QA)" />
           </NavSection>
@@ -242,6 +262,7 @@
             <NavItem to="/plans" :icon="RectangleStackIcon" label="الباقات" />
             <NavItem to="/plugins" :icon="SparklesIcon" label="سوق الإضافات AI" />
           </NavSection>
+          </template>
         </template>
       </nav>
 
@@ -527,7 +548,7 @@ import {
   ChatBubbleLeftRightIcon, FolderOpenIcon,
   AdjustmentsHorizontalIcon, HeartIcon, InformationCircleIcon,
   BuildingLibraryIcon, MapPinIcon, BoltIcon, ArrowsRightLeftIcon, CalendarIcon,
-  QueueListIcon,
+  QueueListIcon, DevicePhoneMobileIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { useStaffUiStore } from '@/stores/staffUi'
@@ -537,6 +558,7 @@ import { featureFlags } from '@/config/featureFlags'
 import {
   canAccessStaffBusinessIntelligence,
   canAccessStaffCommandCenter,
+  canAccessStaffOperationsArea,
   canAccessWorkshopArea,
   tenantSectionOpen,
 } from '@/config/staffFeatureGate'
@@ -561,9 +583,11 @@ import {
   buildTimeUtcDisplay,
 } from '@/config/appRelease'
 import { useToast } from '@/composables/useToast'
+import { useNavigationContext } from '@/composables/useNavigationContext'
 import apiClient from '@/lib/apiClient'
 
 const auth = useAuthStore()
+const { staffShellReady } = useNavigationContext()
 const staffUi = useStaffUiStore()
 const sub  = useSubscriptionStore()
 const biz = useBusinessProfileStore()
@@ -718,6 +742,11 @@ function sectionEnabled(key: string): boolean {
   return biz.isEnabled(key)
 }
 
+/** بيارات / حجوزات / اجتماعات / خريطة حرارية — فقط عند تفعيل بوابة «operations» في ملف النشاط */
+const opsNavOpen = computed(() =>
+  canAccessStaffOperationsArea(auth.isOwner, (k) => biz.isEnabled(k)),
+)
+
 watch(collapsed, v => localStorage.setItem('sidebar_collapsed', String(v)))
 watch(openNavSection, (v) => localStorage.setItem('open_nav_section', v))
 watch(openNavGroups, (v) => localStorage.setItem('open_nav_groups', JSON.stringify(v)), { deep: true })
@@ -808,6 +837,7 @@ const filteredNavQuick = computed(() => {
     if (!navSearchItemVisibleForPortals(item, enabledPortals)) return false
     if (item.requiresManager && !auth.isManager) return false
     if (item.requiresStaff && !auth.isStaff) return false
+    if (item.requiresPlatform && !auth.isPlatform) return false
     if (item.requiresOwner && !auth.isOwner) return false
     if (item.requiresIntelligence && !featureFlags.intelligenceCommandCenter) return false
     if (item.to === '/business-intelligence') {
@@ -834,6 +864,15 @@ const filteredNavQuick = computed(() => {
       }
     }
     if (item.to === '/settings/org-units' && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'org_structure')) {
+      return false
+    }
+    if (item.to.startsWith('/crm/') && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'crm')) {
+      return false
+    }
+    if (
+      item.to.startsWith('/fleet/')
+      && (!enabledPortals.fleet || !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'fleet'))
+    ) {
       return false
     }
     if (
@@ -929,7 +968,8 @@ function prefetchRoute(path?: string) {
 const flatItems = computed(() => {
   void biz.loaded
   void biz.effectiveFeatureMatrix
-  const opsOpen = tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
+  const opsOpen = canAccessStaffOperationsArea(auth.isOwner, (k) => biz.isEnabled(k))
+  const hrOpen = canAccessWorkshopArea(auth.isOwner, (k) => biz.isEnabled(k))
   const items: { to: string; icon: object; label: string; locked: boolean }[] = [
     { to: '/',                     icon: HomeIcon,                label: 'الرئيسية',          locked: false },
     { to: '/pos',                  icon: ShoppingCartIcon,        label: 'نقطة البيع',         locked: false },
@@ -946,6 +986,7 @@ const flatItems = computed(() => {
     ...(auth.isManager ? [{ to: '/branches', icon: BuildingLibraryIcon, label: 'الفروع', locked: false }] : []),
     ...(auth.isStaff ? [{ to: '/branches/map', icon: MapPinIcon, label: 'خريطة الفروع', locked: false }] : []),
     { to: '/customers',            icon: UsersIcon,               label: 'العملاء',            locked: false },
+    ...(hrOpen ? [{ to: '/workshop/employees', icon: UserGroupIcon, label: 'الموظفون', locked: false }] : []),
     { to: '/vehicles',             icon: TruckIcon,               label: 'المركبات',           locked: false },
     { to: '/wallet',               icon: CreditCardIcon,          label: 'المحفظة',            locked: false },
     ...(auth.hasPermission('wallet.top_up_requests.create')
@@ -972,7 +1013,7 @@ const flatItems = computed(() => {
       ? [{ to: '/internal/intelligence', icon: SignalIcon, label: 'مركز العمليات', locked: false }]
       : []),
   ]
-  if (auth.isOwner && enabledPortals.admin) {
+  if (auth.isPlatform && enabledPortals.admin) {
     items.push({ to: '/admin/qa', icon: BeakerIcon, label: 'التحقق من النظام', locked: false })
   }
   return items

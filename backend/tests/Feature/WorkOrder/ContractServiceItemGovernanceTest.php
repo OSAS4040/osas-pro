@@ -255,4 +255,31 @@ final class ContractServiceItemGovernanceTest extends TestCase
             ]],
         ], $fx['company']->id, $fx['branch']->id, $fx['user']->id);
     }
+
+    public function test_staff_line_pricing_preview_returns_contract_price(): void
+    {
+        $fx = $this->baseFx();
+
+        ContractServiceItem::create([
+            'company_id' => $fx['company']->id,
+            'contract_id' => $fx['contract']->id,
+            'service_id' => $fx['service']->id,
+            'unit_price' => 88,
+            'tax_rate' => 15,
+            'applies_to_all_vehicles' => true,
+            'status' => 'active',
+            'priority' => 0,
+        ]);
+
+        $this->actingAs($fx['user'], 'sanctum')
+            ->postJson('/api/v1/work-orders/line-pricing-preview', [
+                'customer_id' => $fx['customer']->id,
+                'vehicle_id' => $fx['vehicle']->id,
+                'service_id' => $fx['service']->id,
+                'quantity' => 1,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.unit_price', 88.0)
+            ->assertJsonPath('data.pricing_source', WorkOrderPricingSource::Contract->value);
+    }
 }

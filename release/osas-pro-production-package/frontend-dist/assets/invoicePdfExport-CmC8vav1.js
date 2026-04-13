@@ -1,0 +1,1 @@
+function s(t,i,e){const g=t.internal.pageSize.getWidth(),n=t.internal.pageSize.getHeight(),o=g,a=e.height*o/e.width;if(a<=n){t.addImage(i,"PNG",0,0,o,a);return}const h=n,d=e.width*h/e.height,c=(g-d)/2;t.addImage(i,"PNG",c,0,d,h)}export{s as a};

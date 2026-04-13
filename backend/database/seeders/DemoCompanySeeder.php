@@ -10,6 +10,7 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\Auth\PhoneNormalizer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -102,19 +103,23 @@ class DemoCompanySeeder extends Seeder
          */
         $demoPassword = 'password';
 
-        foreach ($users as $userData) {
+        foreach (array_values($users) as $idx => $userData) {
+            $phone = PhoneNormalizer::normalizeForStorage('9665012345'.sprintf('%02d', $idx));
             User::withoutGlobalScope('tenant')->updateOrCreate(
                 [
                     'company_id' => $company->id,
                     'email'      => $userData['email'],
                 ],
                 [
-                    'branch_id' => $branch->id,
-                    'name'      => $userData['name'],
-                    'password'  => $demoPassword,
-                    'role'      => UserRole::from($userData['role']),
-                    'status'    => UserStatus::Active,
-                    'is_active' => true,
+                    'branch_id'            => $branch->id,
+                    'name'                 => $userData['name'],
+                    'password'             => $demoPassword,
+                    'phone'                => $phone,
+                    'phone_verified_at'    => now(),
+                    'registration_stage'   => 'phone_verified',
+                    'role'                 => UserRole::from($userData['role']),
+                    'status'               => UserStatus::Active,
+                    'is_active'            => true,
                 ]
             );
         }

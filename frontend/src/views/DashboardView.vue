@@ -24,6 +24,13 @@
         <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{{ dashGreeting }} — {{ today }}</p>
       </div>
       <div class="flex items-center gap-3 flex-wrap">
+        <RouterLink
+          v-if="auth.user?.company_id"
+          :to="{ name: 'companies.profile', params: { companyId: String(auth.user.company_id) } }"
+          class="hidden sm:inline-flex text-xs font-medium text-primary-600 hover:underline px-2"
+        >
+          مركز الشركة
+        </RouterLink>
         <WeatherClock />
         <button class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors" @click="loadData">
           <ArrowPathIcon class="w-3.5 h-3.5" :class="loading ? 'animate-spin' : ''" />

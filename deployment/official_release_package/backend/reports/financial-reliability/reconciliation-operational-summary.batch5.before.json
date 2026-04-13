@@ -1,0 +1,58 @@
+{
+    "summary": {
+        "latest_run": null,
+        "open_findings": 0,
+        "unresolved_findings": 0,
+        "findings_by_type": [],
+        "findings_by_status": {
+            "open": 0,
+            "acknowledged": 0,
+            "resolved": 0,
+            "false_positive": 0
+        },
+        "findings_by_type_map": {
+            "invoice_without_ledger": 0,
+            "unbalanced_journal_entry": 0,
+            "anomalous_reversal_settlement": 0
+        },
+        "unresolved_aging": {
+            "0_1_days": 0,
+            "2_7_days": 0,
+            "8_plus_days": 0
+        },
+        "latest_reconciliation_health": "healthy",
+        "last_successful_run": null,
+        "last_failed_run": null,
+        "runbook_reference": "docs/financial-reconciliation-operational-runbook.md"
+    },
+    "health": {
+        "latest_reconciliation_health": "healthy",
+        "latest_run": null,
+        "last_successful_run": null,
+        "last_failed_run": null,
+        "findings_by_status": {
+            "open": 0,
+            "acknowledged": 0,
+            "resolved": 0,
+            "false_positive": 0
+        },
+        "findings_by_type_map": {
+            "invoice_without_ledger": 0,
+            "unbalanced_journal_entry": 0,
+            "anomalous_reversal_settlement": 0
+        },
+        "unresolved_aging": {
+            "0_1_days": 0,
+            "2_7_days": 0,
+            "8_plus_days": 0
+        },
+        "runbook_reference": "docs/financial-reconciliation-operational-runbook.md"
+    },
+    "db_counts": {
+        "runs_visible": 0,
+        "open": 0,
+        "acknowledged": 0,
+        "resolved": 0,
+        "false_positive": 0
+    }
+}

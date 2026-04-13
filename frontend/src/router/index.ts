@@ -22,6 +22,8 @@ function resolveHistoryBase(): string {
 }
 
 const routes: RouteRecordRaw[] = [
+  /** توافق مع توجيه «غير مشغّل المنصة» بعيداً عن `/admin` */
+  { path: '/dashboard', redirect: '/' },
   // ── Auth — صفحة دخول موحّدة لجميع البوابات ──
   {
     path: '/login',
@@ -51,6 +53,60 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/ResetPasswordView.vue'),
     meta: { guest: true },
   },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/auth/RegisterView.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/phone',
+    name: 'phone-auth',
+    component: () => import('@/views/phone/PhoneAuthView.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/phone/verify',
+    name: 'phone-verify',
+    component: () => import('@/views/phone/PhoneOtpVerifyView.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/phone/onboarding',
+    name: 'phone-onboarding',
+    component: () => import('@/views/phone/PhoneOnboardingHubView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/type',
+    name: 'phone-onboarding-type',
+    component: () => import('@/views/phone/RegistrationAccountTypeView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/individual',
+    name: 'phone-onboarding-individual',
+    component: () => import('@/views/phone/RegistrationIndividualView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/company',
+    name: 'phone-onboarding-company',
+    component: () => import('@/views/phone/RegistrationCompanyView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/pending-review',
+    name: 'phone-onboarding-pending',
+    component: () => import('@/views/phone/CompanyPendingReviewView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/done',
+    name: 'phone-onboarding-done',
+    component: () => import('@/views/phone/PhoneOnboardingDoneView.vue'),
+    meta: { requiresAuth: true },
+  },
 
   {
     path:      '/admin/qa',
@@ -59,7 +115,7 @@ const routes: RouteRecordRaw[] = [
     meta:      {
       requiresAuth: true,
       portal:     'admin',
-      requiresOwner: true,
+      requiresPlatformAdmin: true,
       title:      'QA Dashboard',
     },
   },
@@ -70,7 +126,18 @@ const routes: RouteRecordRaw[] = [
     meta:      {
       requiresAuth: true,
       portal:     'admin',
-      requiresOwner: true,
+      requiresPlatformAdmin: true,
+    },
+  },
+  { path: '/admin/overview', redirect: '/admin' },
+  {
+    path: '/admin/registration-profiles',
+    name: 'admin-registration-profiles',
+    component: () => import('@/views/admin/AdminRegistrationQueueView.vue'),
+    meta: {
+      requiresAuth: true,
+      portal: 'admin',
+      requiresPlatformAdmin: true,
     },
   },
 
@@ -82,6 +149,26 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '',                    name: 'dashboard',          component: () => import('@/views/DashboardView.vue') },
       { path: 'customers',           name: 'customers',          component: () => import('@/views/customers/CustomerListView.vue') },
+      {
+        path:      'customers/:customerId/reports',
+        name:      'customers.reports',
+        component: () => import('@/views/customers/CustomerReportsPulseView.vue'),
+        meta:      {
+          requiresAllPermissions: ['reports.view', 'reports.operations.view'],
+          title:    'لوحة العميل',
+          titleEn:  'Customer pulse',
+        },
+      },
+      {
+        path:      'customers/:customerId',
+        name:      'customers.profile',
+        component: () => import('@/views/customers/CustomerProfileView.vue'),
+        meta:      {
+          requiresPermission: 'customers.view',
+          title:    'مركز العميل',
+          titleEn:  'Customer hub',
+        },
+      },
       { path: 'vehicles',            name: 'vehicles',           component: () => import('@/views/vehicles/VehicleListView.vue') },
       { path: 'vehicles/:id',        name: 'vehicles.show',      component: () => import('@/views/vehicles/VehicleShowView.vue') },
       { path: 'vehicles/:id/card',   name: 'vehicles.card',      component: () => import('@/views/vehicles/VehicleDigitalCardView.vue') },
@@ -113,6 +200,16 @@ const routes: RouteRecordRaw[] = [
       { path: 'goods-receipts/:id',  name: 'goods-receipts.show', component: () => import('@/views/purchases/GoodsReceiptShowView.vue') },
       { path: 'reports',             name: 'reports',            component: () => import('@/views/reports/ReportsView.vue') },
       {
+        path:      'operations/global-feed',
+        name:      'operations.global-feed',
+        component: () => import('@/views/operations/GlobalOperationsFeedView.vue'),
+        meta:      {
+          requiresAllPermissions: ['reports.view', 'reports.operations.view'],
+          title:    'تدفق العمليات',
+          titleEn:  'Global operations feed',
+        },
+      },
+      {
         path:      'business-intelligence',
         name:      'business-intelligence',
         component: () => import('@/views/analytics/BusinessIntelligenceView.vue'),
@@ -124,6 +221,16 @@ const routes: RouteRecordRaw[] = [
         name:      'contracts.catalog',
         component: () => import('@/views/contracts/ContractCatalogView.vue'),
         meta:      { requiresPermission: 'contracts.service_items.view', title: 'بنود العقد' },
+      },
+      {
+        path:      'companies/:companyId',
+        name:      'companies.profile',
+        component: () => import('@/views/companies/CompanyProfileView.vue'),
+        meta:      {
+          requiresAuth: true,
+          title:    'مركز الشركة',
+          titleEn:  'Company hub',
+        },
       },
       { path: 'settings',            name: 'settings',           component: () => import('@/views/settings/SettingsView.vue'), meta: { requiresManager: true } },
       { path: 'settings/integrations', name: 'settings.integrations', component: () => import('@/views/settings/IntegrationsView.vue'), meta: { requiresManager: true } },
@@ -139,6 +246,12 @@ const routes: RouteRecordRaw[] = [
       /** عرض الخريطة لجميع موظفي مركز الخدمة؛ التعديل يبقى من صفحة الفروع (مدير/مالك). */
       { path: 'branches/map',        name: 'branches.map',       component: () => import('@/views/branches/BranchesMapView.vue') },
       { path: 'profile',             name: 'profile',            component: () => import('@/views/profile/ProfileView.vue') },
+      {
+        path:      'account/sessions',
+        name:      'account.sessions',
+        component: () => import('@/views/account/AuthSessionsView.vue'),
+        meta:      { requiresAuth: true, title: 'الأجهزة والجلسات' },
+      },
       { path: 'about/deployment',    name: 'about.deployment',   component: () => import('@/views/AboutDeploymentView.vue') },
       { path: 'about/taxonomy',       name: 'about.taxonomy',     component: () => import('@/views/about/PlatformTaxonomyView.vue') },
       {
@@ -331,6 +444,55 @@ const router = createRouter({
   routes,
 })
 
+/**
+ * مسارات بوابة «فريق العمل» (المستأجر): المحاسبة، الفواتير، العملاء، الموظفون، إلخ.
+ * يُسمح بها لمشغّل المنصة حتى بدون company_id حتى لا يُحبَس في /admin فقط
+ * (رابط «العودة للتطبيق» وروابط الإدارة).
+ */
+function isStaffTenantAppExplorationPath(path: string): boolean {
+  const raw = path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path
+  if (raw === '' || raw === '/') return true
+  const prefixes = [
+    '/invoices',
+    '/ledger',
+    '/chart-of-accounts',
+    '/fixed-assets',
+    '/reports',
+    '/business-intelligence',
+    '/customers',
+    '/workshop',
+    '/work-orders',
+    '/pos',
+    '/operations',
+    '/purchases',
+    '/products',
+    '/inventory',
+    '/suppliers',
+    '/wallet',
+    '/zatca',
+    '/crm',
+    '/settings',
+    '/integrations',
+    '/bays',
+    '/bookings',
+    '/services',
+    '/vehicles',
+    '/dashboard',
+    '/internal',
+  ]
+  return prefixes.some((pre) => raw === pre || raw.startsWith(`${pre}/`))
+}
+
+async function ensureStaffBusinessProfileForShell(): Promise<void> {
+  const auth = useAuthStore()
+  const biz = useBusinessProfileStore()
+  if (!auth.isAuthenticated) return
+  if (!auth.isStaff || auth.isFleet || auth.isCustomer || auth.isPhoneOnboarding) return
+  if (typeof auth.user?.company_id !== 'number' || auth.user.company_id <= 0) return
+  if (biz.loaded) return
+  await biz.load().catch(() => {})
+}
+
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
   const sub  = useSubscriptionStore()
@@ -350,11 +512,39 @@ router.beforeEach(async (to) => {
   }
 
   if (auth.isAuthenticated) {
+    await ensureStaffBusinessProfileForShell()
     theme.loadCompanyTheme().catch(() => {})
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.meta.requiresPlatformAdmin === true && auth.isAuthenticated && !auth.isPlatform) {
+    return { path: '/dashboard' }
+  }
+
+  if (auth.isAuthenticated && auth.isPlatform && to.meta.portal === 'staff' && to.name !== 'access-denied') {
+    const u = auth.user
+    const hasTenantAnchor = typeof u?.company_id === 'number' && u.company_id > 0
+    if (!hasTenantAnchor) {
+      const p = to.path
+      const allowStaffPath =
+        p.startsWith('/about')
+        || p.startsWith('/profile')
+        || p.startsWith('/account/')
+      const allowTenantApp = isStaffTenantAppExplorationPath(p)
+      if (!allowStaffPath && !allowTenantApp) {
+        return { path: '/admin' }
+      }
+    }
+  }
+
+  if (auth.isAuthenticated && String(auth.user?.role ?? '') === 'phone_onboarding' && !to.path.startsWith('/phone')) {
+    if (to.meta.publicPage === true) {
+      return true
+    }
+    return { path: '/phone/onboarding' }
   }
 
   if (to.meta.guest && auth.isAuthenticated) {
@@ -413,6 +603,12 @@ router.beforeEach(async (to) => {
   if (Array.isArray(anyPerms) && anyPerms.length > 0) {
     const ok = anyPerms.some((p) => auth.hasPermission(p))
     if (!ok) return deny('permission')
+  }
+
+  const allPerms = to.meta.requiresAllPermissions
+  if (Array.isArray(allPerms) && allPerms.length > 0) {
+    const okAll = allPerms.every((p) => auth.hasPermission(p))
+    if (!okAll) return deny('permission')
   }
 
   if (to.meta.requiresOwner && !auth.isOwner) {

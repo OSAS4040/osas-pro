@@ -15,6 +15,11 @@ class ChartOfAccountSeeder extends Seeder
             return;
         }
 
+        $this->seedForCompany($company);
+    }
+
+    public function seedForCompany(Company $company): void
+    {
         $accounts = $this->getDefaultAccounts();
 
         foreach ($accounts as $account) {
@@ -25,7 +30,7 @@ class ChartOfAccountSeeder extends Seeder
         }
     }
 
-    private function getDefaultAccounts(): array
+    public function getDefaultAccounts(): array
     {
         return [
             // ══ أصول (Assets) ══

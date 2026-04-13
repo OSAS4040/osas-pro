@@ -108,6 +108,12 @@
             >
               عرض المواعيد
             </button>
+            <RouterLink
+              :to="`/customers/${c.id}`"
+              class="flex-1 py-1.5 text-center border border-slate-200 dark:border-slate-600 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+            >
+              لوحة العميل
+            </RouterLink>
           </div>
         </div>
       </div>
@@ -126,6 +132,7 @@
               <th class="px-4 py-3 font-medium">البريد الإلكتروني</th>
               <th class="px-4 py-3 font-medium">الحالة</th>
               <th class="px-4 py-3 font-medium">تواصل</th>
+              <th class="px-4 py-3 font-medium">تقارير</th>
             </tr>
           </thead>
           <tbody>
@@ -159,9 +166,17 @@
                   </a>
                 </div>
               </td>
+              <td class="px-4 py-3">
+                <RouterLink
+                  :to="`/customers/${c.id}`"
+                  class="text-primary-600 hover:underline text-xs font-medium"
+                >
+                  لوحة العميل
+                </RouterLink>
+              </td>
             </tr>
             <tr v-if="!filtered.length">
-              <td colspan="6" class="table-empty">
+              <td colspan="7" class="table-empty">
                 <p class="table-empty-title">لا يوجد عملاء</p>
                 <p class="table-empty-sub">أضف عميلًا جديدًا للبدء</p>
               </td>
@@ -215,7 +230,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { PlusIcon, XMarkIcon, UsersIcon, MagnifyingGlassIcon, Squares2X2Icon, Bars3Icon, PhoneIcon } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 import NavigationSourceHint from '@/components/NavigationSourceHint.vue'

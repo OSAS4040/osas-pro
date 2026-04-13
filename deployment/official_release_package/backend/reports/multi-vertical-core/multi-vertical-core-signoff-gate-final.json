@@ -1,0 +1,27 @@
+{
+    "generated_at": "2026-04-01T13:29:19+00:00",
+    "phase": "Multi-Vertical Configurable Core",
+    "batches_completed": [
+        "Batch-1",
+        "Batch-2",
+        "Batch-3"
+    ],
+    "metrics": {
+        "companies_with_vertical_profile_before": 0,
+        "companies_with_vertical_profile_after": 1,
+        "branches_with_vertical_profile_before": 0,
+        "branches_with_vertical_profile_after": 1,
+        "behavior_changed_after_assignment": 6
+    },
+    "assignment_proof": {
+        "company_id": 10,
+        "branch_id": 10,
+        "company_vertical_profile_code": "service_workshop",
+        "branch_vertical_profile_code": "service_workshop",
+        "resolved_after_assignment": {
+            "work_orders.require_bay_assignment": true,
+            "bookings.enabled": true
+        }
+    },
+    "decision_recommendation": "Go for formal phase closure"
+}

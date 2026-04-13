@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750" viewBox="0 0 1200 750" role="img" aria-labelledby="t">
+  <title id="t">معاينة توضيحية نقطة البيع في أسس برو</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#064e3b"/>
+      <stop offset="50%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#115e59"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.02"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="#020617"/>
+  <rect x="36" y="36" width="1128" height="678" rx="28" fill="url(#bg)"/>
+  <rect x="36" y="36" width="1128" height="678" rx="28" fill="url(#shine)"/>
+  <rect x="72" y="108" width="1056" height="564" rx="14" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
+  <rect x="92" y="132" width="200" height="14" rx="4" fill="#334155"/>
+  <rect x="92" y="158" width="320" height="10" rx="3" fill="#1e293b"/>
+  <rect x="92" y="210" width="1016" height="48" rx="10" fill="#1e293b"/>
+  <rect x="108" y="282" width="220" height="320" rx="10" fill="#1e293b"/>
+  <rect x="348" y="282" width="744" height="320" rx="10" fill="#134e4a" opacity="0.55"/>
+  <rect x="368" y="308" width="160" height="36" rx="8" fill="#14b8a6" opacity="0.9"/>
+  <rect x="540" y="308" width="160" height="36" rx="8" fill="#334155"/>
+  <rect x="368" y="364" width="704" height="56" rx="8" fill="#0f172a"/>
+  <rect x="368" y="436" width="704" height="56" rx="8" fill="#0f172a"/>
+  <rect x="368" y="508" width="704" height="56" rx="8" fill="#0f172a"/>
+  <text x="600" y="86" text-anchor="middle" fill="#ecfdf5" font-size="34" font-weight="700" font-family="Tahoma, 'Segoe UI', Arial, sans-serif">نقطة البيع</text>
+  <text x="600" y="118" text-anchor="middle" fill="#99f6e4" font-size="18" font-family="Tahoma, 'Segoe UI', Arial, sans-serif">واجهة صندوق سريعة، توضيح بصري</text>
+</svg>

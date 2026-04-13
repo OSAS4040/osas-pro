@@ -1,0 +1,549 @@
+<h1>تقرير شامل — منصة أسس برو / AutoService SaaS</h1>
+<p><strong>تاريخ إعداد التقرير:</strong> 2026-04-05<br><strong>نسخة PDF:</strong> يُولَّد الملف <code>System_Comprehensive_Report.pdf</code> من هذا المستند (انظر <code>docs/report-pdf.css</code> وأمر التوليد في نهاية القسم 5.8).<br><strong>النطاق:</strong> وصف البنية التقنية، الأعمال المنفذة في جلسة التطوير الأخيرة، جاهزية النظام، قاعدة البيانات والعلاقات، ومخططات ERD، وما لم يُنفَّذ أو يبقى مسؤولية التشغيل.</p>
+<hr>
+<h2>1. ملخص تنفيذي</h2>
+<p>المنصة <strong>SaaS متعددة المستأجرين</strong> لقطاع ورش السيارات والأساطيل والتشغيل الميداني: خلفية <strong>Laravel 11</strong>، واجهة <strong>Vue 3 + TypeScript</strong>، قاعدة <strong>PostgreSQL</strong>، <strong>Redis</strong> للتخزين المؤقت والطوابير، <strong>Nginx</strong> كطبقة عكسية، <strong>Docker Compose</strong> للتشغيل المحلي والنشر الشبيه بالإنتاج.</p>
+<p>في جلسة التطوير المشار إليها في هذا التقرير تم تنفيذ تحسينات على <strong>صفحة الهبوط التسويقية</strong>، إضافة <strong>شريط إعلان منصة</strong> قابل للإدارة من لوحة مشغّل المنصة، <strong>تعزيز أمان وسلوك nginx</strong> لمنع فهرسة مجلد <code>/landing</code>، توسيع <strong>تتبّع أحداث الهبوط</strong>، واختبارات آلية جزئية مؤكدة.</p>
+<p><strong>جاهزية النظام:</strong> البناء الإنتاجي للواجهة (<code>npm run build</code>) و<strong>فحص nginx</strong> لملف الواجهة الإنتاجية و<strong>PHPUnit</strong> لمسار الإعلان نجحت في بيئة التحقق المستخدمة؛ <strong>النشر على خوادمكم (مثل pro.osas.sa)</strong> و<strong>اختبار القبول الكامل</strong> يبقى مسؤولية فريق التشغيل وفق <a href="./Staging_Execution_Now.md"><code>Staging_Execution_Now.md</code></a>.</p>
+<hr>
+<h2>2. الأعمال المنفذة (جلسة التطوير المرجعية)</h2>
+<h3>2.1 صفحة الهبوط (<code>/landing</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>البند</th>
+<th>الوصف</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>تجربة المستخدم</td>
+<td>تبسيط أزرار الهيرو، روابط ثانوية داخل <code>&lt;details&gt;</code>، شريط تقدّر للتمرير، شريط ثقة قصير، مسار ذكي يربط «نوع الضغط التشغيلي» بقسم قبل/بعد مع تمرير سلس</td>
+</tr>
+<tr>
+<td>التنقل</td>
+<td>روابط في الرأس (موبايل + سطح مكتب)، معرّفات <code>#faq</code> و <code>#use-cases</code></td>
+</tr>
+<tr>
+<td>المحتوى التقني</td>
+<td>نص المطوّرين (أوامر npm) داخل <code>&lt;details&gt;</code>؛ وصف ميتا تسويقي أوضح</td>
+</tr>
+<tr>
+<td>التحليلات</td>
+<td>أحداث إضافية في <code>landingAnalytics.ts</code> (تنقّل الرأس، فتح «استكشف»، قفزة persona)</td>
+</tr>
+</tbody></table>
+<p><strong>الملفات الرئيسية:</strong> <code>frontend/src/views/marketing/LandingView.vue</code>، <code>frontend/src/utils/landingAnalytics.ts</code>.</p>
+<h3>2.2 الشريط الإعلاني للمنصة</h3>
+<table>
+<thead>
+<tr>
+<th>الطبقة</th>
+<th>التنفيذ</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>قاعدة البيانات</td>
+<td>جدول <code>platform_announcement_banners</code> (صف منطقي واحد عبر <code>theOne()</code>)</td>
+</tr>
+<tr>
+<td>API</td>
+<td><code>GET/PUT /api/v1/platform/announcement-banner</code>، <code>GET .../admin</code>، حماية التحديث بـ <code>SaasPlatformAccess::isPlatformOperator</code></td>
+</tr>
+<tr>
+<td>الواجهة</td>
+<td>مكوّن <code>PlatformPromoBanner.vue</code> في <code>AppLayout</code>؛ تبويب «شريط الإعلان» في <code>AdminDashboardView</code> عند وضع مشغّل المنصة</td>
+</tr>
+<tr>
+<td>السلوك</td>
+<td><code>dismiss_token</code> يتجدد عند الحفظ؛ إخفاء محلي عبر <code>localStorage</code> عند السماح بالإخفاء</td>
+</tr>
+</tbody></table>
+<p><strong>الملفات الرئيسية:</strong> الهجرة <code>2026_04_05_120000_create_platform_announcement_banners_table.php</code>، <code>PlatformAnnouncementBanner</code> (Model)، <code>PlatformAnnouncementBannerController</code>، <code>UpdatePlatformAnnouncementBannerRequest</code>، <code>api.php</code>، <code>PlatformPromoBanner.vue</code>، <code>AdminDashboardView.vue</code>.</p>
+<h3>2.3 nginx — منع «Index of /landing»</h3>
+<table>
+<thead>
+<tr>
+<th>الملف</th>
+<th>التغيير</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>frontend/nginx.conf</code></td>
+<td><code>autoindex off</code>، رؤوس أمان، <code>location ^~ /landing/showcase/</code> للأصول الثابتة، إعادة كتابة <code>landing</code> / <code>asas-pro</code> / <code>asaspro</code> إلى <code>/index.html</code>، حظر <code>/.</code></td>
+</tr>
+<tr>
+<td><code>docker/nginx/conf.d/default.conf</code></td>
+<td><code>autoindex off</code> على مستوى الـ server</td>
+</tr>
+</tbody></table>
+<h3>2.4 الاختبارات والتحقق (ما تم تشغيله فعلياً)</h3>
+<table>
+<thead>
+<tr>
+<th>الفحص</th>
+<th>النتيجة (حسب التشغيل في المشروع)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>npm run build</code> (واجهة)</td>
+<td>نجاح (يشمل <code>vue-tsc</code> و<code>vite build</code>)</td>
+</tr>
+<tr>
+<td><code>nginx -t</code> على <code>frontend/nginx.conf</code></td>
+<td>صياغة صحيحة</td>
+</tr>
+<tr>
+<td><code>vendor/bin/phpunit --filter=PlatformAnnouncementBannerTest</code></td>
+<td><strong>4 tests, 13 assertions — OK</strong></td>
+</tr>
+</tbody></table>
+<p><strong>ملاحظة:</strong> <code>php artisan test</code> في بعض البيئات قد يتصل بـ <code>127.0.0.1</code> لقاعدة البيانات بسبب <code>.env</code>؛ التشغيل المباشر لـ <code>phpunit</code> يقرأ <code>phpunit.xml</code> (<code>DB_HOST=postgres</code>، قاعدة <code>saas_test</code>).</p>
+<hr>
+<h2>3. التقنيات المستخدمة (Stack)</h2>
+<table>
+<thead>
+<tr>
+<th>الطبقة</th>
+<th>التقنية</th>
+<th>إصدار تقريبي / ملاحظة</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>لغة الخلفية</td>
+<td>PHP</td>
+<td>^8.2</td>
+</tr>
+<tr>
+<td>إطار الخلفية</td>
+<td>Laravel</td>
+<td>^11</td>
+</tr>
+<tr>
+<td>مصادقة API</td>
+<td>Laravel Sanctum</td>
+<td>^4</td>
+</tr>
+<tr>
+<td>الواجهة</td>
+<td>Vue</td>
+<td>^3.4</td>
+</tr>
+<tr>
+<td>لغة الواجهة</td>
+<td>TypeScript</td>
+<td>—</td>
+</tr>
+<tr>
+<td>حالة التطبيق</td>
+<td>Pinia</td>
+<td>^2.1</td>
+</tr>
+<tr>
+<td>التوجيه</td>
+<td>Vue Router</td>
+<td>^4.3</td>
+</tr>
+<tr>
+<td>بناء الواجهة</td>
+<td>Vite</td>
+<td>5.x</td>
+</tr>
+<tr>
+<td>HTTP عميل</td>
+<td>Axios</td>
+<td>^1.6</td>
+</tr>
+<tr>
+<td>واجهة ورسوم</td>
+<td>Headless UI، Heroicons، Tailwind (عبر Vite)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>خرائط (حيث يُستخدم)</td>
+<td>Leaflet</td>
+<td>^1.9</td>
+</tr>
+<tr>
+<td>تقارير/تصدير</td>
+<td>Chart.js، jsPDF، xlsx</td>
+<td>—</td>
+</tr>
+<tr>
+<td>مراقبة أخطاء (اختياري)</td>
+<td>Sentry (Laravel + Vue)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>قاعدة البيانات</td>
+<td>PostgreSQL</td>
+<td>15 (في Docker Compose)</td>
+</tr>
+<tr>
+<td>تخزين مؤقت / طوابير</td>
+<td>Redis</td>
+<td>7</td>
+</tr>
+<tr>
+<td>خادم ويب</td>
+<td>Nginx</td>
+<td>1.25 (صور Alpine)</td>
+</tr>
+<tr>
+<td>حاويات</td>
+<td>Docker + Docker Compose</td>
+<td>—</td>
+</tr>
+<tr>
+<td>اختبار خلفية</td>
+<td>PHPUnit</td>
+<td>11.x</td>
+</tr>
+<tr>
+<td>اختبار واجهة</td>
+<td>Vitest</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. بنية النظام والمفاهيم</h2>
+<h3>4.1 تعدد المستأجرين (Multi-tenancy)</h3>
+<ul>
+<li>الكيان المركزي: <strong><code>companies</code></strong> (المستأجر).</li>
+<li><strong><code>branches</code></strong>: فروع تابعة لشركة واحدة؛ المستخدمون يرتبطون بـ <code>company_id</code> وغالباً <code>branch_id</code>.</li>
+<li><strong>نطاق tenant:</strong> سمات مثل <code>HasTenantScope</code> على النماذج الحساسة مع فلترة حسب الشركة (والفرع حيث ينطبق).</li>
+<li><strong>اشتراك:</strong> <code>plans</code>، <code>subscriptions</code>، حدود الاستخدام وفق الباقة.</li>
+</ul>
+<h3>4.2 طبقات الطلب (API)</h3>
+<ul>
+<li>بادئة موحّدة: <strong><code>/api/v1/</code></strong>.</li>
+<li>وسائط شائعة: <code>auth:sanctum</code>، <code>tenant</code>، <code>financial.protection</code>، <code>branch.scope</code>، <code>subscription</code>، وصلاحيات دقيقة (<code>permission:...</code>).</li>
+<li><strong>مشغّلو المنصة:</strong> بريد مُعرَّف في <code>SAAS_PLATFORM_ADMIN_EMAILS</code> (<code>config/saas.php</code>) — وصول محدود لواجهات مثل قائمة الشركات وتحديث الإعلان.</li>
+</ul>
+<h3>4.3 البوابات (Portals) في الواجهة</h3>
+<p>تشمل التطبيق مسارات <strong>فريق العمل (Staff)</strong> داخل <code>AppLayout</code>، ومسارات <strong>الأسطول</strong> و<strong>العميل</strong> في تخطيطات مخصّصة؛ التفعيل يمكن تقييده عبر <code>VITE_ENABLED_PORTALS</code> عند البناء.</p>
+<h3>4.4 الخدمات في Docker Compose (مرجعية)</h3>
+<ul>
+<li><code>app</code> — PHP-FPM / Laravel  </li>
+<li><code>nginx</code> — عكسي للواجهة التطويرية ولـ API  </li>
+<li><code>frontend</code> — Vite dev  </li>
+<li><code>postgres</code>، <code>redis</code>  </li>
+<li><code>queue_high</code>، <code>queue_default</code>، <code>queue_low</code>، <code>scheduler</code></li>
+</ul>
+<p>صورة <strong>إنتاج الواجهة</strong> في <code>frontend/Dockerfile</code> (مرحلة <code>production</code>) تستخدم <strong><code>frontend/nginx.conf</code></strong> كـ <code>default.conf</code> داخل nginx.</p>
+<hr>
+<h2>5. قاعدة البيانات والعلاقات (ملخص مجالّي)</h2>
+<blockquote>
+<p><strong>ملاحظة:</strong> يوجد <strong>أكثر من 80 ملف هجرة</strong>؛ أدناه تجميع <strong>منطقي</strong> وليس قائمة كل عمود. العلاقات النموذجية: <strong>Company 1—N Branch</strong>، <strong>Company 1—N User</strong>، <strong>Branch 1—N User</strong> (حسب التصميم)، وجداول التشغيل ترتبط بـ <strong><code>company_id</code></strong> (وأحياناً <strong><code>branch_id</code></strong>).</p>
+</blockquote>
+<h3>5.1 الهوية والاشتراك والصلاحيات</h3>
+<table>
+<thead>
+<tr>
+<th>الجداول / المجال</th>
+<th>العلاقات والدور</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>companies</code></td>
+<td>جذر المستأجر</td>
+</tr>
+<tr>
+<td><code>branches</code></td>
+<td><code>company_id</code></td>
+</tr>
+<tr>
+<td><code>users</code></td>
+<td><code>company_id</code>, <code>branch_id</code>؛ أدوار وصلاحيات (Spatie-style: <code>roles</code>, <code>permissions</code>, جداول ربط)</td>
+</tr>
+<tr>
+<td><code>plans</code>, <code>subscriptions</code>, <code>subscription_invoices</code></td>
+<td>اشتراك الشركة بالباقة</td>
+</tr>
+<tr>
+<td><code>personal_access_tokens</code></td>
+<td>Sanctum</td>
+</tr>
+<tr>
+<td><code>api_keys</code>, <code>api_usage_logs</code></td>
+<td>تكامل خارجي</td>
+</tr>
+</tbody></table>
+<h3>5.2 التشغيل والورشة</h3>
+<table>
+<thead>
+<tr>
+<th>المجال</th>
+<th>جداول ممثّلة</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>العملاء والمركبات</td>
+<td><code>customers</code>, <code>vehicles</code></td>
+</tr>
+<tr>
+<td>أوامر العمل</td>
+<td><code>work_orders</code>, <code>work_order_items</code>, <code>work_order_technicians</code></td>
+</tr>
+<tr>
+<td>المناطق والحجوزات</td>
+<td><code>bays</code>, <code>bookings</code>, <code>bay_maintenance_logs</code></td>
+</tr>
+<tr>
+<td>الموارد البشرية</td>
+<td><code>employees</code>, <code>attendance_logs</code>, <code>tasks</code>, <code>commissions</code>, <code>commission_rules</code>, <code>leaves</code>, <code>salaries</code></td>
+</tr>
+<tr>
+<td>الخدمات</td>
+<td><code>services</code>, <code>bundles</code>, <code>bundle_items</code></td>
+</tr>
+</tbody></table>
+<h3>5.3 المخزون والمشتريات والمنتجات</h3>
+<table>
+<thead>
+<tr>
+<th>المجال</th>
+<th>جداول ممثّلة</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>المنتجات</td>
+<td><code>product_categories</code>, <code>products</code></td>
+</tr>
+<tr>
+<td>المخزون</td>
+<td><code>inventory</code>, <code>inventory_reservations</code>, <code>stock_movements</code></td>
+</tr>
+<tr>
+<td>الوحدات</td>
+<td><code>units</code>, <code>unit_conversions</code></td>
+</tr>
+<tr>
+<td>الموردون والشراء</td>
+<td><code>suppliers</code>, <code>purchases</code>, <code>purchase_items</code>, <code>goods_receipts</code>, <code>goods_receipt_items</code></td>
+</tr>
+</tbody></table>
+<h3>5.4 المالية والمحاسبة والفوترة</h3>
+<table>
+<thead>
+<tr>
+<th>المجال</th>
+<th>جداول ممثّلة</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>الفواتير والدفع</td>
+<td><code>invoices</code>, <code>invoice_items</code>, <code>payments</code></td>
+</tr>
+<tr>
+<td>المحافظ</td>
+<td><code>wallets</code>, <code>wallet_transactions</code>, تطورات <code>customer_wallets</code> (هجرات الأسطول)</td>
+</tr>
+<tr>
+<td>المحاسبة</td>
+<td><code>chart_of_accounts</code>, <code>journal_entries</code>, <code>journal_entry_lines</code></td>
+</tr>
+<tr>
+<td>عدادات الفواتير</td>
+<td><code>invoice_counters</code> (+ تسلسل عالمي في هجرات لاحقة)</td>
+</tr>
+<tr>
+<td>ZATCA / سجلات</td>
+<td><code>zatca_logs</code> وحقول متعلقة في <code>invoices</code></td>
+</tr>
+</tbody></table>
+<h3>5.5 الحوكمة والموافقات والتنبيهات</h3>
+<table>
+<thead>
+<tr>
+<th>المجال</th>
+<th>جداول ممثّلة</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>السياسات والموافقات</td>
+<td><code>policy_rules</code>, <code>approval_workflows</code>, <code>approval_workflow_actions</code></td>
+</tr>
+<tr>
+<td>التدقيق والتنبيهات</td>
+<td><code>audit_logs</code>, <code>alert_rules</code>, <code>alert_notifications</code></td>
+</tr>
+</tbody></table>
+<h3>5.6 SaaS إضافي ودعم وتكامل</h3>
+<table>
+<thead>
+<tr>
+<th>المجال</th>
+<th>جداول ممثّلة</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Webhooks</td>
+<td><code>webhook_endpoints</code>, <code>webhook_deliveries</code></td>
+</tr>
+<tr>
+<td>Idempotency</td>
+<td><code>idempotency_keys</code></td>
+</tr>
+<tr>
+<td>الدعم</td>
+<td><code>support_tickets</code>, <code>support_ticket_replies</code>, <code>knowledge_base</code>, <code>sla_policies</code>, …</td>
+</tr>
+<tr>
+<td>الإحالات</td>
+<td><code>referrals</code>, <code>loyalty_points</code>, <code>loyalty_transactions</code>, <code>referral_policies</code></td>
+</tr>
+<tr>
+<td>العقود والوقود والمركبة</td>
+<td><code>contracts</code>, <code>contract_notifications</code>, <code>fuel_logs</code>, <code>vehicle_settings</code>, <code>vehicle_documents</code></td>
+</tr>
+<tr>
+<td>عروض الأسعار</td>
+<td><code>quotes</code>, <code>quote_items</code></td>
+</tr>
+<tr>
+<td>الإضافات</td>
+<td><code>plugins_registry</code>, <code>tenant_plugins</code>, <code>plugin_logs</code></td>
+</tr>
+<tr>
+<td>الإشعارات</td>
+<td><code>notifications</code></td>
+</tr>
+<tr>
+<td>الذكاء / الأحداث</td>
+<td><code>domain_events</code>, <code>event_record_failures</code>, <code>intelligence_command_center_governance_audits</code></td>
+</tr>
+<tr>
+<td>الاجتماعات (MVP)</td>
+<td><code>meetings</code>, <code>meeting_participants</code>, <code>meeting_minutes</code>, <code>meeting_decisions</code>, <code>meeting_actions</code>, <code>meeting_attachments</code></td>
+</tr>
+<tr>
+<td>المطابقة المالية</td>
+<td><code>financial_reconciliation_runs</code>, <code>financial_reconciliation_findings</code>, <code>financial_reconciliation_finding_histories</code>, <code>financial_reconciliation_run_attempts</code></td>
+</tr>
+<tr>
+<td>الإعدادات القابلة للضبط</td>
+<td><code>vertical_profiles</code>, <code>config_settings</code></td>
+</tr>
+<tr>
+<td>الفواتير الذكية / تذكيرات</td>
+<td><code>nps_ratings</code>, <code>warranty_items</code>, <code>service_reminders</code></td>
+</tr>
+</tbody></table>
+<h3>5.7 جدول على مستوى المنصة (غير مرتبط بمستأجر واحد في الاستخدام المنطقي)</h3>
+<table>
+<thead>
+<tr>
+<th>الجدول</th>
+<th>الغرض</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><code>platform_announcement_banners</code></strong></td>
+<td>إعلان واحد للواجهة لجميع المستأجرين؛ يُدار من مشغّلي المنصة</td>
+</tr>
+</tbody></table>
+<h3>5.8 مخطط العلاقات (ERD)</h3>
+<p>المنصة تضم <strong>أكثر من 80 هجرة</strong>؛ عرض <strong>كل</strong> الجدول في رسم واحد يصعّب القراءة. لذلك يُعرض <strong>أربعة مخططات منطقية</strong> تغطي الجزء الأكثر استخداماً في التشغيل اليومي. الأسماء والمفاتيح تعكس <strong>النموذج المفاهيمي</strong>؛ قد تختلف تسميات أعمدة فعلية أو فهارس بين الهجرات.</p>
+<h4>أ) المخطط 1 — المستأجر والاشتراك والهوية</h4>
+<p><img src="diagrams/erd-01-core-tenancy.png" alt="ERD — جذر المستأجر والاشتراك"></p>
+<p><em>يشمل: <code>companies</code>، <code>branches</code>، <code>users</code>، <code>plans</code>، <code>subscriptions</code>، <code>api_keys</code>. رموز Sanctum (<code>personal_access_tokens</code>) وربط الأدوار (<code>roles</code> / <code>permissions</code>) موجودة في الهجرات ولم تُرسم هنا لتبسيط الصورة.</em></p>
+<h4>ب) المخطط 2 — العملاء والمركبات وأوامر العمل والفوترة</h4>
+<p><img src="diagrams/erd-02-operations-crm.png" alt="ERD — تشغيل وCRM"></p>
+<p><em>يشمل: <code>customers</code>، <code>vehicles</code>، <code>work_orders</code> (+ بنود وفنّيين)، <code>invoices</code> (+ بنود)، <code>payments</code>.</em></p>
+<h4>ج) المخطط 3 — المنتجات والمخزون والمشتريات</h4>
+<p><img src="diagrams/erd-03-inventory-purchases.png" alt="ERD — مخزون ومشتريات"></p>
+<p><em>يشمل: <code>products</code>، <code>product_categories</code>، <code>inventory</code>، <code>stock_movements</code>، <code>inventory_reservations</code>، <code>suppliers</code>، <code>purchases</code>، <code>goods_receipts</code> (+ بنود).</em></p>
+<h4>د) المخطط 4 — المحاسبة والمحافظ والحوكمة وجدول المنصة</h4>
+<p><img src="diagrams/erd-04-finance-governance-platform.png" alt="ERD — مالية وحوكمة ومنصة"></p>
+<p><em>يشمل: <code>wallets</code>، <code>wallet_transactions</code>، <code>chart_of_accounts</code>، <code>journal_entries</code> (+ بنود)، <code>policy_rules</code>، <code>approval_workflows</code> (+ إجراءات)، <strong><code>platform_announcement_banners</code></strong> (بدون <code>company_id</code> — إعداد على مستوى المنصة).</em></p>
+<h4>مصادر المخططات وإعادة التوليد</h4>
+<ul>
+<li>ملفات Mermaid المصدر: <code>docs/diagrams/erd-01-core-tenancy.mmd</code> … <code>erd-04-*.mmd</code>  </li>
+<li>توليد الصور (يتطلب Docker وصورة <code>minlag/mermaid-cli</code>):</li>
+</ul>
+<pre><code class="language-bash">cd docs/diagrams
+for f in erd-01-core-tenancy erd-02-operations-crm erd-03-inventory-purchases erd-04-finance-governance-platform; do
+  docker run --rm -v &quot;$(pwd):/data&quot; minlag/mermaid-cli:latest -i &quot;/data/${f}.mmd&quot; -o &quot;/data/${f}.png&quot; -b transparent
+done
+</code></pre>
+<ul>
+<li>توليد <strong>PDF</strong> (موصى به: <strong>Gotenberg</strong> + Chromium — جودة عربية/RTL أفضل من wkhtmltopdf):<ul>
+<li><strong>Windows (PowerShell):</strong> من مجلد <code>docs</code> نفّذ <code>.\build-report-pdf.ps1</code> (يتطلب Node وDocker وصورة <code>gotenberg/gotenberg:8</code>).</li>
+<li><strong>Linux/macOS:</strong> <code>bash docs/build-report-pdf.sh</code></li>
+<li>يدويًا: تحويل Markdown إلى HTML للجسم بـ <code>marked</code>، ثم <code>node build-report-html.mjs</code> (يدمج <code>report-pdf.css</code> ويُضمّن صور <code>diagrams/erd-*.png</code> كـ base64 ويزيل روابط <code>.md</code> التي تربك بعض محركات PDF)، ثم:</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-bash"># بعد إنشاء docs/System_Comprehensive_Report.html
+docker run -d --rm -p 3399:3000 --name gt-report-pdf gotenberg/gotenberg:8
+sleep 8
+curl -f -S -X POST &quot;http://127.0.0.1:3399/forms/chromium/convert/html&quot; \
+  -F &quot;files=@System_Comprehensive_Report.html;filename=index.html&quot; \
+  -o System_Comprehensive_Report.pdf
+docker rm -f gt-report-pdf
+</code></pre>
+<p>يُنشَأ <code>System_Comprehensive_Report.pdf</code> في <code>docs/</code> بجانب ملف Markdown.</p>
+<hr>
+<h2>6. الإضافات والملفات المرجعية (وثائق التشغيل)</h2>
+<ul>
+<li>سياسات Staging: <a href="./Staging_Execution_Now.md"><code>Staging_Execution_Now.md</code></a>، <a href="./Staging_Deploy_Runbook.md"><code>Staging_Deploy_Runbook.md</code></a>، <a href="./Staging_Manual_Test_Checklist.md"><code>Staging_Manual_Test_Checklist.md</code></a>.</li>
+<li><code>Makefile</code> / <code>scripts/staging-gate.sh</code> — بوابة جودة قبل الدمج.</li>
+<li>أمثلة بيئة: <code>backend/.env.staging.example</code>، <code>frontend/env.staging.example</code> (إن وُجدت).</li>
+</ul>
+<hr>
+<h2>7. تقييم الجاهزية (بصراحة)</h2>
+<table>
+<thead>
+<tr>
+<th>المحور</th>
+<th>الحالة</th>
+<th>تعليق</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>بناء الواجهة الإنتاجي</td>
+<td>مؤكد نجاحه في التشغيل المرجعي</td>
+<td>يشمل TypeScript</td>
+</tr>
+<tr>
+<td>صياغة nginx للواجهة الإنتاجية</td>
+<td>مؤكد <code>nginx -t</code></td>
+<td>يجب نشر نفس الملف على الخادم الفعلي</td>
+</tr>
+<tr>
+<td>اختبارات مسار الإعلان</td>
+<td>4 اختبارات ناجحة</td>
+<td>لا تغطي كامل النظام</td>
+</tr>
+<tr>
+<td>اختبارات النظام بالكامل</td>
+<td>غير مُعلَن «PASS كامل» هنا</td>
+<td>يشغّل الفريق <code>make verify</code> / PHPUnit كاملاً حسب السياسة</td>
+</tr>
+<tr>
+<td>النشر على استضافة الإنتاج/التجريب</td>
+<td>خارج نطاق المستودع فقط</td>
+<td>يتطلب CI/CD، أسرار، <code>migrate</code>، وبناء <code>VITE_*</code> الصحيح</td>
+</tr>
+<tr>
+<td>اختبار يدوي Staging</td>
+<td>مطلوب حسب الوثائق</td>
+<td>لا يُستبدل بالاختبار الآلي فقط</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. ما لم يُنفَّذ أو ما يبقى مسؤولية الفريق</h2>
+<ol>
+<li><strong>نشر التغييرات</strong> على <code>pro.osas.sa</code> أو أي بيئة — دمج Git، pipeline، ونسخ <code>dist</code> كامل مع <code>nginx.conf</code> المحدّث.  </li>
+<li><strong>تشغيل الهجرات</strong> على قاعدة بيانات كل بيئة (<code>platform_announcement_banners</code> وغيرها).  </li>
+<li><strong>ضبط <code>SAAS_PLATFORM_ADMIN_EMAILS</code></strong> لمن يُسمح له بإدارة الإعلان وقائمة الشركات.  </li>
+<li><strong>اختبار قبول المستخدم (UAT)</strong> وقوائم Staging اليدوية بالكامل.  </li>
+<li><strong>إصلاح/توحيد</strong> تشغيل <code>php artisan test</code> إذا كان <code>.env</code> يفرض <code>DB_HOST=127.0.0.1</code> داخل الحاوية (استخدم <code>vendor/bin/phpunit</code> أو اضبط البيئة).  </li>
+<li><strong>ميزات أو تكاملات</strong> مذكورة في الوثائق أو الواجهة كـ «حسب الإعداد» أو «مرحلة» — قد تكون غير مفعّلة أو تحتاج عقوداً خارجية (ERP، جهات حكومية، ZATCA، إلخ).  </li>
+<li><strong>تغطية اختبار آلية شاملة</strong> لكل مسار (POS، محفظة، tenancy، …) — المشروع يحتوي اختبارات جزئية؛ «جاهزية إنتاج كاملة» قرار تنظيمي بعد البوابات واليدوي.</li>
+</ol>
+<hr>
+<h2>9. خلاصة</h2>
+<p>المنصة <strong>ناضجة تقنياً كمنتج كبير متعدد الوحدات</strong> مع <strong>PostgreSQL</strong> وعلاقات <strong>شركة ← فرع ← مستخدم</strong> وطبقة <strong>خدمات</strong> واسعة. تم في الجلسة المذكورة: <strong>تحسين الهبوط</strong>، <strong>إعلان منصة مع API وواجهة إدارة</strong>، <strong>تصليب nginx</strong>، و<strong>اختبارات مستهدفة</strong> للإعلان. <strong>الجاهزية للإنتاج</strong> تتطلب اتباع مسار Staging الرسمي، نشراً صحيحاً للواجهة وقاعدة البيانات، واختباراً يدوياً موثَّقاً — وذلك خارج ما يثبته المستودع وحده.</p>
+<hr>
+<p><em>نهاية التقرير.</em></p>

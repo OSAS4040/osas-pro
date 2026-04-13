@@ -44,7 +44,7 @@ class SaasPlanCatalogGateTest extends TestCase
         $res->assertJsonPath('code', 'PLAN_CATALOG_FORBIDDEN');
     }
 
-    public function test_platform_email_can_seed_plans_when_tenant_catalog_edit_disabled(): void
+    public function test_tenant_owner_with_allowlisted_email_cannot_seed_plans_when_tenant_catalog_edit_disabled(): void
     {
         config(['saas.allow_tenant_plan_catalog_edit' => false]);
         config(['saas.platform_admin_emails' => ['owner_test@platform.sa']]);
@@ -53,6 +53,23 @@ class SaasPlanCatalogGateTest extends TestCase
         $branch  = $this->createBranch($company);
         $user    = $this->createUser($company, $branch, 'owner', ['email' => 'owner_test@platform.sa']);
 
+        $token = $user->createToken('t')->plainTextToken;
+
+        $res = $this->postJson('/api/v1/plans/seed', [], [
+            'Authorization' => 'Bearer '.$token,
+            'Accept'        => 'application/json',
+        ]);
+
+        $res->assertStatus(403);
+        $res->assertJsonPath('code', 'PLAN_CATALOG_FORBIDDEN');
+    }
+
+    public function test_standalone_platform_operator_can_seed_plans_when_tenant_catalog_edit_disabled(): void
+    {
+        config(['saas.allow_tenant_plan_catalog_edit' => false]);
+        config(['saas.platform_admin_emails' => ['owner_test@platform.sa']]);
+
+        $user  = $this->createStandalonePlatformOperator('owner_test@platform.sa');
         $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->postJson('/api/v1/plans/seed', [], [
@@ -112,16 +129,15 @@ class SaasPlanCatalogGateTest extends TestCase
         ]);
 
         $res->assertStatus(403);
-        $res->assertJsonPath('code', 'PLATFORM_OPERATOR_REQUIRED');
+        $res->assertJsonPath('code', 'PLATFORM_ACCESS_ONLY');
     }
 
     public function test_platform_operator_can_list_admin_companies(): void
     {
         config(['saas.platform_admin_emails' => ['operator@platform.sa']]);
 
-        $tenant = $this->createTenant();
-        $tenant['user']->update(['email' => 'operator@platform.sa']);
-        $token = $tenant['user']->createToken('t')->plainTextToken;
+        $user  = $this->createStandalonePlatformOperator('operator@platform.sa');
+        $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->getJson('/api/v1/admin/companies', [
             'Authorization' => 'Bearer '.$token,

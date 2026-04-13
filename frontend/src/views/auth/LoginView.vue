@@ -37,6 +37,19 @@
           <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ lt('tagline') }}</p>
           <p class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
             {{ lt('unifiedIntro') }}
+            <RouterLink
+              to="/register"
+              class="ms-1 font-semibold text-primary-700 underline underline-offset-2 dark:text-primary-400"
+            >
+              {{ lt('linkRegister') }}
+            </RouterLink>
+            <span class="text-slate-400"> · </span>
+            <RouterLink
+              to="/phone"
+              class="ms-1 font-semibold text-primary-700 underline underline-offset-2 dark:text-primary-400"
+            >
+              {{ lt('linkPhoneOtp') }}
+            </RouterLink>
           </p>
           <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px]">
             <RouterLink
@@ -145,16 +158,17 @@
             <template v-if="!otpStep">
               <div>
                 <label class="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {{ lt('emailLabel') }} <span class="font-normal text-slate-400">{{ lt('emailHint') }}</span>
+                  {{ lt('loginIdLabel') }} <span class="font-normal text-slate-400">{{ lt('loginIdHint') }}</span>
                 </label>
                 <input
                   ref="emailInputRef"
-                  v-model="form.email"
-                  type="email"
+                  v-model="form.loginId"
+                  type="text"
                   required
                   autocomplete="username"
+                  inputmode="text"
                   class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-base text-slate-900 transition-all placeholder:text-slate-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/25 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 sm:text-sm"
-                  placeholder="you@company.com"
+                  :placeholder="lt('loginIdPlaceholder')"
                 >
               </div>
 
@@ -184,14 +198,20 @@
                 class="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-[11px] leading-snug text-slate-600 dark:border-slate-700 dark:bg-slate-900/30 dark:text-slate-300"
               >
                 <input
-                  v-model="rememberEmail"
+                  v-model="rememberLoginId"
                   type="checkbox"
                   class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-primary-600 focus:ring-primary-500 dark:border-slate-600"
                 >
-                <span>{{ lt('rememberEmailLead') }}<strong class="font-semibold text-slate-700 dark:text-slate-200">{{ lt('rememberEmailNever') }}</strong>{{ lt('rememberEmailTail') }}</span>
+                <span>{{ lt('rememberLoginIdLead') }}<strong class="font-semibold text-slate-700 dark:text-slate-200">{{ lt('rememberLoginIdNever') }}</strong>{{ lt('rememberLoginIdTail') }}</span>
               </label>
 
               <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                <RouterLink
+                  to="/register"
+                  class="text-primary-700 underline underline-offset-2 hover:text-primary-800 dark:text-primary-400"
+                >
+                  {{ lt('linkRegister') }}
+                </RouterLink>
                 <RouterLink
                   to="/forgot-password"
                   class="text-primary-700 underline underline-offset-2 hover:text-primary-800 dark:text-primary-400"
@@ -320,13 +340,15 @@ import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { WrenchScrewdriverIcon, EyeIcon, EyeSlashIcon, ExclamationCircleIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { useI18nStore } from '@/stores/i18n'
+import { resolvePostLoginTarget } from '@/utils/postLoginRedirect'
+import { loginErrorMessageFromPayload } from '@/utils/loginApiErrors'
 import { enabledPortals } from '@/config/portalAccess'
 import { useSupportContact } from '@/composables/useSupportContact'
 import AppInstallHint from '@/components/AppInstallHint.vue'
 import PlatformPromoBanner from '@/components/PlatformPromoBanner.vue'
 
-/** بريد محفوظ محلياً فقط — لا يُرسل للخادم إلا عند تسجيل الدخول */
-const REMEMBER_EMAIL_KEY = 'asaspro_saved_login_email'
+/** معرف الدخول (جوال أو بريد) محفوظ محلياً — يُرسل للخادم فقط عند تسجيل الدخول */
+const REMEMBER_LOGIN_ID_KEY = 'asaspro_saved_login_id'
 
 const auth = useAuthStore()
 const i18n = useI18nStore()
@@ -392,7 +414,7 @@ const portalDisabledNotice = computed(() => {
 
 const resetOkBanner = computed(() => route.query.reset === 'ok')
 
-const form = ref({ email: '', password: '' })
+const form = ref({ loginId: '', password: '' })
 const loading = ref(false)
 const error = ref('')
 const showPass = ref(false)
@@ -401,16 +423,16 @@ const otpChallengeId = ref('')
 const otpCode = ref('')
 const otpMessage = ref('')
 const showUsernameHelp = ref(false)
-const rememberEmail = ref(false)
+const rememberLoginId = ref(false)
 const emailInputRef = ref<HTMLInputElement | null>(null)
 const otpInputRef = ref<HTMLInputElement | null>(null)
 
 onMounted(() => {
   try {
-    const saved = localStorage.getItem(REMEMBER_EMAIL_KEY)
-    if (saved && saved.includes('@')) {
-      form.value.email = saved
-      rememberEmail.value = true
+    const saved = localStorage.getItem(REMEMBER_LOGIN_ID_KEY)
+    if (saved && saved.trim() !== '') {
+      form.value.loginId = saved
+      rememberLoginId.value = true
     }
   } catch {
     /* وضع خاص للمتصفح */
@@ -434,7 +456,7 @@ watch(
 )
 
 function fillDemo(d: { email: string; password: string }) {
-  form.value.email = d.email
+  form.value.loginId = d.email
   form.value.password = d.password
   error.value = ''
 }
@@ -473,22 +495,30 @@ function stripZeroWidth(s: string): string {
   return s.replace(/[\u200B-\u200D\uFEFF]/g, '')
 }
 
-function normalizeLoginEmail(raw: string): string {
-  return stripZeroWidth(raw).trim().toLowerCase()
+function normalizeLoginId(raw: string): string {
+  const s = stripZeroWidth(raw).trim()
+  if (s.includes('@')) {
+    return s.toLowerCase()
+  }
+
+  return s
 }
 
 function normalizeLoginPassword(raw: string): string {
   return stripZeroWidth(raw)
 }
 
+/** يطابق DemoPlatformAdminSeeder — عند إدخاله من /login نُظهر توجيهاً خاصاً بدل التشخيص العام */
+const PLATFORM_DEMO_EMAIL = 'platform-demo@osas.sa'
+
 async function handleLogin() {
   loading.value = true
   error.value = ''
-  const email = normalizeLoginEmail(form.value.email)
+  const loginId = normalizeLoginId(form.value.loginId)
   const password = normalizeLoginPassword(form.value.password)
   try {
     if (otpStep.value) {
-      const out = await auth.login(email, password, {
+      const out = await auth.login(loginId, password, {
         challengeId: otpChallengeId.value,
         otp: otpCode.value.replace(/\D/g, ''),
       })
@@ -499,7 +529,7 @@ async function handleLogin() {
         return
       }
     } else {
-      const out = await auth.login(email, password)
+      const out = await auth.login(loginId, password)
       if (out.kind === 'otp_required') {
         otpStep.value = true
         otpChallengeId.value = out.challengeId
@@ -509,8 +539,18 @@ async function handleLogin() {
       }
     }
 
-    const redirect = route.query.redirect as string | undefined
-    const target = redirect ?? auth.portalHome
+    if (auth.isPhoneOnboarding) {
+      await auth.fetchRegistrationFlow().catch(() => {})
+    }
+
+    const target = resolvePostLoginTarget({
+      accountContext: auth.accountContext,
+      registrationFlow: auth.registrationFlow,
+      registrationStage: auth.user?.registration_stage,
+      accountType: auth.user?.account_type,
+      portalHomeFromRole: auth.portalHome,
+      redirectQuery: route.query.redirect,
+    })
 
     if (auth.isFleet && !enabledPortals.fleet) {
       await auth.logout()
@@ -524,10 +564,10 @@ async function handleLogin() {
     }
 
     try {
-      if (rememberEmail.value) {
-        localStorage.setItem(REMEMBER_EMAIL_KEY, email)
+      if (rememberLoginId.value) {
+        localStorage.setItem(REMEMBER_LOGIN_ID_KEY, loginId)
       } else {
-        localStorage.removeItem(REMEMBER_EMAIL_KEY)
+        localStorage.removeItem(REMEMBER_LOGIN_ID_KEY)
       }
     } catch {
       /* تجاهل */
@@ -548,17 +588,31 @@ async function handleLogin() {
       return
     }
     if (res.status === 401) {
-      const m = String(res.data?.message ?? '')
-      const bad = i18n.t('login.errBadCredentials')
-      let msg =
-        m.includes('credentials are incorrect') || m.includes('provided credentials') ? bad : m || bad
-      if (import.meta.env.DEV) {
+      const payload = (res.data ?? {}) as Record<string, unknown>
+      let msg = loginErrorMessageFromPayload(payload, i18n.t)
+      const apiPlatformHint = (res.data as { platform_demo_hint?: string } | undefined)?.platform_demo_hint
+      const isPlatformDemoAttempt =
+        loginId.includes('@') && loginId.toLowerCase() === PLATFORM_DEMO_EMAIL
+
+      if (typeof apiPlatformHint === 'string' && apiPlatformHint.trim() !== '') {
+        msg += '\n\n' + apiPlatformHint.trim()
+      } else if (isPlatformDemoAttempt) {
+        msg +=
+          '\n\n' +
+          'هذا البريد لمشغّل المنصة التجريبي: سجّل الدخول من صفحة /platform/login (وليس /login). أنشئ المستخدم على نفس خادم الـ API: php artisan db:seed --class=Database\\Seeders\\DemoPlatformAdminSeeder'
+      } else if (import.meta.env.DEV) {
         msg += i18n.t('login.errBadCredentialsDevHint')
         const dh = res.data?.dev_hint as
-          | { users_in_db?: number | null; database_error?: boolean }
+          | {
+              users_in_db?: number | null
+              database_error?: boolean
+              platform_demo_next_step?: string
+            }
           | undefined
         if (dh?.database_error) {
           msg += ' ' + i18n.t('login.errDevDbUnreachable')
+        } else if (typeof dh?.platform_demo_next_step === 'string' && dh.platform_demo_next_step.trim() !== '') {
+          msg += '\n\n' + dh.platform_demo_next_step.trim()
         } else if (dh?.users_in_db === 0) {
           msg += ' ' + i18n.t('login.errDevNoUsers')
         } else if (typeof dh?.users_in_db === 'number' && dh.users_in_db > 0) {
@@ -572,8 +626,8 @@ async function handleLogin() {
       error.value = String(res.data.message)
       return
     }
-    if (res.status === 403 && res.data?.message) {
-      error.value = String(res.data.message)
+    if (res.status === 403) {
+      error.value = loginErrorMessageFromPayload((res.data ?? {}) as Record<string, unknown>, i18n.t)
       return
     }
     if (res.status === 422) {

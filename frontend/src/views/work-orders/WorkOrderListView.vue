@@ -84,16 +84,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { useWorkOrderStore } from '@/stores/workOrder'
 import { useStaffUiStore } from '@/stores/staffUi'
 import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 
 const store        = useWorkOrderStore()
 const staffUi      = useStaffUiStore()
+const route        = useRoute()
 const filterStatus = ref('')
 const search = ref('')
+const customerIdFilter = ref<number | null>(null)
 
 const statusFilterValues = [
   'draft',
@@ -107,11 +109,34 @@ const statusFilterValues = [
 ] as const
 const statuses = statusFilterValues.map((value) => ({ value, label: workOrderStatusLabel(value) }))
 
-async function load(): Promise<void> {
-  await store.fetchOrders({ status: filterStatus.value || undefined })
+function syncCustomerFilterFromRoute(): void {
+  const raw = route.query.customer_id
+  if (raw !== undefined && raw !== null && String(raw).match(/^\d+$/)) {
+    customerIdFilter.value = Number(raw)
+  } else {
+    customerIdFilter.value = null
+  }
 }
 
-onMounted(load)
+async function load(): Promise<void> {
+  await store.fetchOrders({
+    status: filterStatus.value || undefined,
+    ...(customerIdFilter.value ? { customer_id: customerIdFilter.value } : {}),
+  })
+}
+
+onMounted(() => {
+  syncCustomerFilterFromRoute()
+  load()
+})
+
+watch(
+  () => route.query.customer_id,
+  () => {
+    syncCustomerFilterFromRoute()
+    load()
+  },
+)
 
 const filteredOrders = computed(() => {
   const q = search.value.trim().toLowerCase()

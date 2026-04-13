@@ -18,6 +18,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\Auth\PhoneNormalizer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -86,12 +87,15 @@ class DemoOperationsSeeder extends Seeder
                     'email'      => self::OWNER_EMAIL,
                 ],
                 [
-                    'branch_id' => $branch->id,
-                    'name'      => 'Simulation Owner',
-                    'password'  => self::OWNER_PASSWORD,
-                    'role'      => UserRole::Owner,
-                    'status'    => UserStatus::Active,
-                    'is_active' => true,
+                    'branch_id'            => $branch->id,
+                    'name'                 => 'Simulation Owner',
+                    'password'             => self::OWNER_PASSWORD,
+                    'phone'                => PhoneNormalizer::normalizeForStorage('966501000088'),
+                    'phone_verified_at'    => now(),
+                    'registration_stage'   => 'phone_verified',
+                    'role'                 => UserRole::Owner,
+                    'status'               => UserStatus::Active,
+                    'is_active'            => true,
                 ]
             );
 

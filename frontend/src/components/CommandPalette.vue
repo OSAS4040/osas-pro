@@ -374,6 +374,9 @@ function roleAllowed(item: PaletteNavItem): boolean {
   ) {
     if (!tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')) return false
   }
+  if (item.to.startsWith('/crm/') && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'crm')) {
+    return false
+  }
   if (item.to.startsWith('/workshop') && !canAccessWorkshopArea(auth.isOwner, (k) => biz.isEnabled(k))) {
     return false
   }
@@ -382,7 +385,10 @@ function roleAllowed(item: PaletteNavItem): boolean {
 }
 
 function portalAllowed(item: PaletteNavItem): boolean {
-  if (item.to.startsWith('/fleet/') && !enabledPortals.fleet) return false
+  if (item.to.startsWith('/fleet/')) {
+    if (!enabledPortals.fleet) return false
+    if (!tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'fleet')) return false
+  }
   if (item.to.startsWith('/admin') && !enabledPortals.admin) return false
   return true
 }

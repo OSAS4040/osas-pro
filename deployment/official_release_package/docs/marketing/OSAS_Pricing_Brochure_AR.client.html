@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OSAS — الباقات والأسعار</title>
+  <meta name="description" content="دليل باقات OSAS والأسعار والإضافات الاختيارية — عرض تقديمي للعملاء." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0c1222;
+      --muted: #475569;
+      --surface: #ffffff;
+      --line: #e2e8f0;
+      --start: #0d9488;
+      --growth: #2563eb;
+      --pro: #d97706;
+      --enterprise: #1e3a5f;
+      --glow-start: rgba(13, 148, 136, 0.12);
+      --glow-growth: rgba(37, 99, 235, 0.12);
+      --glow-pro: rgba(217, 119, 6, 0.14);
+      --glow-ent: rgba(30, 58, 95, 0.14);
+    }
+
+    @page {
+      size: A4;
+      margin: 12mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Tajawal", "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 40%, #f8fafc 100%);
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      padding: 2.25rem 2rem;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 45%, #0d9488 100%);
+      color: #fff;
+      box-shadow: 0 20px 50px rgba(30, 58, 95, 0.35);
+      margin-bottom: 2.5rem;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: -40% auto auto -20%;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(6px);
+      margin-bottom: 1rem;
+    }
+
+    .hero h1 {
+      margin: 0 0 0.5rem;
+      font-size: clamp(1.6rem, 4vw, 2.1rem);
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 36rem;
+      opacity: 0.95;
+      font-size: 1.05rem;
+    }
+
+    .section {
+      margin-bottom: 2.75rem;
+      page-break-inside: avoid;
+    }
+
+    .section-head {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .section-head h2 {
+      margin: 0 0 0.4rem;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--enterprise);
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 720px) {
+      .plans-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .plan-card {
+      border-radius: 16px;
+      padding: 1.35rem 1.25rem 1.25rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .plan-card.popular {
+      border-width: 2px;
+      border-color: var(--growth);
+      box-shadow: 0 16px 40px rgba(37, 99, 235, 0.15);
+    }
+
+    .plan-card.popular::before {
+      content: "الأكثر طلباً";
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+    }
+
+    .plan-card.start {
+      border-top: 4px solid var(--start);
+      background: linear-gradient(180deg, #fff 0%, var(--glow-start) 100%);
+    }
+
+    .plan-card.growth {
+      border-top: 4px solid var(--growth);
+      background: linear-gradient(180deg, #fff 0%, var(--glow-growth) 100%);
+    }
+
+    .plan-card.pro {
+      border-top: 4px solid var(--pro);
+      background: linear-gradient(180deg, #fff 0%, var(--glow-pro) 100%);
+    }
+
+    .plan-card.enterprise {
+      border-top: 4px solid var(--enterprise);
+      background: linear-gradient(180deg, #fff 0%, var(--glow-ent) 100%);
+    }
+
+    .plan-title {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .plan-title h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .plan-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .plan-card.start .plan-icon {
+      background: rgba(13, 148, 136, 0.15);
+      color: var(--start);
+    }
+
+    .plan-card.growth .plan-icon {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--growth);
+    }
+
+    .plan-card.pro .plan-icon {
+      background: rgba(217, 119, 6, 0.15);
+      color: var(--pro);
+    }
+
+    .plan-card.enterprise .plan-icon {
+      background: rgba(30, 58, 95, 0.12);
+      color: var(--enterprise);
+    }
+
+    .price {
+      font-size: 1.65rem;
+      font-weight: 800;
+      margin: 0.5rem 0 0.15rem;
+      letter-spacing: -0.02em;
+    }
+
+    .price small {
+      font-size: 0.95rem;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    .audience {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin: 0 0 1rem;
+    }
+
+    .features {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      margin-bottom: 0.55rem;
+      font-size: 0.92rem;
+    }
+
+    .features svg {
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 720px) {
+      .guide-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .guide-box {
+      border-radius: 14px;
+      padding: 1.1rem 1.15rem;
+      background: #fff;
+      border: 1px solid var(--line);
+      display: flex;
+      gap: 0.85rem;
+      align-items: flex-start;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .guide-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .guide-box:nth-child(1) .guide-num {
+      background: var(--start);
+    }
+
+    .guide-box:nth-child(2) .guide-num {
+      background: var(--growth);
+    }
+
+    .guide-box:nth-child(3) .guide-num {
+      background: var(--pro);
+    }
+
+    .guide-box:nth-child(4) .guide-num {
+      background: var(--enterprise);
+    }
+
+    .guide-box strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.95rem;
+    }
+
+    .guide-box p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .compare-wrap {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    table.compare {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+      font-size: 0.86rem;
+    }
+
+    table.compare th,
+    table.compare td {
+      padding: 0.65rem 0.55rem;
+      text-align: center;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    table.compare th:first-child,
+    table.compare td:first-child {
+      text-align: right;
+      font-weight: 600;
+      min-width: 140px;
+      padding-right: 0.85rem;
+    }
+
+    table.compare thead th {
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.82rem;
+      border: none;
+    }
+
+    table.compare thead th.feature-col {
+      background: var(--enterprise);
+    }
+
+    table.compare thead th.c-start {
+      background: var(--start);
+    }
+
+    table.compare thead th.c-growth {
+      background: var(--growth);
+    }
+
+    table.compare thead th.c-pro {
+      background: var(--pro);
+    }
+
+    table.compare thead th.c-ent {
+      background: #152a45;
+    }
+
+    table.compare tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .cell-ok {
+      color: var(--start);
+      font-weight: 700;
+    }
+
+    .cell-dash {
+      color: #94a3b8;
+    }
+
+    .addons-wrap {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #fff;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    table.addons {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    table.addons th {
+      background: var(--enterprise);
+      color: #fff;
+      padding: 0.75rem 0.85rem;
+      text-align: right;
+      font-weight: 800;
+    }
+
+    table.addons td {
+      padding: 0.65rem 0.85rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    table.addons tr:last-child td {
+      border-bottom: none;
+    }
+
+    .policy-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 720px) {
+      .policy-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .policy-card {
+      border-radius: 14px;
+      padding: 1.25rem;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .policy-card h3 {
+      margin: 0 0 0.75rem;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .policy-card ul {
+      margin: 0;
+      padding: 0 1.1rem 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .policy-card li {
+      margin-bottom: 0.5rem;
+    }
+
+    .visual-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 720px) {
+      .visual-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mock-screen {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+      aspect-ratio: 16 / 10;
+      position: relative;
+    }
+
+    .mock-screen.a {
+      background: linear-gradient(160deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+    }
+
+    .mock-screen.b {
+      background: linear-gradient(160deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
+    }
+
+    .mock-chrome {
+      height: 28px;
+      background: rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 10px;
+    }
+
+    .mock-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .mock-body {
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 10px;
+      height: calc(100% - 28px);
+    }
+
+    .mock-sidebar {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+    }
+
+    .mock-main {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mock-title {
+      height: 14px;
+      width: 55%;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .mock-blocks {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mock-block {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+
+    .mock-caption {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+
+    .screenshot-wrap {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+      background: #f1f5f9;
+    }
+
+    .screenshot-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 420px;
+      object-fit: contain;
+      object-position: top center;
+    }
+
+    .screenshot-wrap .mock-screen {
+      box-shadow: none;
+      border: none;
+      border-radius: 0;
+    }
+
+    .marketing-box {
+      border-radius: 16px;
+      padding: 1.5rem 1.6rem;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(13, 148, 136, 0.1) 100%);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      font-size: 1rem;
+      line-height: 1.75;
+    }
+
+    .marketing-box p {
+      margin: 0;
+    }
+
+    .footer-note {
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .print-share-hint {
+      margin: 0 0 1.25rem;
+      padding: 0.65rem 1rem;
+      text-align: center;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: var(--muted);
+      background: #f1f5f9;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    @media print {
+      .print-share-hint {
+        display: none !important;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      html,
+      body {
+        background: #fff !important;
+        font-size: 11pt;
+        line-height: 1.45;
+      }
+
+      .wrap {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+      }
+
+      .hero {
+        box-shadow: none;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .section {
+        break-inside: auto;
+        page-break-inside: auto;
+      }
+
+      .plan-card,
+      .guide-box,
+      .policy-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        box-shadow: none;
+      }
+
+      .compare-wrap,
+      .addons-wrap {
+        box-shadow: none;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      table.compare {
+        font-size: 0.72rem;
+      }
+
+      table.addons {
+        font-size: 0.8rem;
+      }
+
+      .screenshot-img {
+        max-height: 220px;
+        object-fit: contain;
+      }
+
+      .screenshot-wrap {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .marketing-box {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="print-share-hint" role="note">
+      <strong>للمشاركة كـ PDF:</strong>
+      اضغط Ctrl+P (أو Cmd+P) ← اختر «حفظ كـ PDF» ← فعّل
+      <strong>طباعة الخلفيات / الرسومات الخلفية</strong>
+      لظهور ألوان العناوين والجداول بشكل صحيح.
+    </p>
+    <header class="hero">
+      <div class="hero-inner">
+        <span class="badge">OSAS — منصة تشغيل أعمال متكاملة</span>
+        <h1>خارطة الباقات الرئيسية</h1>
+        <p>أربع باقات متدرجة تغطي بداية التشغيل، النمو، التوسع التشغيلي، والمتطلبات المؤسسية الخاصة — بوضوح كامل لمسار النمو.</p>
+      </div>
+    </header>
+
+    <section class="section" aria-labelledby="plans-title">
+      <div class="section-head">
+        <h2 id="plans-title">الباقات والحدود الأساسية</h2>
+        <p>كل باقة مصممة لتمنحك القيمة المناسبة لمرحلتك دون تعقيد غير ضروري.</p>
+      </div>
+      <div class="plans-grid">
+        <article class="plan-card start">
+          <div class="plan-title">
+            <div class="plan-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <h3>Start</h3>
+          </div>
+          <p class="price">149 <small>ر.س / شهرياً</small></p>
+          <p class="audience">للمنشآت الصغيرة جداً</p>
+          <ul class="features">
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg> 2 مستخدمين</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> فرع واحد</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> حتى 10 موظفين</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> حتى 200 فاتورة شهرياً</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> موارد بشرية أساسية ورواتب</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> فوترة وتشغيل أساسي</li>
+          </ul>
+        </article>
+
+        <article class="plan-card growth popular">
+          <div class="plan-title">
+            <div class="plan-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
+            <h3>Growth</h3>
+          </div>
+          <p class="price">399 <small>ر.س / شهرياً</small></p>
+          <p class="audience">للشركات الصغيرة والمتوسطة</p>
+          <ul class="features">
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg> 5 مستخدمين</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> 3 فروع</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> حتى 30 موظفاً</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> حتى 1,000 فاتورة شهرياً</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> محاسبة كاملة ومخزون</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 17 3.34"/><path d="M21 3v7h-7"/></svg> فواتير إلكترونية وتقارير أوسع</li>
+          </ul>
+        </article>
+
+        <article class="plan-card pro">
+          <div class="plan-title">
+            <div class="plan-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <h3>Pro</h3>
+          </div>
+          <p class="price">899 <small>ر.س / شهرياً</small></p>
+          <p class="audience">للتشغيل الجاد والمتوسع</p>
+          <ul class="features">
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg> 10 مستخدمين</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> 5 فروع</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> حتى 100 موظف</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> فواتير غير محدودة</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> تقارير تنفيذية وموافقات</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> إدارة تشغيل أعمق وتعدد مستودعات</li>
+          </ul>
+        </article>
+
+        <article class="plan-card enterprise">
+          <div class="plan-title">
+            <div class="plan-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+            </div>
+            <h3>Enterprise</h3>
+          </div>
+          <p class="price">ابتداءً من 1,499 <small>ر.س / شهرياً</small></p>
+          <p class="audience">للمجموعات والمتطلبات الخاصة</p>
+          <ul class="features">
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> حسب التعاقد</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> فواتير غير محدودة</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> متعدد الشركات أو الكيانات</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> تكاملات و API متقدم</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> تنفيذ وترحيل وتدريب</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> دعم أعلى وتخصيصات خاصة</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="guide-title">
+      <div class="section-head">
+        <h2 id="guide-title">كيف تختارون الباقة الأنسب؟</h2>
+        <p>دليل قرار سريع يربط حجم التشغيل واحتياجاتك بالباقة المناسبة.</p>
+      </div>
+      <div class="guide-grid">
+        <div class="guide-box">
+          <span class="guide-num">S</span>
+          <div>
+            <strong>ابدأ بـ Start</strong>
+            <p>إذا كانت المنشأة صغيرة جداً وتحتاج إلى الموارد البشرية والرواتب والفوترة الأساسية مع تشغيل يومي بسيط.</p>
+          </div>
+        </div>
+        <div class="guide-box">
+          <span class="guide-num">G</span>
+          <div>
+            <strong>انتقل إلى Growth</strong>
+            <p>إذا كنت تبحث عن نظام متكامل يربط بين المحاسبة والموارد البشرية والمخزون والفروع المحدودة.</p>
+          </div>
+        </div>
+        <div class="guide-box">
+          <span class="guide-num">P</span>
+          <div>
+            <strong>اختر Pro</strong>
+            <p>إذا كان لديك تشغيل يومي كثيف وفروع متعددة وتحتاج إلى فواتير غير محدودة وتقارير تنفيذية أوسع.</p>
+          </div>
+        </div>
+        <div class="guide-box">
+          <span class="guide-num">E</span>
+          <div>
+            <strong>اختر Enterprise</strong>
+            <p>إذا كانت لديك كيانات متعددة أو تكاملات خاصة أو متطلبات تنفيذ وتخصيص ودعم أعلى.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="compare-title">
+      <div class="section-head">
+        <h2 id="compare-title">جدول المقارنة التفصيلي</h2>
+        <p>مقارنة سريعة للفروقات الرئيسية بين الباقات.</p>
+      </div>
+      <div class="compare-wrap">
+        <table class="compare">
+          <thead>
+            <tr>
+              <th class="feature-col">الميزة</th>
+              <th class="c-start">Start</th>
+              <th class="c-growth">Growth</th>
+              <th class="c-pro">Pro</th>
+              <th class="c-ent">Enterprise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>السعر الشهري</td>
+              <td>149 ر.س</td>
+              <td>399 ر.س</td>
+              <td>899 ر.س</td>
+              <td>من 1,499 ر.س</td>
+            </tr>
+            <tr>
+              <td>عدد المستخدمين</td>
+              <td>2</td>
+              <td>5</td>
+              <td>10</td>
+              <td>حسب التعاقد</td>
+            </tr>
+            <tr>
+              <td>عدد الفروع</td>
+              <td>1</td>
+              <td>3</td>
+              <td>5</td>
+              <td>حسب التعاقد</td>
+            </tr>
+            <tr>
+              <td>عدد الموظفين</td>
+              <td>حتى 10</td>
+              <td>حتى 30</td>
+              <td>حتى 100</td>
+              <td>حسب التعاقد</td>
+            </tr>
+            <tr>
+              <td>عدد الفواتير</td>
+              <td>200 شهرياً</td>
+              <td>1,000 شهرياً</td>
+              <td class="cell-ok">غير محدود</td>
+              <td class="cell-ok">غير محدود</td>
+            </tr>
+            <tr>
+              <td>الموارد البشرية والرواتب</td>
+              <td>أساسي</td>
+              <td>كامل</td>
+              <td>متقدم</td>
+              <td>متقدم جداً</td>
+            </tr>
+            <tr>
+              <td>المحاسبة</td>
+              <td>أساسي</td>
+              <td>كامل</td>
+              <td>كامل ومتقدم</td>
+              <td>مخصص حسب الحاجة</td>
+            </tr>
+            <tr>
+              <td>المخزون والمستودعات</td>
+              <td class="cell-dash">—</td>
+              <td class="cell-ok">نعم</td>
+              <td class="cell-ok">متقدم</td>
+              <td class="cell-ok">متقدم</td>
+            </tr>
+            <tr>
+              <td>التقارير التنفيذية</td>
+              <td class="cell-dash">—</td>
+              <td>محدود</td>
+              <td class="cell-ok">نعم</td>
+              <td class="cell-ok">نعم</td>
+            </tr>
+            <tr>
+              <td>التكاملات و API</td>
+              <td>إضافة</td>
+              <td>إضافة</td>
+              <td>أساسي / محدود</td>
+              <td>متقدم</td>
+            </tr>
+            <tr>
+              <td>الدعم الفني</td>
+              <td>قياسي</td>
+              <td>قياسي</td>
+              <td>أولوية</td>
+              <td>أولوية عالية</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="addons-title">
+      <div class="section-head">
+        <h2 id="addons-title">الإضافات المدفوعة الاختيارية</h2>
+        <p>إضافات اختيارية تضيف قيمة دون تحميل الباقة الأساسية رسوماً غير ضرورية.</p>
+      </div>
+      <div class="addons-wrap">
+        <table class="addons">
+          <thead>
+            <tr>
+              <th>الإضافة</th>
+              <th style="width: 110px">السعر الشهري</th>
+              <th>القيمة العملية</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>كاميرات (حتى 2)</td>
+              <td>40 ر.س</td>
+              <td>ربط الكاميرات داخل النظام للمراقبة</td>
+            </tr>
+            <tr>
+              <td>كاميرا إضافية</td>
+              <td>15 ر.س</td>
+              <td>توسعة مرنة</td>
+            </tr>
+            <tr>
+              <td>تقارير تنفيذية متقدمة</td>
+              <td>99 ر.س</td>
+              <td>لوحات معلومات لدعم اتخاذ القرار</td>
+            </tr>
+            <tr>
+              <td>منشئ تقارير متقدم</td>
+              <td>149 ر.س</td>
+              <td>تقارير مخصصة حسب احتياجك</td>
+            </tr>
+            <tr>
+              <td>API / تكاملات</td>
+              <td>199 ر.س</td>
+              <td>تكامل مع أنظمة خارجية</td>
+            </tr>
+            <tr>
+              <td>OCR / قراءة المستندات</td>
+              <td>79 ر.س</td>
+              <td>استخراج بيانات من المستندات</td>
+            </tr>
+            <tr>
+              <td>مستخدم إضافي</td>
+              <td>25 ر.س</td>
+              <td>زيادة سعة الفريق</td>
+            </tr>
+            <tr>
+              <td>فرع إضافي</td>
+              <td>49 ر.س</td>
+              <td>توسعة شبكة الفروع</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="policy-title">
+      <div class="section-head">
+        <h2 id="policy-title">سياسات واضحة تبني الثقة</h2>
+        <p>شفافية في الاحتساب والترقية بين الباقات.</p>
+      </div>
+      <div class="policy-row">
+        <div class="policy-card">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            سياسة الفواتير والاحتساب
+          </h3>
+          <ul>
+            <li>يُحتسب عدد الفواتير بناءً على الفواتير الصادرة فعلياً فقط.</li>
+            <li>المسودات والفواتير الملغاة وعروض الأسعار لا تُحتسب ضمن الحد.</li>
+            <li>باقتا Pro و Enterprise تتضمنان فواتير غير محدودة ضمن الاستخدام العادل.</li>
+          </ul>
+        </div>
+        <div class="policy-card">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            سياسة الترقية
+          </h3>
+          <ul>
+            <li>يمكنكم الترقية إلى باقة أعلى في أي وقت.</li>
+            <li>يُحسب فرق السعر بشكل متناسب مع المدة المتبقية.</li>
+            <li>تُفعّل مزايا الباقة الجديدة مباشرة بعد إتمام الترقية.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="visual-title">
+      <div class="section-head">
+        <h2 id="visual-title">لمحات من الواجهة</h2>
+        <p>نماذج من تجربة الاستخدام داخل المنصة.</p>
+      </div>
+      <div class="visual-row">
+        <div>
+          <div class="screenshot-wrap">
+            <img
+              class="screenshot-img"
+              src="screenshots/command-center.png"
+              alt="لقطة شاشة: مركز القيادة والذكاء"
+              width="1600"
+              height="1000"
+              loading="lazy"
+              decoding="async"
+              onerror="this.style.display='none';var el=this.nextElementSibling;if(el)el.removeAttribute('hidden');"
+            />
+            <div class="mock-screen a" hidden role="img" aria-label="معاينة مركز القيادة والذكاء (احتياطي عند عدم وجود الصورة)">
+              <div class="mock-chrome"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span></div>
+              <div class="mock-body">
+                <div class="mock-sidebar"></div>
+                <div class="mock-main">
+                  <div class="mock-title"></div>
+                  <div class="mock-blocks"><div class="mock-block"></div><div class="mock-block"></div><div class="mock-block"></div><div class="mock-block"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="mock-caption">واجهة مركز القيادة والذكاء</p>
+        </div>
+        <div>
+          <div class="screenshot-wrap">
+            <img
+              class="screenshot-img"
+              src="screenshots/work-orders.png"
+              alt="لقطة شاشة: أوامر العمل"
+              width="1600"
+              height="1000"
+              loading="lazy"
+              decoding="async"
+              onerror="this.style.display='none';var el=this.nextElementSibling;if(el)el.removeAttribute('hidden');"
+            />
+            <div class="mock-screen b" hidden role="img" aria-label="معاينة أوامر العمل (احتياطي عند عدم وجود الصورة)">
+              <div class="mock-chrome"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span></div>
+              <div class="mock-body">
+                <div class="mock-sidebar"></div>
+                <div class="mock-main">
+                  <div class="mock-title" style="width: 40%"></div>
+                  <div class="mock-block" style="flex:1; min-height: 0"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="mock-caption">واجهة أوامر العمل</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="msg-title">
+      <div class="section-head">
+        <h2 id="msg-title">لماذا OSAS؟</h2>
+        <p>اشتراك يتوسع مع نمو منشأتك — بوضوح ومرونة.</p>
+      </div>
+      <div class="marketing-box">
+        <p>
+          <strong>OSAS</strong> ليست مجرد أسعار، بل مسار نمو يبدأ من احتياجاتك الحالية ويتوسع تدريجياً.
+          اشتراكات شهرية مرنة، وإضافات ذكية تضيف قيمة دون تحميلك تكلفة ميزات لا تحتاجها.
+          نهدف إلى تسهيل اتخاذ القرار وتقديم صورة كاملة وواضحة لكم.
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer-note">
+      الأسعار لا تشمل ضريبة القيمة المضافة. الاشتراكات شهرية في هذه المرحلة. تُحدَّد الحدود والإضافات النهائية وفق احتياجكم عند التعاقد.
+    </footer>
+  </div>
+</body>
+</html>

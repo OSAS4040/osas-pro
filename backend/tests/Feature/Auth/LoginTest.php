@@ -23,8 +23,22 @@ class LoginTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'token',
+                'token_type',
                 'user'        => ['id', 'uuid', 'name', 'email', 'role', 'company_id'],
                 'permissions',
+                'account_context' => [
+                    'principal_kind',
+                    'guard_hint',
+                    'home_route_hint',
+                    'user_id',
+                    'company_id',
+                    'platform_role',
+                ],
+                'company',
+                'branches',
+                'enabled_modules',
+                'home_screen',
+                'profile',
                 'trace_id',
             ]);
     }
@@ -101,7 +115,8 @@ class LoginTest extends TestCase
         ]);
 
         $response->assertUnauthorized()
-            ->assertJsonFragment(['message' => 'The provided credentials are incorrect.']);
+            ->assertJsonPath('message_key', 'auth.login.invalid_credentials')
+            ->assertJsonPath('reason_code', 'INVALID_CREDENTIALS');
     }
 
     public function test_login_fails_for_inactive_user(): void
@@ -114,7 +129,8 @@ class LoginTest extends TestCase
             'password' => 'Password123!',
         ]);
 
-        $response->assertStatus(403);
+        $response->assertStatus(403)
+            ->assertJsonPath('reason_code', \App\Support\Auth\LoginEligibilityResult::REASON_ACCOUNT_DISABLED);
     }
 
     public function test_login_requires_email_and_password(): void
@@ -122,7 +138,7 @@ class LoginTest extends TestCase
         $response = $this->postJson('/api/v1/auth/login', []);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['email', 'password']);
+            ->assertJsonValidationErrors(['password', 'email', 'identifier']);
     }
 
     public function test_login_returns_otp_challenge_when_saas_otp_enabled(): void
@@ -166,7 +182,39 @@ class LoginTest extends TestCase
         $this->actingAsUser($tenant['user'])
             ->postJson('/api/v1/auth/logout')
             ->assertStatus(200)
-            ->assertJson(['message' => 'Logged out.']);
+            ->assertJsonFragment(['message' => 'تم تسجيل الخروج من هذا الجهاز.']);
+    }
+
+    public function test_login_with_identifier_and_device_returns_bootstrap(): void
+    {
+        $tenant = $this->createTenant('owner');
+        $tenant['user']->update(['phone' => '0500112233']);
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'identifier'   => '+966 500 112 233',
+            'password'     => 'Password123!',
+            'device_name'  => 'PHPUnit device',
+            'device_type'  => 'android',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('token_type', 'Bearer')
+            ->assertJsonPath('user.id', $tenant['user']->id)
+            ->assertJsonPath('home_screen', 'work_orders');
+    }
+
+    public function test_logout_all_revokes_all_tokens(): void
+    {
+        $tenant = $this->createTenant();
+        $token = $tenant['user']->createToken('t1')->plainTextToken;
+        $tenant['user']->createToken('t2');
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/auth/logout-all')
+            ->assertStatus(200)
+            ->assertJsonFragment(['message' => 'تم تسجيل الخروج من جميع الأجهزة.']);
+
+        $this->assertSame(0, $tenant['user']->fresh()->tokens()->count());
     }
 
     public function test_me_returns_authenticated_user(): void
@@ -179,7 +227,12 @@ class LoginTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('data.id', $tenant['user']->id)
             ->assertJsonPath('data.company_id', $tenant['company']->id)
-            ->assertJsonStructure(['data', 'permissions', 'trace_id']);
+            ->assertJsonStructure([
+                'data',
+                'permissions',
+                'account_context' => ['principal_kind', 'home_route_hint', 'guard_hint', 'platform_role'],
+                'trace_id',
+            ]);
     }
 
     public function test_register_creates_company_branch_user_subscription(): void
@@ -194,11 +247,39 @@ class LoginTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-            ->assertJsonStructure(['token', 'user', 'permissions', 'trace_id']);
+            ->assertJsonStructure([
+                'token',
+                'user',
+                'permissions',
+                'account_context' => ['principal_kind', 'home_route_hint', 'platform_role'],
+                'trace_id',
+            ]);
 
         $this->assertDatabaseHas('companies', ['name' => 'New Auto Center']);
         $this->assertDatabaseHas('users', ['email' => 'john@newcenter.sa', 'role' => 'owner']);
         $this->assertDatabaseHas('subscriptions', ['plan' => 'trial', 'status' => 'active']);
         $this->assertDatabaseHas('branches', ['code' => 'MAIN', 'is_main' => true]);
+    }
+
+    public function test_register_rejects_duplicate_phone_variants(): void
+    {
+        $this->postJson('/api/v1/auth/register', [
+            'company_name'          => 'First Co',
+            'name'                  => 'Owner One',
+            'email'                 => 'owner1@dupphone.test',
+            'password'              => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'phone'                 => '0500112233',
+        ])->assertStatus(201);
+
+        $this->postJson('/api/v1/auth/register', [
+            'company_name'          => 'Second Co',
+            'name'                  => 'Owner Two',
+            'email'                 => 'owner2@dupphone.test',
+            'password'              => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'phone'                 => '+966 500 112 233',
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['phone']);
     }
 }

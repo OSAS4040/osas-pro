@@ -18,6 +18,8 @@ export type NavSearchItem = {
   requiresPermission?: string
   /** يكفي أحد الصلاحيات */
   requiresAnyPermission?: string[]
+  /** مسارات إدارة المنصة — يظهر فقط لمستخدمي platform_employee */
+  requiresPlatform?: boolean
 }
 
 export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
@@ -118,12 +120,19 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
     keywords: ['capabilities', 'ميزات', 'نشاط', 'صلاحيات', 'وضع المنتج'],
   },
   { to: '/support', label: 'مركز الدعم', section: 'إداري', keywords: ['دعم', 'تذكرة'] },
+  {
+    to: '/account/sessions',
+    label: 'الأجهزة والجلسات',
+    section: 'أمان',
+    requiresStaff: true,
+    keywords: ['session', 'جلسة', 'device', 'token', 'logout'],
+  },
   { to: '/activity', label: 'سجل العمليات', section: 'إداري' },
   { to: '/branches', label: 'إدارة الفروع', section: 'إداري', requiresManager: true, keywords: ['فرع', 'موقع'] },
   { to: '/branches/map', label: 'خريطة الفروع', section: 'إداري', requiresStaff: true, keywords: ['google', 'خريطة', 'map'] },
   { to: '/documents/company', label: 'مستندات المنشأة', section: 'إداري', keywords: ['documents'] },
-  { to: '/admin', label: 'لوحة الأدمن', section: 'الإدارة', requiresOwner: true },
-  { to: '/admin/qa', label: 'التحقق من النظام', section: 'الإدارة', requiresOwner: true, keywords: ['qa'] },
+  { to: '/admin', label: 'لوحة الأدمن', section: 'الإدارة', requiresPlatform: true },
+  { to: '/admin/qa', label: 'التحقق من النظام', section: 'الإدارة', requiresPlatform: true, keywords: ['qa'] },
 ]
 
 export function normNavSearch(s: string): string {

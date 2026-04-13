@@ -1,0 +1,144 @@
+# Fragment: POST /api/v1/auth/login (reference for Flutter / codegen)
+# Primary contract is l5-swagger annotations on AuthController.
+openapi: 3.0.3
+info:
+  title: Auth login fragment
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: Login (email or identifier) + mobile bootstrap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [email, password]
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                    password:
+                      type: string
+                    otp:
+                      type: string
+                      nullable: true
+                    otp_challenge:
+                      type: string
+                      nullable: true
+                - type: object
+                  required: [identifier, password, device_name, device_type]
+                  properties:
+                    identifier:
+                      type: string
+                      description: Email or phone (server-side normalization)
+                    password:
+                      type: string
+                    device_name:
+                      type: string
+                    device_type:
+                      type: string
+                      enum: [android, ios, ipados, unknown]
+                    fcm_token:
+                      type: string
+                      nullable: true
+                    otp:
+                      type: string
+                      nullable: true
+                    otp_challenge:
+                      type: string
+                      nullable: true
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, token_type, user, permissions, company, branches, enabled_modules, home_screen, profile, trace_id]
+                properties:
+                  token:
+                    type: string
+                  token_type:
+                    type: string
+                    example: Bearer
+                  user:
+                    type: object
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                  company:
+                    type: object
+                    nullable: true
+                  branches:
+                    type: array
+                    items:
+                      type: object
+                  enabled_modules:
+                    type: array
+                    items:
+                      type: string
+                  home_screen:
+                    type: string
+                  profile:
+                    type: object
+                  trace_id:
+                    type: string
+        "401":
+          description: Invalid credentials
+        "403":
+          description: Account / company / subscription blocked
+  /api/v1/auth/logout:
+    post:
+      summary: Revoke current Sanctum token; optional FCM row cleanup
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fcm_token:
+                  type: string
+                  nullable: true
+      responses:
+        "200":
+          description: Logged out
+
+  /api/v1/auth/logout-all:
+    post:
+      summary: Revoke all tokens for current user
+      security:
+        - bearerAuth: []
+
+  /api/v1/auth/push-device:
+    post:
+      summary: Register or refresh FCM token (queued upsert)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fcm_token]
+              properties:
+                fcm_token:
+                  type: string
+                  minLength: 10
+                device_name:
+                  type: string
+                  nullable: true
+                device_type:
+                  type: string
+                  enum: [android, ios, ipados, unknown]
+                  nullable: true
+      responses:
+        "200":
+          description: Accepted for background sync

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750" viewBox="0 0 1200 750" role="img" aria-labelledby="t">
+  <title id="t">معاينة توضيحية الفوترة والامتثال في أسس برو</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="50%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="#020617"/>
+  <rect x="36" y="36" width="1128" height="678" rx="28" fill="url(#bg)"/>
+  <rect x="36" y="36" width="1128" height="678" rx="28" fill="url(#shine)"/>
+  <rect x="72" y="108" width="1056" height="564" rx="14" fill="#0f172a" stroke="#475569" stroke-width="2"/>
+  <rect x="92" y="132" width="240" height="14" rx="4" fill="#475569"/>
+  <rect x="92" y="158" width="400" height="10" rx="3" fill="#334155"/>
+  <rect x="92" y="200" width="1016" height="520" rx="12" fill="#1e293b"/>
+  <rect x="132" y="236" width="360" height="22" rx="5" fill="#64748b"/>
+  <rect x="132" y="276" width="936" height="14" rx="3" fill="#334155"/>
+  <rect x="132" y="306" width="936" height="14" rx="3" fill="#334155"/>
+  <rect x="132" y="336" width="680" height="14" rx="3" fill="#334155"/>
+  <rect x="132" y="390" width="280" height="120" rx="8" fill="#0f172a" stroke="#475569"/>
+  <rect x="152" y="430" width="120" height="14" rx="3" fill="#94a3b8"/>
+  <rect x="152" y="456" width="80" height="24" rx="4" fill="#22c55e" opacity="0.85"/>
+  <rect x="440" y="390" width="580" height="200" rx="8" fill="#0f172a" stroke="#475569"/>
+  <rect x="460" y="420" width="200" height="12" rx="3" fill="#64748b"/>
+  <rect x="460" y="448" width="520" height="40" rx="6" fill="#334155"/>
+  <rect x="460" y="502" width="520" height="40" rx="6" fill="#334155"/>
+  <rect x="860" y="520" width="120" height="40" rx="8" fill="#3b82f6" opacity="0.9"/>
+  <text x="600" y="86" text-anchor="middle" fill="#f1f5f9" font-size="34" font-weight="700" font-family="Tahoma, 'Segoe UI', Arial, sans-serif">الفوترة والامتثال</text>
+  <text x="600" y="118" text-anchor="middle" fill="#94a3b8" font-size="18" font-family="Tahoma, 'Segoe UI', Arial, sans-serif">مسارات فوترة قابلة للضبط، توضيح بصري</text>
+</svg>

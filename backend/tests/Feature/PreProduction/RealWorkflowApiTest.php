@@ -24,6 +24,7 @@ use Tests\TestCase;
  * وميزان دفتر القيود للقيود المرتبطة بالفاتورة.
  */
 #[Group('pre-production')]
+#[Group('production-readiness')]
 class RealWorkflowApiTest extends TestCase
 {
     private \App\Models\Company $company;

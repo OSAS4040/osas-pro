@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Support\Auth\PhoneNormalizer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -84,12 +85,15 @@ class DefaultAdminSeeder extends Seeder
                 'email'      => self::ADMIN_EMAIL,
             ],
             [
-                'branch_id' => $branch->id,
-                'name'      => 'Osas Pro Admin',
-                'password'  => self::ADMIN_PASSWORD,
-                'role'      => UserRole::Owner,
-                'status'    => UserStatus::Active,
-                'is_active' => true,
+                'branch_id'            => $branch->id,
+                'name'                 => 'Osas Pro Admin',
+                'password'             => self::ADMIN_PASSWORD,
+                'phone'                => PhoneNormalizer::normalizeForStorage('966501000099'),
+                'phone_verified_at'    => now(),
+                'registration_stage'   => 'phone_verified',
+                'role'                 => UserRole::Owner,
+                'status'               => UserStatus::Active,
+                'is_active'            => true,
             ]
         );
 

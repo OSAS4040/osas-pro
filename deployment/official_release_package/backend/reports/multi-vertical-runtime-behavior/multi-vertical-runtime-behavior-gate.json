@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-04-01T17:52:00+03:00",
+  "phase": "Multi-Vertical Runtime Behavior Enforcement",
+  "status": "ready_for_signoff_review",
+  "scope_constraints_respected": {
+    "financial_logic_modified": false,
+    "ledger_modified": false,
+    "payments_modified": false,
+    "taxes_modified": false,
+    "posting_or_journal_modified": false
+  },
+  "runtime_behavior_engine": {
+    "central_resolver_service": "VerticalBehaviorResolverService",
+    "single_runtime_behavior_source": true,
+    "random_vertical_branching_outside_resolver": false
+  },
+  "behavior_domains_covered": {
+    "work_orders": [
+      "work_orders.require_vehicle_plate",
+      "work_orders.allow_quick_order",
+      "work_orders.require_bay_assignment"
+    ],
+    "inventory": [
+      "inventory.track_expiry",
+      "inventory.allow_negative_stock"
+    ],
+    "services": [
+      "services.require_estimated_minutes"
+    ],
+    "pos_non_financial": [
+      "pos.require_customer",
+      "pos.enable_cash_only_mode",
+      "pos.quick_sale_enabled"
+    ]
+  },
+  "traceability": {
+    "behavior_applied_response_hint": true,
+    "rules_triggered_visibility": true
+  },
+  "test_evidence": {
+    "runtime_behavior_suite": "4 passed (16 assertions)",
+    "governance_regression_suite": "5 passed (19 assertions)",
+    "core_regression_suite": "11 passed (24 assertions)",
+    "auth_regression_suite": "9 passed (42 assertions)",
+    "total": "29 passed (101 assertions)"
+  },
+  "decision_recommendation": "Ready for Sign-off"
+}
+

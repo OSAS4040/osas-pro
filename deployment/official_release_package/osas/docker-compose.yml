@@ -1,0 +1,80 @@
+services:
+
+  nginx:
+    image: nginx:alpine
+    container_name: osas_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./osas/public_html:/var/www/html
+      - ./docker/nginx/conf.d/osas.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+    networks:
+      - osas_network
+
+  php:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile.osas
+    container_name: osas_php
+    restart: unless-stopped
+    volumes:
+      - ./osas/public_html:/var/www/html
+      - ./docker/php/osas.ini:/usr/local/etc/php/conf.d/custom.ini
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=osas_osas
+      - DB_USERNAME=osas_user
+      - DB_PASSWORD=osas_password
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - osas_network
+
+  mysql:
+    image: mysql:8.0
+    container_name: osas_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: osas_osas
+      MYSQL_USER: osas_user
+      MYSQL_PASSWORD: osas_password
+    volumes:
+      - osas_mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - osas_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: osas_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root_password
+    depends_on:
+      - mysql
+    networks:
+      - osas_network
+
+volumes:
+  osas_mysql_data:
+
+networks:
+  osas_network:
+    driver: bridge

@@ -1,6 +1,7 @@
 /**
- * WorkshopOS — k6: الملف الشخصي عبر `K6_PROFILE`
- * القيم: smoke | normal | peak | stress | spike | soak
+ * WorkshopOS / OSAS Pro — k6 profile via `K6_PROFILE`.
+ * Values: smoke | normal | peak | stress | spike | soak |
+ *   enterprise_smoke | enterprise_normal | enterprise_peak (strict gate, short duration)
  */
 import { getProfileOptions } from './config/profiles.js';
 import { login } from './lib/auth.js';

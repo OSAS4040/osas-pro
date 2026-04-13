@@ -63,7 +63,7 @@ class PlatformAnnouncementBannerTest extends TestCase
 
         $this->getJson('/api/v1/platform/announcement-banner/admin', $this->authHeaders($user))
             ->assertStatus(403)
-            ->assertJsonPath('code', 'PLATFORM_OPERATOR_REQUIRED');
+            ->assertJsonPath('code', 'PLATFORM_ACCESS_ONLY');
     }
 
     public function test_non_platform_user_cannot_update_banner(): void
@@ -79,17 +79,15 @@ class PlatformAnnouncementBannerTest extends TestCase
             '/api/v1/platform/announcement-banner',
             $this->validBannerBody(false),
             $this->authHeaders($user),
-        )->assertStatus(403);
+        )->assertStatus(403)
+            ->assertJsonPath('code', 'PLATFORM_ACCESS_ONLY');
     }
 
     public function test_platform_operator_can_update_and_round_trip_admin_read(): void
     {
         config(['saas.platform_admin_emails' => ['ops@platform.example']]);
 
-        $company = $this->createCompany();
-        $branch  = $this->createBranch($company);
-        $this->createActiveSubscription($company);
-        $user = $this->createUser($company, $branch, 'owner', ['email' => 'ops@platform.example']);
+        $user = $this->createStandalonePlatformOperator('ops@platform.example');
 
         $body = [
             'is_enabled'  => true,

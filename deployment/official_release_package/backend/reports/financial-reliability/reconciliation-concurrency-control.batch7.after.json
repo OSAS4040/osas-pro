@@ -1,0 +1,20 @@
+{
+    "active_running_runs": 0,
+    "blocked_concurrent_attempts": 1,
+    "stuck_runs": 0,
+    "duplicate_active_runs": 0,
+    "health": "critical",
+    "latest_blocked_attempt": {
+        "id": 54,
+        "run_type": "daily",
+        "run_date": "2026-04-02",
+        "attempt_status": "blocked",
+        "run_id": null,
+        "blocked_by_run_id": 30,
+        "reason": "Another reconciliation run is already active (run_id=30).",
+        "trace_id": "8b7f39c9-3599-4a10-ad50-9e99bc1f5dd6",
+        "meta": null,
+        "created_at": "2026-04-01 11:18:48",
+        "updated_at": "2026-04-01 11:18:48"
+    }
+}

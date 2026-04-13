@@ -1,0 +1,7 @@
+{
+    "active_running_runs": 0,
+    "blocked_concurrent_attempts": 0,
+    "stuck_runs": 0,
+    "duplicate_active_runs": 0,
+    "health": "critical"
+}

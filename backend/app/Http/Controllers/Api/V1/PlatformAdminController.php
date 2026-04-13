@@ -17,8 +17,8 @@ use App\Models\WorkOrder;
 use App\Models\WorkOrderCancellationRequest;
 use App\Services\AuditLogger;
 use App\Services\Config\VerticalProfileGovernanceService;
+use App\Services\Platform\PlatformAdminOverviewService;
 use App\Services\WorkOrderCancellationRequestService;
-use App\Support\SaasPlatformAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,14 +38,6 @@ class PlatformAdminController extends Controller
 
     public function companies(Request $request): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message'  => 'هذه الواجهة لمشغلي المنصة فقط. اضبط SAAS_PLATFORM_ADMIN_EMAILS في البيئة.',
-                'code'     => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $paginator = Company::query()
             ->withCount('users')
             ->orderByDesc('id')
@@ -60,6 +52,9 @@ class PlatformAdminController extends Controller
             $planSlug = $sub ? (string) $sub->plan : '—';
             $plan     = $planSlug !== '—' ? Plan::where('slug', $planSlug)->first() : null;
             $monthly  = $plan ? (float) $plan->price_monthly : 0.0;
+            $planName = $plan !== null
+                ? (string) (($plan->name_ar ?? null) ?: ($plan->name ?? $planSlug))
+                : '—';
 
             $owner = User::withoutGlobalScopes()
                 ->where('company_id', $c->id)
@@ -77,6 +72,7 @@ class PlatformAdminController extends Controller
                 'name'                  => $c->name,
                 'slug'                  => 'company-'.$c->id,
                 'plan_slug'             => $planSlug,
+                'plan_name'             => $planName,
                 'is_active'             => (bool) $c->is_active,
                 'company_status'        => $c->status?->value,
                 'vertical_profile_code' => $c->vertical_profile_code,
@@ -106,14 +102,6 @@ class PlatformAdminController extends Controller
 
     public function updateFinancialModel(Request $request, int $id): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message'  => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code'     => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $data = $request->validate([
             'decision' => 'required|string|in:approved_prepaid,approved_credit,rejected,suspended',
             'credit_limit' => 'nullable|numeric|min:0',
@@ -199,14 +187,6 @@ class PlatformAdminController extends Controller
      */
     public function opsSummary(Request $request): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message'  => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code'     => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $failedJobs = null;
         if (Schema::hasTable('failed_jobs')) {
             $failedJobs = (int) DB::table('failed_jobs')->count();
@@ -233,7 +213,7 @@ class PlatformAdminController extends Controller
                 'failed_jobs_count' => $failedJobs,
                 'redis_ok'          => $redisOk,
                 'database_ok'       => $dbOk,
-                'integrity_hint'    => 'Run `php artisan integrity:verify` on the app host for a full data-integrity pass.',
+                'integrity_hint'    => 'Run `php artisan integrity:sanity` for DB + platform IAM checks; `php artisan integrity:verify` for financial/operational data integrity.',
             ],
             'trace_id' => app('trace_id'),
         ]);
@@ -241,14 +221,6 @@ class PlatformAdminController extends Controller
 
     public function showCompany(Request $request, int $id): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message'  => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code'     => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $company = Company::query()->findOrFail($id);
         $sub = Subscription::withoutGlobalScopes()
             ->where('company_id', $company->id)
@@ -292,14 +264,6 @@ class PlatformAdminController extends Controller
 
     public function updateOperational(Request $request, int $id): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message'  => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code'     => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $data = $request->validate([
             'is_active' => 'sometimes|boolean',
             'status' => 'sometimes|string|in:active,inactive,suspended',
@@ -356,14 +320,6 @@ class PlatformAdminController extends Controller
 
     public function updateSubscription(Request $request, int $id): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message'  => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code'     => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $data = $request->validate([
             'plan_slug' => 'required|string|max:64',
         ]);
@@ -416,14 +372,6 @@ class PlatformAdminController extends Controller
         int $id,
         VerticalProfileGovernanceService $governance,
     ): JsonResponse {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message'  => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code'     => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $data = $request->validate([
             'vertical_profile_code' => 'nullable|string|max:100',
             'reason' => 'nullable|string|max:500',
@@ -457,14 +405,6 @@ class PlatformAdminController extends Controller
 
     public function auditLogs(Request $request): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message'  => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code'     => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $q = AuditLog::query()->where('action', 'like', 'platform.%');
 
         if ($request->filled('company_id')) {
@@ -488,14 +428,6 @@ class PlatformAdminController extends Controller
 
     public function workOrderCancellationRequests(Request $request): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message' => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code' => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $status = $request->query('status');
 
         $q = WorkOrderCancellationRequest::query()
@@ -550,14 +482,6 @@ class PlatformAdminController extends Controller
 
     public function approveWorkOrderCancellation(Request $request, int $id): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message' => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code' => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $data = $request->validate([
             'note' => 'nullable|string|max:2000',
         ]);
@@ -579,14 +503,6 @@ class PlatformAdminController extends Controller
 
     public function rejectWorkOrderCancellation(Request $request, int $id): JsonResponse
     {
-        if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
-            return response()->json([
-                'message' => 'هذه الواجهة لمشغلي المنصة فقط.',
-                'code' => 'PLATFORM_OPERATOR_REQUIRED',
-                'trace_id' => app('trace_id'),
-            ], 403);
-        }
-
         $data = $request->validate([
             'review_notes' => 'required|string|min:3|max:5000',
         ]);
@@ -604,5 +520,16 @@ class PlatformAdminController extends Controller
         }
 
         return response()->json(['data' => $row, 'trace_id' => app('trace_id')]);
+    }
+
+    /**
+     * لوحة قيادة مجمّعة (قراءة فقط) لمشغّلي المنصة.
+     */
+    public function dashboardOverview(PlatformAdminOverviewService $overviewService): JsonResponse
+    {
+        return response()->json([
+            'data' => $overviewService->build(),
+            'trace_id' => app('trace_id'),
+        ]);
     }
 }

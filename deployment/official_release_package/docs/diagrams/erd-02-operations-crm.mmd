@@ -1,0 +1,58 @@
+%% العملاء والمركبات وأوامر العمل والفوترة — المخطط 2 من 4
+erDiagram
+  companies ||--o{ customers : "company_id"
+  companies ||--o{ vehicles : "company_id"
+  companies ||--o{ work_orders : "company_id"
+  companies ||--o{ invoices : "company_id"
+  customers ||--o{ vehicles : "customer_id"
+  customers ||--o{ work_orders : "customer_id"
+  customers ||--o{ invoices : "customer_id"
+  vehicles ||--o{ work_orders : "vehicle_id"
+  work_orders ||--o{ work_order_items : "work_order_id"
+  work_orders ||--o{ work_order_technicians : "work_order_id"
+  invoices ||--o{ invoice_items : "invoice_id"
+  invoices ||--o{ payments : "invoice_id"
+
+  customers {
+    bigint id PK
+    bigint company_id FK
+    string name
+  }
+
+  vehicles {
+    bigint id PK
+    bigint company_id FK
+    bigint customer_id FK
+    string plate_number
+  }
+
+  work_orders {
+    bigint id PK
+    bigint company_id FK
+    bigint customer_id FK
+    bigint vehicle_id FK
+    string status
+  }
+
+  work_order_items {
+    bigint id PK
+    bigint work_order_id FK
+  }
+
+  invoices {
+    bigint id PK
+    bigint company_id FK
+    bigint customer_id FK
+    string status
+  }
+
+  invoice_items {
+    bigint id PK
+    bigint invoice_id FK
+  }
+
+  payments {
+    bigint id PK
+    bigint invoice_id FK
+    decimal amount
+  }
