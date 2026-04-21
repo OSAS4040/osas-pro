@@ -8,6 +8,7 @@ use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
 use App\Enums\UserRole;
 use App\Support\SubscriptionQuota;
+use App\Services\NavigationVisibilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -18,6 +19,9 @@ use Illuminate\Validation\Rule;
  */
 class UserController extends Controller
 {
+    public function __construct(
+        private readonly NavigationVisibilityService $navigationVisibility,
+    ) {}
     /**
      * @OA\Get(
      *     path="/api/v1/users",
@@ -60,9 +64,13 @@ class UserController extends Controller
             ->orderBy('name')
             ->paginate(min(100, max(1, (int) $request->query('per_page', 25))));
 
-        $users->setCollection(
-            $users->getCollection()->map(fn (User $u) => $u->makeHidden(['password']))
-        );
+        $users->setCollection($users->getCollection()->map(function (User $u) {
+            $base = $u->makeHidden(['password'])->toArray();
+            $base['navigation_visibility_override'] = $this->navigationVisibility->userOverride($u);
+            $base['navigation_visibility_effective'] = $this->navigationVisibility->effectiveForUser($u);
+
+            return $base;
+        }));
 
         return response()->json(['data' => $users, 'trace_id' => app('trace_id')]);
     }
@@ -80,17 +88,30 @@ class UserController extends Controller
     {
         SubscriptionQuota::assertCanCreateUser((int) $request->user()->company_id);
 
+        $validated = $request->validated();
+        $nav = $validated['nav_visibility'] ?? null;
+        unset($validated['nav_visibility']);
+
         $user = User::create(array_merge(
-            $request->validated(),
+            $validated,
             [
                 'uuid'       => Str::uuid(),
                 'company_id' => $request->user()->company_id,
             ]
         ));
+        if (is_array($nav)) {
+            $this->navigationVisibility->updateUserOverride($user->fresh('company'), $nav, (int) $request->user()->id);
+        }
         $user->load(['branch', 'orgUnit']);
 
         return response()->json([
-            'data'     => $user->makeHidden(['password']),
+            'data'     => array_merge(
+                $user->makeHidden(['password'])->toArray(),
+                [
+                    'navigation_visibility_override' => $this->navigationVisibility->userOverride($user),
+                    'navigation_visibility_effective' => $this->navigationVisibility->effectiveForUser($user),
+                ]
+            ),
             'trace_id' => app('trace_id'),
         ], 201);
     }
@@ -111,7 +132,16 @@ class UserController extends Controller
 
         $this->authorize('view', $user);
 
-        return response()->json(['data' => $user->makeHidden(['password']), 'trace_id' => app('trace_id')]);
+        return response()->json([
+            'data' => array_merge(
+                $user->makeHidden(['password'])->toArray(),
+                [
+                    'navigation_visibility_override' => $this->navigationVisibility->userOverride($user),
+                    'navigation_visibility_effective' => $this->navigationVisibility->effectiveForUser($user),
+                ]
+            ),
+            'trace_id' => app('trace_id'),
+        ]);
     }
 
     /**
@@ -131,15 +161,27 @@ class UserController extends Controller
         $this->authorize('update', $user);
 
         $data = $request->validated();
+        $nav = $data['nav_visibility'] ?? null;
+        unset($data['nav_visibility']);
 
         if (isset($data['password'])) {
             $data['password'] = bcrypt($data['password']);
         }
 
         $user->update($data);
+        $user->loadMissing('company');
+        if (is_array($nav)) {
+            $this->navigationVisibility->updateUserOverride($user, $nav, (int) $request->user()->id);
+        }
 
         return response()->json([
-            'data'     => $user->fresh(['branch', 'orgUnit'])->makeHidden(['password']),
+            'data'     => array_merge(
+                $user->fresh(['branch', 'orgUnit'])->makeHidden(['password'])->toArray(),
+                [
+                    'navigation_visibility_override' => $this->navigationVisibility->userOverride($user),
+                    'navigation_visibility_effective' => $this->navigationVisibility->effectiveForUser($user),
+                ]
+            ),
             'trace_id' => app('trace_id'),
         ]);
     }

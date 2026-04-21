@@ -86,6 +86,12 @@ Route::prefix('v1')->group(function () {
             Route::get('/admin/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
             Route::get('/admin/overview', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'dashboardOverview'])
                 ->middleware('throttle:60,1');
+            Route::get('/platform/navigation-visibility', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'navigationVisibility']);
+        });
+
+        Route::middleware(['platform.permission:platform.companies.operational'])->group(function () {
+            Route::patch('/platform/navigation-visibility', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateNavigationVisibility'])
+                ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.companies.operational'])->group(function () {
@@ -200,6 +206,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/companies/{id}/pos/test-connection', [\App\Http\Controllers\Api\V1\CompanyController::class, 'testPosConnection']);
         Route::get('/companies/{id}/feature-profile', [\App\Http\Controllers\Api\V1\CompanyController::class, 'featureProfile']);
         Route::patch('/companies/{id}/feature-profile', [\App\Http\Controllers\Api\V1\CompanyController::class, 'updateFeatureProfile']);
+        Route::get('/companies/{id}/navigation-visibility', [\App\Http\Controllers\Api\V1\CompanyController::class, 'navigationVisibility']);
+        Route::patch('/companies/{id}/navigation-visibility', [\App\Http\Controllers\Api\V1\CompanyController::class, 'updateNavigationVisibility']);
         Route::patch('/companies/{id}/vertical-profile', [\App\Http\Controllers\Api\V1\CompanyController::class, 'assignVerticalProfile'])
             ->middleware('permission:config_profiles.manage');
         Route::get('/companies/{id}/effective-config', [\App\Http\Controllers\Api\V1\CompanyController::class, 'effectiveConfig'])

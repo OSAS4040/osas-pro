@@ -4,6 +4,7 @@ import apiClient from '@/lib/apiClient'
 import { useSubscriptionStore } from '@/stores/subscription'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { parseLoginAccountContext, type LoginAccountContextPayload } from '@/types/accountContext'
+import type { NavVisibilityPolicy } from '@/config/navigationVisibility'
 
 export interface User {
   id: number
@@ -35,6 +36,7 @@ export interface User {
   is_platform?: boolean
   /** IAM role from account_context when platform */
   platform_role?: string | null
+  navigation_visibility?: NavVisibilityPolicy
 }
 
 export type LoginOutcome =

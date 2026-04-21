@@ -107,7 +107,7 @@
             </p>
           </div>
 
-          <NavSection section-key="operations" :label="l('تشغيلي', 'Operations')">
+          <NavSection v-if="navSectionVisible('operations')" section-key="operations" :label="l('تشغيلي', 'Operations')">
             <NavItem to="/" :icon="HomeIcon" :label="locale.t('nav.dashboard')" :exact="true" />
             <NavItem to="/pos" :icon="ShoppingCartIcon" :label="locale.t('nav.pos')" />
             <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
@@ -128,7 +128,7 @@
             <NavItem v-if="enabledPortals.fleet && sectionEnabled('fleet')" to="/fleet/wallet" :icon="CreditCardIcon" label="محافظ الأسطول" />
           </NavSection>
 
-          <NavSection v-if="sectionEnabled('hr')" section-key="hr" label="الموارد البشرية">
+          <NavSection v-if="sectionEnabled('hr') && navSectionVisible('hr')" section-key="hr" label="الموارد البشرية">
             <NavItem to="/workshop/employees" :icon="UserGroupIcon" label="إدارة الموظفين" />
             <NavItem to="/workshop/tasks" :icon="ClipboardDocumentCheckIcon" label="إدارة المهام" />
             <NavItem to="/workshop/attendance" :icon="ClockIcon" label="الحضور" />
@@ -140,7 +140,7 @@
           </NavSection>
 
           <NavSection
-            v-if="sectionEnabled('finance') || sectionEnabled('accounting')"
+            v-if="(sectionEnabled('finance') || sectionEnabled('accounting')) && navSectionVisible('finance_accounting')"
             section-key="finance_accounting"
             :label="l('المالية والمحاسبة', 'Finance & Accounting')"
           >
@@ -169,14 +169,14 @@
                 :icon="QueueListIcon"
                 label="طلبات شحن الرصيد"
               />
-              <NavSubGroup group-key="purchases" label="المشتريات">
+              <NavSubGroup v-if="navGroupVisible('purchases')" group-key="purchases" label="المشتريات">
                 <NavItem to="/purchases" :icon="ShoppingBagIcon" label="قائمة المشتريات" />
                 <NavItem to="/purchases/new" :icon="ClipboardDocumentIcon" label="أوامر شراء" />
                 <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
               </NavSubGroup>
             </template>
             <template v-if="sectionEnabled('accounting')">
-              <NavSubGroup group-key="accountant" label="المحاسب">
+              <NavSubGroup v-if="navGroupVisible('accountant')" group-key="accountant" label="المحاسب">
                 <NavItem to="/ledger" :icon="BookOpenIcon" label="القيود اليومية" />
                 <NavItem to="/chart-of-accounts" :icon="TableCellsIcon" label="شجرة الحسابات" />
                 <NavItem to="/zatca" :icon="BuildingOffice2Icon" label="الضرائب" />
@@ -185,13 +185,13 @@
             </template>
           </NavSection>
 
-          <NavSection v-if="sectionEnabled('inventory')" section-key="inventory" :label="l('المخزون', 'Inventory')">
+          <NavSection v-if="sectionEnabled('inventory') && navSectionVisible('inventory')" section-key="inventory" :label="l('المخزون', 'Inventory')">
             <NavItem to="/products" :icon="CubeIcon" label="المنتجات" />
             <NavItem to="/inventory" :icon="ArchiveBoxIcon" :label="locale.t('nav.inventory')" />
             <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
           </NavSection>
 
-          <NavSection v-if="sectionEnabled('reports') || sectionEnabled('intelligence')" section-key="analytics" :label="l('التحليلات وذكاء الأعمال', 'Analytics & Intelligence')">
+          <NavSection v-if="(sectionEnabled('reports') || sectionEnabled('intelligence')) && navSectionVisible('analytics')" section-key="analytics" :label="l('التحليلات وذكاء الأعمال', 'Analytics & Intelligence')">
             <NavItem
               v-if="
                 canAccessStaffBusinessIntelligence({
@@ -221,7 +221,7 @@
             />
           </NavSection>
 
-          <NavSection section-key="admin" :label="l('إداري', 'Admin')">
+          <NavSection v-if="navSectionVisible('admin')" section-key="admin" :label="l('إداري', 'Admin')">
             <NavItem v-if="auth.isManager" to="/branches" :icon="BuildingLibraryIcon" label="إدارة الفروع" />
             <NavItem v-if="auth.isStaff" to="/branches/map" :icon="MapPinIcon" label="خريطة الفروع (Google)" />
             <NavItem to="/contracts" :icon="DocumentCheckIcon" label="العقود" />
@@ -252,12 +252,18 @@
             <NavItem to="/support" :icon="LifebuoyIcon" label="مركز الدعم الفني" />
           </NavSection>
 
-          <NavSection v-if="auth.isPlatform && enabledPortals.admin" section-key="platform" label="إدارة المنصة">
-            <NavItem to="/admin" :icon="CpuChipIcon" label="لوحة الأدمن" />
-            <NavItem to="/admin/qa" :icon="BeakerIcon" label="التحقق من النظام (QA)" />
+          <NavSection
+            v-if="auth.isPlatform && enabledPortals.admin && navSectionVisible('platform')"
+            section-key="platform"
+            label="إدارة منصة أسس برو"
+          >
+            <NavSubGroup v-if="navGroupVisible('platform-center')" group-key="platform-center" label="مركز إدارة المنصة">
+              <NavItem to="/admin" :icon="CpuChipIcon" label="لوحة قيادة المنصة" />
+              <NavItem to="/admin/qa" :icon="BeakerIcon" label="فحص الجودة (QA)" />
+            </NavSubGroup>
           </NavSection>
 
-          <NavSection section-key="subscription" :label="l('الاشتراك', 'Subscription')">
+          <NavSection v-if="navSectionVisible('subscription')" section-key="subscription" :label="l('الاشتراك', 'Subscription')">
             <NavItem to="/subscription" :icon="StarIcon" label="اشتراكي" />
             <NavItem to="/plans" :icon="RectangleStackIcon" label="الباقات" />
             <NavItem to="/plugins" :icon="SparklesIcon" label="سوق الإضافات AI" />
@@ -585,6 +591,7 @@ import {
 import { useToast } from '@/composables/useToast'
 import { useNavigationContext } from '@/composables/useNavigationContext'
 import apiClient from '@/lib/apiClient'
+import { DEFAULT_NAV_VISIBILITY } from '@/config/navigationVisibility'
 
 const auth = useAuthStore()
 const { staffShellReady } = useNavigationContext()
@@ -740,6 +747,16 @@ const openNavGroups = ref<Record<string, boolean>>(
 function sectionEnabled(key: string): boolean {
   if (auth.isOwner) return true
   return biz.isEnabled(key)
+}
+
+function navSectionVisible(key: string): boolean {
+  const policy = auth.user?.navigation_visibility ?? DEFAULT_NAV_VISIBILITY
+  return policy.sections?.[key] !== false
+}
+
+function navGroupVisible(key: string): boolean {
+  const policy = auth.user?.navigation_visibility ?? DEFAULT_NAV_VISIBILITY
+  return policy.groups?.[key] !== false
 }
 
 /** بيارات / حجوزات / اجتماعات / خريطة حرارية — فقط عند تفعيل بوابة «operations» في ملف النشاط */
@@ -1014,6 +1031,7 @@ const flatItems = computed(() => {
       : []),
   ]
   if (auth.isPlatform && enabledPortals.admin) {
+    items.push({ to: '/admin', icon: CpuChipIcon, label: 'لوحة قيادة المنصة', locked: false })
     items.push({ to: '/admin/qa', icon: BeakerIcon, label: 'التحقق من النظام', locked: false })
   }
   return items

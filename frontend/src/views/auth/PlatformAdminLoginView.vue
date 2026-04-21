@@ -18,14 +18,14 @@
           <ShieldCheckIcon class="w-7 h-7 text-emerald-300" />
         </div>
         <div>
-          <p class="text-[10px] uppercase tracking-[0.2em] text-violet-200/80 font-semibold">Platform</p>
-          <h1 class="text-lg font-bold tracking-tight">مشغّل المنصة</h1>
+          <p class="text-[10px] uppercase tracking-[0.2em] text-violet-200/80 font-semibold">Asas Pro Platform</p>
+          <h1 class="text-lg font-bold tracking-tight">أسس برو - إدارة المنصة</h1>
         </div>
       </header>
 
       <div class="relative z-10 my-10 lg:my-0 lg:flex-1 lg:flex lg:flex-col lg:justify-center space-y-5 max-w-md">
         <h2 class="text-2xl lg:text-3xl font-black leading-tight text-white">
-          بوابة آمنة لإدارة الاشتراكات والباقات على مستوى المنصة
+          بوابة أسس برو الموحّدة لإدارة الاشتراكات والباقات على مستوى المنصة
         </h2>
         <p class="text-sm text-slate-300/90 leading-relaxed">
           يُسمح بدخول لوحة المنصة لحسابات <strong class="text-white">بلا شركة</strong> مع
@@ -56,10 +56,10 @@
               <span class="text-xs font-bold uppercase tracking-wider">تسجيل الدخول</span>
             </div>
             <h3 class="text-xl font-bold text-slate-900 dark:text-white">
-              {{ otpStep ? 'التحقق بخطوتين' : 'دخول مشغّل المنصة' }}
+              {{ otpStep ? 'التحقق بخطوتين' : 'دخول إدارة منصة أسس برو' }}
             </h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {{ otpStep ? 'أدخل الرمز المرسل إلى بريدك' : 'حساب مالك مُصرَّح له على مستوى المنصة' }}
+              {{ otpStep ? 'أدخل الرمز المرسل إلى بريدك' : 'حساب مُصرَّح له على مستوى منصة أسس برو' }}
             </p>
           </div>
 
@@ -168,7 +168,7 @@
               :disabled="loading"
               class="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-60 shadow-lg shadow-violet-900/20 transition-all"
             >
-              <span v-if="!loading">{{ otpStep ? 'تأكيد الرمز والدخول' : 'دخول لوحة المنصة' }}</span>
+              <span v-if="!loading">{{ otpStep ? 'تأكيد الرمز والدخول' : 'دخول لوحة منصة أسس برو' }}</span>
               <span v-else class="flex items-center justify-center gap-2">
                 <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />

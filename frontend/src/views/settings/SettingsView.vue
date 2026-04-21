@@ -104,6 +104,41 @@
         </div>
       </template>
 
+      <template v-if="activeTab === 'navigation'">
+        <div class="form-shell space-y-4">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-slate-200">سياسة إظهار الأقسام داخل الشركة</h3>
+          <p class="text-xs text-gray-500 dark:text-slate-400">
+            هذه السياسة تحدد ما يمكن إظهاره للمستخدمين داخل شركتك، وتبقى ضمن حدود سياسة المنصة.
+          </p>
+
+          <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-4 space-y-3">
+            <h4 class="text-xs font-semibold text-gray-600 dark:text-slate-300">الأقسام الرئيسية</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <label v-for="k in visibleCompanySectionKeys" :key="`company-sec-${k}`" class="flex items-center gap-2 text-sm">
+                <input v-model="companyNavPolicy.sections[k]" type="checkbox" class="rounded" />
+                <span>{{ navSectionLabels[k] }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-4 space-y-3">
+            <h4 class="text-xs font-semibold text-gray-600 dark:text-slate-300">الأقسام الفرعية</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <label v-for="k in visibleCompanyGroupKeys" :key="`company-grp-${k}`" class="flex items-center gap-2 text-sm">
+                <input v-model="companyNavPolicy.groups[k]" type="checkbox" class="rounded" />
+                <span>{{ navGroupLabels[k] }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button :disabled="savingCompanyNavPolicy" class="btn btn-primary disabled:opacity-50" @click="saveCompanyNavigationPolicy">
+              {{ savingCompanyNavPolicy ? l('جارٍ الحفظ...', 'Saving...') : l('حفظ سياسة الأقسام للشركة', 'Save company navigation policy') }}
+            </button>
+          </div>
+        </div>
+      </template>
+
       <!-- ══════════════════════════════════════
          TAB 1 — الهوية البصرية
     ══════════════════════════════════════ -->
@@ -510,6 +545,12 @@ import SmartUserGuidePanel from '@/components/settings/SmartUserGuidePanel.vue'
 import { resolvePublicAssetUrl } from '@/utils/publicUrl'
 import { useLocale } from '@/composables/useLocale'
 import { useSetupOnboarding } from '@/composables/useSetupOnboarding'
+import {
+  DEFAULT_NAV_VISIBILITY,
+  NAV_GROUP_LABELS,
+  NAV_SECTION_LABELS,
+  type NavVisibilityPolicy,
+} from '@/config/navigationVisibility'
 
 const { currentTheme, currentPreset, setTheme, setThemePreset, saveCompanyTheme, loadCompanyTheme } = useTheme()
 
@@ -541,7 +582,7 @@ function onRevealSetupChecklist() {
 }
 
 /** @see tabs ids below */
-const VALID_TABS = ['profile', 'identity', 'info', 'invoice', 'theme', 'guide'] as const
+const VALID_TABS = ['profile', 'navigation', 'identity', 'info', 'invoice', 'theme', 'guide'] as const
 
 const activeTab = ref('identity')
 
@@ -555,6 +596,7 @@ function applyTabQuery(): void {
 watch(() => route.query.tab, applyTabQuery)
 const tabs = computed(() => [
   { id: 'profile',  label: l('نشاط المنشأة', 'Business profile'), icon: Cog6ToothIcon },
+  { id: 'navigation', label: l('إظهار الأقسام', 'Navigation visibility'), icon: Cog6ToothIcon },
   { id: 'identity', label: l('الهوية البصرية', 'Visual identity'), icon: PhotoIcon },
   { id: 'info',     label: l('معلومات الشركة', 'Company info'), icon: BuildingOfficeIcon },
   { id: 'invoice',  label: l('إعدادات الفاتورة', 'Invoice settings'), icon: DocumentTextIcon },
@@ -579,6 +621,7 @@ const featureMatrix = reactive<Record<string, boolean>>({
 const savingBusinessProfile = ref(false)
 const savingTheme = ref(false)
 const themeSaved = ref(false)
+const savingCompanyNavPolicy = ref(false)
 const featureMatrixItems = [
   { key: 'operations', label: 'التشغيل', desc: 'لوحات التشغيل وأوامر العمل والحجوزات' },
   { key: 'hr', label: 'الموارد البشرية', desc: 'الموظفون والمهام والحضور والرواتب' },
@@ -592,6 +635,13 @@ const featureMatrixItems = [
   { key: 'org_structure', label: 'هيكل القطاعات والأقسام', desc: 'قطاع / قسم / شعبة — تنظيم ذكي يناسب التشغيل والأسطول (غالباً غير مطلوب بالتجزئة)' },
   { key: 'supplier_contract_mgmt', label: 'عقود الموردين والتنبيهات', desc: 'رفع PDF وتواريخ انتهاء وتنبيهات — يُعطّل افتراضياً لنشاط التجزئة' },
 ]
+const navSectionLabels = NAV_SECTION_LABELS
+const navGroupLabels = NAV_GROUP_LABELS
+const navSectionKeys = Object.keys(NAV_SECTION_LABELS)
+const navGroupKeys = Object.keys(NAV_GROUP_LABELS)
+const visibleCompanySectionKeys = ref<string[]>([...navSectionKeys])
+const visibleCompanyGroupKeys = ref<string[]>([...navGroupKeys])
+const companyNavPolicy = reactive<NavVisibilityPolicy>(JSON.parse(JSON.stringify(DEFAULT_NAV_VISIBILITY)))
 
 // ── Form ──────────────────────────────────────────────────────────────
 const form = reactive({
@@ -707,7 +757,44 @@ onMounted(async () => {
   try {
     await loadCompanyTheme()
   } catch { /* */ }
+  await loadCompanyNavigationPolicy()
 })
+
+async function loadCompanyNavigationPolicy() {
+  if (!auth.user?.company_id) return
+  try {
+    const { data } = await apiClient.get(`/companies/${auth.user.company_id}/navigation-visibility`)
+    const platform = data?.data?.platform_policy
+    const policy = data?.data?.company_policy
+    visibleCompanySectionKeys.value = navSectionKeys.filter((key) => (platform?.sections?.[key] ?? true) !== false)
+    visibleCompanyGroupKeys.value = navGroupKeys.filter((key) => (platform?.groups?.[key] ?? true) !== false)
+    if (policy?.sections && policy?.groups) {
+      for (const key of navSectionKeys) companyNavPolicy.sections[key] = policy.sections[key] !== false
+      for (const key of navGroupKeys) companyNavPolicy.groups[key] = policy.groups[key] !== false
+    }
+  } catch {
+    // keep defaults
+    visibleCompanySectionKeys.value = [...navSectionKeys]
+    visibleCompanyGroupKeys.value = [...navGroupKeys]
+  }
+}
+
+async function saveCompanyNavigationPolicy() {
+  if (!auth.user?.company_id) return
+  savingCompanyNavPolicy.value = true
+  try {
+    const { data } = await apiClient.patch(`/companies/${auth.user.company_id}/navigation-visibility`, companyNavPolicy)
+    const policy = data?.data?.company_policy
+    if (policy?.sections && policy?.groups) {
+      for (const key of navSectionKeys) companyNavPolicy.sections[key] = policy.sections[key] !== false
+      for (const key of navGroupKeys) companyNavPolicy.groups[key] = policy.groups[key] !== false
+    }
+    await auth.fetchMe().catch(() => {})
+    toast.success(l('تم حفظ سياسة الأقسام للشركة', 'Company navigation policy saved'))
+  } finally {
+    savingCompanyNavPolicy.value = false
+  }
+}
 
 function toggleFeature(key: string) {
   featureMatrix[key] = !featureMatrix[key]

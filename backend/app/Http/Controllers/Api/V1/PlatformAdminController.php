@@ -17,6 +17,7 @@ use App\Models\WorkOrder;
 use App\Models\WorkOrderCancellationRequest;
 use App\Services\AuditLogger;
 use App\Services\Config\VerticalProfileGovernanceService;
+use App\Services\NavigationVisibilityService;
 use App\Services\Platform\PlatformAdminOverviewService;
 use App\Services\WorkOrderCancellationRequestService;
 use Illuminate\Http\JsonResponse;
@@ -34,6 +35,7 @@ class PlatformAdminController extends Controller
     public function __construct(
         private readonly WorkOrderCancellationRequestService $workOrderCancellationRequestService,
         private readonly AuditLogger $auditLogger,
+        private readonly NavigationVisibilityService $navigationVisibility,
     ) {}
 
     public function companies(Request $request): JsonResponse
@@ -529,6 +531,29 @@ class PlatformAdminController extends Controller
     {
         return response()->json([
             'data' => $overviewService->build(),
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function navigationVisibility(): JsonResponse
+    {
+        return response()->json([
+            'data' => $this->navigationVisibility->platformPolicy(),
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function updateNavigationVisibility(Request $request): JsonResponse
+    {
+        $payload = $request->validate([
+            'sections' => ['required', 'array'],
+            'groups' => ['required', 'array'],
+        ]);
+
+        $policy = $this->navigationVisibility->updatePlatformPolicy($payload, (int) $request->user()->id);
+
+        return response()->json([
+            'data' => $policy,
             'trace_id' => app('trace_id'),
         ]);
     }

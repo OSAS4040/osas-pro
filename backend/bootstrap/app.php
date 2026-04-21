@@ -105,18 +105,18 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
-                return response()->json([
+                return new \Illuminate\Http\JsonResponse([
                     'message'  => 'Unauthenticated.',
-                    'trace_id' => app('trace_id'),
+                    'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 401);
             }
         });
 
         $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
-                return response()->json([
+                return new \Illuminate\Http\JsonResponse([
                     'message'  => 'This action is unauthorized.',
-                    'trace_id' => app('trace_id'),
+                    'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 403);
             }
         });
@@ -128,10 +128,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->filter(static fn ($m) => is_string($m) && $m !== '')
                     ->first();
 
-                return response()->json([
+                return new \Illuminate\Http\JsonResponse([
                     'message'  => $first ?: 'Validation failed.',
                     'errors'   => $e->errors(),
-                    'trace_id' => app('trace_id'),
+                    'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 422);
             }
         });
@@ -140,29 +140,29 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($apiExpectsJson($request)) {
                 $model = class_basename($e->getModel());
 
-                return response()->json([
+                return new \Illuminate\Http\JsonResponse([
                     'message'  => "{$model} not found.",
-                    'trace_id' => app('trace_id'),
+                    'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 404);
             }
         });
 
         $exceptions->render(function (\DomainException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
-                return response()->json([
+                return new \Illuminate\Http\JsonResponse([
                     'message'  => $e->getMessage(),
-                    'trace_id' => app('trace_id'),
+                    'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 422);
             }
         });
 
         $exceptions->render(function (\App\Exceptions\LedgerPostingFailedException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
-                return response()->json([
+                return new \Illuminate\Http\JsonResponse([
                     'message'  => $e->getMessage(),
                     'code'     => \App\Exceptions\LedgerPostingFailedException::ERROR_CODE,
-                    'trace_id' => app('trace_id'),
-                ], 503)->withHeaders([
+                    'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
+                ], 503, [
                     'Retry-After' => '5',
                 ]);
             }
@@ -182,7 +182,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $payload = [
                 'message'  => $message,
-                'trace_id' => app('trace_id'),
+                'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
             ];
 
             $headers = [];
@@ -206,7 +206,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 }
             }
 
-            return response()->json($payload, $status, $headers);
+            return new \Illuminate\Http\JsonResponse($payload, $status, $headers);
         });
 
         /** Unhandled server errors only — does not replace specialized handlers above. */
@@ -227,11 +227,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
             report($e);
 
-            return response()->json([
+            return new \Illuminate\Http\JsonResponse([
                 'message'  => config('app.debug')
                     ? $e->getMessage().' ['.basename($e->getFile()).':'.$e->getLine().']'
                     : 'Server error.',
-                'trace_id' => app('trace_id'),
+                'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
             ], 500);
         });
     })->create();

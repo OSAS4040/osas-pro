@@ -131,8 +131,8 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/branches', label: 'إدارة الفروع', section: 'إداري', requiresManager: true, keywords: ['فرع', 'موقع'] },
   { to: '/branches/map', label: 'خريطة الفروع', section: 'إداري', requiresStaff: true, keywords: ['google', 'خريطة', 'map'] },
   { to: '/documents/company', label: 'مستندات المنشأة', section: 'إداري', keywords: ['documents'] },
-  { to: '/admin', label: 'لوحة الأدمن', section: 'الإدارة', requiresPlatform: true },
-  { to: '/admin/qa', label: 'التحقق من النظام', section: 'الإدارة', requiresPlatform: true, keywords: ['qa'] },
+  { to: '/admin', label: 'لوحة قيادة المنصة', section: 'إدارة منصة أسس برو', requiresPlatform: true },
+  { to: '/admin/qa', label: 'فحص الجودة (QA)', section: 'إدارة منصة أسس برو', requiresPlatform: true, keywords: ['qa'] },
 ]
 
 export function normNavSearch(s: string): string {

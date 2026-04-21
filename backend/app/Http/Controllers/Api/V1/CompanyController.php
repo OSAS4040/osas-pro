@@ -7,6 +7,7 @@ use App\Http\Requests\Config\AssignVerticalProfileRequest;
 use App\Http\Requests\Company\StoreCompanyRequest;
 use App\Http\Requests\Company\UpdateCompanyRequest;
 use App\Models\Company;
+use App\Services\NavigationVisibilityService;
 use App\Models\Subscription;
 use App\Models\VerticalProfile;
 use App\Services\Config\ResolvedConfigVisibilityService;
@@ -24,6 +25,9 @@ use Illuminate\Support\Str;
  */
 class CompanyController extends Controller
 {
+    public function __construct(
+        private readonly NavigationVisibilityService $navigationVisibility,
+    ) {}
     public function index(): JsonResponse
     {
         $this->authorize('viewAny', Company::class);
@@ -307,6 +311,41 @@ class CompanyController extends Controller
                 'business_type' => $profile['business_type'],
                 'feature_matrix' => $customMatrix,
                 'effective_feature_matrix' => TenantBusinessFeatures::effectiveMatrix($company),
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function navigationVisibility(int $id): JsonResponse
+    {
+        $company = Company::findOrFail($id);
+        $this->authorize('view', $company);
+
+        return response()->json([
+            'data' => [
+                'platform_policy' => $this->navigationVisibility->platformPolicy(),
+                'company_policy' => $this->navigationVisibility->companyPolicy($company),
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function updateNavigationVisibility(Request $request, int $id): JsonResponse
+    {
+        $company = Company::findOrFail($id);
+        $this->authorize('update', $company);
+
+        $payload = $request->validate([
+            'sections' => ['required', 'array'],
+            'groups' => ['required', 'array'],
+        ]);
+
+        $companyPolicy = $this->navigationVisibility->updateCompanyPolicy($company, $payload);
+
+        return response()->json([
+            'data' => [
+                'platform_policy' => $this->navigationVisibility->platformPolicy(),
+                'company_policy' => $companyPolicy,
             ],
             'trace_id' => app('trace_id'),
         ]);

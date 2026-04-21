@@ -52,6 +52,9 @@ class StoreUserRequest extends FormRequest
                 },
             ],
             'is_active' => ['nullable', 'boolean'],
+            'nav_visibility' => ['nullable', 'array'],
+            'nav_visibility.sections' => ['required_with:nav_visibility', 'array'],
+            'nav_visibility.groups' => ['required_with:nav_visibility', 'array'],
         ];
     }
 }

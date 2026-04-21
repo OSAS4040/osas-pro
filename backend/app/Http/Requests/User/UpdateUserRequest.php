@@ -42,6 +42,9 @@ class UpdateUserRequest extends FormRequest
             ],
             'is_active' => ['nullable', 'boolean'],
             'password'  => ['nullable', Password::min(8)->mixedCase()->numbers()],
+            'nav_visibility' => ['nullable', 'array'],
+            'nav_visibility.sections' => ['required_with:nav_visibility', 'array'],
+            'nav_visibility.groups' => ['required_with:nav_visibility', 'array'],
         ];
     }
 }

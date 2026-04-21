@@ -13,6 +13,7 @@ use App\Services\Auth\AuthSecurityTelemetryService;
 use App\Services\Auth\AuthSessionMetadataWriter;
 use App\Services\Auth\LoginBootstrapService;
 use App\Services\Auth\LoginOtpNotifier;
+use App\Services\NavigationVisibilityService;
 use App\Support\Auth\PhoneNormalizer;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterPushDeviceRequest;
@@ -52,6 +53,7 @@ class AuthController extends Controller
         private readonly AuthLoginEventRecorder $authLoginEventRecorder,
         private readonly AuthSecurityTelemetryService $authSecurityTelemetry,
         private readonly PlatformAuditLogger $platformAuditLogger,
+        private readonly NavigationVisibilityService $navigationVisibility,
     ) {}
 
     /**
@@ -987,6 +989,7 @@ class AuthController extends Controller
             'company'     => $user->relationLoaded('company') ? $user->company : null,
             'branch'      => $user->relationLoaded('branch') ? $user->branch : null,
             'subscription' => $user->company_id ? $this->subscriptionBillingSummary((int) $user->company_id) : null,
+            'navigation_visibility' => $this->navigationVisibility->effectiveForUser($user),
         ];
     }
 
