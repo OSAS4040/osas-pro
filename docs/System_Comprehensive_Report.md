@@ -35,10 +35,10 @@
 |--------|---------|
 | قاعدة البيانات | جدول `platform_announcement_banners` (صف منطقي واحد عبر `theOne()`) |
 | API | `GET/PUT /api/v1/platform/announcement-banner`، `GET .../admin`، حماية التحديث بـ `SaasPlatformAccess::isPlatformOperator` |
-| الواجهة | مكوّن `PlatformPromoBanner.vue` في `AppLayout`؛ تبويب «شريط الإعلان» في `AdminDashboardView` عند وضع مشغّل المنصة |
+| الواجهة | مكوّن `PlatformPromoBanner.vue` في `AppLayout`؛ تبويب «شريط الإعلان» في واجهة المنصة (`/platform/announcements` — `PlatformAdminDashboardPage`) عند وضع مشغّل المنصة |
 | السلوك | `dismiss_token` يتجدد عند الحفظ؛ إخفاء محلي عبر `localStorage` عند السماح بالإخفاء |
 
-**الملفات الرئيسية:** الهجرة `2026_04_05_120000_create_platform_announcement_banners_table.php`، `PlatformAnnouncementBanner` (Model)، `PlatformAnnouncementBannerController`، `UpdatePlatformAnnouncementBannerRequest`، `api.php`، `PlatformPromoBanner.vue`، `AdminDashboardView.vue`.
+**الملفات الرئيسية:** الهجرة `2026_04_05_120000_create_platform_announcement_banners_table.php`، `PlatformAnnouncementBanner` (Model)، `PlatformAnnouncementBannerController`، `UpdatePlatformAnnouncementBannerRequest`، `api.php`، `PlatformPromoBanner.vue`، `PlatformAdminDashboardPage.vue` (قسم الإعلانات).
 
 ### 2.3 nginx — منع «Index of /landing»
 

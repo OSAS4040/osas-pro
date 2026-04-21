@@ -157,7 +157,7 @@ Invoke-WebRequest -Uri "http://localhost/api/v1/health" -UseBasicParsing -Timeou
 | Wallet flows | `WalletArchitectureTest`, `WalletTopUpRequestWorkflowTest`, `LedgerHardeningTest` | PASS |
 | Receivables (عام) | لا اسم اختبار صريح لـ receivables مع credit WO؛ تسوية مالية | `FinancialReconciliation*` | PASS |
 | Ledger / reconciliation | `FinancialReconciliationCommandTest`, `FinancialReconciliationReviewLayerTest` | PASS |
-| Admin platform (واجهة) | **لا اختبار E2E واجهة**؛ بناء `AdminDashboardView` ضمن `npm run build` | **PARTIAL** |
+| Admin platform (واجهة) | **لا اختبار E2E واجهة**؛ بناء وحدات `/platform/*` (`Platform*View.vue` + `PlatformAdminDashboardPage`) ضمن `npm run build` | **PARTIAL** |
 
 ---
 

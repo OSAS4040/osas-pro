@@ -29,7 +29,7 @@
 ## Frontend
 
 - `SensitiveOperationReviewModal.vue` shows preview payload; `WorkOrderShowView.vue` uses it for approval and cancellation request; `WorkOrderBatchCreateView.vue` (`/work-orders/batch`) for batch create.
-- **لوحة مشغّل المنصة** (`AdminDashboardView`): تبويب «النموذج المالي» يستدعي `PATCH /platform/companies/{id}/financial-model`؛ تبويب «إلغاء أوامر العمل» يستدعي `GET /platform/work-order-cancellation-requests` و`POST .../approve|reject`.
+- **لوحة مشغّل المنصة** (`/platform/*` — قسم في `PlatformAdminDashboardPage.vue`): تبويب «النموذج المالي» يستدعي `PATCH /platform/companies/{id}/financial-model`؛ تبويب «إلغاء أوامر العمل» يستدعي `GET /platform/work-order-cancellation-requests` و`POST .../approve|reject`.
 
 ## Platform APIs (إضافية)
 
