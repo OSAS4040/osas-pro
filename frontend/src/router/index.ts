@@ -477,6 +477,7 @@ function isStaffTenantAppExplorationPath(path: string): boolean {
     '/bookings',
     '/services',
     '/vehicles',
+    '/companies',
     '/dashboard',
     '/internal',
   ]

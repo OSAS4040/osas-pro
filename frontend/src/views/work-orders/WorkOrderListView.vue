@@ -96,6 +96,7 @@ const route        = useRoute()
 const filterStatus = ref('')
 const search = ref('')
 const customerIdFilter = ref<number | null>(null)
+const companyIdFilter = ref<number | null>(null)
 
 const statusFilterValues = [
   'draft',
@@ -118,15 +119,26 @@ function syncCustomerFilterFromRoute(): void {
   }
 }
 
+function syncCompanyFilterFromRoute(): void {
+  const raw = route.query.company_id
+  if (raw !== undefined && raw !== null && String(raw).match(/^\d+$/)) {
+    companyIdFilter.value = Number(raw)
+  } else {
+    companyIdFilter.value = null
+  }
+}
+
 async function load(): Promise<void> {
   await store.fetchOrders({
     status: filterStatus.value || undefined,
     ...(customerIdFilter.value ? { customer_id: customerIdFilter.value } : {}),
+    ...(companyIdFilter.value ? { company_id: companyIdFilter.value } : {}),
   })
 }
 
 onMounted(() => {
   syncCustomerFilterFromRoute()
+  syncCompanyFilterFromRoute()
   load()
 })
 
@@ -134,6 +146,14 @@ watch(
   () => route.query.customer_id,
   () => {
     syncCustomerFilterFromRoute()
+    load()
+  },
+)
+
+watch(
+  () => route.query.company_id,
+  () => {
+    syncCompanyFilterFromRoute()
     load()
   },
 )

@@ -203,9 +203,13 @@ async function openCreateIfQuery() {
 
 async function load(): Promise<void> {
   const cid = route.query.customer_id
+  const companyId = route.query.company_id
   const params: Record<string, unknown> = { search: search.value }
   if (cid !== undefined && cid !== null && String(cid).match(/^\d+$/)) {
     params.customer_id = Number(cid)
+  }
+  if (companyId !== undefined && companyId !== null && String(companyId).match(/^\d+$/)) {
+    params.company_id = Number(companyId)
   }
   await store.fetchVehicles(params)
 }
@@ -262,6 +266,13 @@ watch(
 
 watch(
   () => route.query.customer_id,
+  () => {
+    void load()
+  },
+)
+
+watch(
+  () => route.query.company_id,
   () => {
     void load()
   },

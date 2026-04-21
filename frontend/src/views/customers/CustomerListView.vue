@@ -281,7 +281,12 @@ function viewBookings(c: any) {
 async function load() {
   loading.value = true
   try {
-    const { data } = await apiClient.get('/customers', { params: { per_page: 200 } })
+    const params: Record<string, unknown> = { per_page: 200 }
+    const companyId = route.query.company_id
+    if (companyId !== undefined && companyId !== null && /^\d+$/.test(String(companyId))) {
+      params.company_id = Number(companyId)
+    }
+    const { data } = await apiClient.get('/customers', { params })
     customers.value = data.data?.data ?? data.data ?? []
   } catch { /* silent */ } finally { loading.value = false }
 }
@@ -299,4 +304,9 @@ async function saveCustomer() {
 }
 
 onMounted(load)
+
+watch(
+  () => route.query.company_id,
+  () => { void load() },
+)
 </script>

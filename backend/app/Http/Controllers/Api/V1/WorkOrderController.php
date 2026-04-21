@@ -46,6 +46,7 @@ class WorkOrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $orders = WorkOrder::with(['customer', 'vehicle', 'assignedTechnician', 'branch'])
+            ->when($request->company_id, fn($q) => $q->where('company_id', (int) $request->company_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->customer_id, fn($q) => $q->where('customer_id', $request->customer_id))
             ->when($request->vehicle_id, fn($q) => $q->where('vehicle_id', $request->vehicle_id))

@@ -184,6 +184,7 @@ const locale = useLocale()
 const route = useRoute()
 const l = (ar: string, en: string) => (locale.lang.value === 'ar' ? ar : en)
 const filterCustomerId = ref('')
+const filterCompanyId = ref('')
 
 const invoices   = ref<any[]>([])
 const selectedIds = ref<number[]>([])
@@ -390,6 +391,9 @@ async function load(resetSelection = true) {
     if (filterCustomerId.value && /^\d+$/.test(filterCustomerId.value)) {
       params.customer_id = Number(filterCustomerId.value)
     }
+    if (filterCompanyId.value && /^\d+$/.test(filterCompanyId.value)) {
+      params.company_id = Number(filterCompanyId.value)
+    }
     const { data } = await apiClient.get('/invoices', { params })
     const res = data.data
     invoices.value = res.data ?? res
@@ -427,6 +431,10 @@ onMounted(() => {
   if (q !== undefined && q !== null && /^\d+$/.test(String(q))) {
     filterCustomerId.value = String(q)
   }
+  const c = route.query.company_id
+  if (c !== undefined && c !== null && /^\d+$/.test(String(c))) {
+    filterCompanyId.value = String(c)
+  }
   load(true)
 })
 
@@ -434,6 +442,15 @@ watch(
   () => route.query.customer_id,
   (q) => {
     filterCustomerId.value = q !== undefined && q !== null && /^\d+$/.test(String(q)) ? String(q) : ''
+    page.value = 1
+    load(true)
+  },
+)
+
+watch(
+  () => route.query.company_id,
+  (q) => {
+    filterCompanyId.value = q !== undefined && q !== null && /^\d+$/.test(String(q)) ? String(q) : ''
     page.value = 1
     load(true)
   },

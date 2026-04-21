@@ -31,6 +31,7 @@ class CustomerController extends Controller
     public function index(Request $request): JsonResponse
     {
         $customers = Customer::with('wallet')
+            ->when($request->company_id, fn($q) => $q->where('company_id', (int) $request->company_id))
             ->when($request->type, fn($q) => $q->where('type', $request->type))
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
                 $q->where('name', 'ilike', "%{$request->search}%")

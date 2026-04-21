@@ -39,6 +39,7 @@ class VehicleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $vehicles = Vehicle::with(['customer', 'branch'])
+            ->when($request->company_id, fn($q) => $q->where('company_id', (int) $request->company_id))
             ->when($request->customer_id, fn($q) => $q->where('customer_id', $request->customer_id))
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
                 $q->where('plate_number', 'ilike', "%{$request->search}%")

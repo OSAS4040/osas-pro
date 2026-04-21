@@ -11,7 +11,10 @@ use App\Models\AuditLog;
 use App\Models\Company;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\User;
+use App\Models\Vehicle;
 use App\Models\VerticalProfile;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderCancellationRequest;
@@ -97,6 +100,69 @@ class PlatformAdminController extends Controller
                 'last_page'    => $paginator->lastPage(),
                 'per_page'     => $paginator->perPage(),
                 'total'        => $paginator->total(),
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function globalSearch(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+        if ($q === '') {
+            return response()->json([
+                'data' => [
+                    'companies' => [],
+                    'users' => [],
+                    'customers' => [],
+                    'invoices' => [],
+                    'work_orders' => [],
+                ],
+                'trace_id' => app('trace_id'),
+            ]);
+        }
+
+        $limit = min(20, max(3, (int) $request->query('limit', 8)));
+        $like = '%'.$q.'%';
+
+        $companies = Company::query()
+            ->where('name', 'like', $like)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'name', 'status']);
+
+        $users = User::withoutGlobalScopes()
+            ->where('name', 'like', $like)
+            ->orWhere('email', 'like', $like)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'name', 'email', 'company_id']);
+
+        $customers = Customer::withoutGlobalScopes()
+            ->where('name', 'like', $like)
+            ->orWhere('phone', 'like', $like)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'name', 'phone', 'company_id']);
+
+        $invoices = Invoice::withoutGlobalScopes()
+            ->where('invoice_number', 'like', $like)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'invoice_number', 'status', 'company_id']);
+
+        $workOrders = WorkOrder::withoutGlobalScopes()
+            ->where('order_number', 'like', $like)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'order_number', 'status', 'company_id']);
+
+        return response()->json([
+            'data' => [
+                'companies' => $companies,
+                'users' => $users,
+                'customers' => $customers,
+                'invoices' => $invoices,
+                'work_orders' => $workOrders,
             ],
             'trace_id' => app('trace_id'),
         ]);
@@ -259,6 +325,69 @@ class PlatformAdminController extends Controller
                 ] : null,
                 'plan_catalog_match' => $plan ? ['slug' => $plan->slug, 'name' => $plan->name] : null,
                 'vertical_profile_options' => $verticalOptions,
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function companyEntitySnapshot(Request $request, int $id): JsonResponse
+    {
+        $company = Company::query()->findOrFail($id);
+        $limit = min(25, max(5, (int) $request->query('limit', 10)));
+
+        $users = User::withoutGlobalScopes()
+            ->where('company_id', $company->id)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'name', 'email', 'role', 'is_active', 'created_at']);
+
+        $customers = Customer::withoutGlobalScopes()
+            ->where('company_id', $company->id)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'name', 'phone', 'email', 'created_at']);
+
+        $vehicles = Vehicle::withoutGlobalScopes()
+            ->where('company_id', $company->id)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'plate_number', 'make', 'model', 'year', 'customer_id', 'created_at']);
+
+        $invoiceAmountColumn = 'total';
+        if (Schema::hasColumn('invoices', 'total_amount')) {
+            $invoiceAmountColumn = 'total_amount';
+        } elseif (Schema::hasColumn('invoices', 'line_total')) {
+            $invoiceAmountColumn = 'line_total';
+        }
+
+        $invoices = Invoice::withoutGlobalScopes()
+            ->where('company_id', $company->id)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->select(['id', 'invoice_number', 'status', 'customer_id', 'created_at'])
+            ->selectRaw($invoiceAmountColumn.' as total_amount')
+            ->get();
+
+        $workOrders = WorkOrder::withoutGlobalScopes()
+            ->where('company_id', $company->id)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get(['id', 'order_number', 'status', 'customer_id', 'vehicle_id', 'created_at']);
+
+        return response()->json([
+            'data' => [
+                'counts' => [
+                    'users' => User::withoutGlobalScopes()->where('company_id', $company->id)->count(),
+                    'customers' => Customer::withoutGlobalScopes()->where('company_id', $company->id)->count(),
+                    'vehicles' => Vehicle::withoutGlobalScopes()->where('company_id', $company->id)->count(),
+                    'invoices' => Invoice::withoutGlobalScopes()->where('company_id', $company->id)->count(),
+                    'work_orders' => WorkOrder::withoutGlobalScopes()->where('company_id', $company->id)->count(),
+                ],
+                'users' => $users,
+                'customers' => $customers,
+                'vehicles' => $vehicles,
+                'invoices' => $invoices,
+                'work_orders' => $workOrders,
             ],
             'trace_id' => app('trace_id'),
         ]);

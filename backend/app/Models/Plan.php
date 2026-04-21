@@ -18,6 +18,7 @@ class Plan extends Model
         'max_products',
         'grace_period_days',
         'features',
+        'feature_catalog',
         'is_active',
         'sort_order',
     ];
@@ -26,6 +27,7 @@ class Plan extends Model
         'price_monthly'    => 'decimal:2',
         'price_yearly'     => 'decimal:2',
         'features'         => 'array',
+        'feature_catalog'  => 'array',
         'is_active'        => 'boolean',
     ];
 

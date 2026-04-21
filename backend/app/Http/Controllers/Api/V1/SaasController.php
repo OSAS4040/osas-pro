@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Enums\UserRole;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Services\Platform\PlatformPermissionService;
@@ -149,10 +148,6 @@ class SaasController extends Controller
     public function updatePlan(Request $request, string $slug): JsonResponse
     {
         $user = $request->user();
-        if (($user->role ?? null) !== UserRole::Owner) {
-            return response()->json(['message' => 'غير مصرح بتعديل الباقات.'], 403);
-        }
-
         if (! $this->platformPermissionService->canManageGlobalPlanCatalog($user)) {
             return response()->json([
                 'message'  => 'تعديل كتالوج الباقات العالمي غير مسموح لهذا الحساب. اضبط SAAS_PLATFORM_ADMIN_EMAILS أو SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT.',
@@ -173,9 +168,21 @@ class SaasController extends Controller
             'grace_period_days' => ['sometimes', 'integer', 'min:0'],
             'features' => ['sometimes', 'array'],
             'features.*' => ['string'],
+            'feature_catalog' => ['sometimes', 'array'],
+            'feature_catalog.*.key' => ['required_with:feature_catalog', 'string', 'max:80'],
+            'feature_catalog.*.name' => ['nullable', 'string', 'max:120'],
+            'feature_catalog.*.name_ar' => ['nullable', 'string', 'max:120'],
+            'feature_catalog.*.type' => ['required_with:feature_catalog', 'in:main,sub'],
+            'feature_catalog.*.price_monthly' => ['nullable', 'numeric', 'min:0'],
+            'feature_catalog.*.price_yearly' => ['nullable', 'numeric', 'min:0'],
+            'feature_catalog.*.is_enabled' => ['nullable', 'boolean'],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer', 'min:1'],
         ]);
+
+        if (array_key_exists('feature_catalog', $data) && ! array_key_exists('features', $data)) {
+            $data['features'] = $this->featuresFromCatalog($data['feature_catalog']);
+        }
 
         $plan->update($data);
 
@@ -183,6 +190,61 @@ class SaasController extends Controller
             'data' => $plan->fresh(),
             'message' => 'تم تحديث الباقة بنجاح.',
         ]);
+    }
+
+    public function createPlan(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $this->platformPermissionService->canManageGlobalPlanCatalog($user)) {
+            return response()->json([
+                'message'  => 'إنشاء باقة جديدة غير مسموح لهذا الحساب.',
+                'code'     => 'PLAN_CATALOG_FORBIDDEN',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
+        $data = $request->validate([
+            'slug' => ['required', 'string', 'max:80', 'unique:plans,slug'],
+            'name' => ['required', 'string', 'max:120'],
+            'name_ar' => ['nullable', 'string', 'max:120'],
+            'price_monthly' => ['required', 'numeric', 'min:0'],
+            'price_yearly' => ['required', 'numeric', 'min:0'],
+            'currency' => ['nullable', 'string', 'size:3'],
+            'max_branches' => ['required', 'integer', 'min:1'],
+            'max_users' => ['required', 'integer', 'min:1'],
+            'max_products' => ['required', 'integer', 'min:1'],
+            'grace_period_days' => ['nullable', 'integer', 'min:0'],
+            'features' => ['nullable', 'array'],
+            'features.*' => ['string'],
+            'feature_catalog' => ['nullable', 'array'],
+            'feature_catalog.*.key' => ['required_with:feature_catalog', 'string', 'max:80'],
+            'feature_catalog.*.name' => ['nullable', 'string', 'max:120'],
+            'feature_catalog.*.name_ar' => ['nullable', 'string', 'max:120'],
+            'feature_catalog.*.type' => ['required_with:feature_catalog', 'in:main,sub'],
+            'feature_catalog.*.price_monthly' => ['nullable', 'numeric', 'min:0'],
+            'feature_catalog.*.price_yearly' => ['nullable', 'numeric', 'min:0'],
+            'feature_catalog.*.is_enabled' => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        if (! array_key_exists('features', $data)) {
+            $data['features'] = $this->featuresFromCatalog($data['feature_catalog'] ?? []);
+        }
+        $data['currency'] = strtoupper((string) ($data['currency'] ?? 'SAR'));
+        $data['grace_period_days'] = (int) ($data['grace_period_days'] ?? 7);
+        $data['is_active'] = (bool) ($data['is_active'] ?? true);
+        if (! array_key_exists('sort_order', $data)) {
+            $nextSort = (int) (Plan::query()->max('sort_order') ?? 0) + 1;
+            $data['sort_order'] = $nextSort > 0 ? $nextSort : 1;
+        }
+
+        $plan = Plan::create($data);
+
+        return response()->json([
+            'data' => $plan,
+            'message' => 'تم إنشاء الباقة بنجاح.',
+        ], 201);
     }
 
     // ── Usage & Limits ────────────────────────────────────────────────
@@ -280,5 +342,23 @@ class SaasController extends Controller
         }
 
         return response()->json(['message' => 'تم إنشاء الباقات الافتراضية.', 'count' => count($plans)]);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $catalog
+     * @return list<string>
+     */
+    private function featuresFromCatalog(array $catalog): array
+    {
+        $features = [];
+        foreach ($catalog as $item) {
+            $key = trim((string) ($item['key'] ?? ''));
+            $enabled = (bool) ($item['is_enabled'] ?? true);
+            if ($key !== '' && $enabled) {
+                $features[] = $key;
+            }
+        }
+
+        return array_values(array_unique($features));
     }
 }

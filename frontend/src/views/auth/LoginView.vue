@@ -25,35 +25,7 @@
         />
       </div>
 
-      <div class="relative z-10 mx-auto grid w-full max-w-6xl items-start justify-items-center gap-6 xl:grid-cols-[minmax(0,560px)_minmax(0,520px)] login-page-unified-v2">
-        <aside
-          class="order-2 hidden h-full w-full max-w-[520px] rounded-3xl border border-white/60 bg-white/65 p-6 backdrop-blur-md shadow-xl shadow-slate-900/5 dark:border-slate-700/60 dark:bg-slate-900/45 dark:shadow-black/25 xl:block"
-        >
-          <p class="text-xs font-semibold tracking-wide text-primary-700 dark:text-primary-300">OSAS PRO</p>
-          <h2 class="mt-2 text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-            تجربة دخول موحّدة وواضحة
-          </h2>
-          <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            دخول أسرع، رسائل أوضح، وتسلسل خطوات يضمن تقليل الأخطاء للمستخدمين الجدد.
-          </p>
-
-          <div class="mt-5 space-y-2">
-            <div class="rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">وضوح الخطوات</p>
-              <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">بيانات الدخول ثم التحقق الثنائي بشكل بصري مباشر.</p>
-            </div>
-            <div class="rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">إرشاد فوري للمستخدم</p>
-              <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">نصوص مساعدة دقيقة تحت كل حقل لتقليل الالتباس.</p>
-            </div>
-            <div class="rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/50">
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">مظهر احترافي</p>
-              <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">تصميم أنظف مع تباين أعلى مناسب للاستخدام الطويل.</p>
-            </div>
-          </div>
-        </aside>
-
-        <div class="order-1 w-full max-w-[560px]">
+      <div class="relative z-10 mx-auto w-full max-w-[560px] login-page-unified-v2">
         <div
           v-if="isDevBuild"
           class="mb-4 rounded-xl border border-amber-300/90 bg-amber-50 px-3 py-2.5 text-center text-[10px] leading-relaxed text-amber-950 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-50"
@@ -63,7 +35,7 @@
           <!-- eslint-disable-next-line vue/no-v-html -- locale-controlled markup -->
           <span class="block [&_code]:text-[10px]" v-html="lt('devBuild')" />
         </div>
-        <div class="mb-6 text-center">
+        <div class="mb-5 text-center">
           <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">{{ lt('brand') }}</h1>
           <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ lt('tagline') }}</p>
           <p class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
@@ -118,6 +90,21 @@
           </div>
         </div>
 
+        <div class="mb-4 grid grid-cols-3 gap-2">
+          <div class="rounded-xl border border-slate-200 bg-white/85 px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-900/60">
+            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">دخول آمن</p>
+            <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">تحقق ثنائي</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white/85 px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-900/60">
+            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">سريع</p>
+            <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">خطوتين فقط</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white/85 px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-900/60">
+            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">موحّد</p>
+            <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">لكل البوابات</p>
+          </div>
+        </div>
+
         <div
           v-if="portalDisabledNotice"
           class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-xs leading-relaxed text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
@@ -133,9 +120,7 @@
         </p>
 
         <div class="overflow-hidden rounded-3xl border border-gray-200/90 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/95 dark:shadow-black/35">
-          <div
-            class="border-b border-white/10 bg-gradient-to-l from-primary-800 via-primary-700 to-primary-600 px-6 pb-4 pt-5"
-          >
+          <div class="border-b border-white/10 bg-gradient-to-l from-primary-800 via-primary-700 to-primary-600 px-6 pb-4 pt-5">
             <div>
               <h2 class="text-sm font-bold text-white">
                 {{ otpStep ? lt('cardTitleOtp') : lt('cardTitleUnified') }}
@@ -365,7 +350,6 @@
         <p class="mt-4 text-center text-[10px] text-slate-400 dark:text-slate-600">
           {{ displayAppName }} · v{{ appVersion }} · {{ new Date().getFullYear() }}
         </p>
-        </div>
       </div>
 
       <Teleport to="body">

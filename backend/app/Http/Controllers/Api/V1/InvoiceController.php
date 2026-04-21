@@ -50,6 +50,7 @@ class InvoiceController extends Controller
     public function index(Request $request): JsonResponse
     {
         $invoices = Invoice::with(['customer', 'branch', 'createdBy'])
+            ->when($request->company_id, fn($q) => $q->where('company_id', (int) $request->company_id))
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->customer_id, fn($q) => $q->where('customer_id', $request->customer_id))
             ->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))

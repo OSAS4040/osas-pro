@@ -82,7 +82,10 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware(['platform.permission:platform.companies.read'])->group(function () {
             Route::get('/platform/companies/{id}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'showCompany']);
+            Route::get('/platform/companies/{id}/entity-snapshot', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companyEntitySnapshot']);
             Route::get('/platform/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
+            Route::get('/platform/search', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'globalSearch']);
+            Route::get('/platform/plans', [\App\Http\Controllers\Api\V1\SaasController::class, 'listPlans']);
             Route::get('/admin/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
             Route::get('/admin/overview', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'dashboardOverview'])
                 ->middleware('throttle:60,1');
@@ -100,8 +103,10 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::middleware(['platform.permission:platform.subscription.manage'])->group(function () {
+            Route::post('/platform/plans', [\App\Http\Controllers\Api\V1\SaasController::class, 'createPlan']);
             Route::patch('/platform/companies/{id}/subscription', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateSubscription'])
                 ->middleware('throttle:30,1');
+            Route::put('/platform/plans/{slug}', [\App\Http\Controllers\Api\V1\SaasController::class, 'updatePlan']);
         });
 
         Route::middleware(['platform.permission:platform.vertical.assign'])->group(function () {
