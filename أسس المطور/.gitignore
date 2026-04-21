@@ -1,0 +1,2 @@
+# Ignore docs build dependencies
+docs/node_modules/
