@@ -1,0 +1,20 @@
+# انسخ هذا الملف إلى: .github/CODEOWNERS
+# استبدل @your-org/platform-team و @your-org/backend-leads بمعرّفات فريقكم على GitHub.
+# المرجع: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# منصة / SaaS / بيئة
+/backend/config/saas.php @your-org/platform-team
+/backend/app/Support/SaasPlatformAccess.php @your-org/platform-team
+/backend/app/Http/Controllers/Api/V1/SaasController.php @your-org/platform-team
+/backend/app/Http/Controllers/Api/V1/PlatformAdminController.php @your-org/platform-team
+/backend/.env.example @your-org/backend-leads
+/backend/.env.staging.example @your-org/backend-leads
+
+# واجهة — بوابات / سياسات build
+/frontend/src/config/portalAccess.ts @your-org/platform-team
+/frontend/env.example @your-org/backend-leads
+/frontend/env.staging.example @your-org/backend-leads
+
+# CI وسياسات
+/.github/workflows/ @your-org/platform-team
+/scripts/ @your-org/platform-team

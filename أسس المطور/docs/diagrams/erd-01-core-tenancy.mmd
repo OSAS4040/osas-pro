@@ -1,0 +1,50 @@
+%% جذر المستأجر والاشتراك والمستخدمين — المخطط 1 من 4
+erDiagram
+  companies ||--o{ branches : "company_id"
+  companies ||--o{ users : "company_id"
+  companies ||--o{ subscriptions : "company_id"
+  companies ||--o{ api_keys : "company_id"
+  branches ||--o{ users : "branch_id"
+  plans ||--o{ subscriptions : "plan"
+
+  companies {
+    bigint id PK
+    uuid uuid UK
+    string name
+    boolean is_active
+  }
+
+  branches {
+    bigint id PK
+    bigint company_id FK
+    string name
+    string code
+    boolean is_main
+  }
+
+  users {
+    bigint id PK
+    bigint company_id FK
+    bigint branch_id FK
+    string email UK
+    string role
+  }
+
+  plans {
+    bigint id PK
+    string slug UK
+    decimal price_monthly
+  }
+
+  subscriptions {
+    bigint id PK
+    bigint company_id FK
+    string plan
+    string status
+  }
+
+  api_keys {
+    bigint id PK
+    bigint company_id FK
+    string key_id UK
+  }
