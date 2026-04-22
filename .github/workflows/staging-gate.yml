@@ -56,9 +56,11 @@ jobs:
           cp backend/.env.example backend/.env
           APP_KEY_VAL="base64:$(openssl rand -base64 32 | tr -d '\n')"
           sed -i "s#^APP_KEY=.*#APP_KEY=${APP_KEY_VAL}#" backend/.env
+          sed -i "s|^DB_HOST=.*|DB_HOST=postgres|" backend/.env
           sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PW}|" backend/.env
           sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|" backend/.env
           sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" backend/.env
+          sed -i "s|^REDIS_HOST=.*|REDIS_HOST=redis|" backend/.env
           sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PW}|" backend/.env
           echo "REDIS_PASSWORD=${REDIS_PW}" >> "${GITHUB_ENV}"
           echo "DB_PASSWORD=${DB_PW}" >> "${GITHUB_ENV}"
