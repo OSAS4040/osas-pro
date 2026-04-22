@@ -70,14 +70,23 @@ jobs:
           docker compose up -d
           deadline=$(( $(date +%s) + ${HEALTH_WAIT_SECS} ))
           while [ "$(date +%s)" -lt "$deadline" ]; do
+            if curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/up"; then
+              echo "Laravel /up OK"
+              break
+            fi
+            sleep 3
+          done
+          curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/up" || { echo "/up timeout"; docker compose logs --tail=80 nginx app; exit 1; }
+          docker compose exec -T app php artisan migrate --force
+          deadline=$(( $(date +%s) + ${HEALTH_WAIT_SECS} ))
+          while [ "$(date +%s)" -lt "$deadline" ]; do
             if curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/api/v1/health"; then
-              echo "Health OK"
+              echo "Dependency health OK"
               break
             fi
             sleep 3
           done
           curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/api/v1/health" || { echo "Health timeout"; docker compose logs --tail=80 nginx app; exit 1; }
-          docker compose exec -T app php artisan migrate --force
           docker compose exec -T app php artisan dev:demo-seed
           export PGPASSWORD="${DB_PASSWORD:-saas_password}"
           EXISTS=$(docker compose exec -T -e PGPASSWORD="$PGPASSWORD" postgres psql -U "${DB_USERNAME}" -d postgres -Atc \

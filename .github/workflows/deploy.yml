@@ -60,7 +60,29 @@ jobs:
       - name: Start services
         run: docker compose up -d
 
-      - name: Wait for API health (bounded)
+      - name: Wait for Laravel /up (bounded)
+        run: |
+          set -euo pipefail
+          deadline=$(( $(date +%s) + ${HEALTH_WAIT_SECS} ))
+          attempt=0
+          while [ "$(date +%s)" -lt "$deadline" ]; do
+            attempt=$((attempt + 1))
+            if curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/up"; then
+              echo "Laravel /up OK (attempt ${attempt}, within ${HEALTH_WAIT_SECS}s budget)"
+              exit 0
+            fi
+            echo "Waiting for /up... (${attempt})"
+            sleep 3
+          done
+          echo "Timeout: /up not reachable within ${HEALTH_WAIT_SECS}s"
+          docker compose ps || true
+          docker compose logs --tail=100 nginx app 2>/dev/null || true
+          exit 1
+
+      - name: Run migrations
+        run: docker compose exec -T app php artisan migrate --force
+
+      - name: Wait for dependency health (bounded)
         run: |
           set -euo pipefail
           deadline=$(( $(date +%s) + ${HEALTH_WAIT_SECS} ))
@@ -68,19 +90,16 @@ jobs:
           while [ "$(date +%s)" -lt "$deadline" ]; do
             attempt=$((attempt + 1))
             if curl -sfS -o /dev/null --max-time 10 "${CHECK_BASE_URL}/api/v1/health"; then
-              echo "Health OK (attempt ${attempt}, within ${HEALTH_WAIT_SECS}s budget)"
+              echo "Dependency health OK (attempt ${attempt}, within ${HEALTH_WAIT_SECS}s budget)"
               exit 0
             fi
-            echo "Waiting for health... (${attempt})"
+            echo "Waiting for /api/v1/health... (${attempt})"
             sleep 3
           done
           echo "Timeout: /api/v1/health not healthy within ${HEALTH_WAIT_SECS}s"
           docker compose ps || true
           docker compose logs --tail=100 nginx app 2>/dev/null || true
           exit 1
-
-      - name: Run migrations
-        run: docker compose exec -T app php artisan migrate --force
 
       - name: Seed demo accounts (local CI .env only)
         run: docker compose exec -T app php artisan dev:demo-seed
