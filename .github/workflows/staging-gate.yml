@@ -62,6 +62,16 @@ jobs:
           sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${DB_DATABASE}|" backend/.env
           sed -i "s|^REDIS_HOST=.*|REDIS_HOST=redis|" backend/.env
           sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=${REDIS_PW}|" backend/.env
+          {
+            echo ""
+            echo "# CI overrides (docker compose networking)"
+            echo "DB_HOST=postgres"
+            echo "REDIS_HOST=redis"
+            echo "DB_USERNAME=${DB_USERNAME}"
+            echo "DB_DATABASE=${DB_DATABASE}"
+            echo "DB_PASSWORD=${DB_PW}"
+            echo "REDIS_PASSWORD=${REDIS_PW}"
+          } >> backend/.env
           echo "REDIS_PASSWORD=${REDIS_PW}" >> "${GITHUB_ENV}"
           echo "DB_PASSWORD=${DB_PW}" >> "${GITHUB_ENV}"
 
