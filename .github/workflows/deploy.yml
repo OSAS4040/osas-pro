@@ -114,6 +114,15 @@ jobs:
             fi
           '
 
+      - name: Ensure writable Laravel runtime paths
+        run: |
+          set -euo pipefail
+          docker compose exec -T -u root app sh -lc '
+            mkdir -p /var/www/storage/logs /var/www/bootstrap/cache
+            chown -R www:www /var/www/storage /var/www/bootstrap/cache
+            chmod -R ug+rwx /var/www/storage /var/www/bootstrap/cache
+          '
+
       - name: Run migrations (app exec, retry)
         run: |
           set -euo pipefail
