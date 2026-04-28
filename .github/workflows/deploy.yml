@@ -175,15 +175,31 @@ jobs:
       - name: Ensure test database (saas_test)
         run: |
           set -euo pipefail
-          export PGPASSWORD="${DB_PASSWORD:-saas_password}"
-          EXISTS=$(docker compose exec -T -e PGPASSWORD="$PGPASSWORD" postgres psql -U "${DB_USERNAME}" -d postgres -Atc \
-            "SELECT 1 FROM pg_database WHERE datname = 'saas_test'" 2>/dev/null || echo "0")
-          if [ "$EXISTS" = "1" ]; then
-            echo "Database saas_test already exists"
-          else
-            echo "Creating database saas_test for PHPUnit"
-            docker compose exec -T -e PGPASSWORD="$PGPASSWORD" postgres psql -U "${DB_USERNAME}" -d postgres -c "CREATE DATABASE saas_test;"
-          fi
+          docker compose exec -T app php -r '
+            $host = getenv("DB_HOST") ?: "postgres";
+            $port = getenv("DB_PORT") ?: "5432";
+            $user = getenv("DB_USERNAME") ?: "saas_user";
+            $pass = getenv("DB_PASSWORD") ?: "saas_password";
+            $testDb = "saas_test";
+
+            $pdo = new PDO("pgsql:host={$host};port={$port};dbname=postgres", $user, $pass, [
+              PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+            $stmt = $pdo->prepare("SELECT 1 FROM pg_database WHERE datname = :db");
+            $stmt->execute(["db" => $testDb]);
+            if (!$stmt->fetchColumn()) {
+              echo "Creating database {$testDb} for PHPUnit\n";
+              $pdo->exec("CREATE DATABASE {$testDb}");
+            } else {
+              echo "Database {$testDb} already exists\n";
+            }
+
+            $probe = new PDO("pgsql:host={$host};port={$port};dbname={$testDb}", $user, $pass, [
+              PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+            $probe->query("SELECT 1");
+            echo "Database {$testDb} is reachable from app container\n";
+          '
 
       - name: Backend tests (PHPUnit)
         run: docker compose exec -T app php artisan test
