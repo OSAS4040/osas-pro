@@ -91,14 +91,26 @@ jobs:
           docker compose logs --tail=100 nginx app 2>/dev/null || true
           exit 1
 
-      - name: Run migrations (one-off container, retry)
+      - name: Ensure backend vendor deps in app container
+        run: |
+          set -euo pipefail
+          docker compose exec -T app sh -lc '
+            if [ ! -f /var/www/vendor/autoload.php ]; then
+              echo "vendor/autoload.php missing; running composer install..."
+              composer install --no-interaction --prefer-dist --optimize-autoloader
+            else
+              echo "vendor/autoload.php exists; skipping composer install."
+            fi
+          '
+
+      - name: Run migrations (app exec, retry)
         run: |
           set -euo pipefail
           max_attempts=5
           attempt=1
           while [ "$attempt" -le "$max_attempts" ]; do
             echo "Migration attempt ${attempt}/${max_attempts}"
-            if docker compose run --rm app php artisan migrate --force; then
+            if docker compose exec -T app php artisan migrate --force; then
               echo "Migrations completed successfully."
               exit 0
             fi
