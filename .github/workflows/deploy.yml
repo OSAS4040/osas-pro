@@ -73,7 +73,7 @@ jobs:
             -v "${{ github.workspace }}/backend:/app" \
             -w /app \
             composer:2.7 \
-            composer install --no-interaction --prefer-dist --optimize-autoloader
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
       - name: Build containers
         run: docker compose build
