@@ -1,22 +1,723 @@
 {
-    "generated_at": "2026-04-13T01:10:22+00:00",
+    "generated_at": "2026-04-26T01:10:18+00:00",
     "checks": {
         "invoice_without_ledger": {
-            "detected": 0,
-            "total_examined": 3,
-            "healthy": 3,
-            "sample": []
+            "detected": 109,
+            "total_examined": 17806,
+            "healthy": 17697,
+            "sample": [
+                {
+                    "id": 6,
+                    "uuid": "e63bcb7c-6687-4bd8-9b10-99c3ba541aa9",
+                    "company_id": 1,
+                    "invoice_number": "SEED-0001",
+                    "status": "paid"
+                },
+                {
+                    "id": 7,
+                    "uuid": "06af5cf8-07b0-4132-a59b-cea9de3b4c56",
+                    "company_id": 1,
+                    "invoice_number": "SEED-0002",
+                    "status": "paid"
+                },
+                {
+                    "id": 8,
+                    "uuid": "9d5eaa64-b831-440a-a301-c9e0601d6097",
+                    "company_id": 1,
+                    "invoice_number": "SEED-0003",
+                    "status": "paid"
+                },
+                {
+                    "id": 9,
+                    "uuid": "0443e546-d848-4666-8700-e29a5e8b9a41",
+                    "company_id": 1,
+                    "invoice_number": "SEED-0004",
+                    "status": "draft"
+                },
+                {
+                    "id": 10,
+                    "uuid": "32e74023-6795-4c6a-b4e5-72891d351dcc",
+                    "company_id": 1,
+                    "invoice_number": "SEED-0005",
+                    "status": "pending"
+                },
+                {
+                    "id": 111,
+                    "uuid": "5d4c14ed-73d4-406d-9e75-931613353f39",
+                    "company_id": 2,
+                    "invoice_number": "SUBV2-CYCLE-2-106",
+                    "status": "paid"
+                },
+                {
+                    "id": 112,
+                    "uuid": "2fc87a62-69d7-46d7-bc58-88a1cd8663bf",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00001",
+                    "status": "paid"
+                },
+                {
+                    "id": 113,
+                    "uuid": "9a92ea8e-0ede-4f69-90c7-2c0268d19300",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00002",
+                    "status": "paid"
+                },
+                {
+                    "id": 114,
+                    "uuid": "383fbd0e-db7e-4c01-bb97-7bbdf12a0d0f",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00003",
+                    "status": "paid"
+                },
+                {
+                    "id": 115,
+                    "uuid": "adf2d57c-8106-466d-a021-db14f919eb37",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00004",
+                    "status": "paid"
+                },
+                {
+                    "id": 116,
+                    "uuid": "6e6a03d8-0808-4acf-b54f-97c3c6cf0dc5",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00005",
+                    "status": "paid"
+                },
+                {
+                    "id": 117,
+                    "uuid": "4851e459-3a01-4546-9256-6fa90c8dea39",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00006",
+                    "status": "paid"
+                },
+                {
+                    "id": 118,
+                    "uuid": "87dd5aff-9c01-4eea-bc30-411252c34110",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00007",
+                    "status": "paid"
+                },
+                {
+                    "id": 119,
+                    "uuid": "1cdb79d6-2700-43e9-871e-dc9a1c43ddf7",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00008",
+                    "status": "paid"
+                },
+                {
+                    "id": 120,
+                    "uuid": "361873a7-ffc7-42ef-a0e0-afa9eb85a5d1",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00009",
+                    "status": "paid"
+                },
+                {
+                    "id": 121,
+                    "uuid": "6a0e9a79-e666-43c5-b9cc-a87bfa750d1a",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00010",
+                    "status": "paid"
+                },
+                {
+                    "id": 122,
+                    "uuid": "fd266639-8863-4e64-8739-6dd3edc13f97",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00011",
+                    "status": "paid"
+                },
+                {
+                    "id": 123,
+                    "uuid": "7a57a87b-d0bf-42e9-ac71-18971b8bdaef",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00012",
+                    "status": "paid"
+                },
+                {
+                    "id": 124,
+                    "uuid": "fd637d60-33ce-46f6-bf07-d05781c3e474",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00013",
+                    "status": "paid"
+                },
+                {
+                    "id": 125,
+                    "uuid": "ca868f95-7feb-48af-a8f1-5eaf08be6f8c",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00014",
+                    "status": "paid"
+                },
+                {
+                    "id": 126,
+                    "uuid": "437155ed-40d2-4828-87e5-a074d2dbd341",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00015",
+                    "status": "paid"
+                },
+                {
+                    "id": 127,
+                    "uuid": "f6d5342a-1c63-4488-9751-86c9d11226ca",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00016",
+                    "status": "paid"
+                },
+                {
+                    "id": 128,
+                    "uuid": "86aadd5f-aa96-4622-868e-e94496e3d888",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00017",
+                    "status": "paid"
+                },
+                {
+                    "id": 129,
+                    "uuid": "3b0b50d3-d293-404b-b644-9e7f39332d7e",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00018",
+                    "status": "paid"
+                },
+                {
+                    "id": 130,
+                    "uuid": "57d6667d-1f08-4f7b-8b47-ac910d740217",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00019",
+                    "status": "paid"
+                },
+                {
+                    "id": 131,
+                    "uuid": "f8f47a37-07a5-41f1-b058-155c8c5bcc1c",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00020",
+                    "status": "paid"
+                },
+                {
+                    "id": 132,
+                    "uuid": "1d29fd4f-6917-4222-933c-117050c67602",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00021",
+                    "status": "paid"
+                },
+                {
+                    "id": 133,
+                    "uuid": "5d435d7f-45ce-47bd-8d34-b9b0f908a940",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00022",
+                    "status": "paid"
+                },
+                {
+                    "id": 134,
+                    "uuid": "4138f8b0-3eeb-4320-843d-729568e9abd9",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00023",
+                    "status": "paid"
+                },
+                {
+                    "id": 135,
+                    "uuid": "11eaa0fb-51ed-42ff-8fd9-5edb6f47f994",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00024",
+                    "status": "paid"
+                },
+                {
+                    "id": 136,
+                    "uuid": "76771815-4025-4ded-a07d-a49f56d59ad6",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00025",
+                    "status": "paid"
+                },
+                {
+                    "id": 137,
+                    "uuid": "a6a8e0bf-209d-4504-bf16-a24e263f1a9d",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00026",
+                    "status": "paid"
+                },
+                {
+                    "id": 138,
+                    "uuid": "aa3fb1ae-4414-4c8d-b924-bfb13ace7e5e",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00027",
+                    "status": "paid"
+                },
+                {
+                    "id": 139,
+                    "uuid": "9cc990ed-d03f-4b60-9b13-5d7f20be2a5a",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00028",
+                    "status": "paid"
+                },
+                {
+                    "id": 140,
+                    "uuid": "c5463f9f-c791-4f7e-9744-e397bff22a72",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00029",
+                    "status": "paid"
+                },
+                {
+                    "id": 141,
+                    "uuid": "1b874651-7ba6-4332-818a-76f3d77d2439",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00030",
+                    "status": "paid"
+                },
+                {
+                    "id": 142,
+                    "uuid": "0cd14970-fee0-4d1e-b4c7-a4bb3771e9ea",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00031",
+                    "status": "paid"
+                },
+                {
+                    "id": 143,
+                    "uuid": "701836a6-b3d6-4d32-abd4-145437ab366a",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00032",
+                    "status": "paid"
+                },
+                {
+                    "id": 144,
+                    "uuid": "14875338-f39f-4703-8c11-aa51627e89d2",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00033",
+                    "status": "paid"
+                },
+                {
+                    "id": 145,
+                    "uuid": "fa99563d-0394-4e52-b8db-f3139f7ea13d",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00034",
+                    "status": "paid"
+                },
+                {
+                    "id": 146,
+                    "uuid": "ac20968b-4145-4b93-b8eb-5a06cb589a00",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00035",
+                    "status": "paid"
+                },
+                {
+                    "id": 147,
+                    "uuid": "5379aa7d-4812-4466-9cc7-eb930b9a828f",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00036",
+                    "status": "paid"
+                },
+                {
+                    "id": 148,
+                    "uuid": "79462ca1-cd11-4490-8420-1c2028b1af77",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00037",
+                    "status": "paid"
+                },
+                {
+                    "id": 149,
+                    "uuid": "123b2993-f836-4abb-b6d0-36092357d509",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00038",
+                    "status": "paid"
+                },
+                {
+                    "id": 150,
+                    "uuid": "57bddecc-c675-43d6-b833-e382fa46fb47",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00039",
+                    "status": "paid"
+                },
+                {
+                    "id": 151,
+                    "uuid": "da0e7937-d9f5-4103-8e72-34a33e909ff4",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00040",
+                    "status": "paid"
+                },
+                {
+                    "id": 152,
+                    "uuid": "43b9731d-aa01-4ddb-97b2-a35f3889a3c1",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00041",
+                    "status": "paid"
+                },
+                {
+                    "id": 153,
+                    "uuid": "de289c47-a18c-40a5-935c-e0f502c80eeb",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00042",
+                    "status": "paid"
+                },
+                {
+                    "id": 154,
+                    "uuid": "03a70494-dcde-477d-9e77-bf82f140de93",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00043",
+                    "status": "paid"
+                },
+                {
+                    "id": 155,
+                    "uuid": "1342ed15-6356-4e8a-a7b3-5f8a39feb8b8",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00044",
+                    "status": "paid"
+                },
+                {
+                    "id": 156,
+                    "uuid": "3fd05c0f-20e4-42d3-845a-202481822d4e",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00045",
+                    "status": "paid"
+                },
+                {
+                    "id": 157,
+                    "uuid": "c9e375f0-4c63-4b5c-9fe7-2bb75a7ecbb0",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00046",
+                    "status": "paid"
+                },
+                {
+                    "id": 158,
+                    "uuid": "55e86621-db7b-477b-9dd2-3e7564eceb72",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00047",
+                    "status": "paid"
+                },
+                {
+                    "id": 159,
+                    "uuid": "ffc205ec-f83d-4e6b-9d98-7324d49eb6c2",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00048",
+                    "status": "paid"
+                },
+                {
+                    "id": 160,
+                    "uuid": "1d93094d-52a1-4861-b635-37238f5dbe00",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00049",
+                    "status": "paid"
+                },
+                {
+                    "id": 161,
+                    "uuid": "a89e7c58-0f0a-4da1-8545-67599785e68b",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00050",
+                    "status": "paid"
+                },
+                {
+                    "id": 162,
+                    "uuid": "bd648095-ed84-4866-a6f7-210325fb7f8e",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00051",
+                    "status": "paid"
+                },
+                {
+                    "id": 163,
+                    "uuid": "528206d1-70c2-42fe-bbbf-7d0e8c2bbb6b",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00052",
+                    "status": "paid"
+                },
+                {
+                    "id": 164,
+                    "uuid": "7aec5897-03cc-48d4-81a6-d37ce2560e12",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00053",
+                    "status": "paid"
+                },
+                {
+                    "id": 165,
+                    "uuid": "c71fe8c8-619d-4c1f-a93c-a1b019037daa",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00054",
+                    "status": "paid"
+                },
+                {
+                    "id": 166,
+                    "uuid": "38911557-a33b-442d-b934-e836750a99c0",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00055",
+                    "status": "paid"
+                },
+                {
+                    "id": 167,
+                    "uuid": "90c1bed8-ff1d-42be-ab16-b1168648beba",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00056",
+                    "status": "paid"
+                },
+                {
+                    "id": 168,
+                    "uuid": "f191b81b-48e3-4a77-8850-93d652b2e6af",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00057",
+                    "status": "paid"
+                },
+                {
+                    "id": 169,
+                    "uuid": "cb7fe289-5c7b-4dfb-8898-769f38f9816c",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00058",
+                    "status": "paid"
+                },
+                {
+                    "id": 170,
+                    "uuid": "87aeecb4-13ef-4a01-9133-c2d2f4f2bdbc",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00059",
+                    "status": "paid"
+                },
+                {
+                    "id": 171,
+                    "uuid": "0efb5ca4-b7e8-49ed-bb03-c751959de267",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00060",
+                    "status": "paid"
+                },
+                {
+                    "id": 172,
+                    "uuid": "c5b2efcb-cd28-4198-8056-1d2b6fe221bd",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00061",
+                    "status": "paid"
+                },
+                {
+                    "id": 173,
+                    "uuid": "a9616b78-170b-421c-b29b-e39753047415",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00062",
+                    "status": "paid"
+                },
+                {
+                    "id": 174,
+                    "uuid": "37f41dc5-93ff-45fe-be93-d0ba2ed62ce5",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00063",
+                    "status": "paid"
+                },
+                {
+                    "id": 175,
+                    "uuid": "21a768f2-b990-4829-9b19-9a6d292e7188",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00064",
+                    "status": "paid"
+                },
+                {
+                    "id": 176,
+                    "uuid": "0e913919-8ef7-478d-b135-44bec63baa74",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00065",
+                    "status": "paid"
+                },
+                {
+                    "id": 177,
+                    "uuid": "66a149ee-abb7-4b84-a32f-cbcc3d2c7f1b",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00066",
+                    "status": "paid"
+                },
+                {
+                    "id": 178,
+                    "uuid": "fd4c2b2f-ff49-446a-8e38-349dfcbb9bef",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00067",
+                    "status": "paid"
+                },
+                {
+                    "id": 179,
+                    "uuid": "8ccbd504-772b-43ea-9657-6838ba2a695e",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00068",
+                    "status": "paid"
+                },
+                {
+                    "id": 180,
+                    "uuid": "ed819239-28e9-4dcc-9ae9-cefb955aa38b",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00069",
+                    "status": "paid"
+                },
+                {
+                    "id": 181,
+                    "uuid": "b51b3489-f3df-4b1e-ae40-f0c13927cb1c",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00070",
+                    "status": "paid"
+                },
+                {
+                    "id": 182,
+                    "uuid": "c754fdf4-6e6f-4698-a7e4-fea19c93b8d3",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00071",
+                    "status": "paid"
+                },
+                {
+                    "id": 183,
+                    "uuid": "8b73cf19-1898-4ac1-936f-9ed41030c81f",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00072",
+                    "status": "paid"
+                },
+                {
+                    "id": 184,
+                    "uuid": "e7380822-8cce-4e9c-a344-53cbd6e85857",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00073",
+                    "status": "paid"
+                },
+                {
+                    "id": 185,
+                    "uuid": "ae8de727-654b-416f-bef4-2df456bd49ee",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00074",
+                    "status": "paid"
+                },
+                {
+                    "id": 186,
+                    "uuid": "b919b278-91be-4bb1-96e5-b78647e35f1a",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00075",
+                    "status": "paid"
+                },
+                {
+                    "id": 187,
+                    "uuid": "c9625307-c369-4163-9bbd-7fa6edb067cd",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00076",
+                    "status": "paid"
+                },
+                {
+                    "id": 188,
+                    "uuid": "e99494fb-bb8e-4144-8f42-84794766a6cd",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00077",
+                    "status": "paid"
+                },
+                {
+                    "id": 189,
+                    "uuid": "6c45d7b6-059c-4c79-ae62-e0ad20dd51d7",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00078",
+                    "status": "paid"
+                },
+                {
+                    "id": 190,
+                    "uuid": "2495a70e-6cb2-4a56-9b83-4f757d50bf0f",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00079",
+                    "status": "paid"
+                },
+                {
+                    "id": 191,
+                    "uuid": "1c624c38-45dc-49ea-8808-fb99555bc3c0",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00080",
+                    "status": "paid"
+                },
+                {
+                    "id": 192,
+                    "uuid": "563a91c2-cd82-4a25-9b74-bc820ead507d",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00081",
+                    "status": "paid"
+                },
+                {
+                    "id": 193,
+                    "uuid": "dcc397a5-4592-4bba-bbef-80f01706f0bb",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00082",
+                    "status": "paid"
+                },
+                {
+                    "id": 194,
+                    "uuid": "cc615f9e-e6bf-4986-826a-4ec7147813df",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00083",
+                    "status": "paid"
+                },
+                {
+                    "id": 195,
+                    "uuid": "66513a28-9354-412d-b2c4-72c6b69a0498",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00084",
+                    "status": "paid"
+                },
+                {
+                    "id": 196,
+                    "uuid": "f9f1ba95-6745-4d72-b754-16a84d65f4ce",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00085",
+                    "status": "paid"
+                },
+                {
+                    "id": 197,
+                    "uuid": "cd99d668-7bf7-4700-9151-c81697a898ee",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00086",
+                    "status": "paid"
+                },
+                {
+                    "id": 198,
+                    "uuid": "362bb5f4-94fd-4e5d-9179-ba1037c2c08f",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00087",
+                    "status": "paid"
+                },
+                {
+                    "id": 199,
+                    "uuid": "434c9534-69ce-464b-907e-ada3be1a5809",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00088",
+                    "status": "paid"
+                },
+                {
+                    "id": 200,
+                    "uuid": "cbfa6b1f-c5cb-408f-a8f2-06fe9a9e6605",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00089",
+                    "status": "paid"
+                },
+                {
+                    "id": 201,
+                    "uuid": "3d93eb71-dc7b-4c3e-aba8-bce9594ac975",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00090",
+                    "status": "paid"
+                },
+                {
+                    "id": 202,
+                    "uuid": "7a685bc9-2bb5-4f80-88f4-16bc71827fe2",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00091",
+                    "status": "paid"
+                },
+                {
+                    "id": 203,
+                    "uuid": "530279bb-e643-47f6-ad96-e942978b2f0d",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00092",
+                    "status": "paid"
+                },
+                {
+                    "id": 204,
+                    "uuid": "ea39def1-fa4d-430a-8cd3-619fb4e374b1",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00093",
+                    "status": "paid"
+                },
+                {
+                    "id": 205,
+                    "uuid": "9f4eafeb-847b-442b-b8fa-ba282d66c402",
+                    "company_id": 6,
+                    "invoice_number": "SIM-2026-00094",
+                    "status": "paid"
+                }
+            ]
         },
         "unbalanced_journal_entries": {
             "detected": 0,
-            "total_examined": 3,
-            "healthy": 3,
+            "total_examined": 17699,
+            "healthy": 17699,
             "sample": []
         },
         "anomalous_reversal_settlement": {
             "detected": 0,
-            "total_examined": 3,
-            "healthy": 3,
+            "total_examined": 17803,
+            "healthy": 17803,
             "sample": {
                 "journal_entries": [],
                 "payments": []
@@ -24,11 +725,1647 @@
         }
     },
     "summary": {
-        "detected_cases": 0,
-        "healthy_cases": 9
+        "detected_cases": 109,
+        "healthy_cases": 53199
     },
     "findings": {
-        "invoice_without_ledger": [],
+        "invoice_without_ledger": [
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 1,
+                "invoice_id": 6,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 6,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "e63bcb7c-6687-4bd8-9b10-99c3ba541aa9",
+                    "invoice_number": "SEED-0001",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 1,
+                "invoice_id": 7,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 7,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "06af5cf8-07b0-4132-a59b-cea9de3b4c56",
+                    "invoice_number": "SEED-0002",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 1,
+                "invoice_id": 8,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 8,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "9d5eaa64-b831-440a-a301-c9e0601d6097",
+                    "invoice_number": "SEED-0003",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 1,
+                "invoice_id": 9,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 9,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "0443e546-d848-4666-8700-e29a5e8b9a41",
+                    "invoice_number": "SEED-0004",
+                    "status": "draft"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 1,
+                "invoice_id": 10,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 10,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "32e74023-6795-4c6a-b4e5-72891d351dcc",
+                    "invoice_number": "SEED-0005",
+                    "status": "pending"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 2,
+                "invoice_id": 111,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 111,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "5d4c14ed-73d4-406d-9e75-931613353f39",
+                    "invoice_number": "SUBV2-CYCLE-2-106",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 112,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 112,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "2fc87a62-69d7-46d7-bc58-88a1cd8663bf",
+                    "invoice_number": "SIM-2026-00001",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 113,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 113,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "9a92ea8e-0ede-4f69-90c7-2c0268d19300",
+                    "invoice_number": "SIM-2026-00002",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 114,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 114,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "383fbd0e-db7e-4c01-bb97-7bbdf12a0d0f",
+                    "invoice_number": "SIM-2026-00003",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 115,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 115,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "adf2d57c-8106-466d-a021-db14f919eb37",
+                    "invoice_number": "SIM-2026-00004",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 116,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 116,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "6e6a03d8-0808-4acf-b54f-97c3c6cf0dc5",
+                    "invoice_number": "SIM-2026-00005",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 117,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 117,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "4851e459-3a01-4546-9256-6fa90c8dea39",
+                    "invoice_number": "SIM-2026-00006",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 118,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 118,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "87dd5aff-9c01-4eea-bc30-411252c34110",
+                    "invoice_number": "SIM-2026-00007",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 119,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 119,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "1cdb79d6-2700-43e9-871e-dc9a1c43ddf7",
+                    "invoice_number": "SIM-2026-00008",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 120,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 120,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "361873a7-ffc7-42ef-a0e0-afa9eb85a5d1",
+                    "invoice_number": "SIM-2026-00009",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 121,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 121,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "6a0e9a79-e666-43c5-b9cc-a87bfa750d1a",
+                    "invoice_number": "SIM-2026-00010",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 122,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 122,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "fd266639-8863-4e64-8739-6dd3edc13f97",
+                    "invoice_number": "SIM-2026-00011",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 123,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 123,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "7a57a87b-d0bf-42e9-ac71-18971b8bdaef",
+                    "invoice_number": "SIM-2026-00012",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 124,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 124,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "fd637d60-33ce-46f6-bf07-d05781c3e474",
+                    "invoice_number": "SIM-2026-00013",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 125,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 125,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "ca868f95-7feb-48af-a8f1-5eaf08be6f8c",
+                    "invoice_number": "SIM-2026-00014",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 126,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 126,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "437155ed-40d2-4828-87e5-a074d2dbd341",
+                    "invoice_number": "SIM-2026-00015",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 127,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 127,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "f6d5342a-1c63-4488-9751-86c9d11226ca",
+                    "invoice_number": "SIM-2026-00016",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 128,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 128,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "86aadd5f-aa96-4622-868e-e94496e3d888",
+                    "invoice_number": "SIM-2026-00017",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 129,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 129,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "3b0b50d3-d293-404b-b644-9e7f39332d7e",
+                    "invoice_number": "SIM-2026-00018",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 130,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 130,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "57d6667d-1f08-4f7b-8b47-ac910d740217",
+                    "invoice_number": "SIM-2026-00019",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 131,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 131,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "f8f47a37-07a5-41f1-b058-155c8c5bcc1c",
+                    "invoice_number": "SIM-2026-00020",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 132,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 132,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "1d29fd4f-6917-4222-933c-117050c67602",
+                    "invoice_number": "SIM-2026-00021",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 133,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 133,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "5d435d7f-45ce-47bd-8d34-b9b0f908a940",
+                    "invoice_number": "SIM-2026-00022",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 134,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 134,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "4138f8b0-3eeb-4320-843d-729568e9abd9",
+                    "invoice_number": "SIM-2026-00023",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 135,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 135,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "11eaa0fb-51ed-42ff-8fd9-5edb6f47f994",
+                    "invoice_number": "SIM-2026-00024",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 136,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 136,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "76771815-4025-4ded-a07d-a49f56d59ad6",
+                    "invoice_number": "SIM-2026-00025",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 137,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 137,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "a6a8e0bf-209d-4504-bf16-a24e263f1a9d",
+                    "invoice_number": "SIM-2026-00026",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 138,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 138,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "aa3fb1ae-4414-4c8d-b924-bfb13ace7e5e",
+                    "invoice_number": "SIM-2026-00027",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 139,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 139,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "9cc990ed-d03f-4b60-9b13-5d7f20be2a5a",
+                    "invoice_number": "SIM-2026-00028",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 140,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 140,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "c5463f9f-c791-4f7e-9744-e397bff22a72",
+                    "invoice_number": "SIM-2026-00029",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 141,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 141,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "1b874651-7ba6-4332-818a-76f3d77d2439",
+                    "invoice_number": "SIM-2026-00030",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 142,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 142,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "0cd14970-fee0-4d1e-b4c7-a4bb3771e9ea",
+                    "invoice_number": "SIM-2026-00031",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 143,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 143,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "701836a6-b3d6-4d32-abd4-145437ab366a",
+                    "invoice_number": "SIM-2026-00032",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 144,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 144,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "14875338-f39f-4703-8c11-aa51627e89d2",
+                    "invoice_number": "SIM-2026-00033",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 145,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 145,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "fa99563d-0394-4e52-b8db-f3139f7ea13d",
+                    "invoice_number": "SIM-2026-00034",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 146,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 146,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "ac20968b-4145-4b93-b8eb-5a06cb589a00",
+                    "invoice_number": "SIM-2026-00035",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 147,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 147,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "5379aa7d-4812-4466-9cc7-eb930b9a828f",
+                    "invoice_number": "SIM-2026-00036",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 148,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 148,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "79462ca1-cd11-4490-8420-1c2028b1af77",
+                    "invoice_number": "SIM-2026-00037",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 149,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 149,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "123b2993-f836-4abb-b6d0-36092357d509",
+                    "invoice_number": "SIM-2026-00038",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 150,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 150,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "57bddecc-c675-43d6-b833-e382fa46fb47",
+                    "invoice_number": "SIM-2026-00039",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 151,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 151,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "da0e7937-d9f5-4103-8e72-34a33e909ff4",
+                    "invoice_number": "SIM-2026-00040",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 152,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 152,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "43b9731d-aa01-4ddb-97b2-a35f3889a3c1",
+                    "invoice_number": "SIM-2026-00041",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 153,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 153,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "de289c47-a18c-40a5-935c-e0f502c80eeb",
+                    "invoice_number": "SIM-2026-00042",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 154,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 154,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "03a70494-dcde-477d-9e77-bf82f140de93",
+                    "invoice_number": "SIM-2026-00043",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 155,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 155,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "1342ed15-6356-4e8a-a7b3-5f8a39feb8b8",
+                    "invoice_number": "SIM-2026-00044",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 156,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 156,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "3fd05c0f-20e4-42d3-845a-202481822d4e",
+                    "invoice_number": "SIM-2026-00045",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 157,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 157,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "c9e375f0-4c63-4b5c-9fe7-2bb75a7ecbb0",
+                    "invoice_number": "SIM-2026-00046",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 158,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 158,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "55e86621-db7b-477b-9dd2-3e7564eceb72",
+                    "invoice_number": "SIM-2026-00047",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 159,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 159,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "ffc205ec-f83d-4e6b-9d98-7324d49eb6c2",
+                    "invoice_number": "SIM-2026-00048",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 160,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 160,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "1d93094d-52a1-4861-b635-37238f5dbe00",
+                    "invoice_number": "SIM-2026-00049",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 161,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 161,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "a89e7c58-0f0a-4da1-8545-67599785e68b",
+                    "invoice_number": "SIM-2026-00050",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 162,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 162,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "bd648095-ed84-4866-a6f7-210325fb7f8e",
+                    "invoice_number": "SIM-2026-00051",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 163,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 163,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "528206d1-70c2-42fe-bbbf-7d0e8c2bbb6b",
+                    "invoice_number": "SIM-2026-00052",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 164,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 164,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "7aec5897-03cc-48d4-81a6-d37ce2560e12",
+                    "invoice_number": "SIM-2026-00053",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 165,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 165,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "c71fe8c8-619d-4c1f-a93c-a1b019037daa",
+                    "invoice_number": "SIM-2026-00054",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 166,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 166,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "38911557-a33b-442d-b934-e836750a99c0",
+                    "invoice_number": "SIM-2026-00055",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 167,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 167,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "90c1bed8-ff1d-42be-ab16-b1168648beba",
+                    "invoice_number": "SIM-2026-00056",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 168,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 168,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "f191b81b-48e3-4a77-8850-93d652b2e6af",
+                    "invoice_number": "SIM-2026-00057",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 169,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 169,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "cb7fe289-5c7b-4dfb-8898-769f38f9816c",
+                    "invoice_number": "SIM-2026-00058",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 170,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 170,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "87aeecb4-13ef-4a01-9133-c2d2f4f2bdbc",
+                    "invoice_number": "SIM-2026-00059",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 171,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 171,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "0efb5ca4-b7e8-49ed-bb03-c751959de267",
+                    "invoice_number": "SIM-2026-00060",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 172,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 172,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "c5b2efcb-cd28-4198-8056-1d2b6fe221bd",
+                    "invoice_number": "SIM-2026-00061",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 173,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 173,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "a9616b78-170b-421c-b29b-e39753047415",
+                    "invoice_number": "SIM-2026-00062",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 174,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 174,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "37f41dc5-93ff-45fe-be93-d0ba2ed62ce5",
+                    "invoice_number": "SIM-2026-00063",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 175,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 175,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "21a768f2-b990-4829-9b19-9a6d292e7188",
+                    "invoice_number": "SIM-2026-00064",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 176,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 176,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "0e913919-8ef7-478d-b135-44bec63baa74",
+                    "invoice_number": "SIM-2026-00065",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 177,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 177,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "66a149ee-abb7-4b84-a32f-cbcc3d2c7f1b",
+                    "invoice_number": "SIM-2026-00066",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 178,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 178,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "fd4c2b2f-ff49-446a-8e38-349dfcbb9bef",
+                    "invoice_number": "SIM-2026-00067",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 179,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 179,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "8ccbd504-772b-43ea-9657-6838ba2a695e",
+                    "invoice_number": "SIM-2026-00068",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 180,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 180,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "ed819239-28e9-4dcc-9ae9-cefb955aa38b",
+                    "invoice_number": "SIM-2026-00069",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 181,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 181,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "b51b3489-f3df-4b1e-ae40-f0c13927cb1c",
+                    "invoice_number": "SIM-2026-00070",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 182,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 182,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "c754fdf4-6e6f-4698-a7e4-fea19c93b8d3",
+                    "invoice_number": "SIM-2026-00071",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 183,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 183,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "8b73cf19-1898-4ac1-936f-9ed41030c81f",
+                    "invoice_number": "SIM-2026-00072",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 184,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 184,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "e7380822-8cce-4e9c-a344-53cbd6e85857",
+                    "invoice_number": "SIM-2026-00073",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 185,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 185,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "ae8de727-654b-416f-bef4-2df456bd49ee",
+                    "invoice_number": "SIM-2026-00074",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 186,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 186,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "b919b278-91be-4bb1-96e5-b78647e35f1a",
+                    "invoice_number": "SIM-2026-00075",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 187,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 187,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "c9625307-c369-4163-9bbd-7fa6edb067cd",
+                    "invoice_number": "SIM-2026-00076",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 188,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 188,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "e99494fb-bb8e-4144-8f42-84794766a6cd",
+                    "invoice_number": "SIM-2026-00077",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 189,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 189,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "6c45d7b6-059c-4c79-ae62-e0ad20dd51d7",
+                    "invoice_number": "SIM-2026-00078",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 190,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 190,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "2495a70e-6cb2-4a56-9b83-4f757d50bf0f",
+                    "invoice_number": "SIM-2026-00079",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 191,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 191,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "1c624c38-45dc-49ea-8808-fb99555bc3c0",
+                    "invoice_number": "SIM-2026-00080",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 192,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 192,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "563a91c2-cd82-4a25-9b74-bc820ead507d",
+                    "invoice_number": "SIM-2026-00081",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 193,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 193,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "dcc397a5-4592-4bba-bbef-80f01706f0bb",
+                    "invoice_number": "SIM-2026-00082",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 194,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 194,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "cc615f9e-e6bf-4986-826a-4ec7147813df",
+                    "invoice_number": "SIM-2026-00083",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 195,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 195,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "66513a28-9354-412d-b2c4-72c6b69a0498",
+                    "invoice_number": "SIM-2026-00084",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 196,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 196,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "f9f1ba95-6745-4d72-b754-16a84d65f4ce",
+                    "invoice_number": "SIM-2026-00085",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 197,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 197,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "cd99d668-7bf7-4700-9151-c81697a898ee",
+                    "invoice_number": "SIM-2026-00086",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 198,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 198,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "362bb5f4-94fd-4e5d-9179-ba1037c2c08f",
+                    "invoice_number": "SIM-2026-00087",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 199,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 199,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "434c9534-69ce-464b-907e-ada3be1a5809",
+                    "invoice_number": "SIM-2026-00088",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 200,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 200,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "cbfa6b1f-c5cb-408f-a8f2-06fe9a9e6605",
+                    "invoice_number": "SIM-2026-00089",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 201,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 201,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "3d93eb71-dc7b-4c3e-aba8-bce9594ac975",
+                    "invoice_number": "SIM-2026-00090",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 202,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 202,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "7a685bc9-2bb5-4f80-88f4-16bc71827fe2",
+                    "invoice_number": "SIM-2026-00091",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 203,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 203,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "530279bb-e643-47f6-ad96-e942978b2f0d",
+                    "invoice_number": "SIM-2026-00092",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 204,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 204,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "ea39def1-fa4d-430a-8cd3-619fb4e374b1",
+                    "invoice_number": "SIM-2026-00093",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 205,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 205,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "9f4eafeb-847b-442b-b8fa-ba282d66c402",
+                    "invoice_number": "SIM-2026-00094",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 206,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 206,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "1eeb424f-4ccf-4a8f-90d9-cb21adffb182",
+                    "invoice_number": "SIM-2026-00095",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 207,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 207,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "7b2a8d14-de5b-4ce6-8765-70db04dc83b2",
+                    "invoice_number": "SIM-2026-00096",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 208,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 208,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "2080c2d2-6227-4476-80c7-7f5f7d6404d9",
+                    "invoice_number": "SIM-2026-00097",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 209,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 209,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "e6999574-d524-4a3c-9c28-1ee0a71a77af",
+                    "invoice_number": "SIM-2026-00098",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 210,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 210,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "2e9c7db8-670b-4b11-9441-a632c5ba4cd0",
+                    "invoice_number": "SIM-2026-00099",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 6,
+                "invoice_id": 211,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 211,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "f5c5fdd1-6395-487d-91fe-e8213d00aedf",
+                    "invoice_number": "SIM-2026-00100",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 2,
+                "invoice_id": 212,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 212,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "e4ab043b-2331-40da-9261-0be0ea5d6b04",
+                    "invoice_number": "OSAS-SEED-2026-01",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 2,
+                "invoice_id": 213,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 213,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "7edb66f3-84f7-4102-8492-c9167246d2e2",
+                    "invoice_number": "OSAS-SEED-2026-02",
+                    "status": "paid"
+                }
+            },
+            {
+                "finding_type": "invoice_without_ledger",
+                "company_id": 2,
+                "invoice_id": 214,
+                "journal_entry_id": null,
+                "payment_id": null,
+                "reference_type": "invoice",
+                "reference_id": 214,
+                "trace_reference": null,
+                "details": {
+                    "invoice_uuid": "fbd4371c-fecf-4ff9-a680-a9e084b4bfd7",
+                    "invoice_number": "OSAS-SEED-2026-03",
+                    "status": "paid"
+                }
+            }
+        ],
         "unbalanced_journal_entry": [],
         "anomalous_reversal_settlement": []
     }

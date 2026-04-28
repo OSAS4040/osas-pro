@@ -6,7 +6,7 @@ export function looksLikeTechnicalServerMessage(message: string): boolean {
   const s = String(message).trim()
   if (!s) return false
   if (s.length > 280) return true
-  return /SQLSTATE|PDOException|stack trace|syntax error|Illuminate\\\\|Connection refused|ECONNREFUSED|Exception in file/i.test(
+  return /SQLSTATE|PDOException|stack trace|syntax error|Illuminate\\\\|Connection refused|ECONNREFUSED|Exception in file|does not exist|Undefined table/i.test(
     s,
   )
 }

@@ -1,6 +1,6 @@
 /**
  * WorkshopOS / OSAS Pro — k6 profile via `K6_PROFILE`.
- * Values: smoke | normal | peak | stress | spike | soak |
+ * Values: smoke | normal | peak | stress | spike | soak | capacity_pos |
  *   enterprise_smoke | enterprise_normal | enterprise_peak (strict gate, short duration)
  */
 import { getProfileOptions } from './config/profiles.js';
@@ -47,9 +47,12 @@ export function setup() {
   const passA = __ENV.K6_PASSWORD_A || 'SimulationDemo123!';
   const emailB = __ENV.K6_EMAIL_B || 'owner@demo.sa';
   const passB = __ENV.K6_PASSWORD_B || 'password';
+  const emailC = __ENV.K6_EMAIL_C || '';
+  const passC = __ENV.K6_PASSWORD_C || 'password';
 
   const tenantA = login(base, emailA, passA);
   const tenantB = login(base, emailB, passB);
+  const tenantC = emailC ? login(base, emailC, passC) : null;
 
   if (!tenantA || !tenantB) {
     setupLoginFailures.add(1);
@@ -64,6 +67,20 @@ export function setup() {
   const ctx = discoverPosContext(base, tenantA.token);
   const posReady = Boolean(ctx.customerId && ctx.product);
 
+  const posActors = [{ key: 'A', token: tenantA.token, companyId: tenantA.companyId, customerId: ctx.customerId, product: ctx.product }];
+  const ctxB = discoverPosContext(base, tenantB.token);
+  if (ctxB.customerId && ctxB.product) {
+    posActors.push({ key: 'B', token: tenantB.token, companyId: tenantB.companyId, customerId: ctxB.customerId, product: ctxB.product });
+  }
+  if (tenantC) {
+    if (tenantC.companyId !== tenantA.companyId && tenantC.companyId !== tenantB.companyId) {
+      const ctxC = discoverPosContext(base, tenantC.token);
+      if (ctxC.customerId && ctxC.product) {
+        posActors.push({ key: 'C', token: tenantC.token, companyId: tenantC.companyId, customerId: ctxC.customerId, product: ctxC.product });
+      }
+    }
+  }
+
   return {
     baseUrl: base,
     tokenA: tenantA.token,
@@ -73,6 +90,7 @@ export function setup() {
     userIdA: tenantA.userId,
     customerId: ctx.customerId,
     product: ctx.product,
+    posActors,
     posReady,
     k6Profile: profile,
   };

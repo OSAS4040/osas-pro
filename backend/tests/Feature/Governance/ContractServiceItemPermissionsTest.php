@@ -6,11 +6,15 @@ namespace Tests\Feature\Governance;
 
 use App\Models\Contract;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
  * صلاحيات بنود الكتالوج التعاقدي مفصّلة في `config/permissions.php` — لا تعتمد على `users.update` فقط.
+ *
+ * @see docs/phases/PHASE_05_PROGRESS_REPORT.md — حوكمة وصلاحيات دقيقة
  */
+#[Group('phase5')]
 final class ContractServiceItemPermissionsTest extends TestCase
 {
     public function test_staff_cannot_list_contract_service_items_without_permission(): void

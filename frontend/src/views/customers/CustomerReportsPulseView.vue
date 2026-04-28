@@ -382,7 +382,7 @@ const headerBadges = computed(() => {
     badges.push({ key: 'low', text: l('منخفض النشاط', 'Low activity'), class: 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/35 dark:text-amber-200' })
   }
   if (s.tickets_open > 0) {
-    badges.push({ key: 'tk', text: l('تذاكر مفتوحة', 'Open tickets'), class: 'border-violet-200 bg-violet-50 text-violet-900 dark:border-violet-800 dark:bg-violet-950/35 dark:text-violet-200' })
+    badges.push({ key: 'tk', text: l('تذاكر مفتوحة', 'Open tickets'), class: 'border-primary-200 bg-primary-50 text-primary-900 dark:border-primary-800 dark:bg-primary-950/35 dark:text-primary-200' })
   }
   if (financialIncluded.value && s.invoices_in_period > 0 && s.payments_in_period === 0) {
     badges.push({ key: 'due', text: l('مستحقات', 'Receivables'), class: 'border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-800 dark:bg-rose-950/35 dark:text-rose-200' })

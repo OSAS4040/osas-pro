@@ -6,19 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\WalletTopUpRequest;
 use App\Services\Config\ConfigResolverService;
+use App\Services\Wallet\WalletTransferInstructionsPdfService;
 use App\Services\WalletTopUpRequestService;
 use App\Support\Media\TenantUploadDisk;
+use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class WalletTopUpRequestController extends Controller
 {
     public function __construct(
         private readonly WalletTopUpRequestService $service,
         private readonly ConfigResolverService $configResolver,
+        private readonly WalletTransferInstructionsPdfService $transferInstructionsPdf,
     ) {}
 
     public function store(Request $request): JsonResponse
@@ -158,6 +161,22 @@ class WalletTopUpRequestController extends Controller
         return Storage::disk($disk)->response($row->receipt_path, 'receipt-'.$row->uuid, [
             'Content-Type' => 'application/octet-stream',
         ]);
+    }
+
+    /**
+     * PDF منسّق: بيانات العميل الطالب + مرجع التحويل + جدول الحسابات المعرّفة للمنشأة.
+     */
+    public function transferInstructions(Request $request, int $id): Response
+    {
+        $this->ensureWalletEnabled($request);
+        $row = WalletTopUpRequest::query()->with(['customer:id,name,phone', 'requester:id,name'])->findOrFail($id);
+        Gate::authorize('downloadTransferInstructions', $row);
+
+        try {
+            return $this->transferInstructionsPdf->streamPdf($row);
+        } catch (DomainException $e) {
+            return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
+        }
     }
 
     private function companyId(): int

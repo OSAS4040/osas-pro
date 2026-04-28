@@ -22,9 +22,12 @@ use Tests\TestCase;
  *
  * يتحقق من: trace_id في الاستجابات، عدم تكرار فاتورة لنفس أمر العمل، مخزون غير سالب
  * وميزان دفتر القيود للقيود المرتبطة بالفاتورة.
+ *
+ * @see docs/phases/PHASE_07_PROGRESS_REPORT.md — مسار كامل ما قبل الإنتاج
  */
 #[Group('pre-production')]
 #[Group('production-readiness')]
+#[Group('phase7')]
 class RealWorkflowApiTest extends TestCase
 {
     private \App\Models\Company $company;

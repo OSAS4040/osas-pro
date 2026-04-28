@@ -7,6 +7,7 @@ use App\Exceptions\LedgerPostingFailedException;
 use App\Models\Invoice;
 use App\Services\LedgerService;
 use App\Support\Accounting\FinancialGlMapping;
+use App\Support\Accounting\LedgerPostingDiagnostics;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -42,6 +43,7 @@ class PostPosLedgerJob implements ShouldQueue
             return;
         }
 
+        $lines = [];
         try {
             // Idempotency guard for async posting retries/concurrency.
             $alreadyPosted = \Illuminate\Support\Facades\DB::table('journal_entries')
@@ -53,16 +55,18 @@ class PostPosLedgerJob implements ShouldQueue
             }
 
             $lines = FinancialGlMapping::linesForPosSale($invoice);
+            $repairKey = 'pos_async_repair:invoice:'.$invoice->id;
             $ledger->post(
                 companyId: $invoice->company_id,
                 data: [
-                    'type'        => JournalEntryType::Sale->value,
-                    'description' => "POS Sale {$invoice->invoice_number}",
-                    'source_type' => Invoice::class,
-                    'source_id'   => $invoice->id,
-                    'entry_date'  => now()->toDateString(),
-                    'lines'       => $lines,
-                    'trace_id'    => $this->traceId,
+                    'type'                      => JournalEntryType::Sale->value,
+                    'description'               => "POS Sale {$invoice->invoice_number}",
+                    'source_type'               => Invoice::class,
+                    'source_id'                 => $invoice->id,
+                    'entry_date'                => now()->toDateString(),
+                    'lines'                     => $lines,
+                    'trace_id'                  => $this->traceId,
+                    'posting_idempotency_key'   => $repairKey,
                 ],
                 branchId: $invoice->branch_id,
                 userId: $invoice->created_by_user_id,
@@ -70,11 +74,18 @@ class PostPosLedgerJob implements ShouldQueue
         } catch (LedgerPostingFailedException $e) {
             throw $e;
         } catch (\Throwable $e) {
+            $repairKey = 'pos_async_repair:invoice:'.$invoice->id;
+            $diag = LedgerPostingDiagnostics::fromGlLines('pos_async_repair', $lines, [
+                'posting_idempotency_key' => $repairKey,
+                'invoice_number'          => $invoice->invoice_number,
+            ]);
             $wrapped = new LedgerPostingFailedException(
                 source: 'pos_async_repair',
                 companyId: (int) $invoice->company_id,
                 invoiceId: $invoice->id,
                 previous: $e,
+                paymentId: null,
+                diagnostics: $diag,
             );
             if ($e instanceof \DomainException || $e instanceof \InvalidArgumentException) {
                 report($wrapped);

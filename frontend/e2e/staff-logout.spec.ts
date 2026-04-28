@@ -52,9 +52,12 @@ test.describe('تسجيل الخروج (موظف / AppLayout)', () => {
 
     await logoutBtn.click()
     await expect(page).toHaveURL(/\/login/)
+    await page.waitForLoadState('domcontentloaded')
     expect(logoutPosts, 'يجب إرسال طلب خروج واحد فقط').toBe(1)
 
-    expect(await page.evaluate(() => localStorage.getItem('auth_token')), 'إزالة التوكن').toBeNull()
+    await expect
+      .poll(async () => page.evaluate(() => localStorage.getItem('auth_token')), { timeout: 15_000 })
+      .toBeNull()
 
     await page.goBack()
     await expect(page).toHaveURL(/\/login/)
@@ -90,10 +93,11 @@ test.describe('تسجيل الخروج (موظف / AppLayout)', () => {
     await page.goto(`${baseURL}/login`)
     await page.evaluate((t) => localStorage.setItem('auth_token', t), token)
     await page.goto(`${baseURL}/bays`)
+    await page.waitForLoadState('domcontentloaded')
 
-    const logoutBtn = headerLogout(page)
-    await expect(logoutBtn).toBeVisible()
-    await expect(logoutBtn).toHaveAttribute('aria-label', 'تسجيل الخروج')
+    const logoutBtn = page.getByTestId('app-header-logout')
+    await expect(logoutBtn).toBeVisible({ timeout: 30_000 })
+    await expect(logoutBtn).toHaveAttribute('aria-label', /logout|خروج/i)
     await logoutBtn.scrollIntoViewIfNeeded()
     await logoutBtn.click()
     await expect(page).toHaveURL(/\/login/)

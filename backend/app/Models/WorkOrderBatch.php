@@ -10,6 +10,7 @@ class WorkOrderBatch extends Model
 {
     protected $fillable = [
         'uuid', 'company_id', 'branch_id', 'created_by_user_id', 'status', 'notes',
+        'idempotency_key', 'bulk_service_code', 'source',
     ];
 
     public function items(): HasMany

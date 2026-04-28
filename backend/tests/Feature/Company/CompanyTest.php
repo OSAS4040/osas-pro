@@ -52,4 +52,32 @@ class CompanyTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_owner_pos_test_connection_blocks_sensitive_target(): void
+    {
+        $tenant = $this->createTenant('owner');
+
+        $response = $this->actingAsUser($tenant['user'])
+            ->postJson("/api/v1/companies/{$tenant['company']->id}/pos/test-connection", [
+                'ip' => '127.0.0.1',
+                'protocol' => 'http',
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('data.ok', false)
+            ->assertJsonPath('data.detail', 'blocked_target');
+    }
+
+    public function test_cashier_cannot_call_pos_test_connection(): void
+    {
+        $tenant = $this->createTenant('cashier');
+
+        $response = $this->actingAsUser($tenant['user'])
+            ->postJson("/api/v1/companies/{$tenant['company']->id}/pos/test-connection", [
+                'ip' => '198.51.100.10',
+                'protocol' => 'http',
+            ]);
+
+        $response->assertStatus(403);
+    }
 }

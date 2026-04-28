@@ -7,8 +7,13 @@ use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — تسجيل الدخول بالبريد/كلمة المرور
+ */
+#[Group('phase0')]
 class LoginTest extends TestCase
 {
     public function test_user_can_login_with_valid_credentials(): void

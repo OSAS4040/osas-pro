@@ -37,6 +37,16 @@ class NotifyCustomerWorkOrderWhatsAppJob implements ShouldQueue
 
     public function handle(WhatsAppOutboundService $messaging): void
     {
+        if (! config('whatsapp_work_order_notifications.enabled')) {
+            Log::info('whatsapp.work_order.skipped_feature_disabled', [
+                'work_order_id' => $this->workOrderId,
+                'company_id'    => $this->companyId,
+                'kind'          => $this->kind,
+            ]);
+
+            return;
+        }
+
         if (! app()->bound('trace_id')) {
             app()->instance('trace_id', (string) Str::uuid());
         }

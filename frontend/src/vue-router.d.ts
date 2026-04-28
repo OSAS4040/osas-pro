@@ -23,5 +23,8 @@ declare module 'vue-router' {
     platformAdminLogin?: boolean
     /** لوحة مشغّل المنصة — حساب بلا شركة + principal_kind platform_employee فقط */
     requiresPlatformAdmin?: boolean
+    /** عنوان شاشة وحدات التسعير/المزودين (Placeholder يقرأ من meta) */
+    platformPricingTitle?: string
+    platformPricingHint?: string
   }
 }

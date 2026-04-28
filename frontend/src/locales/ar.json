@@ -106,6 +106,27 @@
     "planFeatures": "مميزات باقتك",
     "planFeaturesHint": "القدرات المفعّلة ضمن مستوى اشتراكك.",
     "noFeatures": "لم تُرجع الخادم قائمة ميزات لهذه الباقة — تواصل مع الدعم إن بدا ذلك غير صحيح.",
+    "addonsTitle": "إضافات اختيارية على باقتك",
+    "addonsSubtitle": "ميزات مدفوعة بشكل منفصل — دون ترقية الباقة بالكامل. تظهر هنا الإضافات المسموح بها لباقتك الحالية.",
+    "addonsEmpty": "لا توجد إضافات متاحة لباقتك الحالية حالياً.",
+    "addonsMonthly": "شهرياً",
+    "addonsYearly": "سنوياً",
+    "addonsEligible": "متاح لباقتك",
+    "addonsActive": "مفعّل على اشتراكك",
+    "addonsBuy": "اشترِ الإضافة",
+    "addonsRemove": "إلغاء الإضافة",
+    "addonsProcessing": "جاري التنفيذ…",
+    "addonsConfirmTitle": "تأكيد الإضافة",
+    "addonsConfirmIntro": "سيتم تفعيل التمكين على اشتراك مساحة العمل فور تأكيدك.",
+    "addonsConfirmPrice": "الالتزام الشهري التقديري",
+    "addonsGatewayHint": "عند ربط بوابة دفع، يمكن فتح صفحة الدفع ثم إكمال التفعيل هنا بعد نجاح الدفع.",
+    "addonsPayAtGateway": "الدفع عبر البوابة",
+    "addonsActivateAfterPay": "تفعيل الآن (بعد إتمام الدفع)",
+    "addonsActivateDirect": "تفعيل الإضافة",
+    "addonsCancel": "إلغاء",
+    "addonsRemoveConfirm": "إلغاء هذه الإضافة من اشتراكك؟ قد تتوقف الميزات المرتبطة بها فوراً.",
+    "addonsSuccess": "تم تحديث الإضافات.",
+    "addonsError": "تعذّر إكمال العملية.",
     "changePlan": "تغيير الباقة",
     "startDate": "تاريخ البداية",
     "endDate": "تاريخ الانتهاء",
@@ -149,7 +170,9 @@
       "analytics": "تحليلات متقدمة",
       "multi_branch": "تعدد الفروع",
       "inventory": "المخزون",
-      "purchases": "المشتريات"
+      "purchases": "المشتريات",
+      "smart_reports": "التقارير الذكية والتنبيهات",
+      "work_order_advanced_pricing": "تسعير أوامر عمل متقدم"
     }
   }
 }

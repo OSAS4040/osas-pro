@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Enums\BranchStatus;
+use App\Enums\CompanyFinancialModel;
+use App\Enums\CompanyFinancialModelStatus;
 use App\Enums\CompanyStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\ProductType;
@@ -53,6 +55,13 @@ class DemoOperationsSeeder extends Seeder
                     'is_active' => true,
                 ]
             );
+
+            // POS ومسارات مالية أخرى تمر عبر BillingModelPolicyService — بدون اعتماد تبقى الشركة في pending_platform_review وتُرفض كل المبيعات (422).
+            $company->forceFill([
+                'financial_model' => CompanyFinancialModel::Prepaid,
+                'financial_model_status' => CompanyFinancialModelStatus::ApprovedPrepaid,
+                'platform_financial_reviewed_at' => now(),
+            ])->save();
 
             $branch = Branch::firstOrCreate(
                 ['company_id' => $company->id, 'is_main' => true],

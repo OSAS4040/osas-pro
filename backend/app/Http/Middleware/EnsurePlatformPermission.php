@@ -11,6 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Fine-grained platform IAM — must run after {@see EnsurePlatformAdmin}.
+ *
+ * المعامل `$permission`: مفتاح واحد، أو عدة مفاتيح مفصولة بـ {@see '|'} (يكفي تحقيق أحدهم).
  */
 final class EnsurePlatformPermission
 {
@@ -21,7 +23,30 @@ final class EnsurePlatformPermission
     public function handle(Request $request, Closure $next, string $permission): Response
     {
         $user = $request->user();
-        if (! $this->platformPermissionService->hasPermission($user, $permission)) {
+        if (! $user) {
+            return response()->json([
+                'message'  => 'Unauthenticated.',
+                'code'     => 'UNAUTHENTICATED',
+                'trace_id' => app('trace_id'),
+            ], 401);
+        }
+
+        $candidates = str_contains($permission, '|')
+            ? array_values(array_filter(array_map('trim', explode('|', $permission))))
+            : [$permission];
+
+        $allowed = false;
+        foreach ($candidates as $perm) {
+            if ($perm === '') {
+                continue;
+            }
+            if ($this->platformPermissionService->hasPermission($user, $perm)) {
+                $allowed = true;
+                break;
+            }
+        }
+
+        if (! $allowed) {
             return response()->json([
                 'message'  => 'لا تملك صلاحية المنصة المطلوبة لهذا الإجراء.',
                 'code'     => 'PLATFORM_PERMISSION_DENIED',

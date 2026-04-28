@@ -3,7 +3,7 @@
 **ترتيب التنفيذ المرقم:** [`Execution_Order_Asas_Pro.md`](./Execution_Order_Asas_Pro.md).
 
 **الحالة:** معتمدة للفريق التقني.  
-**المرجع التشغيلي:** [`Staging_Deploy_Runbook.md`](./Staging_Deploy_Runbook.md) · الأمر `make staging-gate` · السكربت [`scripts/staging-gate.sh`](../scripts/staging-gate.sh) · CI: `.github/workflows/staging-gate.yml`.
+**المرجع التشغيلي:** [`Staging_Deploy_Runbook.md`](./Staging_Deploy_Runbook.md) · `make staging-gate` / `make staging-gate-ps` (يشمل **`ocr:verify --fail`**) · `make ocr-verify` (فحص OCR سريع إن كان compose شغّالاً) · [`scripts/staging-gate.sh`](../scripts/staging-gate.sh) · [`scripts/staging-gate.ps1`](../scripts/staging-gate.ps1) · CI: `.github/workflows/staging-gate.yml`.
 
 **شرط الدمج والإنتاج (إلزامي):** [`Staging_Gate_Mandatory_Policy.md`](./Staging_Gate_Mandatory_Policy.md).
 

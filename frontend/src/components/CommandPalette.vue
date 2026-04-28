@@ -116,6 +116,7 @@ import { NAV_SEARCH_ITEMS } from '@/config/navSearchItems'
 import { useLocale } from '@/composables/useLocale'
 import { foldSearchText, textMatchScore, routeContextBoost } from '@/utils/commandPaletteSearch'
 import apiClient from '@/lib/apiClient'
+import { isStaffNavHidden, splitStaffNavHref } from '@/lib/staffNavKey'
 import {
   MagnifyingGlassIcon,
   ArrowUpLeftIcon,
@@ -168,6 +169,8 @@ type PaletteNavItem = {
   group: string
   requiresPermission?: string
   requiresAnyPermission?: string[]
+  /** مفتاح ملف نشاط المنشأة — إخفاء عن الموظف عند التعطيل */
+  requiresTenantFeature?: string
   /** فريق العمل (موظف/مدير/مالك) — يستبعد عميل الأسطول وبوابة العميل */
   requiresStaff?: boolean
 }
@@ -277,6 +280,14 @@ const allItems: PaletteNavItem[] = [
   { label: 'دفتر الأستاذ', to: '/ledger', icon: BookOpenIcon, group: 'المالية والمحاسبة' },
   { label: 'دليل الحسابات', to: '/chart-of-accounts', icon: TableCellsIcon, group: 'المالية والمحاسبة' },
   { label: 'ZATCA', to: '/zatca', icon: ScaleIcon, group: 'الامتثال' },
+  {
+    label: 'الأصول الثابتة',
+    to: '/fixed-assets',
+    icon: ArchiveBoxIcon,
+    group: 'المالية والمحاسبة',
+    requiresPermission: 'reports.accounting.view',
+    requiresTenantFeature: 'fixed_assets',
+  },
   { label: 'المنتجات', to: '/products', icon: CubeIcon, group: 'المخزون' },
   { label: 'المخزون', to: '/inventory', icon: ArchiveBoxIcon, group: 'المخزون' },
   { label: 'الموردون', to: '/suppliers', icon: TruckIcon, group: 'المخزون' },
@@ -297,6 +308,7 @@ const allItems: PaletteNavItem[] = [
   { label: 'هيكل القطاعات', to: '/settings/org-units', icon: BuildingOffice2Icon, group: 'أخرى' },
   { label: 'التكاملات', to: '/settings/integrations', icon: WrenchScrewdriverIcon, group: 'أخرى' },
   { label: 'اشتراكي', to: '/subscription', icon: StarIcon, group: 'الاشتراك' },
+  { label: 'إضافات الاشتراك', to: '/subscription#subscription-addons', icon: StarIcon, group: 'الاشتراك' },
   { label: 'الباقات', to: '/plans', icon: StarIcon, group: 'الاشتراك' },
   { label: 'سوق الإضافات', to: '/plugins', icon: SparklesIcon, group: 'الاشتراك' },
   { label: 'الإحالات والولاء', to: '/referrals', icon: GiftIcon, group: 'العمليات' },
@@ -330,6 +342,13 @@ function roleAllowed(item: PaletteNavItem): boolean {
   if (item.requiresAnyPermission?.length) {
     const ok = item.requiresAnyPermission.some((p) => auth.hasPermission(p))
     if (!ok) return false
+  }
+  if (
+    typeof item.requiresTenantFeature === 'string'
+    && item.requiresTenantFeature.length > 0
+    && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), item.requiresTenantFeature)
+  ) {
+    return false
   }
   if (item.to === '/branches' && !auth.isManager) return false
   if (
@@ -381,6 +400,11 @@ function roleAllowed(item: PaletteNavItem): boolean {
     return false
   }
   if (item.to === '/branches/map' && !auth.isStaff) return false
+  const hiddenStaff = auth.user?.hidden_staff_nav_keys
+  if (Array.isArray(hiddenStaff) && hiddenStaff.length > 0) {
+    const { path: hp, hash: hh } = splitStaffNavHref(item.to)
+    if (isStaffNavHidden(hp, hh, new Set(hiddenStaff))) return false
+  }
   return true
 }
 
@@ -389,13 +413,14 @@ function portalAllowed(item: PaletteNavItem): boolean {
     if (!enabledPortals.fleet) return false
     if (!tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'fleet')) return false
   }
-  if (item.to.startsWith('/admin') && !enabledPortals.admin) return false
+  if ((item.to.startsWith('/admin') || item.to.startsWith('/platform')) && !enabledPortals.admin) return false
   return true
 }
 
 const scoredRoutes = computed((): RouteRow[] => {
   void locale.lang.value
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   const q = normQuery.value
   const path = route.path

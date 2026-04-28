@@ -20,7 +20,7 @@
 | **واجهة (Vue)** | `npm run type-check` و `npm run test` (Vitest) و `npm run build` من `frontend/`. |
 | **خلفية (Laravel)** | تشغيل PHPUnit للمجلدات أو `--filter` ذات الصلة. **داخل Docker:** إن فشل `php artisan test` باتصال `127.0.0.1:5432`، استخدم **`./vendor/bin/phpunit`** من مجلد `backend` داخل الحاوية `app` — يحمّل `phpunit.xml` (مثل `DB_HOST=postgres`) بشكل موثوق. |
 | **تخزين / رفع ملفات** | اختبار يدوي أو Feature لمسار رفع واحد + التحقق من الحذف عند الاستبدال. |
-| **نشر Staging** | `Staging_Manual_Test_Checklist.md` + أي `staging-gate` المعتمد في المشروع. |
+| **نشر Staging** | `Staging_Manual_Test_Checklist.md` + **`make staging-gate`** (يشمل Vitest + PHPUnit مراحل 0–7 + **`ocr:verify --fail`**). **نطاق PHPUnit المرحلي مقابل المجموعة الكاملة:** [`docs/phases/PHASE_GATE_SCOPE.md`](./phases/PHASE_GATE_SCOPE.md). |
 
 ## 3) ترتيب العمل اليومي (مقترح)
 

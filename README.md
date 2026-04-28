@@ -394,15 +394,15 @@ Base URL: `/api/v1/`
 ## Staging-first rollout (safe)
 
 - **ترتيب التنفيذ الرسمي (مرقم):** [`docs/Execution_Order_Asas_Pro.md`](docs/Execution_Order_Asas_Pro.md) — ابدأ من المرحلة 0 ولا تتخطَّ مرحلة دون إكمال السابقة.
-- **CI:** [`policy-env-on-pr.yml`](.github/workflows/policy-env-on-pr.yml) يفحص سياسة env على **كل** PR نحو `main`؛ [`staging-gate.yml`](.github/workflows/staging-gate.yml) للبوابة الكاملة حسب المسارات.
+- **CI:** [`policy-env-on-pr.yml`](.github/workflows/policy-env-on-pr.yml) يفحص سياسة env على **كل** PR نحو `main`؛ [`staging-gate.yml`](.github/workflows/staging-gate.yml) للبوابة الكاملة حسب المسارات (Vitest + PHPUnit مراحل 0–7 + **`ocr:verify --fail`**).
 - **Policy (Arabic, binding):** [`docs/Staging_Governance_Policy.md`](docs/Staging_Governance_Policy.md) — إغلاق حلقة Staging قبل التوسع.
-- **Mandatory gate (PR / production):** [`docs/Staging_Gate_Mandatory_Policy.md`](docs/Staging_Gate_Mandatory_Policy.md) — `policy-env-example` + `staging-gate` قبل الدمج والإنتاج.
+- **Mandatory gate (PR / production):** [`docs/Staging_Gate_Mandatory_Policy.md`](docs/Staging_Gate_Mandatory_Policy.md) — `policy-env-example` + `staging-gate` (مع **Tesseract/OCR** في نهاية البوابة) قبل الدمج والإنتاج.
 - **قالب PR:** [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) — قائمة تحقق عند فتح طلب الدمج.
 - **حماية `main` + مراجعة:** [`docs/Branch_Protection_And_Review_Policy.md`](docs/Branch_Protection_And_Review_Policy.md) · إعداد GitHub: [`docs/GitHub_Branch_Protection_Setup.md`](docs/GitHub_Branch_Protection_Setup.md).
 - **Runbook (Arabic):** [`docs/Staging_Deploy_Runbook.md`](docs/Staging_Deploy_Runbook.md) — staging قبل الإنتاج، متغيرات محافظة، فحص بعد النشر.
 - **اختبار Staging يدوي (مرقم):** [`docs/Staging_Manual_Test_Checklist.md`](docs/Staging_Manual_Test_Checklist.md).
 - **ما نفعله الآن + PASS/FAIL + ما لا نفعله:** [`docs/Staging_Execution_Now.md`](docs/Staging_Execution_Now.md).
-- **Quick automated check (Docker):** `make staging-gate` — Vitest + PHPUnit (SaaS / platform gates).
+- **Quick automated check (Docker):** `make staging-gate` — Vitest + PHPUnit مراحل 0–7 + **`make ocr-verify`** مدمج في السكربت؛ [`docs/Executive_Gate_Current_Phase.md`](docs/Executive_Gate_Current_Phase.md).
 - **Example env:** [`backend/.env.staging.example`](backend/.env.staging.example), [`frontend/env.staging.example`](frontend/env.staging.example).
 
 ---
@@ -479,7 +479,11 @@ make tinker        # Laravel Tinker REPL
 make queue-restart # Restart all queue worker containers
 make swagger       # Generate Swagger documentation
 make test          # Run all tests in parallel
-make staging-gate  # Quick gate: npm ci + Vitest + SaaS/platform PHPUnit (Docker)
+make staging-gate  # Vitest + PHPUnit phases 0–7 + ocr:verify --fail (Docker)
+make ocr-verify      # Tesseract eng+ara only (app container; after compose up)
+make preflight-pilot-readonly  # Read-only preflight (bash); see scripts/preflight-pilot-readonly.ps1 on Windows
+make execution-order-local  # policy-env-example + printed hints for phases 1–5 (Node)
+make execution-order-local-ps  # Windows + pwsh: same (no GNU Make); أو: powershell -File scripts/execution-order-local.ps1
 make policy-env-example  # Static check: env *.example must not enable tenant catalog edit (Node)
 make test-filter filter=TestName  # Run specific test
 make test-coverage # Run tests with coverage report

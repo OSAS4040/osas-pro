@@ -20,8 +20,13 @@ use App\Services\InventoryService;
 use App\Services\ReservationService;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_03_PROGRESS_REPORT.md — عقد 409 عبر عدة موارد API
+ */
+#[Group('phase3')]
 class ConflictErrorContractTest extends TestCase
 {
     public function test_409_error_contract_is_consistent_for_transition_rejections(): void

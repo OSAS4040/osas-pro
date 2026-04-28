@@ -10,11 +10,15 @@ use Database\Seeders\DefaultAdminSeeder;
 use Database\Seeders\DemoPlatformAdminSeeder;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
  * يثبت أن بيانات DemoPlatformAdminSeeder تطابق مسار تسجيل الدخول الفعلي (بدون تخمين).
+ *
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md
  */
+#[Group('phase0')]
 final class DemoPlatformAdminSeederLoginTest extends TestCase
 {
     public function test_after_seeder_password_login_returns_platform_employee(): void

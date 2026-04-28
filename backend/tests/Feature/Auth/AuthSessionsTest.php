@@ -8,8 +8,13 @@ use App\Models\AuthLoginEvent;
 use App\Models\AuthPersonalAccessToken;
 use App\Services\Auth\AuthSessionMetadataWriter;
 use Illuminate\Http\Request;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — جلسات وتدقيق تسجيل الدخول
+ */
+#[Group('phase0')]
 class AuthSessionsTest extends TestCase
 {
     public function test_login_success_writes_audit_and_token_metadata(): void

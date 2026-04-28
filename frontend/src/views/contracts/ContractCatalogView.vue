@@ -105,7 +105,7 @@
             <td class="px-3 py-2 text-xs text-gray-500">{{ fmtDateTime(row.updated_at) }}</td>
             <td class="px-3 py-2 whitespace-nowrap">
               <button v-if="canUpdate" type="button" class="text-xs text-primary-600 hover:underline ml-2" @click="openEdit(row)">تعديل</button>
-              <button v-if="canMatchPreview" type="button" class="text-xs text-violet-600 hover:underline ml-2" @click="openTestForRow(row)">اختبر</button>
+              <button v-if="canMatchPreview" type="button" class="text-xs text-primary-600 hover:underline ml-2" @click="openTestForRow(row)">اختبر</button>
               <button v-if="canDelete" type="button" class="text-xs text-red-600 hover:underline" @click="deleteRow(row)">حذف</button>
             </td>
           </tr>

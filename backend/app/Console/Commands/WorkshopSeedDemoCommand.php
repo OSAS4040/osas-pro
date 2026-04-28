@@ -13,7 +13,7 @@ class WorkshopSeedDemoCommand extends Command
 {
     protected $signature = 'workshop:seed-demo';
 
-    protected $description = 'Seed DemoCompanySeeder + DefaultAdminSeeder (owner@demo.sa / admin@osas.sa credentials)';
+    protected $description = 'Seed DemoCompanySeeder + DefaultAdminSeeder + DemoPlatformAdminSeeder (incl. /platform/login demo)';
 
     public function handle(): int
     {
@@ -25,6 +25,7 @@ class WorkshopSeedDemoCommand extends Command
 
         require_once database_path('seeders/DemoCompanySeeder.php');
         require_once database_path('seeders/DefaultAdminSeeder.php');
+        require_once database_path('seeders/DemoPlatformAdminSeeder.php');
 
         Model::unguarded(function () {
             $demo = new \Database\Seeders\DemoCompanySeeder;
@@ -34,9 +35,13 @@ class WorkshopSeedDemoCommand extends Command
             $admin = new \Database\Seeders\DefaultAdminSeeder;
             $admin->setContainer($this->laravel)->setCommand($this);
             $admin->__invoke();
+
+            $platformDemo = new \Database\Seeders\DemoPlatformAdminSeeder;
+            $platformDemo->setContainer($this->laravel)->setCommand($this);
+            $platformDemo->__invoke();
         });
 
-        $this->info('Demo seeders finished. Try: owner@demo.sa / password or admin@osas.sa / 12345678');
+        $this->info('Demo seeders finished. Staff: owner@demo.sa / password or admin@osas.sa / 12345678 — platform: platform-demo@osas.sa / 12345678 at /platform/login');
 
         return self::SUCCESS;
     }

@@ -4,8 +4,13 @@ namespace Tests\Feature\Platform;
 
 use App\Models\PlatformAnnouncementBanner;
 use App\Models\User;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_06_PROGRESS_REPORT.md
+ */
+#[Group('phase6')]
 class PlatformAnnouncementBannerTest extends TestCase
 {
     private function authHeaders(User $user): array

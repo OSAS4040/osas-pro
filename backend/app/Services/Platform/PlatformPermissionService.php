@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Platform;
 
 use App\Models\User;
+use App\Support\PlatformIntelligence\PlatformIntelligenceCapability;
+use App\Support\PlatformIntelligence\PlatformOperatorPermissionMatrix;
 use App\Support\SaasPlatformAccess;
 
 /**
@@ -15,6 +17,21 @@ final class PlatformPermissionService
     public function isSuperAdmin(?User $user): bool
     {
         return $this->effectivePlatformRole($user) === 'super_admin';
+    }
+
+    /**
+     * Resolved {@see User::$platform_role} for grant lookup (same rules as permission checks).
+     */
+    public function readEffectivePlatformRole(?User $user): ?string
+    {
+        return $this->effectivePlatformRole($user);
+    }
+
+    public function intelligenceCapabilityGranted(?User $user, PlatformIntelligenceCapability $capability): bool
+    {
+        $key = PlatformOperatorPermissionMatrix::permissionFor($capability);
+
+        return $this->hasPermission($user, $key);
     }
 
     public function hasPermission(?User $user, string $permission): bool

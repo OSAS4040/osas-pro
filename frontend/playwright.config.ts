@@ -24,7 +24,24 @@ export default defineConfig({
     video: 'retain-on-failure',
     locale: 'ar-SA',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  /**
+   * مسارات المنصة تستخدم نفس حساب التجربة وجلسة Sanctum؛ التشغيل المتوازي لها يسبب تداخلاً.
+   * مشروع منفصل serial + عامّ واحد لبقية الـ E2E.
+   */
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: /platform-phase2-admin-ui-smoke\.spec|platform-phase4-/,
+    },
+    {
+      name: 'chromium-platform-gate',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /platform-phase2-admin-ui-smoke\.spec|platform-phase4-/,
+      fullyParallel: false,
+      workers: 1,
+    },
+  ],
   webServer:
     process.env.PLAYWRIGHT_NO_WEB_SERVER === '1'
       ? undefined

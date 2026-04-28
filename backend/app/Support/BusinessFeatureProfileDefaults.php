@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+/** @see frontend/src/config/businessFeatureProfileDefaults.ts (يجب إبقاؤهما متطابقين) */
 final class BusinessFeatureProfileDefaults
 {
     /**
@@ -15,6 +16,8 @@ final class BusinessFeatureProfileDefaults
                 'hr' => true,
                 'finance' => true,
                 'accounting' => true,
+                /** واجهة الأصول الثابتة — تُفعَّل صراحةً عند جاهزية المنتج والخلفية */
+                'fixed_assets' => false,
                 'inventory' => true,
                 'reports' => true,
                 'intelligence' => true,
@@ -30,6 +33,7 @@ final class BusinessFeatureProfileDefaults
                 'hr' => true,
                 'finance' => true,
                 'accounting' => true,
+                'fixed_assets' => false,
                 'inventory' => true,
                 'reports' => true,
                 'intelligence' => false,
@@ -43,6 +47,7 @@ final class BusinessFeatureProfileDefaults
                 'hr' => true,
                 'finance' => true,
                 'accounting' => true,
+                'fixed_assets' => false,
                 'inventory' => false,
                 'reports' => true,
                 'intelligence' => true,

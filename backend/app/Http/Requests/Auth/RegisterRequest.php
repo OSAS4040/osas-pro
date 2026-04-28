@@ -38,15 +38,17 @@ class RegisterRequest extends FormRequest
                 return;
             }
 
+            $normalized = PhoneNormalizer::normalizeForStorage($raw);
+            $lookup = array_values(array_unique(array_filter([
+                $normalized,
+                ...$variants,
+            ])));
+
             $collision = User::withoutGlobalScope('tenant')
                 ->whereNotNull('phone')
                 ->where('phone', '!=', '')
-                ->get(['id', 'phone'])
-                ->contains(function (User $u) use ($variants): bool {
-                    $uv = PhoneNormalizer::comparisonVariants((string) $u->getRawOriginal('phone'));
-
-                    return count(array_intersect($variants, $uv)) > 0;
-                });
+                ->whereIn('phone', $lookup)
+                ->exists();
 
             if ($collision) {
                 $v->errors()->add('phone', 'رقم الجوال مسجّل مسبقاً.');

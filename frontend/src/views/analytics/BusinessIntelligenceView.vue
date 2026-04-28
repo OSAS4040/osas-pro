@@ -112,7 +112,7 @@
     <!-- تحليل مالي وتشغيلي (API business-analytics) -->
     <section v-if="!reportsDenied" class="space-y-4">
       <h2 class="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
-        <span class="w-1 h-4 bg-violet-500 rounded-full" />
+        <span class="w-1 h-4 bg-primary-500 rounded-full" />
         التحليل المالي والتشغيلي
       </h2>
       <p class="text-xs text-gray-500 dark:text-slate-400 -mt-2 max-w-3xl">

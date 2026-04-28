@@ -6,12 +6,16 @@ namespace Tests\Feature\Saas;
 
 use App\Http\Controllers\Api\V1\SaasController;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
  * يضمن أن بناء المتحكم لا يستدعي parent::__construct() على Illuminate\Routing\Controller
  * (ما يسبب Cannot call constructor في PHP 8+).
+ *
+ * @see docs/phases/PHASE_01_PROGRESS_REPORT.md
  */
+#[Group('phase1')]
 final class SaasControllerContainerTest extends TestCase
 {
     use RefreshDatabase;
@@ -26,6 +30,6 @@ final class SaasControllerContainerTest extends TestCase
     {
         $res = $this->getJson('/api/v1/plans');
         $res->assertSuccessful();
-        $res->assertJsonStructure(['data', 'trace_id']);
+        $res->assertJsonStructure(['data', 'plan_addons', 'trace_id']);
     }
 }

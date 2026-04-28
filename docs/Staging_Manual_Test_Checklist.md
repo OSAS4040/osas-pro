@@ -14,8 +14,8 @@
 
 | # | الإجراء | ملاحظة |
 |---|---------|--------|
-| A1 | `make policy-env-example` أو `node scripts/check-policy-env-example.mjs` | لا يحتاج Docker؛ يتحقق من قوالب env في المستودع |
-| A2 | `docker compose up -d` ثم `make staging-gate` (أو على Windows: `scripts/pilot-step2-docker.ps1` لخطوة 2 كاملة مع `verify` و`integrity`) | Vitest + PHPUnit مسار المنصة/SaaS (+ بوابة أوسع إن استخدمت السكربت) |
+| A1 | `make policy-env-example` أو `node scripts/check-policy-env-example.mjs` | لا يحتاج Docker؛ يتحقق من قوالب env في الجذر و`backend/` و`frontend/` و`load-testing/` وحزم `deployment/` و`release/` (قائمة المسارات في `scripts/check-policy-env-example.mjs`) |
+| A2 | `docker compose up -d` ثم `make staging-gate` أو `make staging-gate-ps` (أو Windows: `scripts/pilot-step2-docker.ps1` لخطوة 2 مع `verify` و`integrity`) | Vitest + PHPUnit مراحل 0–7 + **`php artisan ocr:verify --fail`** داخل الحاوية (+ `verify` / `integrity` في السكربت الكامل عند pilot-step2) |
 | A2b | (اختياري، محلي) `scripts/pilot-step3-local-gate.ps1` و`-WithE2e` لـ `test:ci` | **A1** + `health` + جذر nginx (تحذير 502 متوقع بدون SPA) + Playwright كما في CI |
 | A3 | (اختياري) نجاح **`Policy env on PR`** على GitHub عند وجود PR | يطابق سياسة القوالب |
 

@@ -119,6 +119,21 @@ return [
             'path' => '/zatca', 'feature_gate' => 'accounting', 'permission' => null, 'requires_manager' => true, 'rollout' => 'live',
         ],
         [
+            'id' => 'fixed_assets',
+            'sort' => 235,
+            'section' => ['ar' => 'المحاسبة', 'en' => 'Accounting'],
+            'title' => ['ar' => 'الأصول الثابتة', 'en' => 'Fixed assets'],
+            'description' => [
+                'ar' => 'سجل أصول وإهلاك — يُفعّل من ملف نشاط المنشأة؛ التنفيذ الفني مرحلي.',
+                'en' => 'Asset register and depreciation — gated in the business profile; technical rollout is phased.',
+            ],
+            'path' => '/fixed-assets',
+            'feature_gate' => 'fixed_assets',
+            'permission' => 'reports.accounting.view',
+            'requires_manager' => false,
+            'rollout' => 'planned',
+        ],
+        [
             'id' => 'inventory',
             'sort' => 310,
             'section' => ['ar' => 'المخزون', 'en' => 'Inventory'],

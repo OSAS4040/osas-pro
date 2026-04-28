@@ -22,7 +22,7 @@
     <!-- ذكاء: ملخص -->
     <div
       v-if="!loading && rules.length"
-      class="rounded-xl border border-violet-200/90 bg-violet-50/90 dark:bg-violet-950/40 dark:border-violet-900/50 px-4 py-3 text-sm text-violet-950 dark:text-violet-100"
+      class="rounded-xl border border-primary-200/90 bg-primary-50/90 dark:bg-primary-950/40 dark:border-primary-900/50 px-4 py-3 text-sm text-primary-950 dark:text-primary-100"
     >
       <span class="font-semibold">ملخص:</span>
       {{ activeRules }} قاعدة نشطة من أصل {{ rules.length }} —

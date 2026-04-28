@@ -9,8 +9,13 @@ use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_06_PROGRESS_REPORT.md
+ */
+#[Group('phase6')]
 final class PlatformIamRoleRestrictionTest extends TestCase
 {
     public function test_auditor_cannot_access_ops_summary(): void

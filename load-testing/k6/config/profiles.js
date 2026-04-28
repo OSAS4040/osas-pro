@@ -5,6 +5,8 @@ import {
   THRESHOLDS_STRESS,
   THRESHOLDS_SPIKE,
   THRESHOLDS_SOAK,
+  THRESHOLDS_VERIFICATION,
+  THRESHOLDS_CAPACITY_POS,
   PROFILE_LABELS,
 } from './acceptance.js';
 import { getEnterpriseGateOptions } from './enterprise-gate.js';
@@ -14,7 +16,7 @@ export { PROFILE_LABELS };
 const GRACEFUL = '30s';
 
 /**
- * @param {string} profile smoke|normal|peak|stress|spike|soak
+ * @param {string} profile smoke|normal|peak|stress|spike|soak|capacity_pos|verification|…
  */
 export function getProfileOptions(profile) {
   const p = (profile || 'smoke').toLowerCase();
@@ -34,6 +36,10 @@ export function getProfileOptions(profile) {
       return buildNormal();
     case 'peak':
       return buildPeak();
+    case 'verification':
+      return buildVerificationGate();
+    case 'capacity_pos':
+      return buildCapacityPos();
     case 'stress':
       return buildStress();
     case 'spike':
@@ -209,6 +215,125 @@ function buildNormal() {
     thresholds: THRESHOLDS_NORMAL,
     summaryTrendStats: ['avg', 'med', 'p(50)', 'p(95)', 'p(99)', 'max'],
   };
+}
+
+/**
+ * بوابة تحقق ما بعد التحسين: قراءات ثقيلة (~150 VU) + POS لمدة ≥16 دقيقة، عتبات صارمة (acceptance.THRESHOLDS_VERIFICATION).
+ */
+function buildVerificationGate() {
+  return {
+    scenarios: {
+      read_mix: {
+        executor: 'ramping-vus',
+        startVUs: 0,
+        stages: [
+          { duration: '2m', target: 150 },
+          { duration: '13m', target: 150 },
+          { duration: '1m', target: 0 },
+        ],
+        gracefulRampDown: GRACEFUL,
+        exec: 'scenarioReadMix',
+      },
+      peak_health: {
+        executor: 'constant-arrival-rate',
+        rate: 1,
+        timeUnit: '12s',
+        duration: '15m',
+        preAllocatedVUs: 2,
+        maxVUs: 5,
+        exec: 'scenarioHealth',
+        startTime: '20s',
+      },
+      pos_writes: {
+        executor: 'ramping-arrival-rate',
+        startRate: 2,
+        timeUnit: '1s',
+        preAllocatedVUs: 50,
+        maxVUs: 120,
+        stages: [
+          { duration: '2m', target: 8 },
+          { duration: '13m', target: 10 },
+          { duration: '1m', target: 0 },
+        ],
+        exec: 'scenarioPosSale',
+        startTime: '30s',
+      },
+      isolation_probe: {
+        executor: 'constant-arrival-rate',
+        rate: 1,
+        timeUnit: '5s',
+        duration: '15m',
+        preAllocatedVUs: 2,
+        maxVUs: 8,
+        exec: 'scenarioIsolation',
+        startTime: '40s',
+      },
+      idempotency_probe: {
+        executor: 'shared-iterations',
+        vus: 1,
+        iterations: 4,
+        maxDuration: '2m',
+        exec: 'scenarioIdempotencyMismatch',
+        startTime: '50s',
+      },
+    },
+    thresholds: THRESHOLDS_VERIFICATION,
+    summaryTrendStats: ['avg', 'med', 'p(50)', 'p(95)', 'p(99)', 'max'],
+  };
+}
+
+/**
+ * سعة POS — بيع فقط، معدّل وصول ثابت (iterations/sec) يُضبط بـ K6_CAPACITY_POS_RATE.
+ * مدة الهضم: K6_CAPACITY_POS_RAMP (افتراضي 30s) + K6_CAPACITY_POS_STEADY_MIN (افتراضي 5m) + هبوط قصير.
+ */
+function buildCapacityPos() {
+  const rate = envPositiveInt('K6_CAPACITY_POS_RATE', 3);
+  const steadyMin = envPositiveInt('K6_CAPACITY_POS_STEADY_MIN', 5);
+  const ramp = envDuration('K6_CAPACITY_POS_RAMP', '30s');
+  const tail = envDuration('K6_CAPACITY_POS_TAIL', '25s');
+  const startRate = rate > 1 ? 1 : rate;
+  const preVu = envPositiveInt('K6_CAPACITY_POS_PRE_VUS', Math.min(120, Math.max(20, rate * 10)));
+  const maxVu = envPositiveInt('K6_CAPACITY_POS_MAX_VUS', Math.min(180, Math.max(35, rate * 16)));
+
+  return {
+    scenarios: {
+      /** POS فقط — بدون read_mix لقياس سقف المعاملة المالية بعزل أفضل */
+      pos_writes: {
+        executor: 'ramping-arrival-rate',
+        startRate,
+        timeUnit: '1s',
+        preAllocatedVUs: preVu,
+        maxVUs: maxVu,
+        stages: [
+          { duration: ramp, target: rate },
+          { duration: `${steadyMin}m`, target: rate },
+          { duration: tail, target: 0 },
+        ],
+        exec: 'scenarioPosSale',
+      },
+    },
+    thresholds: THRESHOLDS_CAPACITY_POS,
+    summaryTrendStats: ['avg', 'med', 'p(50)', 'p(95)', 'p(99)', 'max'],
+  };
+}
+
+function envPositiveInt(name, fallback) {
+  const raw = __ENV[name];
+  if (raw == null || raw === '') {
+    return fallback;
+  }
+  const n = parseInt(String(raw), 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+/** قيمة مدة k6 مثل 30s أو 2m — غير صالحة تُستبدل بالافتراضي */
+function envDuration(name, defaultVal) {
+  const raw = __ENV[name];
+  if (raw == null || raw === '') {
+    return defaultVal;
+  }
+  const s = String(raw).trim();
+  return /^[0-9]+(\.[0-9]+)?(ms|s|m|h|d)$/.test(s) ? s : defaultVal;
 }
 
 /** Peak: 75 VU قراءة، POS أعلى — ضمن 50–100 / 10–15 */

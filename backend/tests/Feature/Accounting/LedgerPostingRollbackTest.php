@@ -13,8 +13,13 @@ use App\Services\InvoiceService;
 use App\Services\LedgerService;
 use Illuminate\Support\Str;
 use Mockery;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_04_PROGRESS_REPORT.md — محاسبة / قيود
+ */
+#[Group('phase4')]
 class LedgerPostingRollbackTest extends TestCase
 {
     protected function tearDown(): void

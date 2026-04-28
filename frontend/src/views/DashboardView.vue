@@ -18,7 +18,7 @@
       @dismiss="dismissChecklistForLater"
     />
     <!-- Header -->
-    <div class="flex items-center justify-between gap-4 flex-wrap rounded-2xl border border-gray-200/80 dark:border-slate-700/80 bg-gradient-to-l from-primary-50/90 via-white to-cyan-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-primary-950/40 px-4 py-3 shadow-sm">
+    <div class="flex items-center justify-between gap-4 flex-wrap rounded-2xl border border-gray-200/80 dark:border-slate-700/80 bg-gradient-to-l from-primary-50/90 via-white to-violet-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-primary-950/40 px-4 py-3 shadow-sm">
       <div>
         <h1 class="text-xl font-bold text-gray-900 dark:text-slate-100 tracking-tight">لوحة التحكم</h1>
         <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{{ dashGreeting }} — {{ today }}</p>
@@ -133,7 +133,7 @@
             >
               <td class="px-5 py-2.5 font-medium text-gray-800 dark:text-slate-200 font-mono">{{ inv.invoice_number }}</td>
               <td class="px-5 py-2.5 text-gray-600 dark:text-slate-400 truncate max-w-[120px]">{{ inv.customer_name }}</td>
-              <td class="px-5 py-2.5 text-green-700 dark:text-emerald-400 font-semibold">{{ fmtMoney(parseFloat(inv.total ?? 0)) }}</td>
+              <td class="px-5 py-2.5 text-primary-700 dark:text-primary-400 font-semibold">{{ fmtMoney(parseFloat(inv.total ?? 0)) }}</td>
               <td class="px-5 py-2.5">
                 <span class="px-2 py-0.5 rounded-full text-xs font-medium"
                       :class="invoiceStatusClass(inv.status)"
@@ -169,7 +169,7 @@
             <span class="text-2xl font-bold" :class="stat.color">{{ stat.value }}</span>
           </div>
           <div v-if="woStats.every(s => Number(s.value) === 0)" class="py-8 text-center text-gray-500 dark:text-slate-400">
-            <CheckCircleIcon class="w-10 h-10 text-emerald-200 dark:text-emerald-800 mx-auto mb-2" />
+            <CheckCircleIcon class="w-10 h-10 text-primary-200 dark:text-primary-900/60 mx-auto mb-2" />
             <p class="text-sm font-medium">لا أوامر عمل جديدة في الفترة الحالية</p>
             <p class="text-xs mt-1 text-gray-400">عند استقبال أوامر عمل جديدة سيظهر التوزيع هنا (مركز خدمة أو منفذ بيع)</p>
           </div>
@@ -249,6 +249,7 @@ const biz = useBusinessProfileStore()
 
 const showBiShortcuts = computed(() => {
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   return canAccessStaffBusinessIntelligence({
     buildFlagOn: featureFlags.intelligenceCommandCenter,
@@ -258,6 +259,7 @@ const showBiShortcuts = computed(() => {
 })
 const showHeatmapShortcut = computed(() => {
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   return tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
 })
@@ -320,8 +322,8 @@ const woStats = computed(() => [
     hint: `${kpi.value.woCompletionRate}% منشأة في الفترة`,
     value: kpi.value.woCompleted,
     icon: CheckCircleIcon,
-    color: 'text-green-600 dark:text-green-400',
-    bg: 'bg-green-50 dark:bg-green-950/35',
+    color: 'text-primary-600 dark:text-primary-400',
+    bg: 'bg-primary-50 dark:bg-primary-950/35',
   },
 ])
 
@@ -397,9 +399,9 @@ function fmtMoney(v: number) {
 
 const colorMap: Record<string, Record<string, string>> = {
   red:    { bg: 'bg-red-50',    icon: 'text-red-500',    val: 'text-red-700' },
-  green:  { bg: 'bg-green-50',  icon: 'text-green-600',  val: 'text-green-700' },
+  green:  { bg: 'bg-primary-50 dark:bg-primary-950/25', icon: 'text-primary-600 dark:text-primary-400', val: 'text-primary-700 dark:text-primary-300' },
   blue:   { bg: 'bg-blue-50',   icon: 'text-blue-600',   val: 'text-blue-700' },
-  purple: { bg: 'bg-purple-50', icon: 'text-purple-600', val: 'text-purple-700' },
+  purple: { bg: 'bg-primary-50 dark:bg-primary-950/25', icon: 'text-primary-600 dark:text-primary-400', val: 'text-primary-700 dark:text-primary-300' },
   gray:   { bg: 'bg-gray-50',   icon: 'text-gray-500',   val: 'text-gray-700' },
   orange: { bg: 'bg-orange-50', icon: 'text-orange-500', val: 'text-orange-700' },
   teal:   { bg: 'bg-teal-50',   icon: 'text-teal-600',   val: 'text-teal-700' },
@@ -413,7 +415,7 @@ const KpiCard = defineComponent({
       const c = colorMap[p.color ?? 'gray']
       const trendEl = p.trend
         ? h(p.trend === 'up' ? ArrowTrendingUpIcon : ArrowTrendingDownIcon, {
-            class: `w-3.5 h-3.5 ${p.trend === 'up' ? 'text-green-500' : 'text-red-400'}`
+            class: `w-3.5 h-3.5 ${p.trend === 'up' ? 'text-primary-500' : 'text-red-400'}`
           })
         : null
       return h('div', { class: 'bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 flex items-start gap-4 hover:shadow-sm transition-shadow' }, [
@@ -436,8 +438,8 @@ const QuickBtn = defineComponent({
   props: { icon: Object, label: String, to: { type: String, required: true as const }, color: String },
   setup(p) {
     const btnColor: Record<string, string> = {
-      blue:   'bg-blue-600 hover:bg-blue-700',   purple: 'bg-purple-600 hover:bg-purple-700',
-      green:  'bg-green-600 hover:bg-green-700', teal:   'bg-teal-600 hover:bg-teal-700',
+      blue:   'bg-blue-600 hover:bg-blue-700',   purple: 'bg-primary-600 hover:bg-primary-700',
+      green:  'bg-primary-600 hover:bg-primary-700', teal:   'bg-teal-600 hover:bg-teal-700',
       gray:   'bg-gray-600 hover:bg-gray-700',   orange: 'bg-orange-500 hover:bg-orange-600',
       indigo: 'bg-indigo-600 hover:bg-indigo-700',
       cyan:   'bg-cyan-600 hover:bg-cyan-700',

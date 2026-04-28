@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Pilot step 2 on Windows: same as make staging-gate + make verify + integrity-verify (Docker).
+  Pilot step 2 on Windows: same as make staging-gate (includes ocr:verify) + make verify + integrity-verify (Docker).
 
 .DESCRIPTION
   Requires: docker compose stack up (frontend + app). Stops on first non-zero exit.
@@ -17,12 +17,8 @@ function Step([string]$title) {
   Write-Host "=== $title ==="
 }
 
-Step "staging-gate: Vitest (frontend container)"
-docker compose exec -T frontend sh -lc "cd /app && npm ci && npm test"
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-Step "staging-gate: PHPUnit SaaS path"
-docker compose exec -T app sh -lc "cd /var/www && ./vendor/bin/phpunit tests/Unit/Support/SaasPlatformAccessTest.php tests/Feature/Saas/"
+Step "staging-gate (Vitest + PHPUnit phases 0-7 + ocr:verify)"
+& (Join-Path $root "scripts/staging-gate.ps1")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Step "verify: lint + build (frontend)"

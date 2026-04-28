@@ -1,5 +1,6 @@
 /**
- * تحقق سياسة المستودع: أمثلة backend/.env* لا تُفعّل SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT=true
+ * تحقق سياسة المستودع: قوالب env المعتمدة لا تُفعّل SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT=true
+ * (أسطر غير معلّقة فقط؛ تعليقات # تُتجاهل)
  * تشغيل: node scripts/check-policy-env-example.mjs
  */
 import { readFileSync, existsSync } from 'node:fs'
@@ -7,7 +8,24 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const files = ['backend/.env.example', 'backend/.env.staging.example']
+
+/** مسارات نسبية من جذر المستودع — يجب أن تبقى موجودة وخاضعة لنفس السياسة */
+const files = [
+  '.env.example',
+  'backend/.env.example',
+  'backend/.env.staging.example',
+  'backend/env.example',
+  'frontend/env.example',
+  'frontend/env.staging.example',
+  'load-testing/env.example',
+  'deployment/official_release_package/.env.example',
+  'deployment/official_release_package/backend/.env.example',
+  'deployment/official_release_package/backend/.env.staging.example',
+  'deployment/official_release_package/backend/env.example',
+  'deployment/official_release_package/frontend/env.example',
+  'deployment/official_release_package/frontend/env.staging.example',
+  'release/osas-pro-production-package/deployment/.env.example',
+]
 
 const bad = /\bSAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT\s*=\s*true\b/
 
@@ -28,4 +46,6 @@ for (const rel of files) {
   }
 }
 
-console.log('POLICY CHECK OK: SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT is not true in env examples.')
+console.log(
+  'POLICY CHECK OK: SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT is not true in tracked env templates.',
+)

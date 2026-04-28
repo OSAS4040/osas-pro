@@ -10,8 +10,13 @@ use App\Models\User;
 use App\Support\Auth\LoginEligibilityResult;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — أهلية تسجيل الدخول
+ */
+#[Group('phase0')]
 class LoginEligibilityTest extends TestCase
 {
     public function test_active_user_receives_token(): void

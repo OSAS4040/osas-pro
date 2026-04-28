@@ -17,7 +17,7 @@
 ## A.1 الأدلة الفعلية (واجهة)
 
 - إدارة عامة/إدارية:
-  - `frontend/src/views/admin/AdminDashboardView.vue`
+  - `frontend/src/views/platform/PlatformAdminDashboardPage.vue` (وملفات `Platform*View.vue` للمسارات)
   - `frontend/src/views/admin/QaValidationView.vue`
 - إدارة الشركات والفروع والإعدادات:
   - `frontend/src/views/settings/SettingsView.vue`

@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature\Platform;
 
 use Illuminate\Support\Facades\Config;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_06_PROGRESS_REPORT.md
+ */
+#[Group('phase6')]
 final class PlatformAdminAccessIsolationTest extends TestCase
 {
     public function test_tenant_owner_with_allowlisted_email_gets_403_on_admin_companies(): void

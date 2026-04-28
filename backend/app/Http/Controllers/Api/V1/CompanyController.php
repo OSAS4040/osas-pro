@@ -238,6 +238,8 @@ class CompanyController extends Controller
             'invoice_options' => ['sometimes', 'array'],
             'smart_user_guide' => ['sometimes', 'array'],
             'ui'              => ['sometimes', 'array'],
+            /** ألوان واجهة SPA — يُحمَّل من useTheme (preset + primary) */
+            'ui_theme'        => ['sometimes', 'array'],
             'referrals'       => ['sometimes', 'array'],
             'invoice_footer_note' => ['sometimes', 'string'],
             'default_vat_rate' => ['sometimes', 'numeric', 'min:0', 'max:100'],
@@ -246,13 +248,19 @@ class CompanyController extends Controller
             'documents_notifications' => ['sometimes', 'array'],
             'documents_registry' => ['sometimes', 'array'],
             'supplier_contract_notifications' => ['sometimes', 'array'],
+            'wallet_treasury_accounts' => ['sometimes', 'array', 'max:12'],
+            'wallet_treasury_accounts.*.bank_name' => ['required_with:wallet_treasury_accounts', 'string', 'max:160'],
+            'wallet_treasury_accounts.*.iban' => ['nullable', 'string', 'max:48'],
+            'wallet_treasury_accounts.*.account_number' => ['nullable', 'string', 'max:48'],
+            'wallet_treasury_accounts.*.beneficiary_label' => ['nullable', 'string', 'max:200'],
         ]);
 
         $current  = $company->settings ?? [];
         $merged   = array_merge($current, $request->only([
             'whatsapp', 'email', 'tracking', 'dashcam', 'loyalty', 'cameras', 'booking_portal', 'invoice_options',
-            'smart_user_guide', 'ui', 'referrals', 'invoice_footer_note', 'default_vat_rate', 'accepted_payment_methods',
+            'smart_user_guide', 'ui', 'ui_theme', 'referrals', 'invoice_footer_note', 'default_vat_rate', 'accepted_payment_methods',
             'pos', 'documents_notifications', 'documents_registry', 'supplier_contract_notifications',
+            'wallet_treasury_accounts',
         ]));
         $company->update(['settings' => $merged]);
 
@@ -378,7 +386,7 @@ class CompanyController extends Controller
     public function testPosConnection(Request $request, int $id): JsonResponse
     {
         $company = Company::findOrFail($id);
-        $this->authorize('view', $company);
+        $this->authorize('update', $company);
 
         $data = $request->validate([
             'ip' => ['required', 'string', 'max:255'],
@@ -389,6 +397,17 @@ class CompanyController extends Controller
         $host = trim($data['ip']);
         $protocol = $data['protocol'] ?? 'http';
         $timeout = (int) ($data['timeout_ms'] ?? 1800);
+        if ($this->isSensitiveConnectivityProbeTarget($host)) {
+            return response()->json([
+                'message' => 'الوجهة غير مسموح بها لاختبار الاتصال.',
+                'data' => [
+                    'ok' => false,
+                    'protocol' => $protocol,
+                    'detail' => 'blocked_target',
+                ],
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
         $ok = false;
         $latencyMs = null;
         $detail = null;
@@ -433,6 +452,55 @@ class CompanyController extends Controller
             ],
             'trace_id' => app('trace_id'),
         ], $ok ? 200 : 422);
+    }
+
+    private function isSensitiveConnectivityProbeTarget(string $target): bool
+    {
+        $normalized = trim(strtolower($target));
+        if ($normalized === '') {
+            return true;
+        }
+
+        // Accept raw host/ip or full URL; normalize to hostname for filtering.
+        $host = $normalized;
+        if (str_contains($host, '://')) {
+            $parsed = parse_url($host, PHP_URL_HOST);
+            $host = is_string($parsed) ? strtolower(trim($parsed)) : '';
+        } elseif (str_contains($host, '/')) {
+            $host = explode('/', $host, 2)[0];
+        }
+
+        if ($host === '') {
+            return true;
+        }
+
+        if (str_contains($host, ':')) {
+            $host = explode(':', $host, 2)[0];
+        }
+
+        $blockedHosts = [
+            'localhost',
+            '0.0.0.0',
+            '127.0.0.1',
+            '::1',
+            'host.docker.internal',
+            'metadata.google.internal',
+            '169.254.169.254',
+            '100.100.100.200',
+        ];
+        if (in_array($host, $blockedHosts, true)) {
+            return true;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return str_starts_with($host, '127.')
+                || str_starts_with($host, '169.254.');
+        }
+        if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return $host === '::1' || str_starts_with($host, 'fe80:');
+        }
+
+        return false;
     }
 
 }

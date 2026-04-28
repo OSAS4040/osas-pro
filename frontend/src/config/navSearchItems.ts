@@ -20,6 +20,8 @@ export type NavSearchItem = {
   requiresAnyPermission?: string[]
   /** مسارات إدارة المنصة — يظهر فقط لمستخدمي platform_employee */
   requiresPlatform?: boolean
+  /** مفتاح من `business_profile.feature_matrix` — يُخفى عن الموظفين عند التعطيل (المالك يراه للتهيئة) */
+  requiresTenantFeature?: string
 }
 
 export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
@@ -77,6 +79,14 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/ledger', label: 'دفتر الأستاذ', section: 'المالية والمحاسبة', keywords: ['محاسبة', 'قيود'] },
   { to: '/chart-of-accounts', label: 'دليل الحسابات', section: 'المالية والمحاسبة' },
   { to: '/zatca', label: 'ZATCA الزكاة والضريبة', section: 'المالية والمحاسبة', keywords: ['vat', 'tax'] },
+  {
+    to: '/fixed-assets',
+    label: 'الأصول الثابتة',
+    section: 'المالية والمحاسبة',
+    requiresPermission: 'reports.accounting.view',
+    requiresTenantFeature: 'fixed_assets',
+    keywords: ['أصول', 'إهلاك', 'asset', 'fixed'],
+  },
   { to: '/products', label: 'المنتجات', section: 'المخزون' },
   { to: '/inventory', label: 'المخزون', section: 'المخزون' },
   { to: '/suppliers', label: 'الموردون', section: 'المخزون' },
@@ -109,8 +119,12 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/settings/team-users', label: 'حسابات الفريق', section: 'إداري', requiresManager: true, keywords: ['مستخدم', 'users', 'صلاحيات'] },
   { to: '/settings/org-units', label: 'هيكل القطاعات', section: 'إداري', requiresManager: true, keywords: ['org', 'قطاع', 'قسم', 'هيكل'] },
   { to: '/settings/integrations', label: 'التكاملات', section: 'إداري', requiresManager: true },
-  { to: '/subscription', label: 'اشتراكي', section: 'الاشتراك' },
-  { to: '/plans', label: 'الباقات', section: 'الاشتراك' },
+  { to: '/subscription', label: 'اشتراكي', section: 'الاشتراك', requiresManager: true, keywords: ['تسعير', 'الإضافات', 'ميزات', 'باقة', 'plan', 'اشتراك'] },
+  { to: '/subscription#subscription-addons', label: 'إضافات الاشتراك', section: 'الاشتراك', requiresManager: true, keywords: ['إضافات', 'ميزات', 'تسعير'] },
+  { to: '/subscription/plans', label: 'مقارنة باقات الاشتراك', section: 'الاشتراك', requiresManager: true, keywords: ['مقارنة', 'باقة', 'تسعير', 'plan'] },
+  { to: '/subscription/payment', label: 'دفع الاشتراك', section: 'الاشتراك', requiresManager: true, keywords: ['دفع', 'تجديد', 'دفعة', 'سداد'] },
+  { to: '/subscription/invoices', label: 'فواتير الاشتراك', section: 'الاشتراك', requiresManager: true, keywords: ['فاتورة', 'فواتير', 'saassub'] },
+  { to: '/plans', label: 'الباقات', section: 'الاشتراك', requiresManager: true, keywords: ['تسعير', 'سعر', 'باقة', 'plan', 'الاشتراكات saas'] },
   { to: '/plugins', label: 'سوق الإضافات', section: 'الاشتراك', keywords: ['إضافات', 'ai'] },
   {
     to: '/about/capabilities',
@@ -132,6 +146,7 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/branches/map', label: 'خريطة الفروع', section: 'إداري', requiresStaff: true, keywords: ['google', 'خريطة', 'map'] },
   { to: '/documents/company', label: 'مستندات المنشأة', section: 'إداري', keywords: ['documents'] },
   { to: '/admin', label: 'لوحة قيادة المنصة', section: 'إدارة منصة أسس برو', requiresPlatform: true },
+  { to: '/platform/overview', label: 'مركز المنصة', section: 'إدارة منصة أسس برو', requiresPlatform: true, keywords: ['admin', 'منصة'] },
   { to: '/admin/qa', label: 'فحص الجودة (QA)', section: 'إدارة منصة أسس برو', requiresPlatform: true, keywords: ['qa'] },
 ]
 
@@ -141,7 +156,7 @@ export function normNavSearch(s: string): string {
 
 /** إخفاء عناصر التنقل المرتبطة ببوابة معطّلة (build-time). */
 export function navSearchItemVisibleForPortals(item: NavSearchItem, p: EnabledPortals): boolean {
-  if (item.to.startsWith('/admin') && !p.admin) return false
+  if ((item.to.startsWith('/admin') || item.to.startsWith('/platform')) && !p.admin) return false
   if (item.to.startsWith('/fleet/') && !p.fleet) return false
   return true
 }

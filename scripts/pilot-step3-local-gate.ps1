@@ -7,6 +7,7 @@
   - فحص GET /api/v1/health (Docker/nginx محلي)
   - اختياري: GET على جذر الواجهة (افتراضي نفس منفذ nginx)
   - -WithE2e: من مجلد frontend — npm ci + playwright chromium + npm run test:ci
+  - -WithOcrVerify: نفس فحص Tesseract كما في نهاية staging-gate
 
   لا يغني عن البنود ب، ج، د، هـ على Staging الحقيقي.
 
@@ -22,17 +23,24 @@
 .PARAMETER WithE2e
   يشغّل npm run test:ci (lint + vue-tsc + vitest + playwright)
 
+.PARAMETER WithOcrVerify
+  بعد فحص الصحة: `docker compose exec -T app php artisan ocr:verify --fail` (يتطلب حاوية app شغّالة).
+
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts/pilot-step3-local-gate.ps1
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts/pilot-step3-local-gate.ps1 -WithE2e
+
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File scripts/pilot-step3-local-gate.ps1 -WithOcrVerify
 #>
 param(
   [string]$ApiBaseUrl = "http://127.0.0.1",
   [string]$FrontendBaseUrl = "http://127.0.0.1",
   [switch]$SkipFrontend,
-  [switch]$WithE2e
+  [switch]$WithE2e,
+  [switch]$WithOcrVerify
 )
 
 $ErrorActionPreference = "Stop"
@@ -77,6 +85,17 @@ if (-not $SkipFrontend) {
     Write-Warning "Frontend root check failed: $_"
     Write-Host "TIP: use -SkipFrontend or -FrontendBaseUrl http://127.0.0.1:5173 if Vite dev runs separately."
   }
+}
+
+if ($WithOcrVerify) {
+  Step "OCR: php artisan ocr:verify --fail (app container)"
+  docker compose exec -T app sh -lc "cd /var/www && php artisan ocr:verify --fail"
+  $ocrExit = $LASTEXITCODE
+  if ($ocrExit -ne 0) {
+    Write-Error "ocr:verify failed (exit $ocrExit)"
+    exit $ocrExit
+  }
+  Write-Host "OK: ocr:verify"
 }
 
 if ($WithE2e) {

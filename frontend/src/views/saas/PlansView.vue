@@ -133,6 +133,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { CheckBadgeIcon, CheckIcon, SparklesIcon } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
+import { summarizeAxiosError } from '@/utils/apiErrorSummary'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { appConfirm } from '@/services/appConfirmDialog'
@@ -250,14 +251,14 @@ async function changePlan(slug: string) {
   if (!ok) return
   changingPlan.value = slug
   try {
-    await apiClient.post('/subscription/change', { plan_slug: slug })
-    const r = await apiClient.get('/subscription')
+    await apiClient.post('/subscription/change', { plan_slug: slug }, { skipGlobalErrorToast: true })
+    const r = await apiClient.get('/subscription', { skipGlobalErrorToast: true })
     currentSub.value = r.data?.data?.subscription
-    const pr = await apiClient.get('/plans')
+    const pr = await apiClient.get('/plans', { skipGlobalErrorToast: true })
     plans.value = normalizePlansPayload(pr)
     toast.success('تم تغيير الباقة', 'تم تحديث اشتراكك.')
-  } catch (e: any) {
-    toast.error('تعذّر تغيير الباقة', e?.response?.data?.message ?? 'حدث خطأ')
+  } catch (e: unknown) {
+    toast.error('تعذّر تغيير الباقة', summarizeAxiosError(e))
   } finally { changingPlan.value = '' }
 }
 
@@ -278,13 +279,13 @@ async function saveEdit() {
       ...editForm.value,
       features: featureInput.value.split(',').map((x: string) => x.trim()).filter(Boolean),
     }
-    await apiClient.put(`/plans/${editPlan.value.slug}`, payload)
-    const p = await apiClient.get('/plans')
+    await apiClient.put(`/plans/${editPlan.value.slug}`, payload, { skipGlobalErrorToast: true })
+    const p = await apiClient.get('/plans', { skipGlobalErrorToast: true })
     plans.value = normalizePlansPayload(p)
     editPlan.value = null
     toast.success('تم الحفظ', 'تم تحديث بيانات الباقة.')
-  } catch (e: any) {
-    toast.error('تعذّر التحديث', e?.response?.data?.message ?? 'تعذر تحديث الباقة')
+  } catch (e: unknown) {
+    toast.error('تعذّر التحديث', summarizeAxiosError(e))
   } finally {
     savingEdit.value = false
   }
@@ -295,20 +296,20 @@ onMounted(async () => {
   loadError.value = ''
   try {
     try {
-      const p = await apiClient.get('/plans')
+      const p = await apiClient.get('/plans', { skipGlobalErrorToast: true })
       plans.value = normalizePlansPayload(p)
-    } catch (e: any) {
+    } catch (e: unknown) {
       plans.value = []
-      loadError.value = e?.response?.data?.message ?? 'تعذّر تحميل قائمة الباقات.'
+      loadError.value = summarizeAxiosError(e)
     }
     try {
-      const s = await apiClient.get('/subscription')
+      const s = await apiClient.get('/subscription', { skipGlobalErrorToast: true })
       currentSub.value = s.data?.data?.subscription
     } catch {
       currentSub.value = null
     }
     try {
-      const u = await apiClient.get('/subscription/usage')
+      const u = await apiClient.get('/subscription/usage', { skipGlobalErrorToast: true })
       usage.value = u.data
     } catch {
       usage.value = null

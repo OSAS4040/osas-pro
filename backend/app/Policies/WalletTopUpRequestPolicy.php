@@ -55,4 +55,9 @@ class WalletTopUpRequestPolicy
     {
         return $this->view($user, $request);
     }
+
+    public function downloadTransferInstructions(User $user, WalletTopUpRequest $request): bool
+    {
+        return $this->view($user, $request);
+    }
 }

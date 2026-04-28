@@ -9,6 +9,8 @@ param(
   [string]$PgUser = "saas_user",
   [string]$PgDb = "saas_db",
   [string]$RedisPassword = "redis_password",
+  # Must match docker-compose.yml DOCKER_STACK_PREFIX (default saas → containers saas_app, saas_postgres, …).
+  [string]$DockerStackPrefix = "saas",
   [switch]$SkipSchedulerCheck
 )
 
@@ -17,13 +19,16 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
+$p = $DockerStackPrefix.Trim()
 $required = @(
-  "saas_app", "saas_nginx", "saas_postgres", "saas_redis", "saas_frontend",
-  "saas_queue_default", "saas_queue_high", "saas_queue_low", "saas_scheduler"
+  "${p}_app", "${p}_nginx", "${p}_postgres", "${p}_redis", "${p}_frontend",
+  "${p}_queue_default", "${p}_queue_high", "${p}_queue_low", "${p}_scheduler"
 )
 if ($SkipSchedulerCheck) {
-  $required = $required | Where-Object { $_ -ne "saas_scheduler" }
+  $required = $required | Where-Object { $_ -ne "${p}_scheduler" }
 }
+$pgCtn = "${p}_postgres"
+$redisCtn = "${p}_redis"
 
 Write-Host "== Docker containers (running) =="
 $running = docker ps --format "{{.Names}}" 2>$null
@@ -47,7 +52,7 @@ try {
 }
 
 Write-Host "`n== PostgreSQL failed_jobs count (read-only) =="
-$fj = docker exec saas_postgres psql -U $PgUser -d $PgDb -t -A -c "select count(*) from failed_jobs;" 2>$null
+$fj = docker exec $pgCtn psql -U $PgUser -d $PgDb -t -A -c "select count(*) from failed_jobs;" 2>$null
 if (-not $fj) {
   Write-Host "  FAILED: unable to read PostgreSQL with provided PgUser/PgDb."
   exit 4
@@ -55,7 +60,7 @@ if (-not $fj) {
 Write-Host "  failed_jobs:" ($fj | Out-String).Trim()
 
 Write-Host "`n== PostgreSQL failed_jobs breakdown (last 24h) =="
-$fjBreakdown = docker exec saas_postgres psql -U $PgUser -d $PgDb -t -A -c "select split_part(exception, E'\n', 1) as first_line, count(*) from failed_jobs where failed_at >= now() - interval '24 hour' group by 1 order by 2 desc limit 5;" 2>$null
+$fjBreakdown = docker exec $pgCtn psql -U $PgUser -d $PgDb -t -A -c "select split_part(exception, E'\n', 1) as first_line, count(*) from failed_jobs where failed_at >= now() - interval '24 hour' group by 1 order by 2 desc limit 5;" 2>$null
 if ($fjBreakdown) {
   $fjBreakdown | ForEach-Object { Write-Host "  $_" }
 } else {
@@ -64,9 +69,9 @@ if ($fjBreakdown) {
 
 Write-Host "`n== Redis queue lengths (read-only) =="
 $auth = "REDISCLI_AUTH=$RedisPassword"
-$d = docker exec saas_redis sh -lc "$auth redis-cli --raw LLEN queues:default" 2>$null
-$h = docker exec saas_redis sh -lc "$auth redis-cli --raw LLEN queues:high_priority" 2>$null
-$l = docker exec saas_redis sh -lc "$auth redis-cli --raw LLEN queues:low_priority" 2>$null
+$d = docker exec $redisCtn sh -lc "$auth redis-cli --raw LLEN queues:default" 2>$null
+$h = docker exec $redisCtn sh -lc "$auth redis-cli --raw LLEN queues:high_priority" 2>$null
+$l = docker exec $redisCtn sh -lc "$auth redis-cli --raw LLEN queues:low_priority" 2>$null
 if ((($d | Out-String) -match "NOAUTH") -or (($h | Out-String) -match "NOAUTH") -or (($l | Out-String) -match "NOAUTH")) {
   Write-Host "  FAILED: Redis authentication failed."
   exit 5
@@ -76,7 +81,7 @@ Write-Host "  high_priority:" ($h | Out-String).Trim()
 Write-Host "  low_priority:" ($l | Out-String).Trim()
 
 Write-Host "`n== Redis key stats (read-only) =="
-$redisOps = docker exec saas_redis sh -lc "$auth redis-cli --raw INFO stats | grep -E 'instantaneous_ops_per_sec|rejected_connections|total_error_replies'" 2>$null
+$redisOps = docker exec $redisCtn sh -lc "$auth redis-cli --raw INFO stats | grep -E 'instantaneous_ops_per_sec|rejected_connections|total_error_replies'" 2>$null
 if ($redisOps) {
   $redisOps | ForEach-Object { Write-Host "  $_" }
 }

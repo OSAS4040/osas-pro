@@ -178,7 +178,7 @@
         class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm p-6 outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40"
       >
         <h2 class="font-bold text-gray-800 dark:text-white mb-5 flex items-center gap-2">
-          <DocumentTextIcon class="w-5 h-5 text-purple-500" />
+          <DocumentTextIcon class="w-5 h-5 text-primary-500" />
           المستندات
         </h2>
         <IntelligentVehicleDocumentPanel v-if="vehicle" :vehicle-id="vehicle.id" class="mb-6" />
@@ -193,9 +193,9 @@
             </div>
           </RouterLink>
           <RouterLink :to="`/vehicles/${vehicle.id}/passport`"
-                      class="flex items-center gap-3 p-4 border border-purple-200 dark:border-purple-800/40 bg-purple-50 dark:bg-purple-900/20 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                      class="flex items-center gap-3 p-4 border border-primary-200 dark:border-primary-800/40 bg-primary-50 dark:bg-primary-900/20 rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
           >
-            <DocumentTextIcon class="w-6 h-6 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+            <DocumentTextIcon class="w-6 h-6 text-primary-600 dark:text-primary-400 flex-shrink-0" />
             <div>
               <p class="font-semibold text-gray-800 dark:text-white text-sm">جواز المركبة</p>
               <p class="text-xs text-gray-500 dark:text-slate-400">السجل الكامل والتاريخ</p>

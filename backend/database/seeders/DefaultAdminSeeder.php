@@ -23,6 +23,28 @@ class DefaultAdminSeeder extends Seeder
 
     public function run(): void
     {
+        $allowInProd = filter_var((string) env('APP_DEFAULT_ADMIN_SEEDER', ''), FILTER_VALIDATE_BOOLEAN);
+        if (app()->environment('production') && ! $allowInProd) {
+            $this->command?->warn(
+                'DefaultAdminSeeder skipped in production. Set APP_DEFAULT_ADMIN_SEEDER=true to allow explicitly.'
+            );
+
+            return;
+        }
+
+        $password = trim((string) env('APP_DEFAULT_ADMIN_PASSWORD', self::ADMIN_PASSWORD));
+        if ($password === '') {
+            $password = self::ADMIN_PASSWORD;
+        }
+
+        if (app()->environment('production') && $password === self::ADMIN_PASSWORD) {
+            $this->command?->warn(
+                'DefaultAdminSeeder skipped in production because APP_DEFAULT_ADMIN_PASSWORD is not set.'
+            );
+
+            return;
+        }
+
         // One default tenant: match by canonical email first, else legacy English name (any email),
         // so we never create a second company when the old row used a different email.
         $byEmail = Company::query()->where('email', 'hq@osas.sa')->first();
@@ -87,7 +109,7 @@ class DefaultAdminSeeder extends Seeder
             [
                 'branch_id'            => $branch->id,
                 'name'                 => 'Osas Pro Admin',
-                'password'             => self::ADMIN_PASSWORD,
+                'password'             => $password,
                 'phone'                => PhoneNormalizer::normalizeForStorage('966501000099'),
                 'phone_verified_at'    => now(),
                 'registration_stage'   => 'phone_verified',
@@ -97,6 +119,10 @@ class DefaultAdminSeeder extends Seeder
             ]
         );
 
-        $this->command?->info('Default admin: ' . self::ADMIN_EMAIL . ' / ' . self::ADMIN_PASSWORD);
+        if (app()->environment(['local', 'testing'])) {
+            $this->command?->info('Default admin: ' . self::ADMIN_EMAIL . ' / ' . $password);
+        } else {
+            $this->command?->info('Default admin seeded: ' . self::ADMIN_EMAIL);
+        }
     }
 }

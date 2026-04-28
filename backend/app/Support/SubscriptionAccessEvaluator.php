@@ -38,7 +38,7 @@ final class SubscriptionAccessEvaluator
 
         $status = (string) ($row->status ?? '');
 
-        if ($status === 'suspended') {
+        if ($status === 'suspended' || $status === 'expired') {
             self::logDecision($companyId, 'block', 'suspended', 402, $isLoginAttempt, $status);
 
             return ['code' => 402, 'message' => 'Subscription suspended. Please renew to continue.'];
@@ -59,7 +59,7 @@ final class SubscriptionAccessEvaluator
 
         $inGrace = $graceEndsAt !== null && $now->lt($graceEndsAt);
 
-        if ($inGrace) {
+        if ($inGrace || $status === 'past_due' || $status === 'grace_period') {
             if ($isLoginAttempt || self::isReadOperation($request)) {
                 self::logDecision($companyId, 'allow', 'grace_read_or_login', 200, $isLoginAttempt, $status);
 

@@ -9,8 +9,11 @@ use Tests\TestCase;
 
 /**
  * COMPANY gate — rich profile + feature profile GET/PATCH (no financial core changes).
+ *
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — ملف ميزات المنشأة (مرحلة 0)
  */
 #[Group('production-readiness')]
+#[Group('phase0')]
 final class ProductionReadinessCompanyFeatureProfileTest extends TestCase
 {
     public function test_company_profile_endpoint_returns_envelope(): void
@@ -32,7 +35,8 @@ final class ProductionReadinessCompanyFeatureProfileTest extends TestCase
 
         $auth()->getJson("/api/v1/companies/{$cid}/feature-profile")
             ->assertOk()
-            ->assertJsonStructure(['data' => ['business_type', 'effective_feature_matrix'], 'trace_id']);
+            ->assertJsonStructure(['data' => ['business_type', 'effective_feature_matrix'], 'trace_id'])
+            ->assertJsonPath('data.effective_feature_matrix.fixed_assets', false);
 
         $auth()->patchJson("/api/v1/companies/{$cid}/feature-profile", [
             'business_type'  => 'fleet_operator',

@@ -11,8 +11,8 @@
 | # | ماذا | أين | ملاحظة أمنية |
 |---|------|-----|----------------|
 | 1 | **دمج عبر PR** إلى `main` فقط؛ فحص **Policy env on PR** ناجح | GitHub | لا أسرار في الكود؛ راجع [`Branch_Protection_And_Review_Policy.md`](./Branch_Protection_And_Review_Policy.md) |
-| 2 | **`policy-env-example`** | محلياً: `node scripts/check-policy-env-example.mjs` أو `make policy-env-example` | يتحقق أن أمثلة الـ env لا تُفعّل `SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT=true` |
-| 3 | **`staging-gate`** | محلياً مع Docker: `make staging-gate` | Vitest + PHPUnit مسار المنصة/SaaS؛ انظر [`Makefile`](../Makefile) |
+| 2 | **`policy-env-example`** | محلياً: `node scripts/check-policy-env-example.mjs` أو `make policy-env-example` | يتحقق أن **كل** قوالب env المعتمدة في المستودع (انظر قائمة المسارات في [`scripts/check-policy-env-example.mjs`](../scripts/check-policy-env-example.mjs)) لا تُفعّل `SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT=true` |
+| 3 | **`staging-gate`** | محلياً مع Docker: `make staging-gate` أو Windows: `make staging-gate-ps` | Vitest + PHPUnit مراحل 0–7 + **`ocr:verify --fail`** (Tesseract eng+ara في حاوية `app`)؛ انظر [`Makefile`](../Makefile) و[`scripts/staging-gate.sh`](../scripts/staging-gate.sh) و[`Executive_Gate_Current_Phase.md`](./Executive_Gate_Current_Phase.md) |
 | 4 | **(اختياري موصى به قبل إصدار كبير)** **`verify`** | `make verify` | lint + build واجهة + **كل** `php artisan test` |
 | 5 | **رفع Staging** | خادمكم | أسرار من [`backend/.env.staging.example`](../backend/.env.staging.example) و[`frontend/env.staging.example`](../frontend/env.staging.example) — **لا ترفعوا `.env` إلى git**؛ `APP_DEBUG=false`؛ `SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT=false`؛ بريد منصة **ضيق** في `SAAS_PLATFORM_ADMIN_EMAILS` |
 | 6 | **الاختبار اليدوي** على **عنوان Staging الحقيقي** | متصفح + API | الجدول في القسم التالي + [`Staging_Manual_Test_Checklist.md`](./Staging_Manual_Test_Checklist.md) |
@@ -123,7 +123,8 @@
 | البند | النتيجة | ملاحظة |
 |-------|---------|--------|
 | policy-env-example | PASS/FAIL | |
-| staging-gate | PASS/FAIL | |
+| staging-gate (يشمل ocr:verify) | PASS/FAIL | |
+| ocr-verify منفرد (إن اختُصر دون staging-gate كامل) | PASS/FAIL/N/A | |
 | verify (اختياري) | PASS/FAIL/N/A | |
 | staff / مسارات | PASS/FAIL | |
 | Admin 200 / 403 | PASS/FAIL | |

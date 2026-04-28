@@ -43,6 +43,22 @@ export const THRESHOLDS_NORMAL = /** @type {K6Thresholds} */ ({
   raw_read_after_write_ok: ['rate>0.85'],
 });
 
+/**
+ * بوابة التحقق بعد تحسين POS / البنية (معايير صارمة — تستخدم مع K6_PROFILE=verification).
+ * 5xx: عملياً صفر؛ p99 للطلبات الإجمالية ≤ 1.5s؛ نجاح POS ≥ 99.9%.
+ */
+export const THRESHOLDS_VERIFICATION = /** @type {K6Thresholds} */ ({
+  operational_http_success: ['rate>=0.999'],
+  server_errors_5xx: ['rate<0.000001'],
+  client_timeout_or_network: ['rate<0.02'],
+  http_req_duration: ['p(50)<600', 'p(95)<1000', 'p(99)<1500'],
+  health_ok: ['rate>0.70'],
+  tenant_isolation_403: ['rate>0.85'],
+  pos_sale_2xx: ['rate>0.999'],
+  idempotency_409_payload_mismatch: ['rate>0.85'],
+  raw_read_after_write_ok: ['rate>0.85'],
+});
+
 /** ذروة: أكثر تساهلاً في الزمن، لكن 5xx و timeouts محكومة */
 export const THRESHOLDS_PEAK = /** @type {K6Thresholds} */ ({
   operational_http_success: ['rate>0.97'],
@@ -53,6 +69,17 @@ export const THRESHOLDS_PEAK = /** @type {K6Thresholds} */ ({
   tenant_isolation_403: ['rate>0.85'],
   pos_sale_2xx: ['rate>0.60'],
   raw_read_after_write_ok: ['rate>0.75'],
+});
+
+/**
+ * قياس سعة POS (capacity_pos): عتبات مرخية جداً — الهدف تسجيل p99/5xx وليس «بوابة قبول».
+ * استخدم مع K6_CAPACITY_POS_RATE وشغّل عدة مرات (مثلاً 3 ثم 5 ثم 7) وقارِن التقارير.
+ */
+export const THRESHOLDS_CAPACITY_POS = /** @type {K6Thresholds} */ ({
+  http_req_failed: ['rate<0.995'],
+  server_errors_5xx: ['rate<0.99'],
+  client_timeout_or_network: ['rate<0.99'],
+  http_req_duration: ['p(99)<120000'],
 });
 
 /**
@@ -93,6 +120,9 @@ export const THRESHOLDS_SOAK = /** @type {K6Thresholds} */ ({
 export const PROFILE_LABELS = {
   smoke: 'Smoke — 8 VU, 4 دقائق (ضمن 5–10 / 3–5)',
   normal: 'Normal Load — 30 VU, 15 دقيقة (20–40 / 10–20)',
+  capacity_pos:
+    'Capacity POS — بيع POS فقط (معدّل ثابت عبر K6_CAPACITY_POS_RATE)، عتبات استكشافية — قارِن التقارير بين المعدلات',
+  verification: 'Verification Gate — 150 VU read + POS، ~16 دقيقة (عتبات صارمة بعد التحسين)',
   peak: 'Peak Load — 75 VU read + POS، 12 دقيقة (50–100 / 10–15)',
   stress: 'Stress — تصعيد 15→130 VU على مراحل',
   spike: 'Spike — قفزة 10→95 VU ثم هبوط',

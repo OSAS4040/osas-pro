@@ -2,6 +2,8 @@
 
 **WAVE 0 — لقطة تحليلية للمستودع** (لا تعكس نتيجة تشغيل اختبارات كاملة في هذه الجلسة).
 
+**خريطة تنقل المستأجر ↔ API (مرحلة 0):** [`Tenant_Navigation_API_Map.md`](./Tenant_Navigation_API_Map.md) — جداول + **كتل مسارات الراوتر** (`nav-doc-route-anchors*`) يتحقق منها `npm run docs:nav-api-check` (من مجلد `frontend`).
+
 **وسوم الحالة:** `FULL` كامل للنطاق الحالي للمنتج | `PARTIAL` جزئي | `PLANNED` مخطط فقط | `RISK` منطقة حساسة | `DUP` ازدواجية صيانة
 
 ---
@@ -39,6 +41,9 @@
 | الوحدة | الحالة | المخاطر | الاعتماديات | الاختبارات | UX |
 |--------|--------|-----------|---------------|-------------|-----|
 | WalletService (credit/debit/transfer/reverse) | FULL | **RISK** | DB transactions, idempotency | race command موجود | محدود حسب الدور |
+| Wallet top-up requests (approve/reject) | PARTIAL–FULL | **RISK** | prepaid billing gate | `WalletTopUpRequestWorkflowTest` | قائمة طلبات |
+| Wallet transfer instructions PDF | PARTIAL | منخفض | `wallet_treasury_accounts` أو `iban`/`bank_name` | `WalletTopUpTransferInstructionsTest` | 422 بدون حسابات |
+| Fixed assets (UI + `fixed_assets` gate) | PLANNED | منخفض | `TenantBusinessFeatures`, `system_capabilities` | — | إعدادات ملف النشاط |
 | Wallet ↔ Invoice/Payment link | FULL | **RISK** | migrations phase3 | JSON reconciliation | — |
 | LedgerService (balanced post) | FULL | **RISK** | COA | unbalanced reports تحت `reports/testing` | API للمحاسب |
 | Journal immutability (DB) | FULL | **RISK** | PostgreSQL triggers | — | — |

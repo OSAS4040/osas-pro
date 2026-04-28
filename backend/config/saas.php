@@ -11,6 +11,17 @@
  * SAAS_PLATFORM_ADMIN_PHONES — أرقام جوال مفصولة بفواصل لمشغّلي منصة مستقلين (users.company_id = null فقط).
  * يُطبَّع الرقم بنفس منطق تسجيل الدخول (مثلاً 05xxxxxxxx و 9665xxxxxxxx).
  */
+$loginOtpChannel = strtolower(trim((string) env('SAAS_LOGIN_OTP_CHANNEL', 'email')));
+if (! in_array($loginOtpChannel, ['email', 'sms', 'both'], true)) {
+    $loginOtpChannel = 'email';
+}
+
+$phoneOtpFakePlaintext = (string) env('PHONE_OTP_FAKE_PLAINTEXT', '');
+$appEnv = strtolower(trim((string) env('APP_ENV', 'production')));
+if (! in_array($appEnv, ['local', 'testing'], true)) {
+    $phoneOtpFakePlaintext = '';
+}
+
 return [
     'allow_tenant_plan_catalog_edit' => filter_var(
         env('SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT', false),
@@ -34,7 +45,7 @@ return [
      * قناة إرسال رمز تسجيل الدخول: email | sms | both
      * sms يتطلب TWILIO_* ورقم جوال محفوظ للمستخدم؛ عند الفشل يُحاول البريد إن كان both أو كنسخة احتياطية عند sms فقط.
      */
-    'login_otp_channel' => strtolower((string) env('SAAS_LOGIN_OTP_CHANNEL', 'email')),
+    'login_otp_channel' => $loginOtpChannel,
 
     'twilio_account_sid' => (string) env('TWILIO_ACCOUNT_SID', ''),
     'twilio_auth_token'  => (string) env('TWILIO_AUTH_TOKEN', ''),
@@ -46,7 +57,7 @@ return [
     'phone_otp_send_max_per_phone_window' => max(1, min(20, (int) env('PHONE_OTP_SEND_MAX_PHONE', 5))),
     'phone_otp_send_max_per_ip_window'    => max(5, min(100, (int) env('PHONE_OTP_SEND_MAX_IP', 30))),
     /** عند التعيين في غير الإنتاج: يُسجّل الرمز في السجل (لا يُعاد في JSON للإنتاج) */
-    'phone_otp_fake_plaintext'    => (string) env('PHONE_OTP_FAKE_PLAINTEXT', ''),
+    'phone_otp_fake_plaintext'    => $phoneOtpFakePlaintext,
 
     'login_otp_ttl_seconds' => max(60, min(900, (int) env('SAAS_LOGIN_OTP_TTL', 300))),
 

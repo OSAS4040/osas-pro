@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Platform;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_06_PROGRESS_REPORT.md
+ */
+#[Group('phase6')]
 final class PlatformAdminOverviewTest extends TestCase
 {
     public function test_tenant_user_cannot_read_admin_overview(): void

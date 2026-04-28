@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\SubscriptionStatus;
+use App\Models\Plan;
 use App\Models\Subscription;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,16 +33,24 @@ class CheckSubscriptionStatusJob implements ShouldQueue, ShouldBeUnique
         Subscription::where('status', SubscriptionStatus::Active)
             ->where('ends_at', '<', now())
             ->each(function (Subscription $subscription) {
+                $plan = Plan::query()->where('slug', (string) $subscription->plan)->first();
+                $grace = (int) ($plan?->grace_period_days ?? 3);
                 $subscription->update([
-                    'status'        => SubscriptionStatus::GracePeriod,
-                    'grace_ends_at' => now()->addDays(15),
+                    'status'        => SubscriptionStatus::PastDue,
+                    'grace_ends_at' => now()->addDays($grace),
                 ]);
             });
 
-        Subscription::where('status', SubscriptionStatus::GracePeriod)
+        Subscription::whereIn('status', [SubscriptionStatus::GracePeriod, SubscriptionStatus::PastDue])
             ->where('grace_ends_at', '<', now())
             ->each(function (Subscription $subscription) {
                 $subscription->update(['status' => SubscriptionStatus::Suspended]);
+            });
+
+        Subscription::where('status', SubscriptionStatus::Suspended)
+            ->where('ends_at', '<', now()->subDays(3))
+            ->each(function (Subscription $subscription) {
+                $subscription->update(['status' => SubscriptionStatus::Expired]);
             });
     }
 }

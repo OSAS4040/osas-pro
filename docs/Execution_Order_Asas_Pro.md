@@ -49,9 +49,10 @@
 
 - [x] يوجد workflow [`.github/workflows/policy-env-on-pr.yml`](../.github/workflows/policy-env-on-pr.yml) (فحص env على كل PR + `permissions: contents: read`)
 - [x] يوجد workflow [`.github/workflows/staging-gate.yml`](../.github/workflows/staging-gate.yml) (migrate ثم `dev:demo-seed` في CI عندما `APP_ENV=local`)
-- [x] يوجد [`scripts/staging-gate.sh`](../scripts/staging-gate.sh) و`make staging-gate` و`make policy-env-example` في [`Makefile`](../Makefile)
+- [x] يوجد [`scripts/staging-gate.sh`](../scripts/staging-gate.sh) و`make staging-gate` و`make policy-env-example` و`make ocr-verify` و`make preflight-pilot-readonly` و**`make execution-order-local`** / **`make execution-order-local-ps`** و[`execution-order-local.ps1`](../scripts/execution-order-local.ps1) في [`Makefile`](../Makefile) (البوابة تنتهي بـ **`ocr:verify --fail`** داخل حاوية `app`؛ `execution-order-local*` يشغّل السياسة ثم [`execution-order-local-hint.mjs`](../scripts/execution-order-local-hint.mjs))
 - [x] يوجد [قالب PR](../.github/PULL_REQUEST_TEMPLATE.md)
 - [x] تحديثات تبعيات: [`.github/dependabot.yml`](../.github/dependabot.yml) (Composer + npm أسبوعياً)
+- [x] فحص توريد اختياري على PR: [`.github/workflows/security-supply-chain-pr.yml`](../.github/workflows/security-supply-chain-pr.yml) (`composer audit` + `npm audit` عند تغيير القفل/الإصدارات — انظر [`GitHub_Branch_Protection_Setup.md`](./GitHub_Branch_Protection_Setup.md))
 
 *عند اكتمال المرحلة 1 يدوياً على GitHub: الحوكمة تصبح إلزامية تقنياً على `main`.*
 
@@ -64,6 +65,7 @@
 1. [ ] قراءة [`GitHub_Branch_Protection_Setup.md`](./GitHub_Branch_Protection_Setup.md) كاملاً (حماية كلاسيكية أو **Rulesets**).
 2. [ ] تشغيل workflow **Policy env on PR** على PR نحو `main` مرة على الأقل (أو **Actions** → Run workflow للتجربة)، حتى تظهر **`Policy env on PR / policy-env-example`** في قائمة الفحوص المطلوبة.
 3. [ ] (اختياري) تشغيل **Staging gate** عبر `workflow_dispatch` أو PR يطابق المسارات — لإضافة **`Staging gate / staging-gate`** إن رغبتم؛ انظر تحذير المسارات في [`GitHub_Branch_Protection_Setup.md`](./GitHub_Branch_Protection_Setup.md).
+3b. [ ] (اختياري أمني) تشغيل [**Security supply chain (PR)**](../.github/workflows/security-supply-chain-pr.yml) مرة على الأقل (PR يغيّر `composer.lock` / `package-lock.json` أو **Actions** → Run workflow) ليظهر **`Security supply chain (PR) / dependency-audit`** في قائمة الفحوص إن رغبتم بجعله required — انظر نفس ملف إعداد الحماية.
 4. [ ] حماية **`main`** (فرع أو Ruleset): PR إلزامي، فحوص إلزامية، **`Policy env on PR / policy-env-example`** ضمن المطلوب، تضييق bypass، **Block force pushes**، ومنع push مباشر حسب سياسة المنظمة.
 5. [ ] التحقق: PR تجريبي — لا يُدمَج قبل نجاح **`Policy env on PR / policy-env-example`** على الأقل.
 6. [ ] (مُستحسن) `gh auth login` ثم **`make github-branch-protection-status`** — خروج بنجاح ويظهر تضمين فحص السياسة.
@@ -74,7 +76,7 @@
 
 ## المرحلة 2 — ضبط الفريق (بالتوازي مع 1 أو مباشرة بعدها)
 
-- [ ] إبلاغ الفريق: المرجع الوحيد للترتيب هو **هذا الملف** + السياسات المرتبطة أعلاه، بما فيها قسم **«طبقات تنفيذ المنتج — Contract Layer والأنشطة المتعددة»**.
+- [ ] إبلاغ الفريق: المرجع الوحيد للترتيب هو **هذا الملف** + السياسات المرتبطة أعلاه، بما فيها قسم **«طبقات تنفيذ المنتج — Contract Layer والأنشطة المتعددة»**. (تذكير محلي سريع بعد فحص السياسة: **`make execution-order-local`** — يلخص الخطوات دون إغلاق خانات GitHub.)
 - [ ] أي PR يمس المنصة / SaaS / البيئة / الصلاحيات / **العقود أو مسارات الموردين** / **مصفوفة الميزات أو نوع النشاط**: **تعبئة القالب** + **`make policy-env-example`** + **`make staging-gate`** محلياً إذا لم يُشغِّل CI المسار تلقائياً.
 
 ---
@@ -98,7 +100,17 @@
 ## المرحلة 5 — تحسينات مساندة (اختيارية، بعد ثبات 1–4)
 
 - [x] قالب [.github/CODEOWNERS](../.github/CODEOWNERS) جاهز — فعّل الأسطر بعد استبدال `@your-org/...` من [`CODEOWNERS.example`](./CODEOWNERS.example).
-- [ ] (اختياري) hook محلي قبل `commit` لتشغيل `node scripts/check-policy-env-example.mjs` عند تعديل ملفات env.
+- [x] (اختياري) خطاف git قبل `commit`: [`.githooks/pre-commit`](../.githooks/pre-commit) — يشغّل `node scripts/check-policy-env-example.mjs` عند تعديل (staged) أي مسار يطابق قوالب env في الجذر أو `backend/` أو `frontend/` أو `load-testing/` أو `deployment/official_release_package/` أو `release/osas-pro-production-package/` (التفاصيل داخل الهوكة؛ **القائمة الصريحة للملفات** في [`check-policy-env-example.mjs`](../scripts/check-policy-env-example.mjs)). **التفعيل (مرة واحدة):** `make install-git-hooks` أو `pwsh -File scripts/install-git-hooks.ps1` (يضبط `git config core.hooksPath .githooks`). عند `git commit` يشغّل Git الهوكة (يتطلب `node` في PATH).
+
+---
+
+## إعلان إكمال المراحل 1–4 (توثيق داخلي)
+
+إذا أُنجزت **المراحل 1–4** فعلياً على بيئتكم (GitHub + فريق + Staging + إنتاج أو قرار عدم النشر):
+
+1. حدّثوا خانات `[ ]` في الأقسام **1–4** أعلاه في **فرع توثيق** أو احتفظوا بنسخة موقّعة في أداة تذاكركم.
+2. أرفقوا **دليلاً قصيراً**: تاريخ، منفّذ، مخرجات **`make github-branch-protection-status`** (عند تفعيل المرحلة 1)، وصف **PASS / PASS مع ملاحظات / FAIL** لـ Staging من [`Staging_Execution_Now.md`](./Staging_Execution_Now.md) (نموذج التسجيل في أسفل الملف)، وما إذا تم النشر للإنتاج وفق المرحلة 4.
+3. **لا تُغيّر** خانات الـ checklist في git دون مطابقة واقعية — الهدف أثر تدقيق قابل للمراجعة.
 
 ---
 
@@ -111,8 +123,12 @@
 ## أوامر سريعة (من جذر المستودع، مع Docker)
 
 ```bash
+make execution-order-local   # المرحلة 0 (policy) + تذكير المراحل 1–5 (بدون تعديل GitHub)
+# Windows بدون make: pwsh -File scripts/execution-order-local.ps1 أو powershell -File ... أو: make execution-order-local-ps
 make policy-env-example
 make staging-gate
+# أو فقط OCR داخل الحاوية (بعد compose up): make ocr-verify
+# فحص قراءة فقط قبل Pilot: make preflight-pilot-readonly
 ```
 
 من مجلد `frontend` (بدون Docker للتحقق السريع من سياسة env):

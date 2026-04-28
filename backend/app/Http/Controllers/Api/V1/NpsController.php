@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\DispatchLowNpsAlertJob;
 use App\Models\NpsRating;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
 
 class NpsController extends Controller
 {
@@ -30,10 +30,9 @@ class NpsController extends Controller
             'alert_sent'    => false,
         ]);
 
-        // Alert manager if score <= 2
         if ($rating->score <= 2) {
             $rating->update(['alert_sent' => true]);
-            // TODO: dispatch SendLowNpsAlert notification
+            DispatchLowNpsAlertJob::dispatch($rating->id);
         }
 
         return response()->json(['message' => 'شكراً على تقييمك', 'data' => $rating], 201);
@@ -83,6 +82,10 @@ class NpsController extends Controller
             'channel'    => 'invoice',
             'alert_sent' => $request->score <= 2,
         ]);
+
+        if ($rating->score <= 2) {
+            DispatchLowNpsAlertJob::dispatch($rating->id);
+        }
 
         return response()->json(['message' => 'شكراً على تقييمك!', 'data' => ['score' => $rating->score]], 201);
     }

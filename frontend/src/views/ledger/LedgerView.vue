@@ -128,7 +128,7 @@ function typeBadge(t: string) {
   const map: Record<string, string> = {
     sale: 'bg-green-100 text-green-800',
     purchase: 'bg-blue-100 text-blue-800',
-    payment: 'bg-purple-100 text-purple-800',
+    payment: 'bg-primary-100 text-primary-800',
     reversal: 'bg-red-100 text-red-800',
     adjustment: 'bg-yellow-100 text-yellow-800',
   }

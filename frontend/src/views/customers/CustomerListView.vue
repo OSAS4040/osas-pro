@@ -68,7 +68,7 @@
             <p class="text-xs text-gray-400 mt-0.5">
               <span
                 class="px-2 py-0.5 rounded-full badge-text text-micro"
-                :class="c.type === 'b2b' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'"
+                :class="c.type === 'b2b' ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'"
               >
                 {{ c.type === 'b2b' ? 'شركة' : 'فرد' }}
               </span>
@@ -139,7 +139,7 @@
             <tr v-for="c in filtered" :key="c.id">
               <td class="font-medium text-gray-800 dark:text-slate-100">{{ c.name }}</td>
               <td class="px-4 py-3">
-                <span :class="c.type === 'b2b' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'"
+                <span :class="c.type === 'b2b' ? 'bg-primary-100 text-primary-700' : 'bg-blue-100 text-blue-700'"
                       class="px-2 py-0.5 rounded-full text-xs font-medium"
                 >{{ c.type === 'b2b' ? 'شركة' : 'فرد' }}</span>
               </td>

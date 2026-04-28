@@ -78,7 +78,7 @@ const transactions = ref<any[]>([])
 function walletGradient(type: string) {
   const map: Record<string, string> = {
     cash:          'bg-gradient-to-br from-blue-500 to-blue-700',
-    promotional:   'bg-gradient-to-br from-purple-500 to-purple-700',
+    promotional:   'bg-gradient-to-br from-primary-500 to-primary-700',
     reserved:      'bg-gradient-to-br from-gray-500 to-gray-700',
     fleet:         'bg-gradient-to-br from-teal-500 to-teal-700',
     fleet_vehicle: 'bg-gradient-to-br from-orange-500 to-amber-600',

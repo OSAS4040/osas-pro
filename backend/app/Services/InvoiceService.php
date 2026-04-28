@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\WorkOrder;
 use App\Support\Accounting\FinancialGlMapping;
+use App\Support\Accounting\LedgerPostingDiagnostics;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -117,19 +118,24 @@ class InvoiceService
      */
     private function postInvoiceLedger(Invoice $invoice, string $traceId): void
     {
+        $lines = [];
         try {
             $lines = FinancialGlMapping::linesForSaleInvoice($invoice);
+            $idem = $invoice->idempotency_key !== null && $invoice->idempotency_key !== ''
+                ? (string) $invoice->idempotency_key
+                : null;
 
             $this->ledger->post(
                 companyId: $invoice->company_id,
                 data: [
-                    'type'        => JournalEntryType::Sale->value,
-                    'description' => "Sale Invoice {$invoice->invoice_number}",
-                    'source_type' => Invoice::class,
-                    'source_id'   => $invoice->id,
-                    'entry_date'  => $invoice->issued_at?->toDateString() ?? now()->toDateString(),
-                    'lines'       => $lines,
-                    'trace_id'    => $traceId,
+                    'type'                      => JournalEntryType::Sale->value,
+                    'description'               => "Sale Invoice {$invoice->invoice_number}",
+                    'source_type'               => Invoice::class,
+                    'source_id'                 => $invoice->id,
+                    'entry_date'                => $invoice->issued_at?->toDateString() ?? now()->toDateString(),
+                    'lines'                     => $lines,
+                    'trace_id'                  => $traceId,
+                    'posting_idempotency_key'   => $idem,
                 ],
                 branchId: $invoice->branch_id,
                 userId:   $invoice->created_by_user_id,
@@ -137,11 +143,27 @@ class InvoiceService
         } catch (LedgerPostingFailedException $e) {
             throw $e;
         } catch (\Throwable $e) {
+            $paymentId = (int) (DB::table('payments')
+                ->where('invoice_id', $invoice->id)
+                ->orderByDesc('id')
+                ->value('id') ?? 0);
+
+            $idem = $invoice->idempotency_key !== null && $invoice->idempotency_key !== ''
+                ? (string) $invoice->idempotency_key
+                : null;
+
+            $diag = LedgerPostingDiagnostics::fromGlLines('invoice', $lines, [
+                'posting_idempotency_key' => $idem,
+                'invoice_number'          => $invoice->invoice_number,
+            ]);
+
             throw new LedgerPostingFailedException(
                 source: 'invoice',
                 companyId: (int) $invoice->company_id,
                 invoiceId: $invoice->id,
                 previous: $e,
+                paymentId: $paymentId > 0 ? $paymentId : null,
+                diagnostics: $diag,
             );
         }
     }

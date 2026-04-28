@@ -25,6 +25,7 @@ class JournalEntry extends Model
         'total_credit',
         'currency',
         'trace_id',
+        'posting_idempotency_key',
         'created_by_user_id',
     ];
 

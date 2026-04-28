@@ -20,9 +20,9 @@ const props = defineProps<{
 
 const colorMap: Record<string, { bg: string; text: string }> = {
   blue:   { bg: 'border-l-4 border-blue-500',   text: 'text-blue-700 dark:text-blue-400' },
-  green:  { bg: 'border-l-4 border-green-500',  text: 'text-green-700 dark:text-green-400' },
+  green:  { bg: 'border-l-4 border-primary-500',  text: 'text-primary-700 dark:text-primary-400' },
   orange: { bg: 'border-l-4 border-orange-500', text: 'text-orange-700 dark:text-orange-400' },
-  purple: { bg: 'border-l-4 border-purple-500', text: 'text-purple-700 dark:text-purple-400' },
+  purple: { bg: 'border-l-4 border-primary-500', text: 'text-primary-700 dark:text-primary-400' },
   teal:   { bg: 'border-l-4 border-teal-500',   text: 'text-teal-700 dark:text-teal-400' },
   indigo: { bg: 'border-l-4 border-indigo-500', text: 'text-indigo-700 dark:text-indigo-400' },
   rose:   { bg: 'border-l-4 border-rose-500',   text: 'text-rose-700 dark:text-rose-400' },

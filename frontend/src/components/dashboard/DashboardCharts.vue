@@ -51,8 +51,8 @@ const revenueData = computed(() => ({
     {
       label: 'ر.س',
       data: props.revenue.map((r) => r.revenue),
-      borderColor: 'rgb(99, 102, 241)',
-      backgroundColor: 'rgba(99, 102, 241, 0.12)',
+      borderColor: 'rgb(139, 92, 246)',
+      backgroundColor: 'rgba(139, 92, 246, 0.12)',
       fill: true,
       tension: 0.35,
       pointRadius: 3,
@@ -67,8 +67,8 @@ const woData = computed(() => ({
     {
       label: 'عدد الأوامر',
       data: props.workOrders.map((r) => r.count),
-      borderColor: 'rgb(16, 185, 129)',
-      backgroundColor: 'rgba(16, 185, 129, 0.08)',
+      borderColor: 'rgb(167, 139, 250)',
+      backgroundColor: 'rgba(167, 139, 250, 0.12)',
       fill: true,
       tension: 0.35,
       pointRadius: 3,

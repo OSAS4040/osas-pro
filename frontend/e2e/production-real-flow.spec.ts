@@ -7,13 +7,14 @@ const LOGIN_PASSWORD = process.env.PW_LOGIN_PASSWORD ?? '';
 test.describe('Production real flow', () => {
   async function login(page: Page) {
     await page.goto('/login');
-    await page.locator('input[type="email"]').first().fill(LOGIN_EMAIL);
-    await page.locator('input[type="password"]').first().fill(LOGIN_PASSWORD);
+    await page.locator('input[autocomplete="username"]').first().fill(LOGIN_EMAIL)
+    await page.locator('input[type="password"], input[autocomplete="current-password"]').first().fill(LOGIN_PASSWORD)
     await page.getByRole('button', { name: /login|دخول|تسجيل/i }).click();
     await page.waitForLoadState('networkidle');
   }
 
   test('full navigation test', async ({ page }) => {
+    test.skip(!LOGIN_EMAIL || !LOGIN_PASSWORD, 'يتطلب PW_LOGIN_EMAIL و PW_LOGIN_PASSWORD في البيئة')
     await login(page);
 
     await page.goto('/');

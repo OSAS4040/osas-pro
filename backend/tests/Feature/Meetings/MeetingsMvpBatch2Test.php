@@ -3,8 +3,13 @@
 namespace Tests\Feature\Meetings;
 
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_02_PROGRESS_REPORT.md — اجتماعات / تشغيل تجاري
+ */
+#[Group('phase2')]
 class MeetingsMvpBatch2Test extends TestCase
 {
     public function test_create_meeting(): void

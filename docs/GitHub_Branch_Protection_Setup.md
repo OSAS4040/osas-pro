@@ -8,6 +8,7 @@
 - أن يكون workflow [**Policy env on PR**](../.github/workflows/policy-env-on-pr.yml) قد **عُرِضَ على الأقل مرة** على PR نحو `main` حتى يظهر اسم الفحص في قائمة **Required status checks** عادة بصيغة **`Policy env on PR / policy-env-example`**.
 - لتجربة الـ workflow دون PR: **Actions** → **Policy env on PR** → **Run workflow** (`workflow_dispatch` — لا يغني عن تشغيل الفحص على PR لدمج آمن).
 - (اختياري) تشغيل [**Staging gate**](../.github/workflows/staging-gate.yml) عبر PR يطابق المسارات أو `workflow_dispatch` لإضافة **`Staging gate / staging-gate`** إن رغبتم بجعله required مع فهم قيود المسارات.
+- (اختياري أمني) تشغيل [**Security supply chain (PR)**](../.github/workflows/security-supply-chain-pr.yml) عند تغيير `composer.lock` / `package-lock.json` أو يدوياً — اسم الفحص المعتاد **`Security supply chain (PR) / dependency-audit`**؛ لا تجعله required إن كان يتخطى PRs لا تلمس التبعيات (أو وسّع `paths` في الـ workflow إن رغبتم بتغطية أوسع).
 
 ## مساران في واجهة GitHub
 
@@ -37,7 +38,9 @@
    |--------|----------------------------------------|--------|
    | **إلزامي (مُنصح)** | **`Policy env on PR / policy-env-example`** | يعمل على **كل** PR نحو `main` (workflow [policy-env-on-pr.yml](../.github/workflows/policy-env-on-pr.yml)) — خفيف وآمن كشرط دائم |
    | اختياري | `Staging gate / staging-gate` | يظهر فقط عندما يُشغَّل workflow [staging-gate.yml](../.github/workflows/staging-gate.yml) (مسارات محددة). **لا تجعله required** إن كان يتخطى بعض الـ PRs فيُعطّل الدمج؛ أو وسّع المسارات في الـ workflow، أو اعتمد على التشغيل المحلي + القالب |
-   | اختياري | `Staging gate / frontend-test-ci` | نفس الـ workflow [staging-gate.yml](../.github/workflows/staging-gate.yml) — Vitest + Playwright على `ubuntu-latest`؛ يُنصح بجعله required فقط إن كان يُشغَّل على كل PRs ذات صلة (أو بعد توسيع `paths`) |
+   | اختياري | `Staging gate / frontend-phase-gates` | نفس الـ workflow — `npm run test:phases:fe` (Vitest للواجهة من **0 إلى 6**) قبل `frontend-test-ci` |
+   | اختياري | `Staging gate / frontend-test-ci` | نفس الـ workflow [staging-gate.yml](../.github/workflows/staging-gate.yml) — يعتمد نجاح `frontend-phase-gates` ثم lint + vue-tsc + Vitest + Playwright على `ubuntu-latest` |
+   | اختياري (توريد) | `Security supply chain (PR) / dependency-audit` | [security-supply-chain-pr.yml](../.github/workflows/security-supply-chain-pr.yml) — `composer audit` و`npm audit`؛ يظهر عند تغيير ملفات التبعيات المذكورة في `paths` أو عند `workflow_dispatch` |
 
    قد تختلف الصيغة قليلاً حسب واجهة GitHub؛ اختر المدخلات التي تطابق jobs الـ workflow عندكم.
 
@@ -48,7 +51,7 @@
 
 ## ملاحظات
 
-- إذا **لم يُشغَّل** workflow على PR (خارج `paths` في الملف)، **لا تظهر** checks — يبقى الالتزام بتشغيل **`make policy-env-example`** و **`make staging-gate`** محلياً وتوثيق ذلك في الـ PR (انظر القالب).
+- إذا **لم يُشغَّل** workflow على PR (خارج `paths` في الملف)، **لا تظهر** checks — يبقى الالتزام بتشغيل **`make policy-env-example`** و **`make staging-gate`** (أو **`make ocr-verify`** إن اختصرتم فقط التحقق من Tesseract مع مكدس Docker شغّال) محلياً وتوثيق ذلك في الـ PR (انظر القالب). ينطبق الأمر نفسه على **Security supply chain** عندما لا يتغيّر `composer.lock` أو `package-lock.json`.
 - workflow **Deploy with gate** على `push` إلى `main` منفصل؛ حماية `main` تمنع الدمج بدون checks، والـ deploy يعمل بعد الدمج الناجح.
 
 ## التحقق

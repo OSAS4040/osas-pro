@@ -2,10 +2,10 @@
   <div dir="rtl">
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-        <ClockIcon class="w-6 h-6 text-purple-500" />
+        <ClockIcon class="w-6 h-6 text-primary-500" />
         سياسات مستوى الخدمة (SLA)
       </h2>
-      <button class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium" @click="showNew = true">
+      <button class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700" @click="showNew = true">
         + سياسة جديدة
       </button>
     </div>
@@ -104,7 +104,7 @@
             </div>
             <div class="flex justify-end gap-2">
               <button type="button" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg" @click="closeModal">إلغاء</button>
-              <button type="submit" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium">حفظ</button>
+              <button type="submit" class="rounded-lg bg-primary-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700">حفظ</button>
             </div>
           </form>
         </div>

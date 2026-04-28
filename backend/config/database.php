@@ -30,8 +30,12 @@ return [
             'schema'   => 'public',
             'sslmode'  => 'prefer',
             'options'  => [
-                // Connection pool: reuse connections aggressively
-                PDO::ATTR_PERSISTENT => true,
+                // Under php-fpm, ATTR_PERSISTENT=true often amplifies connection churn / odd pgsql+pdo
+                // failures under concurrent POS — prefer false + PgBouncer if you need pooling.
+                PDO::ATTR_PERSISTENT => filter_var(
+                    (string) env('DB_PERSISTENT', 'false'),
+                    FILTER_VALIDATE_BOOL
+                ),
                 PDO::ATTR_TIMEOUT    => 5,
                 // Prepared statement caching
                 PDO::ATTR_EMULATE_PREPARES => false,

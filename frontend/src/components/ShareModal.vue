@@ -72,13 +72,13 @@
               </button>
 
               <!-- SMS -->
-              <button class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-100 dark:border-purple-800 transition-colors"
+              <button class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 border border-primary-100 dark:border-primary-800 transition-colors"
                       @click="shareSMS"
               >
-                <div class="w-9 h-9 rounded-lg bg-purple-500 flex items-center justify-center shadow-sm shadow-purple-500/30">
+                <div class="w-9 h-9 rounded-lg bg-primary-500 flex items-center justify-center shadow-sm shadow-primary-500/30">
                   <DevicePhoneMobileIcon class="w-5 h-5 text-white" />
                 </div>
-                <span class="text-xs font-medium text-purple-700 dark:text-purple-400">رسالة SMS</span>
+                <span class="text-xs font-medium text-primary-700 dark:text-primary-400">رسالة SMS</span>
               </button>
 
               <!-- Copy Link -->

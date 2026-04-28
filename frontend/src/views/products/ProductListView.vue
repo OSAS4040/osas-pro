@@ -188,7 +188,7 @@ function typeLabel(t: string): string {
 
 function typeClass(t: string): string {
   const m: Record<string, string> = {
-    physical: 'bg-blue-100 text-blue-700', service: 'bg-purple-100 text-purple-700',
+    physical: 'bg-blue-100 text-blue-700', service: 'bg-primary-100 text-primary-700',
     consumable: 'bg-orange-100 text-orange-700', labor: 'bg-gray-100 text-gray-600',
   }
   return m[t] ?? 'bg-gray-100 text-gray-600'

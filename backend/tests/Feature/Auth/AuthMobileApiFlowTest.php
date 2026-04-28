@@ -3,12 +3,16 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\UserPushDevice;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
  * End-to-end API lifecycle (no Flutter): login → push → logout → re-login → logout-all.
  * Simulates FCM "refresh" as a second push registration with a new token (server path).
+ *
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md
  */
+#[Group('phase0')]
 class AuthMobileApiFlowTest extends TestCase
 {
     public function test_end_to_end_login_push_logout_logout_all_and_second_token(): void

@@ -106,6 +106,27 @@
     "planFeatures": "What’s included in your plan",
     "planFeaturesHint": "Capabilities enabled for your subscription tier.",
     "noFeatures": "No feature list returned for this plan — contact support if something looks wrong.",
+    "addonsTitle": "Optional add-ons for your plan",
+    "addonsSubtitle": "Paid capabilities on top of your base plan — no full tier upgrade required. Only add-ons eligible for your current plan are listed.",
+    "addonsEmpty": "There are no add-ons available for your current plan right now.",
+    "addonsMonthly": "per month",
+    "addonsYearly": "per year",
+    "addonsEligible": "Available for your plan",
+    "addonsActive": "Active on your subscription",
+    "addonsBuy": "Purchase add-on",
+    "addonsRemove": "Remove add-on",
+    "addonsProcessing": "Working…",
+    "addonsConfirmTitle": "Confirm add-on",
+    "addonsConfirmIntro": "The capability will be enabled for your workspace subscription once you confirm.",
+    "addonsConfirmPrice": "Estimated monthly commitment",
+    "addonsGatewayHint": "When a payment gateway is connected, you can open checkout first, then complete activation here after payment succeeds.",
+    "addonsPayAtGateway": "Pay via gateway",
+    "addonsActivateAfterPay": "Activate now (after payment)",
+    "addonsActivateDirect": "Activate add-on",
+    "addonsCancel": "Cancel",
+    "addonsRemoveConfirm": "Remove this add-on from your subscription? Related features may stop immediately.",
+    "addonsSuccess": "Add-ons updated.",
+    "addonsError": "Could not complete the action.",
     "changePlan": "Change plan",
     "startDate": "Start date",
     "endDate": "End date",
@@ -149,7 +170,9 @@
       "analytics": "Advanced analytics",
       "multi_branch": "Multi-branch",
       "inventory": "Inventory",
-      "purchases": "Purchases"
+      "purchases": "Purchases",
+      "smart_reports": "Smart reports & signals",
+      "work_order_advanced_pricing": "Advanced work order pricing"
     }
   }
 }

@@ -1,5 +1,5 @@
 # ترتيب التنفيذ الرسمي (مرقم): docs/Execution_Order_Asas_Pro.md
-.PHONY: up down build fresh logs logs-all shell migrate seed seed-simulate key tinker queue-restart swagger dompdf-arabic-check test test-filter test-coverage test-frontend-full test-project-gate staging-gate production-readiness-gate policy-env-example github-branch-protection-status verify release-gate monitoring-gate integrity-verify load-test load-test-preflight load-test-matrix load-test-release-gate load-test-rc-secure-gate ps install ngrok-up ngrok-down ngrok-url up-ngrok dev-bootstrap
+.PHONY: up down build fresh logs logs-all shell migrate seed seed-simulate key tinker queue-restart swagger dompdf-arabic-check test test-filter test-coverage test-frontend-full fe-phases fe-phases-with-e2e test-project-gate staging-gate staging-gate-ps ocr-verify preflight-pilot-readonly production-readiness-gate policy-env-example github-branch-protection-status execution-order-local execution-order-local-ps install-git-hooks verify release-gate monitoring-gate integrity-verify load-test load-test-preflight load-test-matrix load-test-release-gate load-test-rc-secure-gate load-test-capacity-discovery load-test-capacity-one ps install ngrok-up ngrok-down ngrok-url up-ngrok dev-bootstrap
 
 up:
 	docker compose up -d
@@ -68,7 +68,7 @@ tinker:
 	docker compose exec app php artisan tinker
 
 queue-restart:
-	docker compose restart queue_high queue_default queue_low
+	docker compose restart queue_high queue_default queue_pos queue_low
 
 swagger:
 	docker compose exec app php artisan l5-swagger:generate
@@ -86,28 +86,66 @@ test:
 test-frontend-full:
 	cd frontend && npm run test:ci
 
+# نفس `frontend-phase-gates` في CI: Vitest حسب المراحل 0–6 (يفترض `npm install` أو `npm ci` في frontend مسبقاً)
+# Windows بدون make: pwsh -File scripts/fe-phases.ps1
+fe-phases:
+	cd frontend && npm run test:phases:fe
+
+# Vitest 0–6 ثم Playwright المرحلة 7 (يحتاج `npm run test:e2e:install` في الواجهة)
+# Windows: pwsh -File scripts/fe-phases-with-e2e.ps1
+fe-phases-with-e2e:
+	cd frontend && npm run test:phases:fe:with-e2e
+
 # بوابة مشروع: واجهة كاملة ثم PHPUnit داخل Docker
 test-project-gate: test-frontend-full
 	docker compose exec -T app sh -lc "cd /var/www && php artisan config:clear && ./vendor/bin/phpunit"
 
-# فحص سريع بعد نشر staging (قرار: staging أولاً + متغيرات محافظة) — Vitest + PHPUnit مسار المنصة/SaaS
-# نفس المنطق: scripts/staging-gate.sh (لـ CI/Linux)
+# فحص سريع بعد نشر staging — Vitest + PHPUnit مراحل 0–7 + `php artisan ocr:verify --fail` (Tesseract)
+# يتطلب: docker compose up -d — نفس المنطق: bash scripts/staging-gate.sh (لـ CI/Linux وGitHub Actions)
 staging-gate:
-	docker compose exec -T frontend sh -lc "cd /app && npm ci && npm test"
-	docker compose exec -T app sh -lc "cd /var/www && ./vendor/bin/phpunit tests/Unit/Support/SaasPlatformAccessTest.php tests/Feature/Saas/ tests/Feature/Auth/PhoneRegistrationFlowTest.php"
+	bash scripts/staging-gate.sh
+
+# Windows (PowerShell): نفس محتوى staging-gate.sh دون Git Bash
+staging-gate-ps:
+	pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/staging-gate.ps1
+
+# تحقق سريع من Tesseract (eng+ara) داخل حاوية app — يتطلب docker compose up -d
+ocr-verify:
+	docker compose exec -T app sh -lc "cd /var/www && php artisan ocr:verify --fail"
+
+# فحص قراءة فقط قبل Pilot (سياسة env + health + اختياري OCR) — Linux/macOS: bash scripts/preflight-pilot-readonly.sh
+preflight-pilot-readonly:
+	bash scripts/preflight-pilot-readonly.sh
 
 # بوابة جاهزية إنتاج آلية كاملة (تنظيف، بناء، اختبارات، k6 enterprise، integrity، artifact no-dev).
 # على Windows: pwsh -File scripts/osas-pro-production-readiness-gate.ps1
 production-readiness-gate:
 	bash scripts/osas-pro-production-readiness-gate.sh
 
-# تحقق سياسة أمثلة الإعداد — لا يحتاج Docker (Node فقط)
+# تحقق سياسة قوالب env (جذر + backend + frontend + load-testing + حزم النشر) — لا يحتاج Docker (Node فقط)
 policy-env-example:
 	node scripts/check-policy-env-example.mjs
 
 # المرحلة 1 — قراءة فقط من GitHub API: هل main محمي وفيه فحص Policy env (يتطلب gh auth)
 github-branch-protection-status:
 	node scripts/gh-branch-protection-status.mjs
+
+# المراحل 0→5 (محلي): سياسة env ثم تذكير ترتيبي لـ GitHub / Staging / الإنتاج (انظر scripts/execution-order-local-hint.mjs)
+execution-order-local: policy-env-example
+	node scripts/execution-order-local-hint.mjs
+
+# Windows بدون make: نفس المنطق (powershell 5.1+؛ على macOS/Linux يُفضّل pwsh إن وُجد)
+ifeq ($(OS),Windows_NT)
+execution-order-local-ps:
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/execution-order-local.ps1
+else
+execution-order-local-ps:
+	pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/execution-order-local.ps1
+endif
+
+# المرحلة 5 — خطاف git اختياري: فحص policy عند تعديل backend/.env*.example أو frontend/env*.example (يضبط core.hooksPath=.githooks)
+install-git-hooks:
+	git config core.hooksPath .githooks
 
 # بوابة ما قبل الإنتاج: مسار عميل كامل + سلامة بيانات + idempotency خفيف (انظر tests/Feature/PreProduction)
 # واجهة المستخدم: تحقق يدوي (زمن تحميل <1.5s، لا شاشات بيضاء) — لا يغطيه PHPUnit.
@@ -136,8 +174,8 @@ release-gate: verify integrity-verify monitoring-gate
 monitoring-gate:
 	FAIL_ON_FAILED_JOBS=1 CHECK_BASE_URL=$${CHECK_BASE_URL:-http://127.0.0.1} bash ./check.sh
 
-# k6 — خط أساس ثابت عبر K6_PROFILE: smoke | normal | peak | stress | spike | soak
-# مثال: make load-test K6_PROFILE=peak
+# k6 — خط أساس ثابت عبر K6_PROFILE: smoke | normal | peak | verification | stress | spike | soak
+# مثال: make load-test K6_PROFILE=peak  أو  make load-test K6_PROFILE=verification
 K6_PROFILE ?= smoke
 load-test:
 	docker run --rm \
@@ -182,6 +220,34 @@ load-test-release-gate:
 load-test-rc-secure-gate:
 	powershell -ExecutionPolicy Bypass -File scripts/verify-operational-baseline.ps1
 	powershell -ExecutionPolicy Bypass -File scripts/run-peak-rc-secure.ps1
+
+# سلم سعة POS (3→5→7 req/s افتراضياً): تقارير في load-testing/reports/capacity-discovery-*
+# Windows: PowerShell. Linux/macOS: bash. يتطلب Docker + docker compose up + بذور المحاكاة.
+load-test-capacity-discovery:
+ifeq ($(OS),Windows_NT)
+	powershell -ExecutionPolicy Bypass -File scripts/run-capacity-discovery.ps1
+else
+	bash scripts/run-capacity-discovery.sh
+endif
+
+# تشغيل نقطة واحدة: make load-test-capacity-one K6_CAPACITY_POS_RATE=5
+K6_CAPACITY_POS_RATE ?= 3
+K6_CAPACITY_POS_STEADY_MIN ?= 5
+load-test-capacity-one:
+	docker run --rm \
+		-v "$(CURDIR)/load-testing:/work" \
+		-w /work/k6 \
+		--add-host=host.docker.internal:host-gateway \
+		-e K6_BASE_URL=http://host.docker.internal/api \
+		-e K6_PROFILE=capacity_pos \
+		-e K6_CAPACITY_POS_RATE=$(K6_CAPACITY_POS_RATE) \
+		-e K6_CAPACITY_POS_STEADY_MIN=$(K6_CAPACITY_POS_STEADY_MIN) \
+		-e K6_POS_DISTRIBUTION=single \
+		-e K6_EMAIL_A=simulation.owner@demo.local \
+		-e K6_PASSWORD_A=SimulationDemo123! \
+		-e K6_EMAIL_B=owner@demo.sa \
+		-e K6_PASSWORD_B=password \
+		grafana/k6:latest run suite.js
 
 test-filter:
 	docker compose exec app php artisan test --filter=$(filter)

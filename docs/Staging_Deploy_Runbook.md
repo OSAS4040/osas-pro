@@ -61,7 +61,7 @@
 make staging-gate
 ```
 
-يشغّل: `npm ci` + Vitest في حاوية `frontend`، ثم PHPUnit لمسار المنصة/SaaS في حاوية `app` — نفس منطق [`scripts/staging-gate.sh`](../scripts/staging-gate.sh).
+يشغّل: `npm ci` + Vitest في حاوية `frontend`، ثم **PHPUnit بالمراحل `phase0` … `phase7`** في حاوية `app`، ثم **`php artisan ocr:verify --fail`** للتحقق من **Tesseract** ولغات `eng` و`ara` داخل الحاوية (يتوافق مع [`Executive_Gate_Current_Phase.md`](./Executive_Gate_Current_Phase.md)) — نفس منطق [`scripts/staging-gate.sh`](../scripts/staging-gate.sh). على Windows بدون Bash: [`scripts/staging-gate.ps1`](../scripts/staging-gate.ps1) أو `make staging-gate-ps`.
 
 **تحقق سياسة أمثلة الإعداد (بدون Docker):**
 
@@ -70,7 +70,7 @@ make policy-env-example
 # أو: node scripts/check-policy-env-example.mjs
 ```
 
-**CI:** على كل PR نحو `main` (المسارات المذكورة في الملف) يُشغَّل workflow **Staging gate**؛ يتضمّن `policy-env-example` ثم Docker + `staging-gate.sh`.
+**CI:** على كل PR نحو `main` (المسارات المذكورة في الملف) يُشغَّل workflow **Staging gate**؛ يتضمّن `policy-env-example` ثم Docker + `staging-gate.sh` (ينتهي بـ **`ocr:verify --fail`**).
 
 للبوابة الكاملة قبل الدمج استخدم `make verify` أو `make release-gate` حسب [`Makefile`](../Makefile).
 

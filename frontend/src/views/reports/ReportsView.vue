@@ -41,7 +41,7 @@
         <button
           type="button"
           :title="l('مشاركة الرابط مع نفس نطاق التواريخ', 'Share link with same date range')"
-          class="px-3 py-2 text-sm rounded-lg border border-violet-300 text-violet-700 dark:border-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/40"
+          class="px-3 py-2 text-sm rounded-lg border border-primary-300 text-primary-700 dark:border-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950/40"
           @click="shareReport"
         >
           {{ l('مشاركة', 'Share') }}
@@ -738,7 +738,7 @@
               <tr v-for="r in vat.by_rate" :key="String(r.tax_rate)" class="border-b dark:border-slate-700/50">
                 <td class="py-2">{{ r.tax_rate }}%</td>
                 <td class="py-2">{{ fmt(r.taxable_amount) }}</td>
-                <td class="py-2 font-medium text-purple-600">{{ fmt(r.tax_amount) }}</td>
+                <td class="py-2 font-medium text-primary-600">{{ fmt(r.tax_amount) }}</td>
               </tr>
             </tbody>
           </table>
@@ -789,6 +789,7 @@ const locale = useLocale()
 
 const showBiToolbarLink = computed(() => {
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   return canAccessStaffBusinessIntelligence({
     buildFlagOn: featureFlags.intelligenceCommandCenter,
@@ -798,6 +799,7 @@ const showBiToolbarLink = computed(() => {
 })
 const showHeatmapToolbarLink = computed(() => {
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   return tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
 })

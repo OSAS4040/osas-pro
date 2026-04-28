@@ -19,6 +19,14 @@
 powershell -ExecutionPolicy Bypass -File scripts/preflight-pilot-readonly.ps1
 ```
 
+مع التحقق من **OCR داخل Docker** (بعد `docker compose up -d`):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/preflight-pilot-readonly.ps1 -WithOcrVerify
+```
+
+**Linux / macOS / Git Bash:** `make preflight-pilot-readonly` أو `bash scripts/preflight-pilot-readonly.sh` (خيارات: `--with-ocr-verify`، `--skip-frontend`، `--api-url=…`، `--frontend-url=…`).
+
 للتحقق من عنوان Staging:
 
 ```powershell
@@ -28,14 +36,15 @@ powershell -ExecutionPolicy Bypass -File scripts/preflight-pilot-readonly.ps1 `
 ```
 
 - **لا يغيّر** قاعدة البيانات ولا ينشر شيئاً.
-- يتحقق من سياسة ملفات env النموذجية + `/api/v1/health` + (اختياري) الواجهة + حالة Docker.
+- يتحقق من سياسة ملفات env النموذجية + `/api/v1/health` + (اختياري) الواجهة + حالة Docker + (اختياري) **`ocr:verify --fail`** في الحاوية.
 - إذا كان الجذر على `http://127.0.0.1` يعيد **502** (nginx بدون SPA جاهز)، اترك `-FrontendBaseUrl` فارغاً أو أضف `-SkipFrontend` للتحقق من الـ API والسياسة فقط.
 
 ## الخطوة 2 — أتمتة المستودع (بعد `docker compose up -d`)
 
 | الأمر | الغرض |
 |--------|--------|
-| `make staging-gate` | Vitest (وحدات `src`) + PHPUnit مسار SaaS |
+| `make staging-gate` (أو Windows: `make staging-gate-ps`) | Vitest + PHPUnit مراحل 0–7 + **`ocr:verify --fail`** (Tesseract eng+ara)؛ أو سريع: `make ocr-verify` إن كان المكدس شغّالاً |
+| `make fe-phases` أو `pwsh -File scripts/fe-phases.ps1` | نفس **Vitest 0→6** كوظيفة CI `frontend-phase-gates` (بدون Docker) |
 | `make verify` | lint + build واجهة + PHPUnit كامل |
 | `make integrity-verify` أو `docker compose exec -T app php artisan integrity:verify` | سلامة فواتير/مخزون/محفظة (قراءة تحقق) |
 
@@ -54,7 +63,7 @@ powershell -ExecutionPolicy Bypass -File scripts/pilot-step2-docker.ps1
 نفّذ بالترتيب: [`Staging_Manual_Test_Checklist.md`](./Staging_Manual_Test_Checklist.md)  
 على الأقل: **أ، ب، هـ**؛ و**ج، د** إن كانت منصة أو بوابات مفعّلة عندكم.
 
-**قبل أو بجانب Staging (محلي، آلي):** [`scripts/pilot-step3-local-gate.ps1`](../scripts/pilot-step3-local-gate.ps1) — يغطي **A1** + فحص **`/api/v1/health`** والجذر على المكدس المحلي؛ أضف **`-WithE2e`** لتشغيل **`npm run test:ci`** (Playwright كما في GitHub). **لا يغني** عن **ب، ج، د، هـ** على عنوان Staging الحقيقي.
+**قبل أو بجانب Staging (محلي، آلي):** [`scripts/pilot-step3-local-gate.ps1`](../scripts/pilot-step3-local-gate.ps1) — يغطي **A1** + فحص **`/api/v1/health`** والجذر على المكدس المحلي؛ أضف **`-WithOcrVerify`** لـ **`ocr:verify --fail`** داخل Docker؛ أضف **`-WithE2e`** لتشغيل **`npm run test:ci`** (Playwright كما في GitHub). **لا يغني** عن **ب، ج، د، هـ** على عنوان Staging الحقيقي.
 
 **سجل مختصر (انسخه في تذكرة/وثيقة داخلية):**
 

@@ -205,8 +205,8 @@ const quickActions: QuickAction[] = [
     description: 'افتح واجهة نقطة البيع المباشرة',
     route: '/pos',
     icon: ShoppingCartIcon,
-    iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-    iconColor: 'text-purple-600 dark:text-purple-400',
+    iconBg: 'bg-primary-100 dark:bg-primary-900/30',
+    iconColor: 'text-primary-600 dark:text-primary-400',
     keywords: ['pos', 'نقطة', 'البيع', 'بيع', 'كاشير'],
   },
   {

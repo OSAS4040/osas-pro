@@ -37,7 +37,7 @@ function pct(n: number): number {
 }
 
 const barClass = computed(() => {
-  if (props.tone === 'violet') return 'bg-violet-500/90'
+  if (props.tone === 'violet') return 'bg-primary-500/90'
   if (props.tone === 'amber') return 'bg-amber-500/90'
   return 'bg-emerald-500/90'
 })

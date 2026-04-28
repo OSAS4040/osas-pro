@@ -479,8 +479,8 @@
             <div v-if="talkingInvoice.videoUrl" class="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
               <VideoCameraIcon class="w-5 h-5 text-indigo-600" />
             </div>
-            <div v-if="talkingInvoice.audioUrl" class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-              <MicrophoneIcon class="w-5 h-5 text-purple-600" />
+            <div v-if="talkingInvoice.audioUrl" class="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+              <MicrophoneIcon class="w-5 h-5 text-primary-600" />
             </div>
           </div>
         </div>

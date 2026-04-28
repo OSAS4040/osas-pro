@@ -88,7 +88,7 @@
 5. مسار شركة حتى `pending-review` ووصول المشغّل لصفحة طابور المراجعة.
 
 **اختبارات آلية (مرجع):**  
-`backend/tests/Feature/Auth/PhoneRegistrationFlowTest.php` — مضمّن في `scripts/staging-gate.sh` و`Makefile` (`staging-gate`).
+`backend/tests/Feature/Auth/PhoneRegistrationFlowTest.php` — ضمن مجموعة **`phase0`** في PHPUnit؛ يُشغَّل عبر `scripts/staging-gate.sh` / `staging-gate.ps1` و`make staging-gate` / `staging-gate-ps`.
 
 **E2E دخان واجهة:** `frontend/e2e/phone-onboarding-smoke.spec.ts`.
 

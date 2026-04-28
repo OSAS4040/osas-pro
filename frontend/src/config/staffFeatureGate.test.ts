@@ -20,6 +20,8 @@ describe('tenantSectionOpen', () => {
   it('delegates to isEnabled for non-owner', () => {
     expect(tenantSectionOpen(false, matrix({ operations: true }), 'operations')).toBe(true)
     expect(tenantSectionOpen(false, matrix({ operations: false }), 'operations')).toBe(false)
+    expect(tenantSectionOpen(false, matrix({ fixed_assets: true }), 'fixed_assets')).toBe(true)
+    expect(tenantSectionOpen(false, matrix({ fixed_assets: false }), 'fixed_assets')).toBe(false)
   })
 })
 

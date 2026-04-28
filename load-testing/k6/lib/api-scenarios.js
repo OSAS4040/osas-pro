@@ -55,6 +55,33 @@ function recordHttpOutcome(res) {
   }
 }
 
+function previewBody(res) {
+  try {
+    return String(res.body || '').slice(0, 500);
+  } catch (_) {
+    return '';
+  }
+}
+
+function trace503Sample(res, context = {}) {
+  if (res.status !== 503) {
+    return;
+  }
+  const headers = res.headers || {};
+  const sample = {
+    kind: 'POS_503_SAMPLE',
+    status: res.status,
+    url: res.url,
+    duration_ms: res.timings && res.timings.duration != null ? res.timings.duration : null,
+    request_id: headers['X-Request-Id'] || headers['x-request-id'] || null,
+    trace_id: headers['X-Trace-Id'] || headers['x-trace-id'] || null,
+    headers,
+    response_body_preview: previewBody(res),
+    context,
+  };
+  console.error(JSON.stringify(sample));
+}
+
 /** خلط قراءة تشغيلي — السيناريو الأساس للحمل */
 export function scenarioReadMix(data) {
   const h = { headers: bearerHeaders(data.tokenA) };
@@ -139,6 +166,25 @@ function posPayload(data, qty, unitPrice, costPrice, taxRate) {
   };
 }
 
+function selectPosActor(data) {
+  const actors = Array.isArray(data.posActors) ? data.posActors : [];
+  if (actors.length === 0) {
+    return {
+      key: 'A',
+      token: data.tokenA,
+      companyId: data.companyIdA,
+      customerId: data.customerId,
+      product: data.product,
+    };
+  }
+  const mode = String(__ENV.K6_POS_DISTRIBUTION || 'single').toLowerCase();
+  if (mode !== 'distributed' || actors.length === 1) {
+    return actors[0];
+  }
+  const idx = Math.floor(Math.random() * actors.length);
+  return actors[idx];
+}
+
 /** بيع POS — مفتاح Idempotency فريد لكل طلب (لا تكرار غير مقصود) */
 export function scenarioPosSale(data) {
   if (!data.posReady) {
@@ -146,14 +192,22 @@ export function scenarioPosSale(data) {
     return;
   }
 
+  const actor = selectPosActor(data);
   const idem = uuidv4();
-  const p = data.product;
-  const { body } = posPayload(data, 1, p.unit_price, p.cost_price, p.tax_rate);
+  const p = actor.product || data.product;
+  const payloadData = {
+    ...data,
+    customerId: actor.customerId,
+    product: p,
+  };
+  const { body } = posPayload(payloadData, 1, p.unit_price, p.cost_price, p.tax_rate);
 
   const res = http.post(`${data.baseUrl}/v1/pos/sale`, body, {
     headers: {
-      ...bearerHeaders(data.tokenA),
+      ...bearerHeaders(actor.token),
       'Idempotency-Key': idem,
+      'X-Request-Id': uuidv4(),
+      'X-Trace-Id': uuidv4(),
     },
     tags: scenTags({ name: 'POSSale' }),
   });
@@ -165,6 +219,12 @@ export function scenarioPosSale(data) {
   posSaleOk.add(ok201 ? 1 : 0);
   check(res, {
     pos_no_5xx: (r) => r.status < 500 || r.status === 0,
+  });
+  trace503Sample(res, {
+    scenario: 'scenarioPosSale',
+    idempotency_key: idem,
+    actor_key: actor.key,
+    actor_company_id: actor.companyId,
   });
 
   const includeRawFollow = String(__ENV.K6_POS_INCLUDE_RAW || 'true').toLowerCase() !== 'false';
@@ -180,7 +240,7 @@ export function scenarioPosSale(data) {
       if (invId) {
         const t0 = Date.now();
         const invRes = http.get(`${data.baseUrl}/v1/invoices/${invId}`, {
-          headers: bearerHeaders(data.tokenA),
+          headers: bearerHeaders(actor.token),
           tags: scenTags({ name: 'InvoiceShowAfterSale' }),
         });
         recordHttpOutcome(invRes);
@@ -217,13 +277,24 @@ export function scenarioIdempotencyMismatch(data) {
   if (!data.posReady) {
     return;
   }
+  const actor = selectPosActor(data);
   const idem = uuidv4();
-  const p = data.product;
-  const first = posPayload(data, 1, p.unit_price, p.cost_price, p.tax_rate);
-  const second = posPayload(data, 2, p.unit_price, p.cost_price, p.tax_rate);
+  const p = actor.product || data.product;
+  const payloadData = {
+    ...data,
+    customerId: actor.customerId,
+    product: p,
+  };
+  const first = posPayload(payloadData, 1, p.unit_price, p.cost_price, p.tax_rate);
+  const second = posPayload(payloadData, 2, p.unit_price, p.cost_price, p.tax_rate);
 
   const r1 = http.post(`${data.baseUrl}/v1/pos/sale`, first.body, {
-    headers: { ...bearerHeaders(data.tokenA), 'Idempotency-Key': idem },
+    headers: {
+      ...bearerHeaders(actor.token),
+      'Idempotency-Key': idem,
+      'X-Request-Id': uuidv4(),
+      'X-Trace-Id': uuidv4(),
+    },
     tags: scenTags({ name: 'POSIdemFirst' }),
   });
   recordHttpOutcome(r1);
@@ -236,7 +307,12 @@ export function scenarioIdempotencyMismatch(data) {
   }
 
   const r2 = http.post(`${data.baseUrl}/v1/pos/sale`, second.body, {
-    headers: { ...bearerHeaders(data.tokenA), 'Idempotency-Key': idem },
+    headers: {
+      ...bearerHeaders(actor.token),
+      'Idempotency-Key': idem,
+      'X-Request-Id': uuidv4(),
+      'X-Trace-Id': uuidv4(),
+    },
     tags: scenTags({ name: 'POSIdemSecond' }),
   });
   recordHttpOutcome(r2);

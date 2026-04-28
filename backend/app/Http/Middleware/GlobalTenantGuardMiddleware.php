@@ -29,7 +29,7 @@ class GlobalTenantGuardMiddleware
 
         if (! $company) {
             return response()->json([
-                'message'  => 'Company not found for this user. The account may be orphaned — run seeders or fix company_id.',
+                'message'  => 'Company context is invalid for this account.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }

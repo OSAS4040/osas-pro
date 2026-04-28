@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Modules\SubscriptionsV2\Models\PaymentOrder;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
@@ -11,7 +12,7 @@ class Payment extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'uuid', 'company_id', 'branch_id', 'invoice_id', 'created_by_user_id',
+        'uuid', 'company_id', 'branch_id', 'invoice_id', 'payment_order_id', 'created_by_user_id',
         'method', 'payment_method', 'amount', 'currency', 'reference',
         'status', 'external_sync_status', 'external_reference',
         'original_payment_id', 'reversal_payment_id', 'trace_id', 'meta', 'created_at',
@@ -29,6 +30,9 @@ class Payment extends Model
 
         static::updating(function ($model) {
             $allowed = ['status', 'reversal_payment_id', 'external_sync_status'];
+            if ($model->isDirty('invoice_id') && $model->getOriginal('invoice_id') === null) {
+                $allowed[] = 'invoice_id';
+            }
             $dirty   = array_keys($model->getDirty());
             $illegal = array_diff($dirty, $allowed);
 
@@ -47,6 +51,11 @@ class Payment extends Model
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function paymentOrder()
+    {
+        return $this->belongsTo(PaymentOrder::class, 'payment_order_id');
     }
 
     public function originalPayment()

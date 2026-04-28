@@ -9,9 +9,10 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Company;
-use App\Models\Plan;
-use App\Models\Subscription;
 use App\Models\Customer;
+use App\Models\Plan;
+use App\Models\PlanAddon;
+use App\Models\Subscription;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -22,12 +23,15 @@ use App\Services\AuditLogger;
 use App\Services\Config\VerticalProfileGovernanceService;
 use App\Services\NavigationVisibilityService;
 use App\Services\Platform\PlatformAdminOverviewService;
+use App\Services\Platform\PlatformPermissionService;
+use App\Services\Saas\SubscriptionAddonEntitlements;
 use App\Services\WorkOrderCancellationRequestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -168,6 +172,80 @@ class PlatformAdminController extends Controller
         ]);
     }
 
+    /**
+     * قائمة عملاء المستأجرين عبر المنصة (قراءة فقط، بلا سياق شركة في الطلب).
+     */
+    public function platformCustomers(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'q' => 'sometimes|string|max:160',
+            'status' => 'sometimes|string|in:active,inactive,all',
+            'company_id' => 'sometimes|integer|min:1',
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
+
+        $perPage = (int) ($data['per_page'] ?? 30);
+        $perPage = min(100, max(1, $perPage));
+
+        $query = Customer::query()->withoutGlobalScopes()
+            ->with(['company:id,name,status'])
+            ->orderByDesc('customers.id');
+
+        if (! empty($data['company_id'] ?? null)) {
+            $query->where('customers.company_id', (int) $data['company_id']);
+        }
+
+        $status = $data['status'] ?? 'all';
+        if ($status === 'active') {
+            $query->where('customers.is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('customers.is_active', false);
+        }
+
+        $term = isset($data['q']) ? trim($data['q']) : '';
+        if ($term !== '') {
+            $like = '%'.addcslashes($term, '%_\\').'%';
+            $query->where(function ($w) use ($like): void {
+                $w->where('customers.name', 'like', $like)
+                    ->orWhere('customers.name_ar', 'like', $like)
+                    ->orWhere('customers.phone', 'like', $like)
+                    ->orWhere('customers.email', 'like', $like);
+            });
+        }
+
+        $paginator = $query->paginate($perPage);
+
+        $items = array_map(static function (Customer $c): array {
+            $company = $c->company;
+
+            return [
+                'id' => $c->id,
+                'uuid' => $c->uuid,
+                'name' => $c->name_ar !== null && $c->name_ar !== '' ? (string) $c->name_ar : (string) $c->name,
+                'company_id' => (int) $c->company_id,
+                'company_name' => $company !== null ? (string) $company->name : '—',
+                'company_status' => $company?->status?->value,
+                'is_active' => (bool) $c->is_active,
+                'status_label' => $c->is_active ? 'نشط' : 'غير مفعّل',
+                'phone' => $c->phone,
+                'email' => $c->email,
+                'created_at' => $c->created_at?->toIso8601String(),
+            ];
+        }, $paginator->items());
+
+        return response()->json([
+            'data' => $items,
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
     public function updateFinancialModel(Request $request, int $id): JsonResponse
     {
         $data = $request->validate([
@@ -276,12 +354,18 @@ class PlatformAdminController extends Controller
             $dbOk = false;
         }
 
+        $queuePending = null;
+        if (Schema::hasTable('jobs')) {
+            $queuePending = (int) DB::table('jobs')->count();
+        }
+
         return response()->json([
             'data' => [
                 'failed_jobs_count' => $failedJobs,
-                'redis_ok'          => $redisOk,
-                'database_ok'       => $dbOk,
-                'integrity_hint'    => 'Run `php artisan integrity:sanity` for DB + platform IAM checks; `php artisan integrity:verify` for financial/operational data integrity.',
+                'redis_ok' => $redisOk,
+                'database_ok' => $dbOk,
+                'queue_pending_count' => $queuePending,
+                'integrity_hint' => 'للمطابقة التشغيلية: `php artisan integrity:sanity` ثم `integrity:verify` عند الحاجة.',
             ],
             'trace_id' => app('trace_id'),
         ]);
@@ -481,6 +565,11 @@ class PlatformAdminController extends Controller
             'updated_at' => now(),
         ]);
 
+        $freshSub = Subscription::withoutGlobalScopes()->whereKey($sub->id)->first();
+        if ($freshSub !== null) {
+            app(SubscriptionAddonEntitlements::class)->pruneIneligibleForPlan($freshSub);
+        }
+
         $this->auditLogger->log(
             action: 'platform.subscription.plan_changed',
             subjectType: Subscription::class,
@@ -494,6 +583,165 @@ class PlatformAdminController extends Controller
 
         return response()->json([
             'data' => Subscription::withoutGlobalScopes()->whereKey($sub->id)->first(),
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function syncCompanySubscriptionAddon(Request $request, int $id): JsonResponse
+    {
+        $data = $request->validate([
+            'addon_slug' => ['required', 'string', 'max:120'],
+            'attach'     => ['required', 'boolean'],
+        ]);
+
+        Company::query()->findOrFail($id);
+
+        $sub = Subscription::withoutGlobalScopes()
+            ->where('company_id', $id)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($sub === null) {
+            return response()->json([
+                'message'  => 'لا يوجد اشتراك لهذه الشركة.',
+                'trace_id' => app('trace_id'),
+            ], 404);
+        }
+
+        $addon = PlanAddon::query()->where('slug', $data['addon_slug'])->first();
+        if ($addon === null) {
+            return response()->json([
+                'message'  => 'إضافة غير معروفة.',
+                'trace_id' => app('trace_id'),
+            ], 404);
+        }
+
+        $svc = app(SubscriptionAddonEntitlements::class);
+
+        try {
+            if ($data['attach']) {
+                $svc->attach($sub, $addon);
+            } else {
+                $svc->detach($sub, $addon);
+            }
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'message'  => $e->getMessage(),
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
+
+        $this->auditLogger->log(
+            action: $data['attach'] ? 'platform.subscription.addon_attached' : 'platform.subscription.addon_detached',
+            subjectType: Subscription::class,
+            subjectId: (int) $sub->id,
+            before: [],
+            after: [
+                'addon_slug' => $data['addon_slug'],
+                'attach'     => $data['attach'],
+            ],
+            companyId: $id,
+            branchId: null,
+            userId: (int) $request->user()->id,
+        );
+
+        return response()->json([
+            'data' => [
+                'active_addons' => $svc->activeAddonPayloadForSubscription($sub->fresh()),
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    public function storePlanAddonCatalog(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || ! app(PlatformPermissionService::class)->canManageGlobalPlanCatalog($user)) {
+            return response()->json([
+                'message'  => 'إنشاء إضافة في الكتالوج غير مسموح لهذا الحساب.',
+                'code'     => 'PLAN_CATALOG_FORBIDDEN',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'slug' => ['required', 'string', 'max:120', 'regex:/^[a-z0-9][a-z0-9_-]*$/', Rule::unique('plan_addons', 'slug')],
+            'feature_key' => ['required', 'string', 'max:80', 'regex:/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/'],
+            'name' => ['nullable', 'string', 'max:160'],
+            'name_ar' => ['required', 'string', 'max:160'],
+            'description_ar' => ['nullable', 'string', 'max:2000'],
+            'price_monthly' => ['required', 'numeric', 'min:0'],
+            'price_yearly' => ['required', 'numeric', 'min:0'],
+            'currency' => ['sometimes', 'string', 'max:8'],
+            'eligible_plan_slugs' => ['nullable', 'array'],
+            'eligible_plan_slugs.*' => ['string', 'max:64'],
+            'is_active' => ['sometimes', 'boolean'],
+            'sort_order' => ['sometimes', 'integer', 'min:0'],
+        ]);
+
+        $eligible = $validated['eligible_plan_slugs'] ?? null;
+        if (is_array($eligible) && $eligible === []) {
+            $eligible = null;
+        }
+        if (is_array($eligible) && $eligible !== []) {
+            $wanted = array_values(array_unique(array_map('strval', $eligible)));
+            $existing = Plan::query()->whereIn('slug', $wanted)->pluck('slug')->map(fn ($s) => (string) $s)->all();
+            $missing = array_values(array_diff($wanted, $existing));
+            if ($missing !== []) {
+                throw ValidationException::withMessages([
+                    'eligible_plan_slugs' => ['قيم غير معروفة في كتالوج الباقات: '.implode(', ', $missing)],
+                ]);
+            }
+        }
+
+        $addon = PlanAddon::query()->create([
+            'slug' => $validated['slug'],
+            'feature_key' => $validated['feature_key'],
+            'name' => $validated['name'] ?? null,
+            'name_ar' => $validated['name_ar'],
+            'description_ar' => $validated['description_ar'] ?? null,
+            'price_monthly' => $validated['price_monthly'],
+            'price_yearly' => $validated['price_yearly'],
+            'currency' => $validated['currency'] ?? 'SAR',
+            'eligible_plan_slugs' => $eligible,
+            'is_active' => $validated['is_active'] ?? true,
+            'sort_order' => $validated['sort_order'] ?? 0,
+        ]);
+
+        return response()->json([
+            'data' => $addon->fresh(),
+            'trace_id' => app('trace_id'),
+        ], 201);
+    }
+
+    public function updatePlanAddonCatalog(Request $request, string $slug): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || ! app(PlatformPermissionService::class)->canManageGlobalPlanCatalog($user)) {
+            return response()->json([
+                'message'  => 'تعديل كتالوج الإضافات غير مسموح لهذا الحساب.',
+                'code'     => 'PLAN_CATALOG_FORBIDDEN',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
+        $addon = PlanAddon::query()->where('slug', $slug)->firstOrFail();
+
+        $validated = $request->validate([
+            'name_ar'               => ['sometimes', 'string', 'max:160'],
+            'description_ar'        => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'price_monthly'         => ['sometimes', 'numeric', 'min:0'],
+            'price_yearly'          => ['sometimes', 'numeric', 'min:0'],
+            'eligible_plan_slugs'   => ['sometimes', 'nullable', 'array'],
+            'eligible_plan_slugs.*' => ['string', 'max:64'],
+            'is_active'             => ['sometimes', 'boolean'],
+            'sort_order'            => ['sometimes', 'integer', 'min:0'],
+        ]);
+
+        $addon->update($validated);
+
+        return response()->json([
+            'data'     => $addon->fresh(),
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -685,5 +933,13 @@ class PlatformAdminController extends Controller
             'data' => $policy,
             'trace_id' => app('trace_id'),
         ]);
+    }
+
+    /**
+     * تعديل كتالوج الباقات العالمي دون تمرير وسيط المستأجر (للمشغّلين الذين لا يملكون company_id).
+     */
+    public function updatePlanCatalog(Request $request, string $slug): JsonResponse
+    {
+        return app(SaasController::class)->updatePlan($request, $slug);
     }
 }

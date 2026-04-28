@@ -8,6 +8,7 @@ use App\Services\Config\VerticalBehaviorResolverService;
 use App\Services\POSService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(name="POS", description="Point-of-sale fast-track B2C flow")
@@ -67,6 +68,21 @@ class POSController extends Controller
      */
     public function sale(Request $request): JsonResponse
     {
+        $t0 = microtime(true);
+        $seg = [
+            'validate_ms' => 0.0,
+            'policy_ms' => 0.0,
+            'sale_service_ms' => 0.0,
+            'response_serialize_ms' => 0.0,
+        ];
+
+        Log::info('POS_SALE_ENTERED', [
+            'request_id' => $request->header('X-Request-Id'),
+            'trace_id' => $request->header('X-Trace-Id'),
+            'idempotency_key' => $request->header('Idempotency-Key'),
+            'endpoint' => $request->path(),
+        ]);
+
         $user = $request->user();
         $behavior = $this->behaviorResolver->resolve((int) $user->company_id, $user->branch_id ? (int) $user->branch_id : null);
 
@@ -83,6 +99,7 @@ class POSController extends Controller
             ], 422);
         }
 
+        $tv = microtime(true);
         $data = $request->validate([
             'customer_id'            => 'nullable|integer|exists:customers,id',
             'vehicle_id'             => 'nullable|integer|exists:vehicles,id',
@@ -103,6 +120,7 @@ class POSController extends Controller
             'payment.amount'         => 'required|numeric|min:0',
             'payment.reference'      => 'nullable|string',
         ]);
+        $seg['validate_ms'] = round((microtime(true) - $tv) * 1000, 2);
 
         $data['idempotency_key'] = $idempotencyKey;
         if (($behavior['flags']['require_customer'] ?? false) && ! $request->filled('customer_id')) {
@@ -121,6 +139,7 @@ class POSController extends Controller
             ], 422);
         }
 
+        $tp = microtime(true);
         try {
             $this->billingModelPolicy->assertTenantMayOperate((int) $user->company_id);
             if (($data['payment']['method'] ?? '') === 'wallet') {
@@ -129,7 +148,9 @@ class POSController extends Controller
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
         }
+        $seg['policy_ms'] = round((microtime(true) - $tp) * 1000, 2);
 
+        $ts = microtime(true);
         try {
             $invoice = $this->posService->sale(
                 data:           $data,
@@ -141,7 +162,37 @@ class POSController extends Controller
         } catch (\DomainException $e) {
             $status = str_contains($e->getMessage(), 'Idempotency') ? 409 : 422;
             return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], $status);
+        } catch (\Throwable $e) {
+            Log::error('POS_FAILURE', [
+                'trace_id'         => app()->bound('trace_id') ? (string) app('trace_id') : null,
+                'request_id'       => app()->bound('request_id') ? (string) app('request_id') : null,
+                'idempotency_key'  => $idempotencyKey,
+                'company_id'       => $user->company_id,
+                'endpoint'         => $request->path(),
+                'exception_class'  => $e::class,
+                'exception'        => $e->getMessage(),
+            ]);
+            throw $e;
         }
+        $seg['sale_service_ms'] = round((microtime(true) - $ts) * 1000, 2);
+
+        $tr = microtime(true);
+        Log::info('POS_SALE_COMPLETED', [
+            'request_id' => app()->bound('request_id') ? (string) app('request_id') : $request->header('X-Request-Id'),
+            'trace_id' => app()->bound('trace_id') ? (string) app('trace_id') : $request->header('X-Trace-Id'),
+            'idempotency_key' => $idempotencyKey,
+            'invoice_id' => $invoice->id ?? null,
+            'endpoint' => $request->path(),
+        ]);
+        $seg['response_serialize_ms'] = round((microtime(true) - $tr) * 1000, 2);
+        Log::info('POS_TIMING_BREAKDOWN', [
+            'request_id' => app()->bound('request_id') ? (string) app('request_id') : null,
+            'trace_id' => app()->bound('trace_id') ? (string) app('trace_id') : null,
+            'idempotency_key' => $idempotencyKey,
+            'company_id' => $user->company_id,
+            'invoice_id' => $invoice->id ?? null,
+            'total_ms' => round((microtime(true) - $t0) * 1000, 2),
+        ] + $seg);
 
         return response()->json([
             'data'             => $invoice,

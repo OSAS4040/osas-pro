@@ -4,18 +4,25 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
+use App\Models\PlanAddon;
 use App\Models\Subscription;
 use App\Services\Platform\PlatformPermissionService;
+use App\Services\Saas\SubscriptionAddonEntitlements;
+use App\Modules\SubscriptionsV2\Services\SubscriptionService as SubscriptionLifecycleService;
 use App\Support\PlanFeatureDefaults;
+use Database\Seeders\PlanAddonSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class SaasController extends Controller
 {
     public function __construct(
         private readonly PlatformPermissionService $platformPermissionService,
+        private readonly SubscriptionLifecycleService $subscriptionLifecycleService,
     ) {}
 
     // ── Plans (public — no auth required) ────────────────────────────
@@ -28,9 +35,26 @@ class SaasController extends Controller
 
         $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
 
+        $planAddons = [];
+        if (Schema::hasTable('plan_addons')) {
+            if (! PlanAddon::query()->where('is_active', true)->exists()) {
+                try {
+                    (new PlanAddonSeeder)->run();
+                } catch (\Throwable $e) {
+                    Log::warning('PlanAddonSeeder failed in listPlans', [
+                        'message' => $e->getMessage(),
+                    ]);
+                }
+            }
+            $planAddons = PlanAddon::query()->where('is_active', true)->orderBy('sort_order')->get();
+        } else {
+            Log::warning('plan_addons table missing; run: php artisan migrate');
+        }
+
         return response()->json([
-            'data'     => $plans,
-            'trace_id' => app('trace_id'),
+            'data'        => $plans,
+            'plan_addons' => $planAddons,
+            'trace_id'    => app('trace_id'),
         ]);
     }
 
@@ -55,13 +79,15 @@ class SaasController extends Controller
             ];
         }
         $planPayload['features'] = $this->resolvePlanFeaturesForResponse($plan, $sub);
+        $addonsSvc = app(SubscriptionAddonEntitlements::class);
 
         return response()->json([
             'data' => [
                 'subscription'   => $sub,
-                'plan'           => $planPayload,
-                'is_active'      => in_array($sub->status, ['active', 'trialing']),
-                'days_remaining' => now()->diffInDays($sub->ends_at, false),
+                'plan'             => $planPayload,
+                'active_addons'    => $addonsSvc->activeAddonPayloadForSubscription($sub),
+                'is_active'        => in_array($sub->status, ['active', 'trialing']),
+                'days_remaining'   => now()->diffInDays($sub->ends_at, false),
             ],
         ]);
     }
@@ -76,24 +102,26 @@ class SaasController extends Controller
         $fromPlan = $plan?->features;
         if (is_array($fromPlan) && $fromPlan !== []) {
             if (array_is_list($fromPlan) && isset($fromPlan[0]) && is_string($fromPlan[0])) {
-                return $this->featureTokenListToAssoc($fromPlan);
+                $base = $this->featureTokenListToAssoc($fromPlan);
+            } else {
+                /** @var array<string, bool> $fromPlan */
+                $base = $fromPlan;
             }
-
-            /** @var array<string, bool> $fromPlan */
-            return $fromPlan;
+        } else {
+            $fromSub = $sub->features;
+            if (is_array($fromSub) && $fromSub !== []) {
+                if (array_is_list($fromSub) && isset($fromSub[0]) && is_string($fromSub[0])) {
+                    $base = $this->featureTokenListToAssoc($fromSub);
+                } else {
+                    /** @var array<string, bool> $fromSub */
+                    $base = $fromSub;
+                }
+            } else {
+                $base = PlanFeatureDefaults::associativeForSlug((string) $sub->plan);
+            }
         }
 
-        $fromSub = $sub->features;
-        if (is_array($fromSub) && $fromSub !== []) {
-            if (array_is_list($fromSub) && isset($fromSub[0]) && is_string($fromSub[0])) {
-                return $this->featureTokenListToAssoc($fromSub);
-            }
-
-            /** @var array<string, bool> $fromSub */
-            return $fromSub;
-        }
-
-        return PlanFeatureDefaults::associativeForSlug((string) $sub->plan);
+        return app(SubscriptionAddonEntitlements::class)->mergePurchasedFeatureKeys($sub, $base);
     }
 
     /**
@@ -131,17 +159,110 @@ class SaasController extends Controller
             return response()->json(['message' => 'لا يوجد اشتراك لتحديثه.'], 404);
         }
 
+        $beforePlan = Plan::where('slug', $sub->plan)->first();
+        if ($beforePlan === null) {
+            return response()->json(['message' => 'Current plan is not resolvable.'], 422);
+        }
+
         $before = $sub->plan;
-        $sub->update([
-            'plan'     => $plan->slug,
-            'features' => $plan->features,
-            'max_branches' => $plan->max_branches,
-            'max_users'    => $plan->max_users,
-        ]);
+        if ((float) $plan->price_monthly >= (float) $beforePlan->price_monthly) {
+            $this->subscriptionLifecycleService->upgrade($sub, $plan, (int) $user->id);
+            $message = "تم ترقية الباقة من {$before} إلى {$plan->slug}.";
+        } else {
+            $this->subscriptionLifecycleService->scheduleDowngrade($sub, $plan, (int) $user->id);
+            $message = "تمت جدولة تخفيض الباقة من {$before} إلى {$plan->slug} بنهاية الدورة.";
+        }
+
+        $fresh = $sub->fresh();
+        if ($fresh !== null) {
+            app(SubscriptionAddonEntitlements::class)->pruneIneligibleForPlan($fresh);
+        }
 
         return response()->json([
             'data'    => $sub->fresh(),
-            'message' => "تم تغيير الباقة من {$before} إلى {$plan->slug}.",
+            'message' => $message,
+        ]);
+    }
+
+    /**
+     * شراء إضافة على الاشتراك الحالي (مالك المستأجر — لا يستبدل الباقة).
+     */
+    public function purchaseSubscriptionAddon(Request $request): JsonResponse
+    {
+        if (! Schema::hasTable('plan_addons') || ! Schema::hasTable('subscription_addons')) {
+            return response()->json([
+                'message'  => 'كتالوج الإضافات غير مهيأ على الخادم. نفِّذ ترحيل قاعدة البيانات (php artisan migrate).',
+                'code'     => 'ADDONS_SCHEMA_MISSING',
+                'trace_id' => app('trace_id'),
+            ], 503);
+        }
+
+        $data = $request->validate([
+            'addon_slug' => ['required', 'string', 'max:120'],
+        ]);
+
+        $user = $request->user();
+        $sub  = Subscription::where('company_id', $user->company_id)->first();
+        if (! $sub) {
+            return response()->json(['message' => 'لا يوجد اشتراك.'], 404);
+        }
+
+        $addon = PlanAddon::query()->where('slug', $data['addon_slug'])->where('is_active', true)->first();
+        if (! $addon) {
+            return response()->json(['message' => 'الإضافة غير موجودة أو غير مفعّلة.', 'code' => 'ADDON_NOT_FOUND'], 404);
+        }
+
+        $svc = app(SubscriptionAddonEntitlements::class);
+
+        try {
+            $svc->attach($sub, $addon);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage(), 'code' => 'ADDON_NOT_ELIGIBLE'], 422);
+        }
+
+        return response()->json([
+            'message' => 'تم تفعيل الإضافة على اشتراككم.',
+            'data'    => [
+                'active_addons' => $svc->activeAddonPayloadForSubscription($sub->fresh()),
+            ],
+        ], 201);
+    }
+
+    /**
+     * إلغاء إضافة مفعّلة على الاشتراك الحالي.
+     */
+    public function removeSubscriptionAddon(Request $request, string $slug): JsonResponse
+    {
+        if (! Schema::hasTable('plan_addons') || ! Schema::hasTable('subscription_addons')) {
+            return response()->json([
+                'message'  => 'كتالوج الإضافات غير مهيأ على الخادم. نفِّذ ترحيل قاعدة البيانات (php artisan migrate).',
+                'code'     => 'ADDONS_SCHEMA_MISSING',
+                'trace_id' => app('trace_id'),
+            ], 503);
+        }
+
+        $user = $request->user();
+        $sub  = Subscription::where('company_id', $user->company_id)->first();
+        if (! $sub) {
+            return response()->json(['message' => 'لا يوجد اشتراك.'], 404);
+        }
+
+        $addon = PlanAddon::query()->where('slug', $slug)->first();
+        if (! $addon) {
+            return response()->json(['message' => 'الإضافة غير موجودة.', 'code' => 'ADDON_NOT_FOUND'], 404);
+        }
+
+        $svc = app(SubscriptionAddonEntitlements::class);
+        $deleted = $svc->detach($sub, $addon);
+        if ($deleted === 0) {
+            return response()->json(['message' => 'لم تكن هذه الإضافة مفعّلة.', 'code' => 'ADDON_NOT_ATTACHED'], 404);
+        }
+
+        return response()->json([
+            'message' => 'تم إلغاء الإضافة.',
+            'data'    => [
+                'active_addons' => $svc->activeAddonPayloadForSubscription($sub->fresh()),
+            ],
         ]);
     }
 
@@ -339,6 +460,16 @@ class SaasController extends Controller
 
         foreach ($plans as $p) {
             Plan::updateOrCreate(['slug' => $p['slug']], $p);
+        }
+
+        if (Schema::hasTable('plan_addons')) {
+            (new PlanAddonSeeder)->run();
+        } else {
+            return response()->json([
+                'message'  => 'جدول plan_addons غير موجود. نفِّذ ترحيل قاعدة البيانات أولاً (php artisan migrate).',
+                'code'     => 'ADDONS_SCHEMA_MISSING',
+                'trace_id' => app('trace_id'),
+            ], 503);
         }
 
         return response()->json(['message' => 'تم إنشاء الباقات الافتراضية.', 'count' => count($plans)]);

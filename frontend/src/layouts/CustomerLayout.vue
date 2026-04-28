@@ -51,24 +51,34 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   UserCircleIcon, ArrowLeftOnRectangleIcon, BellIcon,
-  HomeIcon, TruckIcon, DocumentTextIcon, CalendarDaysIcon, CreditCardIcon
+  HomeIcon, TruckIcon, DocumentTextIcon, CalendarDaysIcon, CreditCardIcon, CurrencyDollarIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
+import { isCustomerNavHidden } from '@/lib/staffNavKey'
 
 const auth   = useAuthStore()
 const router = useRouter()
 const $route = useRoute()
 
-const navItems = [
-  { to: '/customer/dashboard', icon: HomeIcon,          label: 'الرئيسية' },
-  { to: '/customer/vehicles',  icon: TruckIcon,         label: 'مركباتي' },
-  { to: '/customer/bookings',  icon: CalendarDaysIcon,  label: 'حجوزاتي' },
-  { to: '/customer/invoices',  icon: DocumentTextIcon,  label: 'فواتيري' },
-  { to: '/customer/wallet',    icon: CreditCardIcon,    label: 'المحفظة' },
+const navItemsAll = [
+  { to: '/customer/dashboard', icon: HomeIcon,            label: 'الرئيسية' },
+  { to: '/customer/vehicles',  icon: TruckIcon,           label: 'مركباتي' },
+  { to: '/customer/bookings',  icon: CalendarDaysIcon,    label: 'حجوزاتي' },
+  { to: '/customer/pricing',   icon: CurrencyDollarIcon,  label: 'التسعير' },
+  { to: '/customer/invoices',  icon: DocumentTextIcon,    label: 'فواتيري' },
+  { to: '/customer/wallet',    icon: CreditCardIcon,      label: 'المحفظة' },
 ]
+
+const navItems = computed(() => {
+  const hidden = auth.user?.hidden_customer_nav_keys
+  if (!Array.isArray(hidden) || !hidden.length) return navItemsAll
+  const set = new Set(hidden)
+  return navItemsAll.filter((item) => !isCustomerNavHidden(item.to, set))
+})
 
 async function handleLogout() {
   await auth.logout()

@@ -23,6 +23,20 @@ class WorkOrderService
         private readonly WorkOrderPricingResolverService $pricingResolver,
     ) {}
 
+    /**
+     * HTTP requests bind trace_id via middleware; queue/console contexts do not.
+     */
+    private function resolveTraceId(): string
+    {
+        if (app()->bound('trace_id')) {
+            $v = app('trace_id');
+
+            return is_string($v) && $v !== '' ? $v : Str::uuid()->toString();
+        }
+
+        return Str::uuid()->toString();
+    }
+
     public function create(array $data, int $companyId, int $branchId, int $userId): WorkOrder
     {
         $startedAt = microtime(true);
@@ -67,7 +81,7 @@ class WorkOrderService
                 'driver_phone'            => $data['driver_phone'] ?? null,
                 'technician_notes'        => $data['notes'] ?? $data['technician_notes'] ?? null,
                 'estimated_total'         => $estimatedTotal,
-                'trace_id'                => app('trace_id'),
+                'trace_id'                => $this->resolveTraceId(),
             ]);
 
             foreach ($itemsData as $item) {
@@ -102,7 +116,7 @@ class WorkOrderService
                     'work_order_id' => $order->id,
                     'duration_ms' => round($elapsedMs, 2),
                     'threshold_ms' => $warnMs,
-                    'trace_id' => app('trace_id'),
+                    'trace_id' => $this->resolveTraceId(),
                 ]);
             }
         }
@@ -185,7 +199,7 @@ class WorkOrderService
                     'work_order_id' => $fresh->id,
                     'from_status'   => $from,
                     'to_status'     => $to,
-                    'trace_id'      => app('trace_id'),
+                    'trace_id'      => $this->resolveTraceId(),
                 ]);
 
                 throw new \DomainException(
@@ -225,7 +239,7 @@ class WorkOrderService
                 'work_order_id' => $fresh->id,
                 'from_status'   => $order->status->value,
                 'to_status'     => $newStatus->value,
-                'trace_id'      => app('trace_id'),
+                'trace_id'      => $this->resolveTraceId(),
             ]);
 
             $refreshed = $fresh->refresh();
@@ -249,19 +263,35 @@ class WorkOrderService
         ));
 
         if ($newStatus === WorkOrderStatus::Delivered) {
-            Bus::dispatch(new NotifyCustomerWorkOrderWhatsAppJob(
-                workOrderId: $fresh->id,
-                companyId: (int) $fresh->company_id,
-                kind: 'delivered',
-            ));
+            if (! config('whatsapp_work_order_notifications.enabled')) {
+                Log::info('whatsapp.work_order.dispatch_skipped_feature_disabled', [
+                    'work_order_id' => $fresh->id,
+                    'company_id'    => (int) $fresh->company_id,
+                    'kind'          => 'delivered',
+                ]);
+            } else {
+                Bus::dispatch(new NotifyCustomerWorkOrderWhatsAppJob(
+                    workOrderId: $fresh->id,
+                    companyId: (int) $fresh->company_id,
+                    kind: 'delivered',
+                ));
+            }
         }
 
         if ($newStatus === WorkOrderStatus::Completed) {
-            Bus::dispatch(new NotifyCustomerWorkOrderWhatsAppJob(
-                workOrderId: $fresh->id,
-                companyId: (int) $fresh->company_id,
-                kind: 'completed',
-            ));
+            if (! config('whatsapp_work_order_notifications.enabled')) {
+                Log::info('whatsapp.work_order.dispatch_skipped_feature_disabled', [
+                    'work_order_id' => $fresh->id,
+                    'company_id'    => (int) $fresh->company_id,
+                    'kind'          => 'completed',
+                ]);
+            } else {
+                Bus::dispatch(new NotifyCustomerWorkOrderWhatsAppJob(
+                    workOrderId: $fresh->id,
+                    companyId: (int) $fresh->company_id,
+                    kind: 'completed',
+                ));
+            }
         }
 
         return $fresh;
@@ -322,7 +352,7 @@ class WorkOrderService
             Log::info('work_order.system_status_change', [
                 'work_order_id' => $fresh->id,
                 'to_status' => $newStatus->value,
-                'trace_id' => app('trace_id'),
+                'trace_id' => $this->resolveTraceId(),
             ]);
 
             return $fresh->refresh();

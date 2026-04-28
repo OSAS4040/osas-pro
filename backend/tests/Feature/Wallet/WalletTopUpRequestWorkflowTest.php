@@ -8,8 +8,13 @@ use App\Models\CustomerWallet;
 use App\Models\WalletTopUpRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_02_PROGRESS_REPORT.md — مسار شحن محفظة تجاري
+ */
+#[Group('phase2')]
 class WalletTopUpRequestWorkflowTest extends TestCase
 {
     private array $tenant;

@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { loginErrorMessageFromPayload } from '@/utils/loginApiErrors'
+import { loginErrorMessageFromPayload, normalizeApiMessageText } from '@/utils/loginApiErrors'
+
+describe('normalizeApiMessageText', () => {
+  it('decodes common HTML entities', () => {
+    expect(normalizeApiMessageText('&quot;hello&quot; &amp; world')).toBe('"hello" & world')
+  })
+
+  it('parses JSON-stringified string bodies', () => {
+    expect(normalizeApiMessageText('"خطأ من الخادم"')).toBe('خطأ من الخادم')
+  })
+
+  it('converts escaped newlines to real newlines', () => {
+    expect(normalizeApiMessageText('line1\\nline2')).toBe('line1\nline2')
+  })
+})
 
 describe('loginErrorMessageFromPayload', () => {
   const t = (key: string) =>
@@ -22,5 +36,12 @@ describe('loginErrorMessageFromPayload', () => {
 
   it('falls back to server message when key unknown', () => {
     expect(loginErrorMessageFromPayload({ message: 'Server text' }, t)).toBe('Server text')
+  })
+
+  it('normalizes server message fallback (entities / JSON string)', () => {
+    // Entities decode to double-quoted text; JSON branch then unwraps the string value.
+    expect(loginErrorMessageFromPayload({ message: '&quot;تجربة&quot;' }, t)).toBe('تجربة')
+    expect(loginErrorMessageFromPayload({ message: '"نص"' }, t)).toBe('نص')
+    expect(loginErrorMessageFromPayload({ message: 'كلمة &amp; رمز' }, t)).toBe('كلمة & رمز')
   })
 })

@@ -455,9 +455,9 @@ const columns = [
   {
     status: 'review',
     label: 'مراجعة',
-    badge: 'bg-purple-100 text-purple-700',
-    headerBg: 'bg-purple-50',
-    headerText: 'text-purple-800',
+    badge: 'bg-primary-100 text-primary-700',
+    headerBg: 'bg-primary-50',
+    headerText: 'text-primary-800',
     nextStatus: 'completed',
     nextLabel: 'إتمام',
   },
@@ -504,7 +504,7 @@ const stats = computed(() => [
   { label: 'الكل',     status: '',            value: tasks.value.length,                                            color: 'text-gray-700' },
   { label: 'للتنفيذ', status: 'pending',      value: tasks.value.filter(t => t.status === 'pending').length,      color: 'text-yellow-600' },
   { label: 'جاري',    status: 'in_progress',  value: tasks.value.filter(t => t.status === 'in_progress').length,  color: 'text-blue-600' },
-  { label: 'مراجعة',  status: 'review',       value: tasks.value.filter(t => t.status === 'review').length,       color: 'text-purple-600' },
+  { label: 'مراجعة',  status: 'review',       value: tasks.value.filter(t => t.status === 'review').length,       color: 'text-primary-600' },
   { label: 'مكتمل',   status: 'completed',    value: tasks.value.filter(t => t.status === 'completed').length,    color: 'text-green-600' },
   { label: 'ملغى',    status: 'cancelled',    value: tasks.value.filter(t => t.status === 'cancelled').length,    color: 'text-red-500' },
 ])
@@ -547,7 +547,7 @@ function statusClass(s: string): string {
     {
       pending:     'bg-yellow-100 text-yellow-700',
       in_progress: 'bg-blue-100 text-blue-700',
-      review:      'bg-purple-100 text-purple-700',
+      review:      'bg-primary-100 text-primary-700',
       completed:   'bg-green-100 text-green-700',
       cancelled:   'bg-red-100 text-red-700',
     }[s] ?? 'bg-gray-100 text-gray-600'
@@ -572,7 +572,7 @@ const highPriorityOpen = computed(() =>
 )
 
 const avatarColors = [
-  'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500',
+  'bg-blue-500', 'bg-emerald-500', 'bg-primary-500', 'bg-amber-500',
   'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500', 'bg-teal-500',
 ]
 

@@ -102,7 +102,7 @@
       <!-- Invoice History -->
       <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5">
         <h3 class="font-bold text-sm text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-          <DocumentTextIcon class="w-4 h-4 text-purple-500" /> سجل الفواتير
+          <DocumentTextIcon class="w-4 h-4 text-primary-500" /> سجل الفواتير
         </h3>
         <div v-if="!invoices.length" class="text-center py-4 text-gray-400 text-xs">لا توجد فواتير</div>
         <div v-else class="space-y-2">

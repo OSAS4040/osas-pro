@@ -346,6 +346,10 @@ function safeLimitRecommendation(profile, data, stressAnalysis) {
   const p95 = m.http_req_duration ? metricVal(m.http_req_duration, 'p(95)') : null;
   const s5 = m.server_errors_5xx ? metricVal(m.server_errors_5xx, 'rate') : null;
 
+  if (profile === 'capacity_pos') {
+    return 'تشغيل استكشافي لسعة POS — راقب `scen_pos_post_http_ms` p99 و`pos_sale_2xx` و`dropped_iterations`. قارِن عدة تشغيلات بمعدلات وصول مختلفة (مثلاً 3 / 5 / 7/sec عبر `K6_CAPACITY_POS_RATE`).';
+  }
+
   if (profile === 'stress') {
     if (stressAnalysis.firstCollapse) {
       return `الحد الآمن التقريبي أقل من **~${stressAnalysis.firstCollapse.vu} VU** (ظهر انهيار/تدهور شديد عند هذه المرحلة). راجع جدول مراحل الإجهاد أدناه.`;

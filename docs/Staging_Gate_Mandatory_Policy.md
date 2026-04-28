@@ -13,7 +13,7 @@
 
 | المكوّن | الوصف |
 |---------|--------|
-| [`scripts/staging-gate.sh`](../scripts/staging-gate.sh) | سكربت موحّد (Vitest + PHPUnit مسار المنصة/SaaS) |
+| [`scripts/staging-gate.sh`](../scripts/staging-gate.sh) · [`scripts/staging-gate.ps1`](../scripts/staging-gate.ps1) (Windows) | سكربت موحّد: Vitest + PHPUnit بالمراحل `phase0`…`phase7` (يشمل Auth في `phase0` وSaaS في `phase1`) ثم **`php artisan ocr:verify --fail`** (Tesseract eng+ara داخل حاوية `app`) |
 | `make staging-gate` | نفس المنطق عبر Makefile |
 | `make policy-env-example` | تحقق ثابت من سياسة أمثلة الإعداد |
 | [`.github/workflows/staging-gate.yml`](../.github/workflows/staging-gate.yml) | CI على PR (حسب المسارات المعتمدة في الملف) |

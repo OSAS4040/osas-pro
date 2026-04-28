@@ -85,9 +85,14 @@
                 </td>
                 <td class="px-4 py-3 text-xs text-gray-500">{{ fmtDate(r.created_at) }}</td>
                 <td class="px-4 py-3 text-left">
-                  <button type="button" class="text-xs font-semibold text-primary-600 hover:underline" @click="openDetail(r.id)">
-                    تفاصيل
-                  </button>
+                  <div class="flex flex-wrap gap-2 justify-end">
+                    <button type="button" class="text-xs font-semibold text-primary-600 hover:underline" @click="openDetail(r.id)">
+                      تفاصيل
+                    </button>
+                    <button type="button" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:underline" @click="downloadTransferInstructions(r.id)">
+                      تعليمات تحويل PDF
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -170,6 +175,13 @@
                     >
                       إيصال
                     </button>
+                    <button
+                      type="button"
+                      class="text-[11px] font-semibold text-slate-600 hover:underline"
+                      @click="downloadTransferInstructions(r.id)"
+                    >
+                      PDF تحويل
+                    </button>
                     <template v-if="r.status === 'pending'">
                       <button type="button" class="text-[11px] font-semibold text-green-600 hover:underline disabled:opacity-50" :disabled="actionBusyId === r.id" @click="confirmApprove(r)">
                         اعتماد
@@ -235,6 +247,9 @@
             <div>
               <label class="block text-xs font-semibold mb-1">رقم المرجع / الحوالة</label>
               <input v-model="createForm.reference_number" type="text" class="field" maxlength="120">
+              <p v-if="createForm.payment_method === 'bank_transfer'" class="text-[11px] text-gray-500 dark:text-slate-400 mt-1 leading-relaxed">
+                عند التحويل البنكي: إن تُرك الحقل فارغاً يُولَّد مرجع تلقائياً (WTU-…) ويُذكر في مستند «تعليمات التحويل» مع اسم العميل.
+              </p>
             </div>
             <div>
               <label class="block text-xs font-semibold mb-1">ملاحظات</label>
@@ -281,6 +296,9 @@
               ({{ fmt(detail.approved_wallet_transaction.amount) }})
             </p>
             <div class="flex flex-wrap gap-2 pt-2">
+              <button type="button" class="btn btn-outline text-xs py-1.5" @click="downloadTransferInstructions(detail.id)">
+                تعليمات تحويل (PDF)
+              </button>
               <button v-if="detail.has_receipt" type="button" class="btn btn-outline text-xs py-1.5" @click="downloadReceipt(detail.id)">
                 تنزيل الإيصال
               </button>
@@ -670,6 +688,34 @@ async function downloadReceipt(id: number) {
     URL.revokeObjectURL(url)
   } catch {
     toast.error('تعذر تنزيل الإيصال')
+  }
+}
+
+async function downloadTransferInstructions(id: number) {
+  try {
+    const r = await apiClient.get(`/wallet-top-up-requests/${id}/transfer-instructions`, {
+      responseType: 'blob',
+      skipGlobalErrorToast: true,
+    })
+    const blob = r.data as Blob
+    if (blob.type && blob.type.includes('json')) {
+      const text = await blob.text()
+      try {
+        const j = JSON.parse(text) as { message?: string }
+        toast.error(j.message ?? 'تعذر إصدار المستند')
+      } catch {
+        toast.error('تعذر إصدار المستند')
+      }
+      return
+    }
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `wallet-transfer-${id}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (e: unknown) {
+    toast.error(summarizeAxiosError(e))
   }
 }
 

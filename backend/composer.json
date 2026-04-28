@@ -45,7 +45,16 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-        ]
+        ],
+        "test:phase0": "@php vendor/bin/phpunit --group=phase0",
+        "test:phase1": "@php vendor/bin/phpunit --group=phase1",
+        "test:phase2": "@php vendor/bin/phpunit --group=phase2",
+        "test:phase3": "@php vendor/bin/phpunit --group=phase3",
+        "test:phase4": "@php vendor/bin/phpunit --group=phase4",
+        "test:phase5": "@php vendor/bin/phpunit --group=phase5",
+        "test:phase6": "@php vendor/bin/phpunit --group=phase6",
+        "test:phase7": "@php vendor/bin/phpunit --group=phase7",
+        "test:phases": "@php vendor/bin/phpunit --group=phase0 && @php vendor/bin/phpunit --group=phase1 && @php vendor/bin/phpunit --group=phase2 && @php vendor/bin/phpunit --group=phase3 && @php vendor/bin/phpunit --group=phase4 && @php vendor/bin/phpunit --group=phase5 && @php vendor/bin/phpunit --group=phase6 && @php vendor/bin/phpunit --group=phase7"
     },
     "config": {
         "optimize-autoloader": true,

@@ -253,7 +253,7 @@ docker rm -f gt-report-pdf
 ## 6. الإضافات والملفات المرجعية (وثائق التشغيل)
 
 - سياسات Staging: [`Staging_Execution_Now.md`](./Staging_Execution_Now.md)، [`Staging_Deploy_Runbook.md`](./Staging_Deploy_Runbook.md)، [`Staging_Manual_Test_Checklist.md`](./Staging_Manual_Test_Checklist.md).
-- `Makefile` / `scripts/staging-gate.sh` — بوابة جودة قبل الدمج.
+- `Makefile` / `scripts/staging-gate.sh` — بوابة جودة قبل الدمج (Vitest + PHPUnit مراحل 0–7 + **`ocr:verify --fail`**).
 - أمثلة بيئة: `backend/.env.staging.example`، `frontend/env.staging.example` (إن وُجدت).
 
 ---

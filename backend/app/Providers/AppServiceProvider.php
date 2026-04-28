@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Queue\Failed\DedupingDatabaseUuidFailedJobProvider;
+use App\Queue\Listeners\LogIncidentScopeQueueExceptions;
 use App\Support\Auth\PhoneNormalizer;
 use App\Support\Observability\LedgerAlertWebhookNotifier;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
@@ -43,6 +45,11 @@ class AppServiceProvider extends ServiceProvider
 
         $this->configureAuthRateLimiters();
 
+        if (! $this->app->runningUnitTests()
+            && filter_var((string) env('QUEUE_INCIDENT_EXCEPTION_LOG_ENABLED', 'true'), FILTER_VALIDATE_BOOL)) {
+            Event::listen(JobExceptionOccurred::class, LogIncidentScopeQueueExceptions::class);
+        }
+
         if ($this->app->runningUnitTests()) {
             $this->configureTestingDatabase();
         } else {
@@ -61,6 +68,29 @@ class AppServiceProvider extends ServiceProvider
                 : (int) config('saas.login_rate_limit_per_minute', 20);
 
             return Limit::perMinute(max(3, min(120, $perMinute)))->by($key);
+        });
+
+        RateLimiter::for('password-reset-request', function (Request $request) {
+            $email = strtolower(trim((string) $request->input('email', '')));
+            $key = sha1((string) $request->ip().'|'.$email);
+
+            return Limit::perMinute(8)->by($key);
+        });
+
+        RateLimiter::for('password-reset-confirm', function (Request $request) {
+            $email = strtolower(trim((string) $request->input('email', '')));
+            $token = (string) $request->input('token', '');
+            $key = sha1((string) $request->ip().'|'.$email.'|'.$token);
+
+            return Limit::perMinute(12)->by($key);
+        });
+
+        RateLimiter::for('register', function (Request $request) {
+            $email = strtolower(trim((string) $request->input('email', '')));
+            $phone = PhoneNormalizer::normalizeForStorage((string) $request->input('phone', ''));
+            $key = sha1((string) $request->ip().'|'.$email.'|'.$phone);
+
+            return Limit::perMinute(5)->by($key);
         });
 
         RateLimiter::for('otp-verify', function (Request $request) {

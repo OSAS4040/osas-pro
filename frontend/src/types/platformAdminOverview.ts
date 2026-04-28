@@ -28,6 +28,10 @@ export interface PlatformAdminOverviewHealth {
   failed_jobs: number | null
   trend: 'stable' | 'degraded' | string
   database_ok: boolean
+  redis_ok?: boolean
+  queue_pending_count?: number | null
+  scheduler_last_run_at?: string | null
+  scheduler_note_ar?: string | null
 }
 
 export interface PlatformAdminOverviewAlert {
@@ -43,6 +47,7 @@ export interface PlatformAdminAttentionCompany {
   company_id: number
   name: string
   reason: string
+  reason_ar?: string
   reasons?: string[]
   activity_score?: number
   last_activity_days_ago?: number

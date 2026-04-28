@@ -37,7 +37,7 @@ export function isPathConsistentWithAccountContext(
   if (pk === 'platform_employee') {
     const cid = ctx.company_id
     if (typeof cid === 'number' && cid > 0) {
-      if (path === '/admin' || path.startsWith('/admin/')) {
+      if (path.startsWith('/admin') || path.startsWith('/platform')) {
         return true
       }
       if (path.startsWith('/fleet-portal') || path.startsWith('/customer')) {
@@ -47,13 +47,13 @@ export function isPathConsistentWithAccountContext(
       return true
     }
 
-    return path === '/admin' || path.startsWith('/admin/')
+    return path.startsWith('/admin') || path.startsWith('/platform')
   }
   if (guard === 'onboarding') {
     return path.startsWith('/phone/onboarding')
   }
   if (pk === 'tenant_user') {
-    if (path.startsWith('/admin') || path.startsWith('/fleet-portal') || path.startsWith('/customer')) {
+    if (path.startsWith('/admin') || path.startsWith('/platform') || path.startsWith('/fleet-portal') || path.startsWith('/customer')) {
       return false
     }
     return true
@@ -81,7 +81,7 @@ function fallbackHome(ctx: LoginAccountContextPayload | null, portalHomeFromRole
         return portalHomeFromRole || '/'
       }
 
-      return '/admin'
+      return '/platform/overview'
     }
     case 'customer_user':
       if (ctx.home_route_hint.startsWith('/fleet-portal')) return '/fleet-portal'

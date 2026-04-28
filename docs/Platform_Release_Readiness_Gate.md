@@ -28,8 +28,8 @@
 
 | البوابة | الوصف |
 |---------|--------|
-| `scripts/staging-gate.sh` | Vitest + PHPUnit للمسارات المعتمدة |
-| `scripts/preflight-pilot-readonly.ps1` | فحوصات قراءة فقط ضد عنوان Staging |
+| `scripts/staging-gate.sh` | Vitest + PHPUnit مراحل 0–7 + **`ocr:verify --fail`** |
+| `scripts/preflight-pilot-readonly.ps1` / `.sh` | فحوصات قراءة فقط؛ اختياري **`--with-ocr-verify`** / **`-WithOcrVerify`** |
 | `npm run test:ci` (frontend) | lint + types + tests + e2e |
 
 سجّل: التاريخ، الفرع، نتيجة PASS/FAIL، من نفّذ.

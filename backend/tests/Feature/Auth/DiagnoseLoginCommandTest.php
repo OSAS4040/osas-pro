@@ -2,8 +2,13 @@
 
 namespace Tests\Feature\Auth;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — أمر تشخيص تسجيل الدخول
+ */
+#[Group('phase0')]
 class DiagnoseLoginCommandTest extends TestCase
 {
     public function test_diagnose_unknown_email_succeeds_with_warning(): void

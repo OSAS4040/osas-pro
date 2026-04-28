@@ -2,7 +2,12 @@
   <div class="min-h-screen bg-slate-50 p-4 dark:bg-slate-950" dir="rtl">
     <div class="mx-auto max-w-5xl">
       <div class="mb-4 flex items-center justify-between gap-2">
-        <RouterLink to="/admin" class="text-sm text-purple-700 underline">← لوحة المنصة</RouterLink>
+        <RouterLink
+          to="/platform/overview"
+          class="text-sm font-semibold text-primary-700 underline decoration-primary-300 underline-offset-2 transition-colors hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300"
+        >
+          ← لوحة المنصة
+        </RouterLink>
         <button type="button" class="text-xs text-slate-500 underline" @click="load">تحديث</button>
       </div>
       <h1 class="text-xl font-bold text-slate-900 dark:text-white">طلبات التسجيل بالجوال</h1>

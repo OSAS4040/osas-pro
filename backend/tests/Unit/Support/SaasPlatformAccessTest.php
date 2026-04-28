@@ -4,8 +4,13 @@ namespace Tests\Unit\Support;
 
 use App\Models\User;
 use App\Support\SaasPlatformAccess;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_01_PROGRESS_REPORT.md — وصول مشغّل المنصة (قائمة السماح)
+ */
+#[Group('phase1')]
 class SaasPlatformAccessTest extends TestCase
 {
     public function test_platform_operator_when_email_in_allowlist(): void

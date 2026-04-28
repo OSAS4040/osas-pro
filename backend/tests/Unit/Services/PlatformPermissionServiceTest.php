@@ -117,6 +117,12 @@ class PlatformPermissionServiceTest extends TestCase
         $this->assertTrue(
             app(PlatformPermissionService::class)->hasPermission($user, 'platform.companies.read')
         );
+        $this->assertTrue(
+            app(PlatformPermissionService::class)->hasPermission($user, 'platform.support.read')
+        );
+        $this->assertTrue(
+            app(PlatformPermissionService::class)->hasPermission($user, 'platform.support.manage')
+        );
     }
 
     public function test_has_permission_false_when_role_lacks_permission(): void

@@ -11,8 +11,13 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — تسجيل بالهاتف / OTP
+ */
+#[Group('phase0')]
 class PhoneRegistrationFlowTest extends TestCase
 {
     use RefreshDatabase;

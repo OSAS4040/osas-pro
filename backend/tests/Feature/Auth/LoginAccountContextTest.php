@@ -10,8 +10,13 @@ use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — مصادقة وسياق الحساب
+ */
+#[Group('phase0')]
 class LoginAccountContextTest extends TestCase
 {
     public function test_password_login_includes_account_context_for_tenant_owner(): void
@@ -54,7 +59,7 @@ class LoginAccountContextTest extends TestCase
             'identifier'   => '05049998877',
             'password'     => 'Password123!X',
             'device_name'  => 'phpunit',
-            'device_type'  => 'test',
+            'device_type'  => 'unknown',
         ])
             ->assertOk()
             ->assertJsonPath('account_context.principal_kind', LoginPrincipalKind::PlatformEmployee->value)

@@ -84,8 +84,8 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     }
   }
 
-  async function loadSubscription(): Promise<void> {
-    if (loaded.value) return
+  async function loadSubscription(force = false): Promise<void> {
+    if (loaded.value && !force) return
     try {
       const { data } = await apiClient.get('/subscription')
       const payload = data.data ?? data

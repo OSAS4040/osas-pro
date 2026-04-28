@@ -8,8 +8,8 @@
 
 | البوابة | الأمر / المسار | الغرض |
 |---------|----------------|--------|
-| Staging gate (محلي) | من جذر المشروع: `bash scripts/staging-gate.sh` (أو `make staging-gate` إن وُجد في Makefile) | Vitest واجهة + PHPUnit مسارات محددة |
-| Pilot step 2 (Windows) | `powershell -ExecutionPolicy Bypass -File scripts/pilot-step2-docker.ps1` | Docker + staging-gate + verify |
+| Staging gate (محلي) | `bash scripts/staging-gate.sh` أو `make staging-gate` أو Windows: `pwsh -File scripts/staging-gate.ps1` / `make staging-gate-ps` | Vitest واجهة + PHPUnit مراحل 0–7 + **`ocr:verify --fail`** |
+| Pilot step 2 (Windows) | `powershell -ExecutionPolicy Bypass -File scripts/pilot-step2-docker.ps1` | Docker + staging-gate (يشمل OCR) + verify |
 | Frontend CI-like | `cd frontend && npm run test:ci` | lint + typecheck + unit + e2e |
 | Backend | `cd backend && php artisan test` (أو `./vendor/bin/phpunit` حسب الإعداد) | Feature + Unit |
 
@@ -81,7 +81,7 @@
 | Backend — هوية وجلسات وOTP وتقييد | `docker exec saas_app php artisan test tests/Feature/Auth/` | **69 passed** |
 | Backend — وحدات أهلية/سياق | `docker exec saas_app php artisan test tests/Unit/Auth/` | **10 passed** |
 | Frontend — توجيه ما بعد الدخول ورسائل API | `docker exec saas_frontend sh -lc "cd /app && npx vitest run src/utils/postLoginRedirect.test.ts src/utils/loginApiErrors.test.ts"` | **11 passed** |
-| Staging gate (جزئي + Auth كامل) | `bash scripts/staging-gate.sh` | يشغّل Vitest كامل للواجهة + `tests/Feature/Auth/` كاملة بعد هذا التحديث |
+| Staging gate (Auth ضمن phase0) | `bash scripts/staging-gate.sh` أو `staging-gate.ps1` | Vitest كامل + PHPUnit `phase0`…`phase7` + **`ocr:verify --fail`** |
 
 **حكم الموجة التالية:** **GO** لبدء **WAVE 2** من ناحية التخطيط والتنفيذ — بشرط عدم توسيع النطاق خارج مواصفات الموجة 2 وعدم لمس النواة المالية دون بوابة مالية.
 

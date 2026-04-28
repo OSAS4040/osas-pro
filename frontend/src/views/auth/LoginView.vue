@@ -304,7 +304,7 @@
                 class="flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200"
               >
                 <ExclamationCircleIcon class="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
-                <span class="flex-1 break-words">{{ error }}</span>
+                <span class="flex-1 break-words whitespace-pre-line">{{ error }}</span>
               </div>
             </Transition>
 
@@ -385,7 +385,7 @@ import { EyeIcon, EyeSlashIcon, ExclamationCircleIcon } from '@heroicons/vue/24/
 import { useAuthStore } from '@/stores/auth'
 import { useI18nStore } from '@/stores/i18n'
 import { resolvePostLoginTarget } from '@/utils/postLoginRedirect'
-import { loginErrorMessageFromPayload } from '@/utils/loginApiErrors'
+import { loginErrorMessageFromPayload, normalizeApiMessageText } from '@/utils/loginApiErrors'
 import { enabledPortals } from '@/config/portalAccess'
 import { useSupportContact } from '@/composables/useSupportContact'
 import AppInstallHint from '@/components/AppInstallHint.vue'
@@ -634,12 +634,15 @@ async function handleLogin() {
     if (res.status === 401) {
       const payload = (res.data ?? {}) as Record<string, unknown>
       let msg = loginErrorMessageFromPayload(payload, i18n.t)
-      const apiPlatformHint = (res.data as { platform_demo_hint?: string } | undefined)?.platform_demo_hint
+      const apiPlatformHintRaw = (res.data as { platform_demo_hint?: string } | undefined)?.platform_demo_hint
+      const apiPlatformHint = typeof apiPlatformHintRaw === 'string'
+        ? normalizeApiMessageText(apiPlatformHintRaw)
+        : ''
       const isPlatformDemoAttempt =
         loginId.includes('@') && loginId.toLowerCase() === PLATFORM_DEMO_EMAIL
 
-      if (typeof apiPlatformHint === 'string' && apiPlatformHint.trim() !== '') {
-        msg += '\n\n' + apiPlatformHint.trim()
+      if (apiPlatformHint !== '') {
+        msg += '\n\n' + apiPlatformHint
       } else if (isPlatformDemoAttempt) {
         msg +=
           '\n\n' +

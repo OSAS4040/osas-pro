@@ -29,6 +29,11 @@ class Subscription extends Model
         return $this->belongsTo(Company::class);
     }
 
+    public function purchasedAddons()
+    {
+        return $this->hasMany(SubscriptionAddon::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === SubscriptionStatus::Active;

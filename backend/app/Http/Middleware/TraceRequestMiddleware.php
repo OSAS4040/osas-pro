@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -13,16 +14,26 @@ class TraceRequestMiddleware
     {
         $traceId = $request->header('X-Trace-Id') ?? (string) Str::uuid();
         $correlationId = $request->header('X-Correlation-Id') ?? (string) Str::uuid();
+        $requestId = $request->header('X-Request-Id') ?? (string) Str::uuid();
 
         $request->attributes->set('trace_id', $traceId);
         $request->attributes->set('correlation_id', $correlationId);
+        $request->attributes->set('request_id', $requestId);
         app()->instance('trace_id', $traceId);
         app()->instance('correlation_id', $correlationId);
+        app()->instance('request_id', $requestId);
+
+        Log::withContext([
+            'trace_id'        => $traceId,
+            'request_id'      => $requestId,
+            'correlation_id'  => $correlationId,
+        ]);
 
         $response = $next($request);
 
         $response->headers->set('X-Trace-Id', $traceId);
         $response->headers->set('X-Correlation-Id', $correlationId);
+        $response->headers->set('X-Request-Id', $requestId);
 
         $this->setSentryContext($request, $traceId);
 

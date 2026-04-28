@@ -14,6 +14,7 @@ use App\Services\Auth\AuthSessionMetadataWriter;
 use App\Services\Auth\LoginBootstrapService;
 use App\Services\Auth\LoginOtpNotifier;
 use App\Services\NavigationVisibilityService;
+use App\Services\Platform\StaffNavHideResolver;
 use App\Support\Auth\PhoneNormalizer;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterPushDeviceRequest;
@@ -26,6 +27,7 @@ use App\Models\UserPushDevice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Support\Auth\LoginContextResolution;
+use App\Support\PlatformIntelligence\PlatformRolePermissionResolver;
 use App\Support\SubscriptionAccessEvaluator;
 use Database\Seeders\DemoPlatformAdminSeeder;
 use Illuminate\Database\QueryException;
@@ -54,6 +56,7 @@ class AuthController extends Controller
         private readonly AuthSecurityTelemetryService $authSecurityTelemetry,
         private readonly PlatformAuditLogger $platformAuditLogger,
         private readonly NavigationVisibilityService $navigationVisibility,
+        private readonly StaffNavHideResolver $staffNavHideResolver,
     ) {}
 
     /**
@@ -392,7 +395,7 @@ class AuthController extends Controller
      */
     private function platformDemoLoginFailureHint(?LoginRequest $request): ?string
     {
-        if ($request === null || app()->environment('production')) {
+        if ($request === null || ! app()->environment(['local', 'testing'])) {
             return null;
         }
 
@@ -446,7 +449,7 @@ class AuthController extends Controller
      */
     private function localLoginDiagnostics(?LoginRequest $request = null): ?array
     {
-        if (! config('app.debug') || app()->environment('production')) {
+        if (! config('app.debug') || ! app()->environment(['local', 'testing'])) {
             return null;
         }
 
@@ -500,7 +503,7 @@ class AuthController extends Controller
     private function loginPreTokenGuards(User $user, Request $request): ?JsonResponse
     {
         $roleValue = (string) $user->getRawOriginal('role');
-        $permissions = $this->getUserPermissions($roleValue);
+        $permissions = $this->resolveEffectivePermissionsSnapshot($user, $roleValue);
         $resolution = ($this->resolveLoginContext)($user, $permissions);
         $request->attributes->set(self::LOGIN_CONTEXT_RESOLUTION_REQUEST_KEY, $resolution);
 
@@ -588,7 +591,7 @@ class AuthController extends Controller
     private function issueAuthTokenResponse(User $user, Request $request): JsonResponse
     {
         $roleValue = (string) $user->getRawOriginal('role');
-        $permissions = $this->getUserPermissions($roleValue);
+        $permissions = $this->resolveEffectivePermissionsSnapshot($user, $roleValue);
         $deviceLabel = $request->filled('device_name')
             ? (string) $request->input('device_name')
             : 'web-spa';
@@ -647,7 +650,7 @@ class AuthController extends Controller
             'trace_id'        => app('trace_id'),
         ]);
 
-        if (config('app.debug')) {
+        if (config('app.debug') && app()->environment(['local', 'testing'])) {
             Log::debug('login.otp_code', ['code' => $code]);
         }
 
@@ -733,13 +736,15 @@ class AuthController extends Controller
     {
         $msg = strtolower($e->getMessage());
 
+        // Never expose SQL/connection details to the client — full exception is already reported()+logged.
         if (str_contains($msg, 'personal_access_tokens')) {
-            return 'Cannot issue API token. Run: php artisan migrate (table personal_access_tokens).';
+            return 'تعذّر إنشاء رمز الدخول: الجداول غير مكتملة. نفّذ: php artisan migrate '
+                .'(Docker: docker compose exec app php artisan migrate).';
         }
 
-        return config('app.debug')
-            ? $e->getMessage()
-            : 'Database error during login. Run php artisan migrate and verify DB credentials in .env.';
+        return 'خطأ في قاعدة البيانات أثناء تسجيل الدخول. نفّذ php artisan migrate وتأكد من إعدادات DB في .env '
+            .'(Docker: docker compose exec app php artisan migrate). إن احتجت حساب المنصة التجريبي بعدها: '
+            .'docker compose exec app php artisan db:seed --class=Database\\Seeders\\DemoPlatformAdminSeeder';
     }
 
     /**
@@ -823,7 +828,7 @@ class AuthController extends Controller
         $payload = [
             'token'       => $token,
             'user'        => $this->formatUser($user),
-            'permissions' => $this->getUserPermissions((string) $user->getRawOriginal('role')),
+            'permissions' => $this->resolveEffectivePermissionsSnapshot($user, (string) $user->getRawOriginal('role')),
             'trace_id'    => app('trace_id'),
         ];
         if ($resolution->eligibility->allowed && $resolution->accountContext !== null) {
@@ -950,7 +955,7 @@ class AuthController extends Controller
     {
         $user = $request->user()->load('company', 'branch');
         $roleValue = (string) $user->getRawOriginal('role');
-        $permissions = $this->getUserPermissions($roleValue);
+        $permissions = $this->resolveEffectivePermissionsSnapshot($user, $roleValue);
         $resolution = ($this->resolveLoginContext)($user, $permissions);
 
         $payload = [
@@ -990,6 +995,8 @@ class AuthController extends Controller
             'branch'      => $user->relationLoaded('branch') ? $user->branch : null,
             'subscription' => $user->company_id ? $this->subscriptionBillingSummary((int) $user->company_id) : null,
             'navigation_visibility' => $this->navigationVisibility->effectiveForUser($user),
+            'hidden_staff_nav_keys' => $this->staffNavHideResolver->hiddenKeysForStaffUser($user),
+            'hidden_customer_nav_keys' => $this->staffNavHideResolver->hiddenKeysForCustomerUser($user),
         ];
     }
 
@@ -1057,6 +1064,22 @@ class AuthController extends Controller
         }
 
         return $perms;
+    }
+
+    /**
+     * Tenant RBAC snapshot merged with platform IAM grants when the user is a platform operator.
+     *
+     * @return list<string>
+     */
+    private function resolveEffectivePermissionsSnapshot(User $user, string $roleValue): array
+    {
+        $tenant = $this->getUserPermissions($roleValue);
+        $platform = app(PlatformRolePermissionResolver::class)->platformPermissionGrantsForUser($user);
+        if ($platform === []) {
+            return $tenant;
+        }
+
+        return array_values(array_unique([...$tenant, ...$platform]));
     }
 
     private function dispatchPushDeviceJob(

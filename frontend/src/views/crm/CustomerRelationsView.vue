@@ -56,7 +56,7 @@
       </ul>
     </div>
 
-    <div class="rounded-xl bg-violet-50/80 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900/50 p-4 text-sm text-violet-900 dark:text-violet-200">
+    <div class="rounded-xl bg-primary-50/80 dark:bg-primary-950/30 border border-primary-200 dark:border-primary-900/50 p-4 text-sm text-primary-900 dark:text-primary-200">
       <strong>خارطة قادمة:</strong> RFM scoring + Customer Health Score + Next Best Action لكل عميل.
     </div>
   </div>

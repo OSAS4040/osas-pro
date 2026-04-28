@@ -1,32 +1,63 @@
 <template>
-  <div class="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
-    <div v-for="card in cards" :key="card.key" class="rounded-xl border border-white/80 bg-white/90 p-3 shadow-sm ring-1 ring-violet-100/60 dark:border-slate-700 dark:bg-slate-900/70 dark:ring-violet-900/30">
-      <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{{ card.label }}</div>
-      <div class="mt-1 text-xl font-black tabular-nums text-slate-900 dark:text-white">{{ card.value }}</div>
-      <div v-if="card.hint" class="mt-1 text-[10px] leading-snug text-slate-500 dark:text-slate-500">{{ card.hint }}</div>
-    </div>
+  <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
+    <PlatformKpiCard
+      v-for="card in cards"
+      :key="card.key"
+      :label="card.label"
+      :value="card.value"
+      :hint="card.hint || ''"
+      :tone="card.tone ?? 'default'"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { PlatformAdminOverviewKpis } from '@/types/platformAdminOverview'
+import PlatformKpiCard from '@/components/platform-admin/ui/PlatformKpiCard.vue'
 
 const props = defineProps<{
   kpis: PlatformAdminOverviewKpis
   definitions: Record<string, string>
 }>()
 
-const cards = computed(() => [
-  { key: 'total', label: 'Total Companies', value: props.kpis.total_companies.toLocaleString('ar-SA') },
-  { key: 'active', label: 'Active Companies', value: props.kpis.active_companies.toLocaleString('ar-SA'), hint: props.definitions.active_company },
-  { key: 'low', label: 'Low Activity', value: props.kpis.low_activity_companies.toLocaleString('ar-SA'), hint: props.definitions.low_activity_company },
-  { key: 'trial', label: 'Trial Companies', value: props.kpis.trial_companies.toLocaleString('ar-SA') },
-  { key: 'churn', label: 'Churn Risk', value: props.kpis.churn_risk_companies.toLocaleString('ar-SA') },
-  { key: 'users', label: 'Total Users', value: props.kpis.total_users.toLocaleString('ar-SA') },
-  { key: 'subs', label: 'Active Subscriptions', value: props.kpis.subscriptions_active.toLocaleString('ar-SA') },
-  { key: 'mrr', label: 'Estimated MRR', value: `${props.kpis.estimated_mrr.toLocaleString('ar-SA')} ر.س`, hint: props.definitions.catalog_mrr_estimate },
-  { key: 'n7', label: 'New 7d', value: props.kpis.companies_new_7d.toLocaleString('ar-SA') },
-  { key: 'n30', label: 'New 30d', value: props.kpis.companies_new_30d.toLocaleString('ar-SA') },
-])
+const cards = computed(() => {
+  const k = props.kpis
+  const d = props.definitions
+  return [
+    { key: 'total', label: 'إجمالي الشركات', value: k.total_companies.toLocaleString('ar-SA'), tone: 'default' as const },
+    {
+      key: 'active',
+      label: 'شركات نشطة (7 أيام)',
+      value: k.active_companies.toLocaleString('ar-SA'),
+      hint: d.active_company,
+      tone: 'success' as const,
+    },
+    {
+      key: 'low',
+      label: 'منخفضة النشاط',
+      value: k.low_activity_companies.toLocaleString('ar-SA'),
+      hint: d.low_activity_company,
+      tone: 'warning' as const,
+    },
+    { key: 'trial', label: 'شركات تجريبية', value: k.trial_companies.toLocaleString('ar-SA'), tone: 'default' as const },
+    {
+      key: 'churn',
+      label: 'مخاطر انقطاع',
+      value: k.churn_risk_companies.toLocaleString('ar-SA'),
+      tone: k.churn_risk_companies > 0 ? ('danger' as const) : ('default' as const),
+    },
+    { key: 'users', label: 'إجمالي المستخدمين', value: k.total_users.toLocaleString('ar-SA'), tone: 'default' as const },
+    { key: 'subs', label: 'اشتراكات فعّالة', value: k.subscriptions_active.toLocaleString('ar-SA'), tone: 'brand' as const },
+    {
+      key: 'mrr',
+      label: 'التقدير الشهري المتكرر — كتالوج',
+      value: `${k.estimated_mrr.toLocaleString('ar-SA')} ر.س`,
+      hint: d.catalog_mrr_estimate,
+      tone: 'brand' as const,
+    },
+    { key: 'n7', label: 'شركات جديدة (7 أيام)', value: k.companies_new_7d.toLocaleString('ar-SA'), tone: 'success' as const },
+    { key: 'n30', label: 'شركات جديدة (30 يوماً)', value: k.companies_new_30d.toLocaleString('ar-SA'), tone: 'default' as const },
+  ]
+})
 </script>

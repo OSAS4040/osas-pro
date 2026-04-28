@@ -128,21 +128,21 @@
     <section v-show="activeTab === 'cameras'" class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center"><VideoCameraIcon class="w-5 h-5 text-purple-600" /></div>
+          <div class="w-9 h-9 rounded-lg bg-primary-100 flex items-center justify-center"><VideoCameraIcon class="w-5 h-5 text-primary-600" /></div>
           <div><h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100">كاميرات IP لمركز الخدمة / المنفذ</h3><p class="text-xs text-gray-400">ربط الكاميرات لمراقبة الرافعات ومدخل الاستقبال</p></div>
         </div>
-        <button class="flex items-center gap-1.5 text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 transition-colors" @click="addCamera">
+        <button class="flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-1.5 text-xs text-white transition-colors hover:bg-primary-700" @click="addCamera">
           <PlusIcon class="w-3.5 h-3.5" /> إضافة كاميرا
         </button>
       </div>
       <div class="p-5 space-y-4">
         <!-- Usage Explanation -->
-        <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-xl p-4 text-sm text-purple-800 dark:text-purple-300">
+        <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-xl p-4 text-sm text-primary-800 dark:text-primary-300">
           <p class="font-medium mb-2">كيف يعمل نظام الكاميرات؟</p>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-            <div class="flex items-start gap-2"><span class="w-5 h-5 bg-purple-200 dark:bg-purple-800 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-purple-700 dark:text-purple-300">1</span><span>كاميرا الاستقبال تقرأ لوحة المركبة تلقائياً عند الدخول</span></div>
-            <div class="flex items-start gap-2"><span class="w-5 h-5 bg-purple-200 dark:bg-purple-800 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-purple-700 dark:text-purple-300">2</span><span>كاميرا الرافعة تكتشف وجود مركبة وتُحدّث الحالة تلقائياً</span></div>
-            <div class="flex items-start gap-2"><span class="w-5 h-5 bg-purple-200 dark:bg-purple-800 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-purple-700 dark:text-purple-300">3</span><span>تُلتقط صور تلقائياً عند الاستقبال والتسليم لحماية قانونية</span></div>
+            <div class="flex items-start gap-2"><span class="w-5 h-5 bg-primary-200 dark:bg-primary-800 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-primary-700 dark:text-primary-300">1</span><span>كاميرا الاستقبال تقرأ لوحة المركبة تلقائياً عند الدخول</span></div>
+            <div class="flex items-start gap-2"><span class="w-5 h-5 bg-primary-200 dark:bg-primary-800 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-primary-700 dark:text-primary-300">2</span><span>كاميرا الرافعة تكتشف وجود مركبة وتُحدّث الحالة تلقائياً</span></div>
+            <div class="flex items-start gap-2"><span class="w-5 h-5 bg-primary-200 dark:bg-primary-800 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-primary-700 dark:text-primary-300">3</span><span>تُلتقط صور تلقائياً عند الاستقبال والتسليم لحماية قانونية</span></div>
           </div>
         </div>
 
@@ -154,7 +154,7 @@
               <input v-model="cam.name" class="text-sm font-medium text-gray-900 dark:text-slate-100 bg-transparent border-none outline-none focus:bg-gray-50 dark:focus:bg-slate-700 rounded px-1" placeholder="اسم الكاميرا" />
             </div>
             <div class="flex items-center gap-2">
-              <button class="text-xs text-purple-600 hover:underline" @click="testCameraStream(i)">اختبار</button>
+              <button class="text-xs text-primary-600 hover:underline" @click="testCameraStream(i)">اختبار</button>
               <button class="text-xs text-red-500 hover:underline" @click="cameras.splice(i,1)">حذف</button>
             </div>
           </div>
@@ -209,10 +209,10 @@
         <div v-if="!cameras.length" class="text-center py-8">
           <VideoCameraIcon class="w-12 h-12 text-gray-200 dark:text-slate-600 mx-auto mb-3" />
           <p class="text-sm text-gray-400">لا توجد كاميرات مضافة</p>
-          <button class="mt-3 text-xs text-purple-600 hover:underline" @click="addCamera">+ إضافة أول كاميرا</button>
+          <button class="mt-3 text-xs text-primary-600 hover:underline" @click="addCamera">+ إضافة أول كاميرا</button>
         </div>
 
-        <button :disabled="savingCameras" class="px-5 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 disabled:opacity-50" @click="saveCameras">
+        <button :disabled="savingCameras" class="rounded-lg bg-primary-600 px-5 py-2 text-sm text-white transition-colors hover:bg-primary-700 disabled:opacity-50" @click="saveCameras">
           {{ savingCameras ? 'جارٍ الحفظ...' : 'حفظ إعدادات الكاميرات' }}
         </button>
       </div>
@@ -508,9 +508,9 @@
             <LinkIcon class="w-5 h-5 text-indigo-500 mt-0.5" />
             <div><p class="text-sm font-semibold text-gray-900 dark:text-slate-100">رابط من المنصة</p><p class="text-xs text-gray-400 mt-0.5">book.workshopos.sa/اسمك</p><span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full mt-1 inline-block">جميع الباقات</span></div>
           </button>
-          <button :disabled="!canCustomDomain" class="flex items-start gap-3 p-4 rounded-xl border-2 text-right transition-all" :class="[bookingPortal.domainType === 'custom' ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-slate-600', !canCustomDomain ? 'opacity-60 cursor-not-allowed' : '']" @click="bookingPortal.domainType = 'custom'">
-            <GlobeAltIcon class="w-5 h-5 mt-0.5" :class="bookingPortal.domainType === 'custom' ? 'text-purple-500' : 'text-gray-400'" />
-            <div><p class="text-sm font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-1">دومين خاص <LockClosedIcon v-if="!canCustomDomain" class="w-3 h-3 text-gray-400" /></p><p class="text-xs text-gray-400 mt-0.5">booking.yourworkshop.sa</p><span class="text-xs px-1.5 py-0.5 rounded-full mt-1 inline-block" :class="canCustomDomain ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-400'">{{ canCustomDomain ? 'متاح' : 'Enterprise' }}</span></div>
+          <button :disabled="!canCustomDomain" class="flex items-start gap-3 p-4 rounded-xl border-2 text-right transition-all" :class="[bookingPortal.domainType === 'custom' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-gray-200 dark:border-slate-600', !canCustomDomain ? 'opacity-60 cursor-not-allowed' : '']" @click="bookingPortal.domainType = 'custom'">
+            <GlobeAltIcon class="w-5 h-5 mt-0.5" :class="bookingPortal.domainType === 'custom' ? 'text-primary-500' : 'text-gray-400'" />
+            <div><p class="text-sm font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-1">دومين خاص <LockClosedIcon v-if="!canCustomDomain" class="w-3 h-3 text-gray-400" /></p><p class="text-xs text-gray-400 mt-0.5">booking.yourworkshop.sa</p><span class="text-xs px-1.5 py-0.5 rounded-full mt-1 inline-block" :class="canCustomDomain ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-400'">{{ canCustomDomain ? 'متاح' : 'Enterprise' }}</span></div>
           </button>
         </div>
         <div>
@@ -798,7 +798,7 @@ async function copySecret() {
 const waProviders = [
   { id: 'platform', emoji: '🟢', name: 'رقم المنصة', desc: 'إرسال عبر رقمنا الموحّد', requiresPro: false, badge: 'الأسهل', badgeClass: 'bg-green-100 text-green-700' },
   { id: 'twilio',   emoji: '📱', name: 'Twilio',     desc: 'مزود عالمي',              requiresPro: true,  badge: 'شائع',    badgeClass: 'bg-blue-100 text-blue-700' },
-  { id: 'custom_api', emoji: '⚙️', name: 'مزود مخصص', desc: 'أي مزود REST',          requiresPro: true,  badge: 'مرن',     badgeClass: 'bg-purple-100 text-purple-700' },
+  { id: 'custom_api', emoji: '⚙️', name: 'مزود مخصص', desc: 'أي مزود REST',          requiresPro: true,  badge: 'مرن',     badgeClass: 'bg-primary-100 text-primary-700' },
 ]
 const waSettings = reactive({ provider: 'platform', twilio_sid: '', twilio_token: '', twilio_from: '', custom_api_url: '', custom_api_key: '', custom_from: '' })
 const waTriggers = reactive([

@@ -21,7 +21,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-200 bg-white p-2.5 text-violet-700 shadow-sm transition hover:bg-violet-50 disabled:opacity-45 dark:border-slate-600 dark:bg-slate-800 dark:text-violet-300 dark:hover:bg-slate-700"
+              class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-200 bg-white p-2.5 text-primary-700 shadow-sm transition hover:bg-primary-50 disabled:opacity-45 dark:border-slate-600 dark:bg-slate-800 dark:text-primary-300 dark:hover:bg-slate-700"
               title="مشاركة البطاقة كصورة"
               aria-label="مشاركة كصورة"
               :disabled="shareImageBusy"
@@ -130,7 +130,7 @@
             <button
               v-if="identityHasActiveLink"
               type="button"
-              class="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-medium text-violet-800 hover:bg-violet-100 disabled:opacity-50 dark:border-violet-500/40 dark:bg-violet-950/50 dark:text-violet-200 dark:hover:bg-violet-900/40"
+              class="rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-xs font-medium text-primary-800 hover:bg-primary-100 disabled:opacity-50 dark:border-primary-500/40 dark:bg-primary-950/50 dark:text-primary-200 dark:hover:bg-primary-900/40"
               :disabled="identityBusy"
               title="إلغاء الرمز الحالي وإنشاء رمز جديد — يُبطل الطباعات السابقة"
               @click="rotateVehicleIdentity"
@@ -316,7 +316,7 @@
         <div class="no-print relative mx-auto mt-5 h-12 w-[92%] max-w-[22rem]">
           <div class="wallet-stack-layer wallet-stack-layer--3 absolute bottom-0 left-[6%] right-[6%] h-3 rounded-t-xl bg-amber-200/95 shadow-md dark:bg-amber-900/50" />
           <div class="wallet-stack-layer wallet-stack-layer--2 absolute bottom-1 left-[10%] right-[10%] h-3 rounded-t-xl bg-sky-300/95 shadow-md dark:bg-sky-800/60" />
-          <div class="wallet-stack-layer wallet-stack-layer--1 absolute bottom-2 left-[14%] right-[14%] h-3.5 rounded-t-xl bg-violet-300/90 shadow-md dark:bg-violet-900/55" />
+          <div class="wallet-stack-layer wallet-stack-layer--1 absolute bottom-2 left-[14%] right-[14%] h-3.5 rounded-t-xl bg-primary-300/90 shadow-md dark:bg-primary-900/55" />
         </div>
       </div>
 
@@ -628,14 +628,14 @@ const loyaltyNextTier = computed(() => {
 })
 const loyaltyTierClass = computed(() => {
   const t = loyaltyTier.value
-  if (t === 'بلاتيني') return 'bg-purple-100 text-purple-700'
+  if (t === 'بلاتيني') return 'bg-primary-100 text-primary-700'
   if (t === 'ذهبي') return 'bg-yellow-100 text-yellow-700'
   if (t === 'فضي') return 'bg-gray-100 text-gray-600'
   return 'bg-orange-100 text-orange-700'
 })
 const loyaltyBarClass = computed(() => {
   const t = loyaltyTier.value
-  if (t === 'بلاتيني') return 'bg-purple-500'
+  if (t === 'بلاتيني') return 'bg-primary-500'
   if (t === 'ذهبي') return 'bg-yellow-400'
   return 'bg-gray-400'
 })

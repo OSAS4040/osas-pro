@@ -43,9 +43,12 @@ Route::prefix('v1')->group(function () {
 
     Route::post('/auth/login', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'login'])
         ->middleware('throttle:login');
-    Route::post('/auth/register', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'register']);
-    Route::post('/auth/forgot-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'forgotPassword']);
-    Route::post('/auth/reset-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'resetPassword']);
+    Route::post('/auth/register', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'register'])
+        ->middleware('throttle:register');
+    Route::post('/auth/forgot-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:password-reset-request');
+    Route::post('/auth/reset-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'resetPassword'])
+        ->middleware('throttle:password-reset-confirm');
 
     Route::post('/auth/phone/request-otp', [\App\Http\Controllers\Api\V1\Auth\PhoneOtpAuthController::class, 'requestOtp'])
         ->middleware('throttle:otp-resend');
@@ -86,6 +89,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/platform/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
             Route::get('/platform/search', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'globalSearch']);
             Route::get('/platform/plans', [\App\Http\Controllers\Api\V1\SaasController::class, 'listPlans']);
+            Route::get('/platform/customers', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'platformCustomers'])
+                ->middleware('throttle:60,1');
             Route::get('/admin/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
             Route::get('/admin/overview', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'dashboardOverview'])
                 ->middleware('throttle:60,1');
@@ -97,8 +102,150 @@ Route::prefix('v1')->group(function () {
                 ->middleware('throttle:30,1');
         });
 
+        Route::middleware(['platform.permission:platform.intelligence.signals.read'])->group(function () {
+            Route::get('/platform/intelligence/signals', [\App\Http\Controllers\Api\V1\PlatformIntelligenceSignalsController::class, 'index'])
+                ->middleware('throttle:60,1');
+        });
+
+        Route::middleware(['platform.permission:platform.intelligence.candidates.read'])->group(function () {
+            Route::get('/platform/intelligence/incident-candidates', [\App\Http\Controllers\Api\V1\PlatformIntelligenceIncidentCandidatesController::class, 'index'])
+                ->middleware('throttle:60,1');
+        });
+
+        Route::middleware(['platform.permission:platform.intelligence.incidents.read'])->group(function () {
+            Route::get('/platform/intelligence/incidents', [\App\Http\Controllers\Api\V1\PlatformIntelligenceIncidentsController::class, 'index'])
+                ->middleware('throttle:60,1');
+            Route::get('/platform/intelligence/incidents/{incident_key}', [\App\Http\Controllers\Api\V1\PlatformIntelligenceIncidentsController::class, 'show'])
+                ->where('incident_key', '[A-Za-z0-9_.]+')
+                ->middleware('throttle:60,1');
+        });
+
+        Route::middleware(['platform.permission:platform.intelligence.incidents.materialize'])->group(function () {
+            Route::post('/platform/intelligence/incidents/materialize', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'materialize'])
+                ->middleware('throttle:30,1');
+        });
+
+        Route::post('/platform/intelligence/incidents/{incident_key}/acknowledge', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'acknowledge'])
+            ->middleware(['platform.permission:platform.intelligence.incidents.acknowledge', 'throttle:60,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+        Route::post('/platform/intelligence/incidents/{incident_key}/move-under-review', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'moveUnderReview'])
+            ->middleware(['platform.permission:platform.intelligence.incidents.acknowledge', 'throttle:60,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+        Route::post('/platform/intelligence/incidents/{incident_key}/escalate', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'escalate'])
+            ->middleware(['platform.permission:platform.intelligence.incidents.escalate', 'throttle:60,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+        Route::post('/platform/intelligence/incidents/{incident_key}/move-monitoring', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'moveMonitoring'])
+            ->middleware(['platform.permission:platform.intelligence.incidents.acknowledge', 'throttle:60,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+        Route::post('/platform/intelligence/incidents/{incident_key}/resolve', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'resolve'])
+            ->middleware(['platform.permission:platform.intelligence.incidents.resolve', 'throttle:30,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+        Route::post('/platform/intelligence/incidents/{incident_key}/close', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'close'])
+            ->middleware(['platform.permission:platform.intelligence.incidents.close', 'throttle:30,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+        Route::post('/platform/intelligence/incidents/{incident_key}/assign-owner', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'assignOwner'])
+            ->middleware(['platform.permission:platform.intelligence.incidents.assign_owner', 'throttle:60,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+        Route::post('/platform/intelligence/incidents/{incident_key}/notes', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'appendNote'])
+            ->middleware(['platform.permission:platform.intelligence.incidents.acknowledge', 'throttle:60,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+
+        Route::middleware(['platform.permission:platform.intelligence.decisions.read'])->group(function () {
+            Route::get('/platform/intelligence/decisions', [\App\Http\Controllers\Api\V1\PlatformDecisionLogController::class, 'index'])
+                ->middleware('throttle:60,1');
+            Route::get('/platform/intelligence/incidents/{incident_key}/decisions', [\App\Http\Controllers\Api\V1\PlatformDecisionLogController::class, 'indexForIncident'])
+                ->where('incident_key', '[A-Za-z0-9_.]+')
+                ->middleware('throttle:60,1');
+        });
+
+        Route::post('/platform/intelligence/incidents/{incident_key}/decisions', [\App\Http\Controllers\Api\V1\PlatformDecisionLogController::class, 'store'])
+            ->middleware(['platform.permission:platform.intelligence.decisions.write', 'throttle:30,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+
+        Route::middleware(['platform.permission:platform.intelligence.incidents.read'])->group(function () {
+            Route::get('/platform/intelligence/incidents/{incident_key}/workflows', [\App\Http\Controllers\Api\V1\PlatformIncidentWorkflowController::class, 'index'])
+                ->where('incident_key', '[A-Za-z0-9_.]+')
+                ->middleware('throttle:60,1');
+        });
+
+        Route::post('/platform/intelligence/incidents/{incident_key}/workflows/execute', [\App\Http\Controllers\Api\V1\PlatformIncidentWorkflowController::class, 'execute'])
+            ->middleware(['platform.permission:platform.intelligence.guided_workflows.execute', 'throttle:20,1'])
+            ->where('incident_key', '[A-Za-z0-9_.]+');
+
+        Route::middleware(['platform.permission:platform.intelligence.incidents.read'])->group(function () {
+            Route::get('/platform/intelligence/command-surface', [\App\Http\Controllers\Api\V1\PlatformIntelligenceCommandSurfaceController::class, 'commandSurface'])
+                ->middleware('throttle:60,1');
+            Route::get('/platform/intelligence/incidents/{incident_key}/correlation', [\App\Http\Controllers\Api\V1\PlatformIntelligenceCommandSurfaceController::class, 'incidentCorrelation'])
+                ->where('incident_key', '[A-Za-z0-9_.]+')
+                ->middleware('throttle:60,1');
+
+            Route::middleware(['platform.permission:platform.intelligence.controlled_actions.view'])->group(function () {
+                Route::get('/platform/intelligence/incidents/{incident_key}/controlled-actions', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'index'])
+                    ->where('incident_key', '[A-Za-z0-9_.]+')
+                    ->middleware('throttle:60,1');
+            });
+
+            Route::middleware(['platform.permission:platform.intelligence.controlled_actions.create_follow_up'])->group(function () {
+                Route::post('/platform/intelligence/incidents/{incident_key}/controlled-actions/create-follow-up', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'createFollowUp'])
+                    ->where('incident_key', '[A-Za-z0-9_.]+')
+                    ->middleware('throttle:30,1');
+            });
+
+            Route::middleware(['platform.permission:platform.intelligence.controlled_actions.request_human_review'])->group(function () {
+                Route::post('/platform/intelligence/incidents/{incident_key}/controlled-actions/request-human-review', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'requestHumanReview'])
+                    ->where('incident_key', '[A-Za-z0-9_.]+')
+                    ->middleware('throttle:20,1');
+            });
+
+            Route::middleware(['platform.permission:platform.intelligence.controlled_actions.link_task_reference'])->group(function () {
+                Route::post('/platform/intelligence/incidents/{incident_key}/controlled-actions/link-internal-task-reference', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'linkInternalTaskReference'])
+                    ->where('incident_key', '[A-Za-z0-9_.]+')
+                    ->middleware('throttle:20,1');
+            });
+
+            Route::middleware(['platform.permission:platform.intelligence.controlled_actions.assign_owner'])->group(function () {
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/assign-owner', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'assignOwner'])
+                    ->where('action_id', '[0-9a-fA-F\\-]{36}')
+                    ->middleware('throttle:40,1');
+            });
+
+            Route::middleware(['platform.permission:platform.intelligence.controlled_actions.schedule'])->group(function () {
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/schedule-follow-up-window', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'schedule'])
+                    ->where('action_id', '[0-9a-fA-F\\-]{36}')
+                    ->middleware('throttle:30,1');
+            });
+
+            Route::middleware(['platform.permission:platform.intelligence.controlled_actions.complete'])->group(function () {
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/mark-completed', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'complete'])
+                    ->where('action_id', '[0-9a-fA-F\\-]{36}')
+                    ->middleware('throttle:30,1');
+            });
+
+            Route::middleware(['platform.permission:platform.intelligence.controlled_actions.cancel'])->group(function () {
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/cancel', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'cancel'])
+                    ->where('action_id', '[0-9a-fA-F\\-]{36}')
+                    ->middleware('throttle:30,1');
+            });
+
+            Route::middleware(['platform.permission:platform.intelligence.controlled_actions.reopen'])->group(function () {
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/reopen', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'reopen'])
+                    ->where('action_id', '[0-9a-fA-F\\-]{36}')
+                    ->middleware('throttle:20,1');
+            });
+        });
+
         Route::middleware(['platform.permission:platform.companies.operational'])->group(function () {
             Route::patch('/platform/companies/{id}/operational', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateOperational'])
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware(['platform.permission:platform.tenant_nav.manage'])->group(function () {
+            Route::get('/platform/tenant-nav-hides', [\App\Http\Controllers\Api\V1\PlatformTenantNavHideController::class, 'index'])
+                ->middleware('throttle:60,1');
+            Route::post('/platform/tenant-nav-hides', [\App\Http\Controllers\Api\V1\PlatformTenantNavHideController::class, 'store'])
+                ->middleware('throttle:30,1');
+            Route::delete('/platform/tenant-nav-hides/{id}', [\App\Http\Controllers\Api\V1\PlatformTenantNavHideController::class, 'destroy'])
+                ->whereNumber('id')
                 ->middleware('throttle:30,1');
         });
 
@@ -107,6 +254,112 @@ Route::prefix('v1')->group(function () {
             Route::patch('/platform/companies/{id}/subscription', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateSubscription'])
                 ->middleware('throttle:30,1');
             Route::put('/platform/plans/{slug}', [\App\Http\Controllers\Api\V1\SaasController::class, 'updatePlan']);
+            Route::post('/platform/companies/{id}/subscription-addons', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'syncCompanySubscriptionAddon'])
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware(['platform.permission:platform.subscription.manage'])->prefix('admin/subscriptions')->group(function () {
+            Route::get('/attention-summary', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'attentionSummary'])
+                ->middleware('throttle:120,1');
+            Route::get('/list', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'subscriptionList'])
+                ->middleware('throttle:60,1');
+            Route::get('/subscription/{subscription}', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'subscriptionShow'])
+                ->whereNumber('subscription')
+                ->middleware('throttle:60,1');
+            Route::get('/invoices', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'invoiceList'])
+                ->middleware('throttle:60,1');
+            Route::get('/invoices/{invoice}', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'invoiceShow'])
+                ->whereNumber('invoice')
+                ->middleware('throttle:60,1');
+            Route::get('/payment-orders/{id}', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'paymentOrderShow'])
+                ->whereNumber('id')
+                ->middleware('throttle:60,1');
+            Route::get('/bank-transactions/{id}', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'bankTransactionShow'])
+                ->whereNumber('id')
+                ->middleware('throttle:60,1');
+            Route::get('/debug/health', \App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionsDebugHealthController::class)
+                ->middleware('throttle:30,1');
+            Route::get('/overview', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'overview'])
+                ->middleware('throttle:60,1');
+            Route::get('/review-queue', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformReviewQueueController::class, 'index'])
+                ->middleware('throttle:60,1');
+            Route::get('/transactions', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'transactions'])
+                ->middleware('throttle:60,1');
+            Route::get('/wallets', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'wallets'])
+                ->middleware('throttle:60,1');
+            Route::get('/notifications', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'notifications'])
+                ->middleware('throttle:120,1');
+            Route::get('/insights', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'insights'])
+                ->middleware('throttle:60,1');
+            Route::post('/review-queue/{id}/match', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformReviewQueueController::class, 'match'])
+                ->whereNumber('id')
+                ->middleware('throttle:30,1');
+            Route::post('/review-queue/{id}/reject', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformReviewQueueController::class, 'reject'])
+                ->whereNumber('id')
+                ->middleware('throttle:30,1');
+            Route::post('/bank-transactions/import', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformBankTransactionImportController::class, 'store'])
+                ->middleware('throttle:30,1');
+            Route::post('/payment-orders/{id}/approve', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformPaymentOrderController::class, 'approve'])
+                ->whereNumber('id')
+                ->middleware('throttle:30,1');
+            Route::post('/payment-orders/{id}/reject', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformPaymentOrderController::class, 'reject'])
+                ->whereNumber('id')
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware(['platform.permission:platform.pricing.view'])->prefix('platform/pricing')->group(function () {
+            Route::get('/requests', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'index'])
+                ->middleware('throttle:60,1');
+            Route::get('/requests/{uuid}', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'show'])
+                ->whereUuid('uuid')
+                ->middleware('throttle:60,1');
+            Route::get('/customer-price-versions', [\App\Http\Controllers\Api\V1\Platform\PlatformCustomerPriceVersionController::class, 'index'])
+                ->middleware('throttle:60,1');
+        });
+
+        Route::middleware(['platform.permission:platform.pricing.create'])->prefix('platform/pricing')->group(function () {
+            Route::post('/requests', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'store'])
+                ->middleware('throttle:30,1');
+            Route::post('/requests/{uuid}/submit-for-review', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'submitForReview'])
+                ->whereUuid('uuid')
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware(['platform.permission:platform.pricing.review'])->prefix('platform/pricing')->group(function () {
+            Route::post('/requests/{uuid}/begin-review', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'beginReview'])
+                ->whereUuid('uuid')
+                ->middleware('throttle:30,1');
+            Route::post('/requests/{uuid}/complete-review', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'completeReview'])
+                ->whereUuid('uuid')
+                ->middleware('throttle:30,1');
+            Route::post('/requests/{uuid}/escalate', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'escalate'])
+                ->whereUuid('uuid')
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware(['platform.permission:platform.pricing.approve'])->prefix('platform/pricing')->group(function () {
+            Route::post('/requests/{uuid}/approve', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'approve'])
+                ->whereUuid('uuid')
+                ->middleware('throttle:20,1');
+            Route::post('/requests/{uuid}/reject', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'reject'])
+                ->whereUuid('uuid')
+                ->middleware('throttle:20,1');
+            Route::post('/requests/{uuid}/return-for-edit', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'returnForEdit'])
+                ->whereUuid('uuid')
+                ->middleware('throttle:20,1');
+        });
+
+        Route::middleware(['platform.permission:platform.providers.manage'])->prefix('platform/providers')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController::class, 'index'])
+                ->middleware('throttle:60,1');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController::class, 'store'])
+                ->middleware('throttle:30,1');
+            Route::get('/{id}/costs', [\App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController::class, 'costs'])
+                ->whereNumber('id')
+                ->middleware('throttle:60,1');
+            Route::post('/{id}/costs', [\App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController::class, 'storeCost'])
+                ->whereNumber('id')
+                ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.vertical.assign'])->group(function () {
@@ -116,6 +369,15 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware(['platform.permission:platform.financial_model.manage'])->group(function () {
             Route::patch('/platform/companies/{id}/financial-model', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateFinancialModel']);
+        });
+
+        Route::middleware(['platform.permission:platform.catalog.manage'])->group(function () {
+            Route::put('/platform/plans/{slug}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updatePlanCatalog'])
+                ->middleware('throttle:30,1');
+            Route::post('/platform/plan-addons', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'storePlanAddonCatalog'])
+                ->middleware('throttle:30,1');
+            Route::put('/platform/plan-addons/{slug}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updatePlanAddonCatalog'])
+                ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.cancellations.read'])->group(function () {
@@ -144,6 +406,33 @@ Route::prefix('v1')->group(function () {
             Route::post('/platform/registration-profiles/{id}/reject', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'reject']);
             Route::post('/platform/registration-profiles/{id}/request-more-info', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'requestMoreInfo']);
             Route::post('/platform/registration-profiles/{id}/suspend', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'suspend']);
+        });
+
+        Route::middleware(['platform.permission:platform.support.read'])->group(function () {
+            Route::get('/platform/support/tickets', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'indexTickets'])
+                ->middleware('throttle:120,1');
+            Route::get('/platform/support/tickets/{id}', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'showTicket'])
+                ->whereNumber('id')
+                ->middleware('throttle:120,1');
+            Route::get('/platform/support/stats', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'stats'])
+                ->middleware('throttle:60,1');
+        });
+
+        Route::middleware(['platform.permission:platform.notifications.read|platform.subscription.manage'])->group(function () {
+            Route::get('/platform/notifications', [\App\Http\Controllers\Api\V1\PlatformNotificationCenterController::class, 'index'])
+                ->middleware('throttle:120,1');
+        });
+
+        Route::middleware(['platform.permission:platform.support.manage'])->group(function () {
+            Route::patch('/platform/support/tickets/{id}', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'updateTicket'])
+                ->whereNumber('id')
+                ->middleware('throttle:60,1');
+            Route::patch('/platform/support/tickets/{id}/status', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'changeStatus'])
+                ->whereNumber('id')
+                ->middleware('throttle:60,1');
+            Route::post('/platform/support/tickets/{id}/replies', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'storeReply'])
+                ->whereNumber('id')
+                ->middleware('throttle:60,1');
         });
 
         Route::prefix('reporting')->group(function () {
@@ -207,8 +496,10 @@ Route::prefix('v1')->group(function () {
         Route::delete('/companies/{id}/stamp',        [\App\Http\Controllers\Api\V1\CompanyController::class, 'deleteStamp']);
         Route::get('/companies/{id}/settings',        [\App\Http\Controllers\Api\V1\CompanyController::class, 'getSettings']);
         Route::patch('/companies/{id}/settings',      [\App\Http\Controllers\Api\V1\CompanyController::class, 'updateSettings']);
-        Route::post('/companies/{id}/settings/test-channel', [\App\Http\Controllers\Api\V1\CompanyController::class, 'testIntegrationChannel']);
-        Route::post('/companies/{id}/pos/test-connection', [\App\Http\Controllers\Api\V1\CompanyController::class, 'testPosConnection']);
+        Route::post('/companies/{id}/settings/test-channel', [\App\Http\Controllers\Api\V1\CompanyController::class, 'testIntegrationChannel'])
+            ->middleware('permission:users.update');
+        Route::post('/companies/{id}/pos/test-connection', [\App\Http\Controllers\Api\V1\CompanyController::class, 'testPosConnection'])
+            ->middleware(['permission:users.update', 'throttle:20,1']);
         Route::get('/companies/{id}/feature-profile', [\App\Http\Controllers\Api\V1\CompanyController::class, 'featureProfile']);
         Route::patch('/companies/{id}/feature-profile', [\App\Http\Controllers\Api\V1\CompanyController::class, 'updateFeatureProfile']);
         Route::get('/companies/{id}/navigation-visibility', [\App\Http\Controllers\Api\V1\CompanyController::class, 'navigationVisibility']);
@@ -306,6 +597,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/',              [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'index']);
             Route::post('/',             [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'store'])
                 ->middleware('permission:work_orders.create');
+            Route::post('/bulk', [\App\Http\Controllers\Api\V1\WorkOrderBulkController::class, 'store'])
+                ->middleware('permission:work_orders.create');
+            Route::get('/batches/{batchUuid}', [\App\Http\Controllers\Api\V1\WorkOrderBulkController::class, 'showBatch'])
+                ->where('batchUuid', '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
+                ->middleware('permission:work_orders.view');
             Route::post('/batches',      [\App\Http\Controllers\Api\V1\WorkOrderBatchController::class, 'store'])
                 ->middleware('permission:work_orders.create');
             Route::get('/{id}/pdf', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'downloadPdf'])
@@ -387,6 +683,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/my', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'my'])
                 ->middleware('permission:wallet.top_up_requests.view');
             Route::get('/{id}/receipt', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'receipt']);
+            Route::get('/{id}/transfer-instructions', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'transferInstructions']);
             Route::get('/{id}', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'show']);
             Route::patch('/{id}', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'update'])
                 ->middleware('permission:wallet.top_up_requests.create');
@@ -711,10 +1008,41 @@ Route::prefix('v1')->group(function () {
         Route::get('/subscription',         [\App\Http\Controllers\Api\V1\SaasController::class, 'currentSubscription']);
         Route::post('/subscription/change',  [\App\Http\Controllers\Api\V1\SaasController::class, 'changePlan'])
             ->middleware('permission:subscriptions.manage');
+        Route::post('/subscription/addons', [\App\Http\Controllers\Api\V1\SaasController::class, 'purchaseSubscriptionAddon'])
+            ->middleware('permission:subscriptions.manage');
+        Route::delete('/subscription/addons/{slug}', [\App\Http\Controllers\Api\V1\SaasController::class, 'removeSubscriptionAddon'])
+            ->middleware('permission:subscriptions.manage');
         Route::get('/subscription/usage',   [\App\Http\Controllers\Api\V1\SaasController::class, 'usageLimits'])
             ->middleware('permission:subscriptions.view');
         Route::put('/plans/{slug}',         [\App\Http\Controllers\Api\V1\SaasController::class, 'updatePlan'])
             ->middleware('permission:subscriptions.manage');
+
+        Route::prefix('subscriptions')->group(function () {
+            Route::get('/payment-orders', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantPaymentOrderController::class, 'index'])
+                ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
+            Route::post('/payment-orders', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantPaymentOrderController::class, 'store'])
+                ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
+            Route::post('/payment-orders/{id}/submit-transfer', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantPaymentOrderController::class, 'submitTransfer'])
+                ->whereNumber('id')
+                ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
+            Route::post('/payment-orders/{id}/upload-receipt', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantPaymentOrderController::class, 'uploadReceipt'])
+                ->whereNumber('id')
+                ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
+            Route::get('/current', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'current'])
+                ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
+            Route::get('/plans', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'plans'])
+                ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
+            Route::get('/invoices', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'invoices'])
+                ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
+            Route::get('/wallet', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'wallet'])
+                ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
+            Route::get('/notifications', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'notifications'])
+                ->middleware(['permission:subscriptions.view', 'throttle:120,1']);
+            Route::post('/upgrade', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'upgrade'])
+                ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
+            Route::post('/downgrade', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'downgrade'])
+                ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
+        });
     });
 
     // ── Bays & Bookings (Phase 6) ────────────────────────────────────
@@ -943,6 +1271,7 @@ Route::prefix('v1')->group(function () {
     // ── Customer Portal ────────────────────────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->prefix('customer-portal')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\CustomerPortalController::class, 'dashboard']);
+        Route::get('/pricing', [\App\Http\Controllers\Api\V1\CustomerPortalController::class, 'pricing']);
     });
 
     Route::middleware(['auth.apikey', 'api.log', 'financial.protection', 'subscription'])->group(function () {

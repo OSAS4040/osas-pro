@@ -11,8 +11,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — أمان مصادقة (PR5)
+ */
+#[Group('phase0')]
 class AuthSecurityPr5Test extends TestCase
 {
     protected function setUp(): void

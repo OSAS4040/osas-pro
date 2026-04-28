@@ -33,8 +33,18 @@ final class WalletTopUpRequestService
 
         $path = $receipt ? $this->storeReceipt($companyId, $receipt) : null;
 
+        $uuid = (string) Str::uuid();
+        $paymentMethod = WalletTopUpPaymentMethod::from((string) $data['payment_method']);
+        $reference = $data['reference_number'] ?? null;
+        if ($paymentMethod === WalletTopUpPaymentMethod::BankTransfer) {
+            $refTrim = is_string($reference) ? trim($reference) : '';
+            if ($refTrim === '') {
+                $reference = 'WTU-'.strtoupper(substr(str_replace('-', '', $uuid), 0, 12));
+            }
+        }
+
         return WalletTopUpRequest::create([
-            'uuid' => (string) Str::uuid(),
+            'uuid' => $uuid,
             'company_id' => $companyId,
             'branch_id' => $branchId,
             'customer_id' => (int) $data['customer_id'],
@@ -42,8 +52,8 @@ final class WalletTopUpRequestService
             'target' => (string) $data['target'],
             'amount' => $data['amount'],
             'currency' => 'SAR',
-            'payment_method' => WalletTopUpPaymentMethod::from((string) $data['payment_method']),
-            'reference_number' => $data['reference_number'] ?? null,
+            'payment_method' => $paymentMethod,
+            'reference_number' => $reference,
             'receipt_path' => $path,
             'status' => WalletTopUpRequestStatus::Pending,
             'notes_from_customer' => $data['notes_from_customer'] ?? null,

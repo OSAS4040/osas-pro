@@ -17,6 +17,9 @@ final class WorkOrderBatchService
     ) {}
 
     /**
+     * Synchronous batch used by the sensitive-preview UI: one HTTP transaction creates every work order.
+     * For large bursts (hundreds/thousands of vehicles) use {@see WorkOrderBulkSubmissionService} + queue chunks instead.
+     *
      * @param  list<array{customer_id:int, vehicle_id:int, items?: array}>  $lines
      */
     public function processBatch(int $companyId, int $branchId, int $userId, array $lines, ?string $notes = null): WorkOrderBatch

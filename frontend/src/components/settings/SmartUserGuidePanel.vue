@@ -64,9 +64,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useBusinessProfileStore } from '@/stores/businessProfile'
 import apiClient from '@/lib/apiClient'
 import { useToast } from '@/composables/useToast'
 import { NAV_SEARCH_ITEMS, navSearchItemVisibleForPortals } from '@/config/navSearchItems'
+import { tenantSectionOpen } from '@/config/staffFeatureGate'
 import { enabledPortals } from '@/config/portalAccess'
 import { listPageHelpEntries } from '@/help/pageHelpRegistry'
 import { printDocument } from '@/composables/useAppPrint'
@@ -80,6 +82,7 @@ type GuideItem = {
 }
 
 const auth = useAuthStore()
+const biz = useBusinessProfileStore()
 const toast = useToast()
 const search = ref('')
 const publishStatus = ref<'draft' | 'published'>('draft')
@@ -91,8 +94,30 @@ const helpMap = computed(() => {
   return map
 })
 
-const guideItems = computed<GuideItem[]>(() =>
-  NAV_SEARCH_ITEMS.filter((nav) => navSearchItemVisibleForPortals(nav, enabledPortals)).map((nav) => {
+const guideItems = computed<GuideItem[]>(() => {
+  void biz.loaded
+  void biz.businessType
+  void biz.effectiveFeatureMatrix
+  return NAV_SEARCH_ITEMS.filter((nav) => {
+    if (!navSearchItemVisibleForPortals(nav, enabledPortals)) return false
+    if (nav.requiresManager && !auth.isManager) return false
+    if (nav.requiresOwner && !auth.isOwner) return false
+    if (nav.requiresStaff && !auth.isStaff) return false
+    if (nav.requiresPlatform && !auth.isPlatform) return false
+    if (nav.requiresPermission && !auth.hasPermission(nav.requiresPermission)) return false
+    if (nav.requiresAnyPermission?.length) {
+      const ok = nav.requiresAnyPermission.some((p) => auth.hasPermission(p))
+      if (!ok) return false
+    }
+    if (
+      typeof nav.requiresTenantFeature === 'string'
+      && nav.requiresTenantFeature.length > 0
+      && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), nav.requiresTenantFeature)
+    ) {
+      return false
+    }
+    return true
+  }).map((nav) => {
     const byName = helpMap.value.get((nav.to === '/' ? 'dashboard' : nav.to.replace(/^\//, '').replace(/\//g, '.')))
     return {
       to: nav.to,
@@ -101,8 +126,8 @@ const guideItems = computed<GuideItem[]>(() =>
       summary: byName?.summary ?? `شرح تنفيذي لشاشة ${nav.label} ضمن ${nav.section}.`,
       sections: byName?.sections ?? [],
     }
-  }),
-)
+  })
+})
 
 const groupedFiltered = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -167,6 +192,7 @@ function downloadGuide() {
 }
 
 onMounted(() => {
+  void biz.load().catch(() => {})
   void loadGuideSettings()
 })
 </script>

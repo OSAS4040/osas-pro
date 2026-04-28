@@ -10,7 +10,7 @@
       </div>
       <div class="flex gap-2">
         <button :class="activeTab==='referrals' ? 'bg-pink-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" @click="activeTab = 'referrals'">الإحالات</button>
-        <button :class="activeTab==='loyalty' ? 'bg-purple-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" @click="activeTab = 'loyalty'">النقاط</button>
+        <button :class="activeTab==='loyalty' ? 'bg-primary-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" @click="activeTab = 'loyalty'">النقاط</button>
         <button :class="activeTab==='policy' ? 'bg-blue-500 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600'" class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" @click="activeTab = 'policy'">السياسات</button>
       </div>
     </div>
@@ -34,7 +34,7 @@
       </div>
 
       <!-- Generate link -->
-      <div class="bg-gradient-to-l from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-2xl border border-pink-100 dark:border-pink-800/40 p-5">
+      <div class="bg-gradient-to-l from-pink-50 to-primary-50 dark:from-pink-900/20 dark:to-primary-900/20 rounded-2xl border border-pink-100 dark:border-pink-800/40 p-5">
         <h3 class="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
           <LinkIcon class="w-5 h-5 text-pink-500" />
           رابط الإحالة الخاص بك
@@ -95,7 +95,7 @@
           <h3 class="font-semibold text-gray-800 dark:text-white">متصدرو النقاط</h3>
           <TrophyIcon class="w-5 h-5 text-yellow-500" />
         </div>
-        <div v-if="loadingLb" class="flex justify-center py-12"><div class="w-7 h-7 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin"></div></div>
+        <div v-if="loadingLb" class="flex justify-center py-12"><div class="w-7 h-7 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin"></div></div>
         <div v-else class="divide-y divide-gray-100 dark:divide-slate-700">
           <div v-for="(lp, i) in leaderboard" :key="lp.id" class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
             <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
@@ -108,7 +108,7 @@
               <p class="text-xs text-gray-400">{{ lp.customer?.phone }}</p>
             </div>
             <div class="text-right">
-              <p class="font-bold text-purple-600 dark:text-purple-400">{{ lp.points?.toLocaleString('ar-SA') }} نقطة</p>
+              <p class="font-bold text-primary-600 dark:text-primary-400">{{ lp.points?.toLocaleString('ar-SA') }} نقطة</p>
               <p class="text-xs text-gray-400">مستخدم: {{ lp.points_used?.toLocaleString('ar-SA') }}</p>
             </div>
           </div>

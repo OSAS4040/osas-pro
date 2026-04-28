@@ -27,6 +27,9 @@ abstract class TestCase extends BaseTestCase
         if (! app()->bound('correlation_id')) {
             app()->instance('correlation_id', (string) Str::uuid());
         }
+        if (! app()->bound('request_id')) {
+            app()->instance('request_id', (string) Str::uuid());
+        }
     }
 
     protected function createCompany(array $overrides = []): Company

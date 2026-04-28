@@ -100,6 +100,44 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         );
     }
 
+    public function test_does_not_dispatch_whatsapp_jobs_when_feature_disabled(): void
+    {
+        Config::set('whatsapp_work_order_notifications.enabled', false);
+        Bus::fake([NotifyCustomerWorkOrderWhatsAppJob::class]);
+
+        $order = $this->createOrder();
+        $order = $this->service->transition($order, WorkOrderStatus::Approved);
+        $order = $this->service->transition($order, WorkOrderStatus::InProgress);
+        $order = $this->service->transition($order, WorkOrderStatus::Completed);
+        $this->service->transition($order, WorkOrderStatus::Delivered);
+
+        Bus::assertNotDispatched(NotifyCustomerWorkOrderWhatsAppJob::class);
+    }
+
+    public function test_job_handle_skips_when_feature_disabled_without_http(): void
+    {
+        Config::set('whatsapp_work_order_notifications.enabled', false);
+        $this->mergeWhatsAppSettings([
+            'provider' => 'twilio',
+            'config'   => [
+                'twilio_sid'   => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                'twilio_token' => 'test_auth_token',
+                'twilio_from'  => '14155238886',
+            ],
+            'triggers' => [
+                'wo_delivered' => true,
+            ],
+        ]);
+
+        Http::fake(fn () => Http::response(['sid' => 'SMtest'], 201));
+
+        $order = $this->createOrder();
+        $job = new NotifyCustomerWorkOrderWhatsAppJob($order->id, (int) $this->company->id, 'delivered');
+        $job->handle(app(WhatsAppOutboundService::class));
+
+        Http::assertNothingSent();
+    }
+
     public function test_dispatches_whatsapp_jobs_on_completed_and_delivered(): void
     {
         Bus::fake([NotifyCustomerWorkOrderWhatsAppJob::class]);

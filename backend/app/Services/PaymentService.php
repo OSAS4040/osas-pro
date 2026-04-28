@@ -107,8 +107,12 @@ class PaymentService
             return $payment;
         });
 
-        $inv = Invoice::find($payment->invoice_id);
-        if ($inv) {
+        DB::afterCommit(function () use ($payment, $userId): void {
+            $inv = Invoice::find($payment->invoice_id);
+            if (! $inv) {
+                return;
+            }
+
             $this->intelligentEvents->emit(new InvoicePaid(
                 companyId: (int) $inv->company_id,
                 branchId: $inv->branch_id ? (int) $inv->branch_id : null,
@@ -120,7 +124,7 @@ class PaymentService
                 invoiceStatus: $inv->fresh()->status->value,
                 sourceContext: 'PaymentService::createPayment',
             ));
-        }
+        });
 
         return $payment;
     }

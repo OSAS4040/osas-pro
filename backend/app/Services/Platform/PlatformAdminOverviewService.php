@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\WorkOrder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -24,7 +25,12 @@ use Illuminate\Support\Facades\Schema;
 final class PlatformAdminOverviewService
 {
     private const CACHE_KEY = 'platform:admin:overview:v2';
-    private const CACHE_TTL_SECONDS = 60;
+
+    /** Executive overview cache TTL — Signal Engine reads the same snapshot; keep aligned with docs + scoring meta. */
+    public const EXECUTIVE_OVERVIEW_CACHE_TTL_SECONDS = 60;
+
+    /** يُحدَّث من ‎`routes/console.php`‎ عند كل ‎`php artisan schedule:run`‎ ناجح (عادةً عبر cron). */
+    public const SCHEDULER_LAST_RUN_CACHE_KEY = 'platform:schedule:last_run_at';
 
     /**
      * @return array<string, mixed>
@@ -33,7 +39,7 @@ final class PlatformAdminOverviewService
     {
         return Cache::remember(
             self::CACHE_KEY,
-            now()->addSeconds(self::CACHE_TTL_SECONDS),
+            now()->addSeconds(self::EXECUTIVE_OVERVIEW_CACHE_TTL_SECONDS),
             fn (): array => $this->buildFresh(),
         );
     }
@@ -61,13 +67,13 @@ final class PlatformAdminOverviewService
 
         return [
             'generated_at' => $now->toIso8601String(),
-            'cache' => ['ttl_seconds' => self::CACHE_TTL_SECONDS],
+            'cache' => ['ttl_seconds' => self::EXECUTIVE_OVERVIEW_CACHE_TTL_SECONDS],
             'definitions' => [
-                'active_company' => 'Company with activity in last 7 days (work order, invoice, or login).',
-                'low_activity_company' => 'Company with activity in days 8-14 but not in the latest 7 days.',
-                'inactive_company' => 'No activity in last 14 days.',
-                'catalog_mrr_estimate' => 'Estimated MRR from plan catalog for latest active subscription per company; not accounting revenue.',
-                'activity_score' => 'activity_score = 3*work_orders + 2*invoices + 1*logins (last 7 days).',
+                'active_company' => 'شركة لديها نشاط خلال آخر 7 أيام (أمر عمل أو فاتورة أو تسجيل دخول).',
+                'low_activity_company' => 'شركة لديها نشاط بين اليوم 8 والـ 14 دون نشاط في آخر 7 أيام.',
+                'inactive_company' => 'لا نشاط يذكر خلال آخر 14 يوماً.',
+                'catalog_mrr_estimate' => 'MRR تقديري من كتالوج الباقات لآخر اشتراك فعّال لكل شركة — وليس إيراداً محصّلاً.',
+                'activity_score' => 'درجة النشاط = 3×أوامر العمل + 2×الفواتير + 1×تسجيلات الدخول (آخر 7 أيام).',
             ],
             'kpis' => [
                 'total_companies' => $companiesTotal,
@@ -269,21 +275,52 @@ final class PlatformAdminOverviewService
     private function buildHealth(): array
     {
         $failedJobs = Schema::hasTable('failed_jobs') ? (int) DB::table('failed_jobs')->count() : null;
+
         $databaseOk = true;
         try {
             DB::selectOne('select 1 as ok');
         } catch (\Throwable) {
             $databaseOk = false;
         }
-        $queueOk = $failedJobs === null || $failedJobs <= 20;
+
+        $redisOk = false;
+        try {
+            $pong = Redis::connection()->ping();
+            $redisOk = $pong === true || $pong === '+PONG' || $pong === 'PONG';
+        } catch (\Throwable) {
+            $redisOk = false;
+        }
+
+        $queuePending = null;
+        if (Schema::hasTable('jobs')) {
+            $queuePending = (int) DB::table('jobs')->count();
+        }
+
+        $failedPressure = $failedJobs !== null && $failedJobs > 20;
+        $jobsPressure = $queuePending !== null && $queuePending > 500;
+        $queueOk = ! $failedPressure && ! $jobsPressure;
 
         return [
             'api' => $databaseOk ? 'ok' : 'degraded',
             'queue' => $queueOk ? 'ok' : 'degraded',
             'failed_jobs' => $failedJobs,
-            'trend' => ($queueOk && $databaseOk) ? 'stable' : 'degraded',
+            'trend' => ($queueOk && $databaseOk && $redisOk) ? 'stable' : 'degraded',
             'database_ok' => $databaseOk,
+            'redis_ok' => $redisOk,
+            'queue_pending_count' => $queuePending,
+            'scheduler_last_run_at' => $this->schedulerLastRunAt(),
+            'scheduler_note_ar' => 'يُحدَّث هذا الطابع عندما يستدعي الخادم ‎`php artisan schedule:run`‎ (cron). إن بقي فارغاً فالجدولة لا تصل إلى التطبيق.',
         ];
+    }
+
+    private function schedulerLastRunAt(): ?string
+    {
+        $raw = Cache::get(self::SCHEDULER_LAST_RUN_CACHE_KEY);
+        if (! is_string($raw) || $raw === '') {
+            return null;
+        }
+
+        return $raw;
     }
 
     /**
@@ -408,6 +445,7 @@ final class PlatformAdminOverviewService
                 'company_id' => $cid,
                 'name' => $company->name,
                 'reason' => $reason,
+                'reason_ar' => $this->attentionReasonAr($reason),
                 'reasons' => $reasons,
                 'activity_score' => (int) $activity['activity_score_7d'],
                 'last_activity_days_ago' => (int) $activity['last_activity_days_ago'],
@@ -438,8 +476,8 @@ final class PlatformAdminOverviewService
             $alerts[] = [
                 'type' => 'pending_financial_review',
                 'severity' => 'medium',
-                'message' => "There are {$pendingFinancial} companies pending financial-model review.",
-                'action_hint' => 'Review pending approvals in financial model section.',
+                'message' => 'يوجد '.$pendingFinancial.' شركة بانتظار مراجعة النموذج المالي على مستوى المنصة.',
+                'action_hint' => 'راجع قسم «النموذج المالي» واعتماد أو رفض الطلبات.',
                 'action_path' => '/admin#admin-section-finance',
             ];
         }
@@ -447,8 +485,8 @@ final class PlatformAdminOverviewService
             $alerts[] = [
                 'type' => 'queue_failed_jobs',
                 'severity' => 'high',
-                'message' => "Failed jobs are high ({$failedJobs}).",
-                'action_hint' => 'Inspect queue workers and failed jobs.',
+                'message' => 'إجمالي المهام الفاشلة المتراكمة في الطابور مرتفع ('.$failedJobs.').',
+                'action_hint' => 'افحص عمال الطابور وحدد السبب الجذري أولاً، ثم أعد المحاولة بشكل موجّه أو أصلح السبب.',
                 'action_path' => '/admin#admin-section-ops',
             ];
         }
@@ -458,8 +496,8 @@ final class PlatformAdminOverviewService
                     'type' => 'trial_expiring',
                     'severity' => 'high',
                     'company_id' => $row['company_id'],
-                    'message' => "Trial is ending soon for {$row['name']}.",
-                    'action_hint' => 'Contact customer and convert to paid plan.',
+                    'message' => 'اشتراك تجريبي على وشك الانتهاء للشركة «'.($row['name'] ?? '').'».',
+                    'action_hint' => 'تواصل مع المستأجر أو حوّل إلى باقة مدفوعة وفق سياسة المنصة.',
                     'action_path' => '/admin#admin-section-tenants',
                 ];
             }
@@ -486,22 +524,22 @@ final class PlatformAdminOverviewService
         $insights = [];
         if ($new30 > 0) {
             $pct = round(($new7 / max(1, $new30)) * 100, 1);
-            $insights[] = ['tone' => 'positive', 'text' => "Company growth signal: {$new7} new companies in 7d ({$pct}% of 30d baseline)."];
+            $insights[] = ['tone' => 'positive', 'text' => 'إشارة نمو: '.$new7.' شركة جديدة خلال 7 أيام ('.$pct.'٪ من مقياس 30 يوماً).'];
         }
         if ($companyBuckets['low_activity'] > 0) {
-            $insights[] = ['tone' => 'warning', 'text' => "{$companyBuckets['low_activity']} companies show low activity (8-14 days)."];
+            $insights[] = ['tone' => 'warning', 'text' => $companyBuckets['low_activity'].' شركة بأداء منخفض (نشاط بين 8 و14 يوماً).'];
         }
         if ($companyBuckets['inactive'] > 0) {
-            $insights[] = ['tone' => 'action', 'text' => "{$companyBuckets['inactive']} companies are inactive for 14+ days; run reactivation workflow."];
+            $insights[] = ['tone' => 'action', 'text' => $companyBuckets['inactive'].' شركة بلا نشاط يذكر منذ 14 يوماً فأكثر — راجع خطة إعادة التفعيل.'];
         }
         if (($statusDistribution['trial'] ?? 0) > 0) {
-            $insights[] = ['tone' => 'neutral', 'text' => 'Trial pool exists; monitor trial-to-paid conversion closely.'];
+            $insights[] = ['tone' => 'neutral', 'text' => 'توجد شركات على باقة تجريبية — راقب التحويل إلى مدفوع.'];
         }
         if (($health['trend'] ?? 'stable') === 'degraded') {
-            $insights[] = ['tone' => 'warning', 'text' => 'Operational health is degraded; queue/API reliability needs immediate check.'];
+            $insights[] = ['tone' => 'warning', 'text' => 'الصحة التشغيلية منخفضة (قاعدة البيانات، Redis، أو ضغط الطابور) — راجع قسم التشغيل العام.'];
         }
         if (count($attention) > 0) {
-            $insights[] = ['tone' => 'action', 'text' => 'Actionable attention list is available for prioritized platform follow-up.'];
+            $insights[] = ['tone' => 'action', 'text' => 'توجد قائمة شركات تحتاج متابعة مرتبة حسب الأولوية التشغيلية.'];
         }
 
         return $insights;
@@ -525,12 +563,24 @@ final class PlatformAdminOverviewService
     private function attentionActionHint(string $reason): string
     {
         return match ($reason) {
-            'trial_ending' => 'Start trial-to-paid conversion follow-up.',
-            'low_activity_7_14d' => 'Initiate low-activity engagement plan.',
-            'inactive_14d' => 'Escalate to customer success reactivation workflow.',
-            'pending_financial_review' => 'Complete pending financial model review.',
-            'operational_block' => 'Investigate operational suspension and restore safely.',
-            default => 'Manual platform operator review.',
+            'trial_ending' => 'متابعة تحويل التجربة إلى اشتراك مدفوع.',
+            'low_activity_7_14d' => 'تشغيل خطة تدخل للشركات منخفضة النشاط.',
+            'inactive_14d' => 'تصعيد لمسار إعادة تفعيل / نجاح العملاء.',
+            'pending_financial_review' => 'إكمال مراجعة النموذج المالي المعلّقة.',
+            'operational_block' => 'التحقق من سبب الإيقاف التشغيلي ثم إعادة التفعيل بأمان.',
+            default => 'مراجعة يدوية من مشغّل المنصة.',
+        };
+    }
+
+    private function attentionReasonAr(string $reason): string
+    {
+        return match ($reason) {
+            'operational_block' => 'إيقاف تشغيلي أو شركة موقوفة',
+            'pending_financial_review' => 'نموذج مالي بانتظار مراجعة المنصة',
+            'inactive_14d' => 'لا نشاط منذ 14 يوماً فأكثر',
+            'low_activity_7_14d' => 'نشاط منخفض (7–14 يوماً)',
+            'trial_ending' => 'تجربة تنتهي خلال أيام',
+            default => $reason,
         };
     }
 }

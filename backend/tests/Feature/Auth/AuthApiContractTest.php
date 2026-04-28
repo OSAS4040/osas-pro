@@ -2,11 +2,15 @@
 
 namespace Tests\Feature\Auth;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
  * Locks the API contract: /api/* must always speak JSON (no HTML / web redirects).
+ *
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md
  */
+#[Group('phase0')]
 class AuthApiContractTest extends TestCase
 {
     public function test_login_without_accept_header_still_returns_json(): void

@@ -2,6 +2,62 @@ import { ref, watch } from 'vue'
 import apiClient from '@/lib/apiClient'
 import { useAuthStore } from '@/stores/auth'
 
+/** مرّة واحدة بعد تحديث الهوية البنفسجية — يُحدَّث عند تغيير ترحيل الألوان مستقبلاً */
+const THEME_BRAND_REVISION = '2026-04-osas-purple'
+const THEME_BRAND_REVISION_KEY = 'theme_brand_revision'
+
+/** ألوان الهوية القديمة (أزرق/تركواز) → بنفسجي أسس الحالي — يطبَّق على localStorage وبيانات الشركة المحمّلة */
+const LEGACY_PRIMARY_TO_BRAND: Record<string, string> = {
+  '#2563eb': '#7c3aed',
+  '#1d4ed8': '#6d28d9',
+  '#3b82f6': '#8b5cf6',
+  '#0d9488': '#7c3aed',
+  '#14b8a6': '#8b5cf6',
+  '#0f766e': '#6d28d9',
+  '#115e59': '#5b21b6',
+  '#134e4a': '#5b21b6',
+}
+
+function normHex(hex: string): string {
+  return hex.trim().toLowerCase()
+}
+
+export function mapLegacyBrandPrimary(hex: string | undefined | null): string {
+  if (!hex || typeof hex !== 'string') return '#7c3aed'
+  const key = normHex(hex)
+  return LEGACY_PRIMARY_TO_BRAND[key] ?? hex.trim()
+}
+
+function migrateStoredThemeBrandOnce(): void {
+  if (typeof localStorage === 'undefined') return
+  try {
+    if (localStorage.getItem(THEME_BRAND_REVISION_KEY) === THEME_BRAND_REVISION) return
+
+    const preset = localStorage.getItem('theme_preset')
+    const colorRaw = localStorage.getItem('theme_color')
+    const colorNorm = colorRaw ? normHex(colorRaw) : ''
+
+    const oldDefaultBlue =
+      preset === 'enterprise-blue' && (!colorRaw || colorNorm === '#2563eb')
+
+    const violetPresetButBlueHex =
+      preset === 'violet-executive' && colorNorm === '#2563eb'
+
+    const legacyHexOnly = colorRaw && LEGACY_PRIMARY_TO_BRAND[colorNorm]
+
+    if (oldDefaultBlue || violetPresetButBlueHex || legacyHexOnly) {
+      localStorage.setItem('theme_preset', 'violet-executive')
+      localStorage.setItem('theme_color', mapLegacyBrandPrimary(colorRaw || '#2563eb'))
+    }
+
+    localStorage.setItem(THEME_BRAND_REVISION_KEY, THEME_BRAND_REVISION)
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+migrateStoredThemeBrandOnce()
+
 type ThemePreset = {
   name: string
   label: string
@@ -12,12 +68,11 @@ type ThemePreset = {
 }
 
 export const THEME_PRESETS: ThemePreset[] = [
-  { name: 'enterprise-blue',   label: 'Enterprise Blue (افتراضي)', primary: '#2563eb', hover: '#1d4ed8', ring: '#3b82f6', css: '' },
-  { name: 'emerald-executive', label: 'Emerald Executive',          primary: '#0d9488', hover: '#0f766e', ring: '#14b8a6', css: '' },
-  { name: 'slate-professional',label: 'Slate Professional',         primary: '#475569', hover: '#334155', ring: '#64748b', css: '' },
-  { name: 'violet',            label: 'بنفسجي',                      primary: '#7c3aed', hover: '#6d28d9', ring: '#8b5cf6', css: '' },
-  { name: 'rose',              label: 'وردي',                        primary: '#e11d48', hover: '#be123c', ring: '#f43f5e', css: '' },
-  { name: 'amber',             label: 'ذهبي',                        primary: '#d97706', hover: '#b45309', ring: '#f59e0b', css: '' },
+  { name: 'violet-executive', label: 'بنفسجي Osas (افتراضي)', primary: '#7c3aed', hover: '#6d28d9', ring: '#8b5cf6', css: '' },
+  { name: 'enterprise-blue', label: 'Enterprise Blue', primary: '#2563eb', hover: '#1d4ed8', ring: '#3b82f6', css: '' },
+  { name: 'slate-professional', label: 'Slate Professional', primary: '#475569', hover: '#334155', ring: '#64748b', css: '' },
+  { name: 'rose', label: 'وردي', primary: '#e11d48', hover: '#be123c', ring: '#f43f5e', css: '' },
+  { name: 'amber', label: 'ذهبي', primary: '#d97706', hover: '#b45309', ring: '#f59e0b', css: '' },
 ]
 
 export function hexToRgb(hex: string): string {
@@ -27,6 +82,12 @@ export function hexToRgb(hex: string): string {
   return `${r} ${g} ${b}`
 }
 
+/** Legacy: teal preset أصبح بنفسجي؛ الاسم القديم violet يُوجَّه للبنفسجي الحالي. */
+export function normalizeThemePresetName(name: string): string {
+  if (name === 'violet' || name === 'emerald-executive') return 'violet-executive'
+  return name
+}
+
 function applyTheme(primaryHex: string) {
   const root = document.documentElement
   root.style.setProperty('--color-primary', primaryHex)
@@ -34,14 +95,14 @@ function applyTheme(primaryHex: string) {
   // Generate scale from base color
   const presetColors: Record<string, string[]> = {
     '#2563eb': ['#eff6ff','#dbeafe','#bfdbfe','#93c5fd','#60a5fa','#3b82f6','#2563eb','#1d4ed8','#1e40af','#1e3a8a'],
-    '#0d9488': ['#f0fdfa','#ccfbf1','#99f6e4','#5eead4','#2dd4bf','#14b8a6','#0d9488','#0f766e','#115e59','#134e4a'],
-    '#7c3aed': ['#f5f3ff','#ede9fe','#ddd6fe','#c4b5fd','#a78bfa','#8b5cf6','#7c3aed','#6d28d9','#5b21b6','#4c1d95'],
+    '#0d9488': ['#f5f3ff','#ede9fe','#ddd6fe','#c4b5fd','#a78bfa','#8b5cf6','#7c3aed','#6d28d9','#5b21b6','#4c1d95'],
+    '#7c3aed': ['#faf8ff','#f3edff','#e9e1fc','#d4c5f9','#c4b5fd','#a78bfa','#8b5cf6','#7c3aed','#6d28d9','#5b21b6'],
     '#e11d48': ['#fff1f2','#ffe4e6','#fecdd3','#fda4af','#fb7185','#f43f5e','#e11d48','#be123c','#9f1239','#881337'],
     '#d97706': ['#fffbeb','#fef3c7','#fde68a','#fcd34d','#fbbf24','#f59e0b','#d97706','#b45309','#92400e','#78350f'],
     '#475569': ['#f8fafc','#f1f5f9','#e2e8f0','#cbd5e1','#94a3b8','#64748b','#475569','#334155','#1e293b','#0f172a'],
   }
 
-  const scale = presetColors[primaryHex] ?? presetColors['#2563eb']
+  const scale = presetColors[primaryHex] ?? presetColors['#7c3aed']
   const shades = [50,100,200,300,400,500,600,700,800,900]
 
   shades.forEach((shade, i) => {
@@ -74,8 +135,25 @@ function applyTheme(primaryHex: string) {
   `
 }
 
-const currentTheme = ref<string>(localStorage.getItem('theme_color') ?? '#2563eb')
-const currentPreset = ref<string>(localStorage.getItem('theme_preset') ?? 'enterprise-blue')
+const savedPresetRaw = localStorage.getItem('theme_preset') ?? 'violet-executive'
+const savedPreset = normalizeThemePresetName(savedPresetRaw)
+if (savedPreset !== savedPresetRaw) {
+  localStorage.setItem('theme_preset', savedPreset)
+}
+
+let initialThemeColor = mapLegacyBrandPrimary(localStorage.getItem('theme_color') ?? '#7c3aed')
+if (savedPresetRaw === 'violet') {
+  initialThemeColor = '#7c3aed'
+  localStorage.setItem('theme_color', initialThemeColor)
+}
+const LEGACY_TEALS = ['#0d9488', '#14b8a6', '#115e59', '#134e4a']
+if (LEGACY_TEALS.includes(initialThemeColor)) {
+  initialThemeColor = '#7c3aed'
+  localStorage.setItem('theme_color', initialThemeColor)
+}
+
+const currentTheme = ref<string>(initialThemeColor)
+const currentPreset = ref<string>(savedPreset)
 const themeLoadedFromCompany = ref(false)
 
 watch(currentTheme, (c) => {
@@ -89,7 +167,7 @@ applyTheme(currentTheme.value)
 
 export function useTheme() {
   function setThemePreset(name: string) {
-    const preset = THEME_PRESETS.find((p) => p.name === name)
+    const preset = THEME_PRESETS.find((p) => p.name === normalizeThemePresetName(name))
     if (!preset) return
     currentPreset.value = preset.name
     currentTheme.value = preset.primary
@@ -108,10 +186,10 @@ export function useTheme() {
       const { data } = await apiClient.get(`/companies/${auth.user.company_id}/settings`)
       const uiTheme = data?.data?.ui_theme ?? null
       if (uiTheme?.preset && typeof uiTheme.preset === 'string') {
-        setThemePreset(uiTheme.preset)
+        setThemePreset(normalizeThemePresetName(uiTheme.preset))
       }
       if (uiTheme?.primary && typeof uiTheme.primary === 'string') {
-        currentTheme.value = uiTheme.primary
+        currentTheme.value = mapLegacyBrandPrimary(uiTheme.primary)
       }
       themeLoadedFromCompany.value = true
     } catch {

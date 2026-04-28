@@ -32,31 +32,38 @@
     --icon-size-inline: 1.125rem;
     --icon-size-card: 1.5rem;
 
-    --bg-base:       #f4f7f6;
+    /* هوية أسس برو — محايد دافئ مع لمسة بنفسجية خفيفة للعلامة والظلال */
+    --bg-base:       #f5f3fa;
     --bg-card:       #ffffff;
-    --bg-sidebar:    #fafcfb;
+    --bg-sidebar:    #f9f7fc;
     --bg-header:     #ffffff;
-    --border-color:  #e2e8e4;
+    --border-color:  #e4dfee;
     --text-primary:  #0f172a;
     --text-secondary:#475569;
     --text-muted:    #94a3b8;
-    --shadow:        0 1px 3px rgba(13,148,136,.06);
+    --brand-teal:    #7c3aed;
+    --brand-teal-soft: rgba(124, 58, 237, 0.11);
+    --brand-violet:  #7c3aed;
+    --shadow:        0 1px 3px rgba(124, 58, 237, 0.06);
+    --shadow-card:   0 4px 22px -6px rgba(124, 58, 237, 0.09), 0 1px 3px rgba(15, 23, 42, 0.05);
     --radius-sm: 10px;
     --radius-md: 14px;
     --radius-lg: 18px;
-    --ring-focus: 0 0 0 3px rgba(20, 184, 166, 0.22);
+    --ring-focus: 0 0 0 3px rgba(139, 92, 246, 0.26);
   }
 
   .dark {
-    --bg-base:       #0c1222;
-    --bg-card:       #152238;
-    --bg-sidebar:    #111c2a;
-    --bg-header:     #152238;
-    --border-color:  #2d3a4d;
+    --bg-base:       #0b1220;
+    --bg-card:       #121c2e;
+    --bg-sidebar:    #0f1828;
+    --bg-header:     #121c2e;
+    --border-color:  #2a3548;
     --text-primary:  #f1f5f9;
     --text-secondary:#94a3b8;
     --text-muted:    #64748b;
-    --shadow:        0 1px 3px rgba(0,0,0,.35);
+    --brand-teal-soft: rgba(167, 139, 250, 0.14);
+    --shadow:        0 1px 3px rgba(0, 0, 0, 0.35);
+    --shadow-card:   0 4px 24px -4px rgba(0, 0, 0, 0.45);
   }
 
   html {
@@ -100,7 +107,15 @@
   /** عنوان قسم داخل الصفحة (أسفل العنوان الرئيسي) */
   .section-title { @apply text-base md:text-lg font-semibold tracking-tight text-gray-900 dark:text-slate-100; }
 
-  .panel { @apply rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm; }
+  /** عناوين أقسام لوحة إدارة المنصة — PRIORITY 6 typography (بدون font-black) */
+  .platform-admin-section-heading {
+    @apply text-lg md:text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100;
+  }
+
+  .panel {
+    @apply rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800;
+    box-shadow: var(--shadow-card);
+  }
   .panel-head { @apply px-4 py-3 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between gap-2; }
   .panel-title { @apply text-sm font-semibold text-gray-800 dark:text-slate-100; }
   .panel-body { @apply p-4; }
@@ -111,8 +126,21 @@
 
   .page-container  { @apply max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6; }
 
+  /**
+   * شريط سياق علوي — هوية أسس برو: شريط بنفسجي على بداية السطر (inline-start في RTL = يمين)
+   * + عنوان الصفحة + فتات خبز داخل حد أقصى يطابق المحتوى.
+   */
+  .osos-context-strip {
+    @apply border-b border-[color:var(--border-color)] bg-[color:var(--bg-header)] dark:border-slate-700;
+    border-inline-start: 4px solid var(--brand-teal);
+    box-shadow: inset 0 1px 0 rgba(124, 58, 237, 0.06);
+  }
+
   /* Light + Dark aware card */
-  .card            { @apply bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-6 shadow-sm transition-colors; }
+  .card {
+    @apply bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-6 transition-colors;
+    box-shadow: var(--shadow-card);
+  }
   .card-header     { @apply flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-slate-700; }
 
   .form            { @apply space-y-4; }
@@ -129,9 +157,9 @@
   .field           { @apply w-full border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors; }
   .field-sm        { @apply w-full border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors; }
 
-  .btn             { @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn             { @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed; }
   .btn-sm          { @apply px-3 py-1.5 text-xs; }
-  .btn-primary     { @apply bg-primary-600 text-white hover:bg-primary-700; }
+  .btn-primary     { @apply bg-primary-600 text-white shadow-sm shadow-primary-900/10 hover:bg-primary-700 hover:shadow-md active:scale-[0.99] dark:shadow-none; }
   .btn-outline     { @apply border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700; }
   .btn-secondary   { @apply bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600; }
   .btn-ghost       { @apply bg-transparent text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700; }
@@ -147,7 +175,7 @@
   .badge-yellow    { @apply bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300; }
   .badge-blue      { @apply bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300; }
   .badge-gray      { @apply bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300; }
-  .badge-purple    { @apply bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300; }
+  .badge-purple    { @apply bg-primary-100 dark:bg-primary-900/40 text-primary-800 dark:text-primary-300; }
   /** نص داخل شارة/وسم */
   .badge-text      { @apply text-xs font-medium leading-tight; }
 

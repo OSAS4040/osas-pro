@@ -19,8 +19,8 @@
     <!-- KPI Cards -->
     <div class="grid grid-cols-3 gap-3">
       <div class="bg-white rounded-xl border border-gray-100 p-4 text-center">
-        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-2">
-          <TruckIcon class="w-5 h-5 text-purple-600" />
+        <div class="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+          <TruckIcon class="w-5 h-5 text-primary-600" />
         </div>
         <p class="text-2xl font-bold text-gray-900">{{ kpi.totalVehicles }}</p>
         <p class="text-xs text-gray-500 mt-0.5">إجمالي المركبات</p>
@@ -81,7 +81,7 @@
       <h3 class="text-sm font-semibold text-gray-800 mb-3">اتجاه الطلبات</h3>
       <div class="flex items-end gap-1.5 h-20">
         <div v-for="(d, i) in weekDays" :key="i" class="flex-1 flex flex-col items-center gap-1">
-          <div class="w-full rounded-sm bg-purple-400 transition-all"
+          <div class="w-full rounded-sm bg-primary-400 transition-all"
                :style="{ height: `${Math.max(d * 14, 3)}px`, opacity: d === 0 ? 0.3 : 1 }"
           ></div>
           <span class="text-[10px] text-gray-400">{{ weekLabels[i] }}</span>
@@ -102,8 +102,8 @@
       <RouterLink to="/customer/vehicles"
                   class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col items-center gap-2 hover:border-orange-300 hover:shadow-md transition-all"
       >
-        <div class="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center">
-          <TruckIcon class="w-6 h-6 text-purple-600" />
+        <div class="w-11 h-11 bg-primary-100 rounded-xl flex items-center justify-center">
+          <TruckIcon class="w-6 h-6 text-primary-600" />
         </div>
         <span class="text-xs font-semibold text-gray-800">مركباتي</span>
       </RouterLink>
@@ -133,7 +133,7 @@ import { RouterLink } from 'vue-router'
 import {
   TruckIcon, CreditCardIcon, StarIcon, CalendarDaysIcon,
   DocumentTextIcon, ChatBubbleLeftRightIcon, ClipboardDocumentListIcon,
-  WrenchScrewdriverIcon,
+  WrenchScrewdriverIcon, CurrencyDollarIcon,
 } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 
@@ -147,6 +147,7 @@ const quickLinks = [
   { label: 'المركبات',   to: '/customer/vehicles',   icon: TruckIcon },
   { label: 'الطلبات',    to: '/customer/bookings',   icon: ClipboardDocumentListIcon },
   { label: 'الصيانة',    to: '/customer/bookings',   icon: WrenchScrewdriverIcon },
+  { label: 'التسعير',    to: '/customer/pricing',    icon: CurrencyDollarIcon },
   { label: 'المحفظة',    to: '/customer/invoices',   icon: CreditCardIcon },
   { label: 'الفواتير',   to: '/customer/invoices',   icon: DocumentTextIcon },
   { label: 'إنشاء طلب', to: '/customer/bookings',   icon: CalendarDaysIcon },

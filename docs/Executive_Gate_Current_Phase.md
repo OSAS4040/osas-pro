@@ -36,6 +36,8 @@
 
 **تنفيذ في المستودع (آمن):** يُثبَّت `tesseract-ocr` مع بيانات `eng` و`ara` عبر `backend/Dockerfile` من مستودعات Alpine الرسمية فقط (`apk add --no-cache`). أي `docker compose build` لخدمة `app` والطوابير يعتمد نفس الصورة.
 
+**تحقق آلي مع البوابة:** بعد بناء الصورة، يشغّل **`make staging-gate`** (و[`scripts/staging-gate.sh`](../scripts/staging-gate.sh) في CI) الأمر **`php artisan ocr:verify --fail`** داخل حاوية `app` — يفشل البوابة إن كان المحرك أو حزم اللغات ناقصة.
+
 ---
 
 ## 3) تنفيذ جولة يدوية قصيرة من الواجهة

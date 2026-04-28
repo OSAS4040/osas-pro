@@ -35,6 +35,7 @@
         <env name="DB_PORT"          value="5432" force="true"/>
         <env name="CACHE_DRIVER"     value="array" force="true"/>
         <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="WHATSAPP_WORK_ORDER_NOTIFICATIONS_ENABLED" value="true" force="true"/>
         <env name="SESSION_DRIVER"   value="array" force="true"/>
         <env name="MAIL_MAILER"      value="array" force="true"/>
         <env name="REDIS_HOST"       value="redis" force="true"/>

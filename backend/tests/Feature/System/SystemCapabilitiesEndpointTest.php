@@ -2,8 +2,13 @@
 
 namespace Tests\Feature\System;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — كتالوج القدرات (مرحلة 0)
+ */
+#[Group('phase0')]
 class SystemCapabilitiesEndpointTest extends TestCase
 {
     public function test_owner_receives_capability_catalog_for_tenant(): void
@@ -39,6 +44,22 @@ class SystemCapabilitiesEndpointTest extends TestCase
 
         $this->assertSame('cancelled', collect($items)->firstWhere('id', 'supplier_portal')['status'] ?? null);
         $this->assertSame('post_launch', collect($items)->firstWhere('id', 'driver_field_app')['status'] ?? null);
+    }
+
+    public function test_fixed_assets_catalog_entry_is_planned_without_path(): void
+    {
+        $t = $this->createTenant('owner');
+
+        $response = $this->actingAsUser($t['user'])->getJson('/api/v1/system/capabilities');
+        $response->assertStatus(200);
+
+        $items = $response->json('data.items');
+        $row = collect($items)->firstWhere('id', 'fixed_assets');
+        $this->assertNotNull($row, 'fixed_assets must exist in system_capabilities catalog');
+        $this->assertSame('planned', $row['status'] ?? null);
+        $this->assertArrayHasKey('path', $row);
+        $this->assertNull($row['path']);
+        $this->assertSame('fixed_assets', $row['gate'] ?? null);
     }
 
     public function test_fleet_contact_is_forbidden(): void

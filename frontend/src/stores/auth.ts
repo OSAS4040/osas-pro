@@ -37,6 +37,10 @@ export interface User {
   /** IAM role from account_context when platform */
   platform_role?: string | null
   navigation_visibility?: NavVisibilityPolicy
+  /** مفاتيح عناصر مخفاة من قائمة فريق العمل (من إدارة المنصة) */
+  hidden_staff_nav_keys?: string[]
+  /** مفاتيح تبويبات/مسارات مخفاة في بوابة العميل */
+  hidden_customer_nav_keys?: string[]
 }
 
 export type LoginOutcome =
@@ -97,7 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
       return false
     }
     /** مشغّل منصة مرتبط بشركة (هجين) — يُعرَف في الخلفية بـ is_platform_user حتى لو تأخّر account_context لإطار */
-    if (Boolean(u.is_platform_user)) {
+    if (u.is_platform_user) {
       return true
     }
     if (u.company_id != null) {
@@ -125,7 +129,7 @@ export const useAuthStore = defineStore('auth', () => {
     isPhoneOnboarding.value
       ? '/phone/onboarding'
       : isPlatform.value
-        ? (typeof user.value?.company_id === 'number' && user.value.company_id > 0 ? '/' : '/admin')
+        ? (typeof user.value?.company_id === 'number' && user.value.company_id > 0 ? '/' : '/platform/overview')
         : isFleet.value
           ? '/fleet-portal'
           : isCustomer.value
@@ -259,6 +263,10 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function hasPermission(permission: string): boolean {
+    /** Platform IAM keys must never be bypassed by tenant-owner shortcuts. */
+    if (permission.startsWith('platform.')) {
+      return permissions.value.includes(permission)
+    }
     if (isOwner.value) return true
     // UI fallback: manager can always see reports tabs; API still enforces true authorization.
     if (isManager.value && permission.startsWith('reports.')) return true

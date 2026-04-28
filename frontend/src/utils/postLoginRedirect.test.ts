@@ -23,14 +23,15 @@ describe('sanitizeInternalPath', () => {
 })
 
 describe('isPathConsistentWithAccountContext', () => {
-  it('restricts standalone platform employee to /admin', () => {
+  it('restricts standalone platform employee to /platform and /admin surfaces', () => {
     const c = ctx({
       principal_kind: 'platform_employee',
-      home_route_hint: '/admin',
+      home_route_hint: '/platform/overview',
       guard_hint: 'platform',
       company_id: null,
     })
-    expect(isPathConsistentWithAccountContext('/admin', c)).toBe(true)
+    expect(isPathConsistentWithAccountContext('/platform/overview', c)).toBe(true)
+    expect(isPathConsistentWithAccountContext('/admin/qa', c)).toBe(true)
     expect(isPathConsistentWithAccountContext('/work-orders', c)).toBe(false)
   })
 
@@ -43,6 +44,7 @@ describe('isPathConsistentWithAccountContext', () => {
     })
     expect(isPathConsistentWithAccountContext('/work-orders', c)).toBe(true)
     expect(isPathConsistentWithAccountContext('/admin', c)).toBe(true)
+    expect(isPathConsistentWithAccountContext('/platform/companies', c)).toBe(true)
     expect(isPathConsistentWithAccountContext('/fleet-portal', c)).toBe(false)
   })
 
@@ -50,6 +52,7 @@ describe('isPathConsistentWithAccountContext', () => {
     const c = ctx({ principal_kind: 'tenant_user', home_route_hint: '/pos', guard_hint: 'staff' })
     expect(isPathConsistentWithAccountContext('/pos', c)).toBe(true)
     expect(isPathConsistentWithAccountContext('/admin', c)).toBe(false)
+    expect(isPathConsistentWithAccountContext('/platform/overview', c)).toBe(false)
     expect(isPathConsistentWithAccountContext('/fleet-portal', c)).toBe(false)
   })
 
@@ -125,5 +128,22 @@ describe('resolvePostLoginTarget', () => {
       redirectQuery: undefined,
     })
     expect(path).toBe('/work-orders')
+  })
+
+  it('falls back to /platform/overview for standalone platform employee without valid hint', () => {
+    const path = resolvePostLoginTarget({
+      accountContext: ctx({
+        principal_kind: 'platform_employee',
+        home_route_hint: '/',
+        guard_hint: 'platform',
+        company_id: null,
+      }),
+      registrationFlow: null,
+      registrationStage: null,
+      accountType: null,
+      portalHomeFromRole: '/',
+      redirectQuery: undefined,
+    })
+    expect(path).toBe('/platform/overview')
   })
 })

@@ -7,6 +7,8 @@
   - طلب GET على /api/v1/health
   - اختياري: التحقق أن الواجهة تستجيب (HEAD أو GET على الجذر)
   - اختياري: docker compose ps (حالة الحاويات)
+  - اختياري -WithOcrVerify: php artisan ocr:verify --fail داخل حاوية app
+  - مكافئ bash: scripts/preflight-pilot-readonly.sh (انظر --help)
 
 .PARAMETER ApiBaseUrl
   أصل API بدون مسار صحي، مثال: https://staging.example.com أو http://127.0.0.1
@@ -20,6 +22,9 @@
 .PARAMETER SkipFrontend
   يتخطى فحص الواجهة حتى لو وُجد FrontendBaseUrl (مفيد إذا nginx يعيد 502 محلياً أو تريد التحقق من API فقط).
 
+.PARAMETER WithOcrVerify
+  بعد فحوص القراءة: يشغّل `docker compose exec -T app php artisan ocr:verify --fail` (يتطلب حاوية app شغّالة محلياً).
+
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts/preflight-pilot-readonly.ps1
 
@@ -28,12 +33,16 @@
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts/preflight-pilot-readonly.ps1 -ApiBaseUrl "http://127.0.0.1" -SkipFrontend
+
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File scripts/preflight-pilot-readonly.ps1 -WithOcrVerify
 #>
 param(
   [string]$ApiBaseUrl = "http://127.0.0.1",
   [string]$FrontendBaseUrl = "",
   [switch]$SkipDocker,
-  [switch]$SkipFrontend
+  [switch]$SkipFrontend,
+  [switch]$WithOcrVerify
 )
 
 $ErrorActionPreference = "Stop"
@@ -108,6 +117,25 @@ if (-not $SkipDocker) {
   }
   catch {
     Write-Host "WARN: docker compose ps unavailable - $($_.Exception.Message)"
+  }
+}
+
+if ($WithOcrVerify) {
+  Write-Step "OCR: php artisan ocr:verify --fail (app container)"
+  try {
+    docker compose exec -T app sh -lc "cd /var/www && php artisan ocr:verify --fail"
+    $ocrExit = $LASTEXITCODE
+    if ($ocrExit -ne 0) {
+      Write-Host "FAIL: ocr:verify (exit $ocrExit)"
+      $failed = $true
+    }
+    else {
+      Write-Host "OK: ocr:verify"
+    }
+  }
+  catch {
+    Write-Host "FAIL: ocr:verify - $($_.Exception.Message)"
+    $failed = $true
   }
 }
 

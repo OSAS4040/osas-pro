@@ -78,6 +78,38 @@ function mentionsPolicyGate(contexts) {
   );
 }
 
+function mentionsFrontendPhaseGates(contexts) {
+  const lower = [...contexts].map((c) => c.toLowerCase());
+  return lower.some((c) => c.includes('frontend-phase-gates'));
+}
+
+function mentionsSupplyChainAudit(contexts) {
+  const lower = [...contexts].map((c) => c.toLowerCase());
+  return lower.some(
+    (c) =>
+      c.includes('dependency-audit') ||
+      (c.includes('security') && c.includes('supply') && c.includes('chain')),
+  );
+}
+
+function printOptionalBranchProtectionHints(contexts) {
+  const lines = [];
+  if (!mentionsFrontendPhaseGates(contexts)) {
+    lines.push(
+      '  - اختياري: «Staging gate / frontend-phase-gates» (Vitest 0→6؛ راجع قيود paths في staging-gate.yml).',
+    );
+  }
+  if (!mentionsSupplyChainAudit(contexts)) {
+    lines.push(
+      '  - اختياري: «Security supply chain (PR) / dependency-audit» (بعد تشغيل security-supply-chain-pr.yml؛ راجع paths).',
+    );
+  }
+  if (lines.length) {
+    console.log('\nاقتراحات إضافية (لا تغيّر رمز الخروج):');
+    for (const l of lines) console.log(l);
+  }
+}
+
 function rulesetCoversMain(ruleset) {
   const inc = ruleset?.conditions?.ref_name?.include;
   if (!Array.isArray(inc)) return false;
@@ -181,6 +213,7 @@ function main() {
     console.log(
       '\nحالة: يبدو أن فحص السياسة مضمن (تحقق بصرياً أن الاسم يطابق واجهة GitHub بالضبط).',
     );
+    printOptionalBranchProtectionHints(contexts);
     process.exit(0);
   }
 
@@ -252,6 +285,7 @@ function main() {
     process.exit(1);
   }
   console.log('\nحالة: يبدو أن فحص السياسة مضمن في rulesets (راجع الاسم في GitHub).');
+  printOptionalBranchProtectionHints(allContexts);
   process.exit(0);
 }
 

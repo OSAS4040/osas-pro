@@ -5,8 +5,13 @@ namespace Tests\Feature\Auth;
 use App\Jobs\SyncUserPushDeviceJob;
 use App\Models\UserPushDevice;
 use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+/**
+ * @see docs/phases/PHASE_00_CLOSURE_REPORT.md — أجهزة الدفع
+ */
+#[Group('phase0')]
 class PushDeviceTest extends TestCase
 {
     public function test_login_dispatches_push_sync_job_when_fcm_token_present(): void

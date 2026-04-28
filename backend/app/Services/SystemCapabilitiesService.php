@@ -69,9 +69,12 @@ final class SystemCapabilitiesService
         ];
 
         if ($rollout === 'planned') {
+            $plannedGate = isset($row['feature_gate']) && is_string($row['feature_gate']) ? $row['feature_gate'] : null;
+
             return $base + [
                 'status'    => 'planned',
                 'path'      => null,
+                'gate'      => $plannedGate,
                 'reason_ar' => 'على خارطة الطريق — غير متاح كمسار تشغيلي كامل بعد.',
                 'reason_en' => 'On the roadmap — not yet available as a full operational path.',
             ];
