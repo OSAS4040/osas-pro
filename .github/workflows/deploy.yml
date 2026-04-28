@@ -24,8 +24,8 @@ env:
   HEALTH_WAIT_SECS: "180"
   DB_USERNAME: saas_user
   DB_DATABASE: saas_db
-  CI_REDIS_PASSWORD: ${{ secrets.CI_REDIS_PASSWORD }}
-  CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+  DB_PASSWORD: saas_password
+  REDIS_PASSWORD: redis_password
 
 jobs:
   deploy:
@@ -39,8 +39,8 @@ jobs:
       - name: Prepare backend .env for CI
         run: |
           set -euo pipefail
-          REDIS_PW="${CI_REDIS_PASSWORD:-redis_password}"
-          DB_PW="${CI_DB_PASSWORD:-saas_password}"
+          REDIS_PW="${REDIS_PASSWORD}"
+          DB_PW="${DB_PASSWORD}"
           cp backend/.env.example backend/.env
           APP_KEY_VAL="base64:$(openssl rand -base64 32 | tr -d '\n')"
           sed -i "s#^APP_KEY=.*#APP_KEY=${APP_KEY_VAL}#" backend/.env
