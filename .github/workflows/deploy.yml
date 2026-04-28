@@ -91,8 +91,29 @@ jobs:
           docker compose logs --tail=100 nginx app 2>/dev/null || true
           exit 1
 
-      - name: Run migrations
-        run: docker compose exec -T app php artisan migrate --force
+      - name: Run migrations (retry transient exec failures)
+        run: |
+          set -euo pipefail
+          max_attempts=5
+          attempt=1
+          while [ "$attempt" -le "$max_attempts" ]; do
+            echo "Migration attempt ${attempt}/${max_attempts}"
+            if docker compose ps --status running --services | grep -qx "app"; then
+              if docker compose exec -T app php artisan migrate --force; then
+                echo "Migrations completed successfully."
+                exit 0
+              fi
+            else
+              echo "App service is not in running state yet."
+            fi
+            echo "Migration attempt ${attempt} failed; collecting app diagnostics before retry..."
+            docker compose ps app || true
+            docker compose logs --tail=80 app 2>/dev/null || true
+            attempt=$((attempt + 1))
+            sleep 5
+          done
+          echo "Migrations failed after ${max_attempts} attempts."
+          exit 1
 
       - name: Wait for dependency health (bounded)
         run: |
