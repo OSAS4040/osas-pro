@@ -85,7 +85,7 @@
               v-for="link in staffPortalLinks"
               :key="'ov-' + link.to"
               :to="link.to"
-              :aria-name="link.label"
+              v-bind="{ ariaName: link.label }"
               :icon="link.icon"
               dense
               class="max-w-[11rem] shrink-0"
@@ -98,9 +98,9 @@
           <p class="font-semibold text-slate-900 dark:text-white">الإيرادات والتحليلات</p>
           <p class="mt-1">
             الأرقام في الملخص مرجعية من كتالوج الباقات وليست إيراداً محصّلاً. للتحليلات التشغيلية:
-            <PlatformOperationsExitLink to="/reports" aria-name="التقارير" variant="inline">التقارير</PlatformOperationsExitLink>
+            <PlatformOperationsExitLink to="/reports" v-bind="{ ariaName: 'التقارير' }" variant="inline">التقارير</PlatformOperationsExitLink>
             و
-            <PlatformOperationsExitLink to="/business-intelligence" aria-name="ذكاء الأعمال" variant="inline">ذكاء الأعمال</PlatformOperationsExitLink>
+            <PlatformOperationsExitLink to="/business-intelligence" v-bind="{ ariaName: 'ذكاء الأعمال' }" variant="inline">ذكاء الأعمال</PlatformOperationsExitLink>
             .
           </p>
           <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
@@ -269,11 +269,11 @@
       </div>
       <p class="mt-4 flex flex-wrap items-baseline gap-x-1 gap-y-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
         <span>للتحليل التفصيلي داخل المستأجر استخدم</span>
-        <PlatformOperationsExitLink to="/reports" aria-name="التقارير" variant="inline">التقارير</PlatformOperationsExitLink>
+        <PlatformOperationsExitLink to="/reports" v-bind="{ ariaName: 'التقارير' }" variant="inline">التقارير</PlatformOperationsExitLink>
         <span>و</span>
-        <PlatformOperationsExitLink to="/business-intelligence" aria-name="ذكاء الأعمال" variant="inline">ذكاء الأعمال</PlatformOperationsExitLink>
+        <PlatformOperationsExitLink to="/business-intelligence" v-bind="{ ariaName: 'ذكاء الأعمال' }" variant="inline">ذكاء الأعمال</PlatformOperationsExitLink>
         <span>(صلاحيات المستأجر). مسار</span>
-        <PlatformOperationsExitLink to="/operations/global-feed" aria-name="تدفق العمليات اليومي" variant="inline">تدفق العمليات</PlatformOperationsExitLink>
+        <PlatformOperationsExitLink to="/operations/global-feed" v-bind="{ ariaName: 'تدفق العمليات اليومي' }" variant="inline">تدفق العمليات</PlatformOperationsExitLink>
         <span>لمتابعة التشغيل اليومي.</span>
       </p>
     </div>

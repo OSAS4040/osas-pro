@@ -165,7 +165,7 @@
           </div>
           <PlatformOperationsExitLink
             to="/customers"
-            aria-name="شاشة العملاء في فريق العمل"
+            v-bind="{ ariaName: 'شاشة العملاء في فريق العمل' }"
             variant="toolbar"
             class="shrink-0"
           >

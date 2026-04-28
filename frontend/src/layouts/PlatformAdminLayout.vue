@@ -281,7 +281,7 @@
           </nav>
           <div class="flex items-center gap-2">
             <PlatformNotificationsBell />
-            <PlatformOperationsExitLink to="/" aria-name="فريق العمل" variant="toolbar" class="lg:hidden">
+            <PlatformOperationsExitLink to="/" v-bind="{ ariaName: 'فريق العمل' }" variant="toolbar" class="lg:hidden">
               فريق العمل
             </PlatformOperationsExitLink>
           </div>

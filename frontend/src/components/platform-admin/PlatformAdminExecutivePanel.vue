@@ -106,7 +106,7 @@
           </RouterLink>
           <PlatformOperationsExitLink
             to="/invoices"
-            aria-name="الفواتير والتحصيل في فريق العمل"
+            v-bind="{ ariaName: 'الفواتير والتحصيل في فريق العمل' }"
             dense
             class="shrink-0 self-center"
           >

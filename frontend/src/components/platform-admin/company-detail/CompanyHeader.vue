@@ -16,8 +16,8 @@
         <RouterLink to="/platform/companies" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800/60">العودة إلى الشركات</RouterLink>
         <RouterLink to="/platform/finance" class="rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/30">المالية</RouterLink>
         <RouterLink to="/platform/customers" class="rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/30">العملاء</RouterLink>
-        <PlatformOperationsExitLink to="/vehicles" aria-name="المركبات في بوابة فريق العمل" dense>المركبات</PlatformOperationsExitLink>
-        <PlatformOperationsExitLink to="/invoices" aria-name="الفواتير في بوابة فريق العمل" dense>الفواتير</PlatformOperationsExitLink>
+        <PlatformOperationsExitLink to="/vehicles" v-bind="{ ariaName: 'المركبات في بوابة فريق العمل' }" dense>المركبات</PlatformOperationsExitLink>
+        <PlatformOperationsExitLink to="/invoices" v-bind="{ ariaName: 'الفواتير في بوابة فريق العمل' }" dense>الفواتير</PlatformOperationsExitLink>
       </div>
     </div>
   </div>

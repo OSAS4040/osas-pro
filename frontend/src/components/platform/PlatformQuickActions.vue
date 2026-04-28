@@ -14,15 +14,15 @@
     </RouterLink>
     <PlatformOperationsExitLink
       to="/admin/registration-profiles"
-      aria-name="طلبات التسجيل"
+      v-bind="{ ariaName: 'طلبات التسجيل' }"
       variant="toolbar"
     >
       طلبات التسجيل
     </PlatformOperationsExitLink>
-    <PlatformOperationsExitLink to="/admin/qa" aria-name="اختبار النظام" variant="toolbar">
+    <PlatformOperationsExitLink to="/admin/qa" v-bind="{ ariaName: 'اختبار النظام' }" variant="toolbar">
       اختبار النظام
     </PlatformOperationsExitLink>
-    <PlatformOperationsExitLink to="/reports" aria-name="التقارير في فريق العمل" variant="toolbar">
+    <PlatformOperationsExitLink to="/reports" v-bind="{ ariaName: 'التقارير في فريق العمل' }" variant="toolbar">
       التقارير (فريق العمل)
     </PlatformOperationsExitLink>
     <button
