@@ -94,7 +94,7 @@
         <KpiCard color="green" :icon="ChartBarIcon" :value="fmtMoney(kpi.totalRevenue)" label="حجم الفواتير (الفترة)" sub="مجموع إجمالي الفواتير بحسب الإصدار — ليس المتحصّل النقدي" />
         <KpiCard color="gray" :icon="DocumentTextIcon" :value="String(kpi.openInvoiceCount)" label="فواتير مفتوحة / قيد التحصيل" sub="عدد" />
         <KpiCard color="orange" :icon="ScaleIcon" :value="fmtMoney(kpi.totalOutstanding)" label="الذمم المدينة" sub="ر.س مستحقة" />
-        <KpiCard color="teal" :icon="CurrencyDollarIcon" :value="fmtMoney(kpi.walletBalanceTotal)" label="أرصدة المحافظ" sub="مجموع الأنواع" />
+        <KpiCard color="purple" :icon="CurrencyDollarIcon" :value="fmtMoney(kpi.walletBalanceTotal)" label="أرصدة المحافظ" sub="مجموع الأنواع" />
         <KpiCard color="blue" :icon="BanknotesIcon" :value="fmtMoney(kpi.totalCollected)" label="المتحصّل (الفترة)" sub="مدفوعات مكتملة ضمن نطاق التقرير" />
         <KpiCard color="indigo" :icon="ChartPieIcon" :value="`${kpi.collectionRate}%`" label="معدل التحصيل" sub="نسبة المتحصّل إلى حجم الفواتير في الفترة" />
         <KpiCard color="purple" :icon="UserPlusIcon" :value="String(kpi.newCustomersInPeriod)" label="عملاء جدد" sub="خلال نفس فترة التقرير" />
@@ -184,7 +184,7 @@
         <QuickBtn :icon="DocumentTextIcon" label="فاتورة جديدة" to="/invoices/create" color="blue" />
         <QuickBtn :icon="ClipboardDocumentIcon" label="أمر عمل" to="/work-orders/new" color="purple" />
         <QuickBtn :icon="ShoppingCartIcon" label="نقطة البيع" to="/pos" color="green" />
-        <QuickBtn :icon="UsersIcon" label="عميل جديد" to="/customers" color="teal" />
+        <QuickBtn :icon="UsersIcon" label="عميل جديد" to="/customers" color="green" />
         <RouterLink
           :to="{ name: 'vehicles', query: { add: '1' } }"
           class="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm hover:shadow active:scale-[0.97] bg-primary-600 hover:bg-primary-700"
@@ -208,8 +208,8 @@
         />
         <QuickBtn :icon="ChartBarIcon" label="التقارير" to="/reports" color="gray" />
         <QuickBtn :icon="ScaleIcon" label="ZATCA" to="/zatca" color="orange" />
-        <QuickBtn v-if="auth.isStaff" :icon="MapPinIcon" label="خريطة الفروع" to="/branches/map" color="cyan" />
-        <QuickBtn v-if="auth.isManager" :icon="BuildingLibraryIcon" label="الفروع" to="/branches" color="teal" />
+        <QuickBtn v-if="auth.isStaff" :icon="MapPinIcon" label="خريطة الفروع" to="/branches/map" color="indigo" />
+        <QuickBtn v-if="auth.isManager" :icon="BuildingLibraryIcon" label="الفروع" to="/branches" color="green" />
       </div>
     </div>
   </div>
@@ -404,7 +404,7 @@ const colorMap: Record<string, Record<string, string>> = {
   purple: { bg: 'bg-primary-50 dark:bg-primary-950/25', icon: 'text-primary-600 dark:text-primary-400', val: 'text-primary-700 dark:text-primary-300' },
   gray:   { bg: 'bg-gray-50',   icon: 'text-gray-500',   val: 'text-gray-700' },
   orange: { bg: 'bg-orange-50', icon: 'text-orange-500', val: 'text-orange-700' },
-  teal:   { bg: 'bg-teal-50',   icon: 'text-teal-600',   val: 'text-teal-700' },
+  teal:   { bg: 'bg-primary-50 dark:bg-primary-950/25', icon: 'text-primary-600 dark:text-primary-400', val: 'text-primary-700 dark:text-primary-300' },
   indigo: { bg: 'bg-indigo-50', icon: 'text-indigo-600', val: 'text-indigo-700' },
 }
 
@@ -439,10 +439,11 @@ const QuickBtn = defineComponent({
   setup(p) {
     const btnColor: Record<string, string> = {
       blue:   'bg-blue-600 hover:bg-blue-700',   purple: 'bg-primary-600 hover:bg-primary-700',
-      green:  'bg-primary-600 hover:bg-primary-700', teal:   'bg-teal-600 hover:bg-teal-700',
+      green:  'bg-primary-600 hover:bg-primary-700',
+      teal:   'bg-primary-600 hover:bg-primary-700',
       gray:   'bg-gray-600 hover:bg-gray-700',   orange: 'bg-orange-500 hover:bg-orange-600',
       indigo: 'bg-indigo-600 hover:bg-indigo-700',
-      cyan:   'bg-cyan-600 hover:bg-cyan-700',
+      cyan:   'bg-primary-600 hover:bg-primary-700',
     }
     return () => h(RouterLink, {
       to: p.to!,

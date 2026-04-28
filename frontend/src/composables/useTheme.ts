@@ -16,6 +16,13 @@ const LEGACY_PRIMARY_TO_BRAND: Record<string, string> = {
   '#0f766e': '#6d28d9',
   '#115e59': '#5b21b6',
   '#134e4a': '#5b21b6',
+  '#10b981': '#8b5cf6',
+  '#059669': '#7c3aed',
+  '#047857': '#6d28d9',
+  '#065f46': '#5b21b6',
+  '#34d399': '#a78bfa',
+  '#2dd4bf': '#8b5cf6',
+  '#5eead4': '#a78bfa',
 }
 
 function normHex(hex: string): string {
@@ -24,8 +31,9 @@ function normHex(hex: string): string {
 
 export function mapLegacyBrandPrimary(hex: string | undefined | null): string {
   if (!hex || typeof hex !== 'string') return '#7c3aed'
-  const key = normHex(hex)
-  return LEGACY_PRIMARY_TO_BRAND[key] ?? hex.trim()
+  const raw = hex.trim()
+  const key = normHex(raw.startsWith('#') ? raw : `#${raw}`)
+  return LEGACY_PRIMARY_TO_BRAND[key] ?? key
 }
 
 function migrateStoredThemeBrandOnce(): void {
@@ -89,8 +97,9 @@ export function normalizeThemePresetName(name: string): string {
 }
 
 function applyTheme(primaryHex: string) {
+  const normalized = mapLegacyBrandPrimary(primaryHex)
   const root = document.documentElement
-  root.style.setProperty('--color-primary', primaryHex)
+  root.style.setProperty('--color-primary', normalized)
 
   // Generate scale from base color
   const presetColors: Record<string, string[]> = {
@@ -102,7 +111,7 @@ function applyTheme(primaryHex: string) {
     '#475569': ['#f8fafc','#f1f5f9','#e2e8f0','#cbd5e1','#94a3b8','#64748b','#475569','#334155','#1e293b','#0f172a'],
   }
 
-  const scale = presetColors[primaryHex] ?? presetColors['#7c3aed']
+  const scale = presetColors[normalized] ?? presetColors['#7c3aed']
   const shades = [50,100,200,300,400,500,600,700,800,900]
 
   shades.forEach((shade, i) => {
@@ -115,7 +124,7 @@ function applyTheme(primaryHex: string) {
   if (!el) { el = document.createElement('style'); el.id = styleId; document.head.appendChild(el) }
 
   el.textContent = `
-    :root { --primary: ${primaryHex}; }
+    :root { --primary: ${normalized}; }
     .text-primary-600 { color: ${scale[6]} !important; }
     .text-primary-700 { color: ${scale[7]} !important; }
     .text-primary-400 { color: ${scale[4]} !important; }

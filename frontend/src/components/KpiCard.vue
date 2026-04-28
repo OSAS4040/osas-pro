@@ -23,7 +23,7 @@ const colorMap: Record<string, { bg: string; text: string }> = {
   green:  { bg: 'border-l-4 border-primary-500',  text: 'text-primary-700 dark:text-primary-400' },
   orange: { bg: 'border-l-4 border-orange-500', text: 'text-orange-700 dark:text-orange-400' },
   purple: { bg: 'border-l-4 border-primary-500', text: 'text-primary-700 dark:text-primary-400' },
-  teal:   { bg: 'border-l-4 border-teal-500',   text: 'text-teal-700 dark:text-teal-400' },
+  teal:   { bg: 'border-l-4 border-primary-500', text: 'text-primary-700 dark:text-primary-400' },
   indigo: { bg: 'border-l-4 border-indigo-500', text: 'text-indigo-700 dark:text-indigo-400' },
   rose:   { bg: 'border-l-4 border-rose-500',   text: 'text-rose-700 dark:text-rose-400' },
   red:    { bg: 'border-l-4 border-red-500',     text: 'text-red-700 dark:text-red-400' },
