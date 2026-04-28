@@ -262,15 +262,22 @@ services:
     image: postgres:16-alpine
     container_name: ${DOCKER_STACK_PREFIX:-saas}_postgres
     restart: unless-stopped
-    command: >
-      postgres
-      -c shared_preload_libraries=pg_stat_statements
-      -c pg_stat_statements.track=all
-      -c pg_stat_statements.max=10000
-      -c pg_stat_statements.save=on
-      -c log_min_duration_statement=500
-      -c log_line_prefix=%m [%p] %q%u@%d
-      -c idle_in_transaction_session_timeout=10s
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
+      - -c
+      - pg_stat_statements.max=10000
+      - -c
+      - pg_stat_statements.save=on
+      - -c
+      - log_min_duration_statement=500
+      - -c
+      - log_line_prefix=%m [%p] %q%u@%d
+      - -c
+      - idle_in_transaction_session_timeout=10s
     ports:
       - "5432:5432"
     environment:
