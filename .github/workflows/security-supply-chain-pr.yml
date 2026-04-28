@@ -1,0 +1,56 @@
+# فحص توريد التبعيات (Composer + npm audit) على PRs نحو main
+# يُشغَّل عند تغيير ملفات التبعيات أو هذا الملف، أو يدوياً عبر workflow_dispatch.
+# انظر: docs/GitHub_Branch_Protection_Setup.md — يمكن جعل الفحص required بعد أول تشغيل ناجح.
+
+name: Security supply chain (PR)
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/composer.json'
+      - 'backend/composer.lock'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/security-supply-chain-pr.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: supply-chain-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer
+
+      - name: Composer install + audit (backend)
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          composer install --no-dev --no-interaction --prefer-dist
+          composer audit --no-interaction
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm ci + audit (frontend)
+        working-directory: frontend
+        run: |
+          set -euo pipefail
+          npm ci
+          npm audit --audit-level=moderate

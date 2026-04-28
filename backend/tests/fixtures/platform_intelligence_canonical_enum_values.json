@@ -1,0 +1,42 @@
+{
+  "$schema_comment": "Single canonical string union for PHP + TS Platform Intelligence enums. Change only here + regenerate consumers; parity tests enforce match.",
+  "severity": ["info", "low", "medium", "high", "critical"],
+  "incident_status": [
+    "open",
+    "acknowledged",
+    "under_review",
+    "escalated",
+    "monitoring",
+    "resolved",
+    "closed"
+  ],
+  "ownership_state": ["unassigned", "assigned", "reassigned"],
+  "escalation_state": ["none", "pending", "escalated", "contained"],
+  "decision_type": [
+    "observation",
+    "escalation",
+    "false_positive",
+    "monitor",
+    "closure",
+    "action_approved"
+  ],
+  "signal_source_type": [
+    "finance",
+    "operations",
+    "adoption",
+    "compliance",
+    "integrations",
+    "governance",
+    "intelligence",
+    "system"
+  ],
+  "signal_type": [
+    "metric_threshold",
+    "trend",
+    "anomaly",
+    "rule",
+    "manual",
+    "correlation",
+    "composite"
+  ]
+}

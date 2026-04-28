@@ -1,0 +1,29 @@
+#!/bin/sh
+# يشغّل فحص سياسة قوالب env عند تعديل أي من المسارات المرتبطة في الـ commit.
+# التفعيل (مرة واحدة من جذر المستودع): make install-git-hooks
+# المرجع: docs/Execution_Order_Asas_Pro.md — المرحلة 5
+# القائمة الكاملة للملفات: scripts/check-policy-env-example.mjs
+
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+need=0
+for f in $staged; do
+  case "$f" in
+    .env.example) need=1 ;;
+    backend/.env*|backend/env.example) need=1 ;;
+    frontend/env.example|frontend/env.staging.example) need=1 ;;
+    load-testing/env.example) need=1 ;;
+    deployment/official_release_package/.env.example) need=1 ;;
+    deployment/official_release_package/backend/.env*|deployment/official_release_package/backend/env.example) need=1 ;;
+    deployment/official_release_package/frontend/env.example|deployment/official_release_package/frontend/env.staging.example) need=1 ;;
+    release/osas-pro-production-package/deployment/.env.example) need=1 ;;
+  esac
+done
+
+if [ "$need" -eq 1 ]; then
+  node scripts/check-policy-env-example.mjs
+fi
+
+exit 0
