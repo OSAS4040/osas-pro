@@ -66,6 +66,15 @@ jobs:
       - name: Docker version
         run: docker --version && docker compose version
 
+      - name: Install backend dependencies for mounted source
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/app" \
+            -w /app \
+            composer:2.7 \
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+
       - name: Build containers
         run: docker compose build
 
@@ -96,8 +105,10 @@ jobs:
           set -euo pipefail
           docker compose exec -T app sh -lc '
             if [ ! -f /var/www/vendor/autoload.php ]; then
-              echo "vendor/autoload.php missing; running composer install..."
-              composer install --no-interaction --prefer-dist --optimize-autoloader
+              echo "vendor/autoload.php is missing after pre-install; failing fast for diagnostics."
+              ls -la /var/www || true
+              ls -la /var/www/vendor || true
+              exit 1
             else
               echo "vendor/autoload.php exists; skipping composer install."
             fi
