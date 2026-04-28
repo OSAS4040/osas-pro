@@ -64,3 +64,15 @@ artifacts/osas-pro-readiness/
 /test-results/
 *.zip
 
+# ── Local worktrees & Git metadata (not the app) ───────────
+.worktrees/
+
+# ── Load testing: keep k6 scripts; never commit secrets or run output ──
+load-testing/reports/
+load-testing/k6/tmp-login.json
+load-testing/k6/*.env
+
+# ── Ad-hoc host monitor dumps (repo root only) ─────────────
+/pg-monitor*.txt
+/fpm-monitor*.txt
+
