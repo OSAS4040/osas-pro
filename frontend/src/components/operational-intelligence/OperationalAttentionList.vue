@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import type { OperationalAttentionItem } from '@/types/operationalIntelligence'
 
-const props = defineProps<{
+defineProps<{
   title: string
   items: OperationalAttentionItem[]
   labelFor: (it: OperationalAttentionItem) => string

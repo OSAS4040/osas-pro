@@ -181,24 +181,34 @@
             <RouterLink
               class="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               :to="{ path: '/work-orders', query: { customer_id: String(customerId) } }"
-            >{{ l('أوامر العمل', 'Work orders') }}</RouterLink>
+            >
+              {{ l('أوامر العمل', 'Work orders') }}
+            </RouterLink>
             <RouterLink
               v-if="financialIncluded"
               class="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               :to="{ path: '/invoices', query: { customer_id: String(customerId) } }"
-            >{{ l('الفواتير', 'Invoices') }}</RouterLink>
+            >
+              {{ l('الفواتير', 'Invoices') }}
+            </RouterLink>
             <RouterLink
               class="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               :to="{ path: '/vehicles', query: { customer_id: String(customerId) } }"
-            >{{ l('المركبات', 'Vehicles') }}</RouterLink>
+            >
+              {{ l('المركبات', 'Vehicles') }}
+            </RouterLink>
             <RouterLink
               class="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               :to="{ path: '/bookings', query: { customer_id: String(customerId) } }"
-            >{{ l('المواعيد', 'Bookings') }}</RouterLink>
+            >
+              {{ l('المواعيد', 'Bookings') }}
+            </RouterLink>
             <RouterLink
               to="/support"
               class="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-            >{{ l('الدعم', 'Support') }}</RouterLink>
+            >
+              {{ l('الدعم', 'Support') }}
+            </RouterLink>
           </div>
         </section>
       </template>
@@ -259,7 +269,6 @@ const {
   loading: pulseLoading,
   error: pulseError,
   current,
-  previous,
   financialIncluded,
   prevSummary,
   reload,

@@ -44,7 +44,7 @@ export function pathToStaffNavKey(href: string): string {
 
 export function pathToCustomerNavKey(href: string): string {
   const path = (href.split('?', 2)[0] ?? '').trim().replace(/^\/customer\/?/i, '')
-  let slug =
+  const slug =
     path === '' || path === '/'
       ? 'dashboard'
       : path

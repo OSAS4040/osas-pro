@@ -268,25 +268,6 @@ function formatCurrency(v: number): string {
   return new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(v || 0)
 }
 
-function formatDate(d: string | null | undefined): string {
-  if (!d) return '—'
-  const x = new Date(d)
-  return Number.isNaN(x.getTime()) ? '—' : x.toLocaleDateString('ar-SA', { dateStyle: 'medium' })
-}
-
-function subscriptionStatusLabelAr(status: string | null | undefined): string {
-  const s = String(status ?? '')
-    .trim()
-    .toLowerCase()
-  if (s === '') return 'لا يوجد اشتراك مسجّل'
-  const map: Record<string, string> = {
-    active: 'اشتراك نشط',
-    grace_period: 'فترة سماح',
-    suspended: 'اشتراك موقوف',
-  }
-  return map[s] ?? 'حالة اشتراك غير معروفة لدى المنصة'
-}
-
 function companyOperationalHintAr(c: { company_status?: string; is_active?: boolean }): string {
   if (c.company_status === 'suspended') return 'حالة الشركة: موقوفة تشغيلياً'
   if (c.is_active === false) return 'حالة الشركة: غير مفعّلة للدخول'

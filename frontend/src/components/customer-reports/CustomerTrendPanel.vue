@@ -8,13 +8,17 @@
           class="px-2.5 py-1 rounded-md transition-colors"
           :class="tab === 'ops' ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-300'"
           @click="tab = 'ops'"
-        >{{ tabOps }}</button>
+        >
+          {{ tabOps }}
+        </button>
         <button
           type="button"
           class="px-2.5 py-1 rounded-md transition-colors"
           :class="tab === 'fin' ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-300'"
           @click="tab = 'fin'"
-        >{{ tabFin }}</button>
+        >
+          {{ tabFin }}
+        </button>
       </div>
     </div>
     <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">{{ caption }}</p>

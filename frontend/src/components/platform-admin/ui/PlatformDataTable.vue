@@ -33,7 +33,7 @@ interface ColumnDef {
   label: string
 }
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     columns: ColumnDef[]
     rows: Record<string, unknown>[]

@@ -33,6 +33,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/LoginView.vue'),
     meta: { guest: true },
   },
+  { path: '/staff/login', redirect: '/login' },
   {
     path: '/platform/login',
     name: 'platform-login',
@@ -40,9 +41,19 @@ const routes: RouteRecordRaw[] = [
     meta: { guest: true, platformAdminLogin: true },
   },
   { path: '/admin/login', redirect: '/platform/login' },
-  // Redirect الروابط القديمة للصفحة الموحّدة
-  { path: '/fleet/login',    redirect: '/login' },
-  { path: '/customer/login', redirect: '/login' },
+  // تسجيل دخول مخصص لكل بوابة (فصل تدريجي دون كسر المصادقة الحالية)
+  {
+    path: '/fleet/login',
+    name: 'fleet-login',
+    component: () => import('@/views/auth/FleetLoginView.vue'),
+    meta: { guest: true, portalLogin: 'fleet' },
+  },
+  {
+    path: '/customer/login',
+    name: 'customer-login',
+    component: () => import('@/views/auth/CustomerLoginView.vue'),
+    meta: { guest: true, portalLogin: 'customer' },
+  },
   {
     path: '/forgot-password',
     name: 'forgot-password',
@@ -843,6 +854,16 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    const targetPortal = String(to.meta.portal ?? '')
+    if (targetPortal === 'fleet') {
+      return { name: 'fleet-login', query: { redirect: to.fullPath } }
+    }
+    if (targetPortal === 'customer') {
+      return { name: 'customer-login', query: { redirect: to.fullPath } }
+    }
+    if (targetPortal === 'admin') {
+      return { name: 'platform-login', query: { redirect: to.fullPath } }
+    }
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
@@ -998,12 +1019,12 @@ router.beforeEach(async (to) => {
 
   // بوابات اختيارية معطّلة في البناء — لا تُعرَض ولا تُحمَّل لأدوارها
   if (auth.isAuthenticated && auth.isFleet && !enabledPortals.fleet) {
-    if (to.name === 'login') return true
-    return { name: 'login', query: { notice: 'portal_disabled', portal: 'fleet' } }
+    if (to.name === 'fleet-login') return true
+    return { name: 'fleet-login', query: { notice: 'portal_disabled', portal: 'fleet' } }
   }
   if (auth.isAuthenticated && auth.isCustomer && !enabledPortals.customer) {
-    if (to.name === 'login') return true
-    return { name: 'login', query: { notice: 'portal_disabled', portal: 'customer' } }
+    if (to.name === 'customer-login') return true
+    return { name: 'customer-login', query: { notice: 'portal_disabled', portal: 'customer' } }
   }
   if (auth.isAuthenticated && auth.isStaff) {
     if (to.path.startsWith('/fleet-portal') && !enabledPortals.fleet) {

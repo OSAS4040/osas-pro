@@ -85,7 +85,7 @@
               v-for="link in staffPortalLinks"
               :key="'ov-' + link.to"
               :to="link.to"
-              :ariaName="link.label"
+              :aria-name="link.label"
               :icon="link.icon"
               dense
               class="max-w-[11rem] shrink-0"
@@ -98,9 +98,9 @@
           <p class="font-semibold text-slate-900 dark:text-white">الإيرادات والتحليلات</p>
           <p class="mt-1">
             الأرقام في الملخص مرجعية من كتالوج الباقات وليست إيراداً محصّلاً. للتحليلات التشغيلية:
-            <PlatformOperationsExitLink to="/reports" ariaName="التقارير" variant="inline">التقارير</PlatformOperationsExitLink>
+            <PlatformOperationsExitLink to="/reports" aria-name="التقارير" variant="inline">التقارير</PlatformOperationsExitLink>
             و
-            <PlatformOperationsExitLink to="/business-intelligence" ariaName="ذكاء الأعمال" variant="inline">ذكاء الأعمال</PlatformOperationsExitLink>
+            <PlatformOperationsExitLink to="/business-intelligence" aria-name="ذكاء الأعمال" variant="inline">ذكاء الأعمال</PlatformOperationsExitLink>
             .
           </p>
           <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
@@ -129,111 +129,111 @@
         جاري تحميل الرسوم والتحليلات…
       </div>
       <div v-else class="space-y-5">
-      <div class="grid gap-5 lg:grid-cols-12">
-        <div
-          class="rounded-2xl border border-slate-200/95 bg-white p-4 shadow-sm ring-1 ring-slate-100/80 dark:border-slate-800 dark:bg-slate-900 dark:ring-slate-800/60 lg:col-span-8"
-        >
-          <div class="mb-3 flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
-            <div>
-              <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                ملخص أسبوعي — أوامر العمل والشركات الجديدة
-              </h3>
-              <p class="mt-0.5 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-                من تقرير نبض المنصة؛ محوران لأن حجم أوامر العمل يختلف عن عدد الشركات.
-              </p>
+        <div class="grid gap-5 lg:grid-cols-12">
+          <div
+            class="rounded-2xl border border-slate-200/95 bg-white p-4 shadow-sm ring-1 ring-slate-100/80 dark:border-slate-800 dark:bg-slate-900 dark:ring-slate-800/60 lg:col-span-8"
+          >
+            <div class="mb-3 flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                  ملخص أسبوعي — أوامر العمل والشركات الجديدة
+                </h3>
+                <p class="mt-0.5 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                  من تقرير نبض المنصة؛ محوران لأن حجم أوامر العمل يختلف عن عدد الشركات.
+                </p>
+              </div>
+              <span
+                v-if="pulseReportPeriod"
+                class="shrink-0 rounded-lg bg-slate-50 px-2 py-1 text-[10px] font-mono text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:ring-slate-600"
+                dir="ltr"
+              >{{ pulseReportPeriod }}</span>
             </div>
-            <span
-              v-if="pulseReportPeriod"
-              class="shrink-0 rounded-lg bg-slate-50 px-2 py-1 text-[10px] font-mono text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:ring-slate-600"
-              dir="ltr"
-            >{{ pulseReportPeriod }}</span>
-          </div>
-          <div v-if="!hasWeeklyTrend" class="flex min-h-[220px] items-center justify-center px-4 text-center text-sm text-slate-500 dark:text-slate-400">
-            لا توجد دفعات زمنية كافية في النطاق الحالي، أو تعذّر تحميل نبض المنصة. سيظهر المخطط تلقائياً عند توفر بيانات أسبوعية.
-          </div>
-          <div v-else class="relative h-[260px] w-full">
-            <Line
-              :key="'plt-trend-' + chartThemeKey"
-              :data="platformTrendLineData"
-              :options="platformTrendLineOptions"
-            />
-          </div>
-        </div>
-
-        <div
-          class="rounded-2xl border border-slate-200/95 bg-white p-4 shadow-sm ring-1 ring-slate-100/80 dark:border-slate-800 dark:bg-slate-900 dark:ring-slate-800/60 lg:col-span-4"
-        >
-          <h3 class="mb-1 border-b border-slate-100 pb-3 text-sm font-bold text-slate-900 dark:border-slate-800 dark:text-white">
-            توزيع الباقات (المحمّل)
-          </h3>
-          <p v-if="planDistribution.length === 0" class="mt-4 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-            لا توجد شركات في الصفحة الحالية لرسم التوزيع.
-          </p>
-          <template v-else>
-            <div class="relative mx-auto mt-2 h-[200px] w-full max-w-[280px]">
-              <Doughnut
-                :key="'plt-plan-' + chartThemeKey"
-                :data="planDoughnutData"
-                :options="planDoughnutOptions"
+            <div v-if="!hasWeeklyTrend" class="flex min-h-[220px] items-center justify-center px-4 text-center text-sm text-slate-500 dark:text-slate-400">
+              لا توجد دفعات زمنية كافية في النطاق الحالي، أو تعذّر تحميل نبض المنصة. سيظهر المخطط تلقائياً عند توفر بيانات أسبوعية.
+            </div>
+            <div v-else class="relative h-[260px] w-full">
+              <Line
+                :key="'plt-trend-' + chartThemeKey"
+                :data="platformTrendLineData"
+                :options="platformTrendLineOptions"
               />
             </div>
-            <PlatformInsightCard
-              class="mt-3"
-              eyebrow="قراءة التوزيع"
-              title="توزيع الباقات في عيّنة الصفحة الحالية"
-              :badge="`${planDistribution.length.toLocaleString('ar-SA')} باقة`"
-              tone="default"
-              :why="planDistributionSummary"
-              meaning="الرسم يعطي الصورة السريعة؛ التفاصيل التعاقدية تُراجع من جدول المشتركين أو مالية المنصة."
-              recommendation="استخدم التصفية حسب الباقة عند ضبط التسعير أو متابعة الترقيات."
-              cta-label="عرض المشتركين مع التصفية"
-              cta-to="/platform/companies"
-            />
-          </template>
-        </div>
-      </div>
+          </div>
 
-      <div class="grid gap-5 lg:grid-cols-2">
-        <div
-          class="rounded-2xl border border-slate-200/95 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-          :class="{ 'lg:col-span-2': !hasSubscriptionMixChart }"
-        >
-          <h3 class="mb-2 text-sm font-bold text-slate-900 dark:text-white">
-            مكوّن الشركات (إجمالي المنصة)
-          </h3>
-          <p class="mb-3 text-[11px] text-slate-500 dark:text-slate-400">
-            تشغيل طبيعي مقابل موقوفة مقابل الحالات الأخرى — من ملخص النبض.
-          </p>
-          <div v-if="!hasCompanyMixChart" class="flex min-h-[140px] items-center text-sm text-slate-500 dark:text-slate-400">
-            غير متاح بدون بيانات ملخص المنصة.
-          </div>
-          <div v-else class="relative h-[160px] w-full">
-            <Bar
-              :key="'plt-co-' + chartThemeKey"
-              :data="companyMixBarData"
-              :options="companyMixBarOptions"
-            />
-          </div>
-        </div>
-        <div
-          v-if="hasSubscriptionMixChart"
-          class="rounded-2xl border border-slate-200/95 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-        >
-          <h3 class="mb-2 text-sm font-bold text-slate-900 dark:text-white">
-            الاشتراكات حسب الحالة
-          </h3>
-          <p class="mb-3 text-[11px] text-slate-500 dark:text-slate-400">
-            عدد الاشتراكات لكل حالة مسجّلة في قاعدة المنصة.
-          </p>
-          <div class="relative h-[160px] w-full">
-            <Bar
-              :key="'plt-sub-' + chartThemeKey"
-              :data="subscriptionMixBarData"
-              :options="subscriptionMixBarOptions"
-            />
+          <div
+            class="rounded-2xl border border-slate-200/95 bg-white p-4 shadow-sm ring-1 ring-slate-100/80 dark:border-slate-800 dark:bg-slate-900 dark:ring-slate-800/60 lg:col-span-4"
+          >
+            <h3 class="mb-1 border-b border-slate-100 pb-3 text-sm font-bold text-slate-900 dark:border-slate-800 dark:text-white">
+              توزيع الباقات (المحمّل)
+            </h3>
+            <p v-if="planDistribution.length === 0" class="mt-4 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+              لا توجد شركات في الصفحة الحالية لرسم التوزيع.
+            </p>
+            <template v-else>
+              <div class="relative mx-auto mt-2 h-[200px] w-full max-w-[280px]">
+                <Doughnut
+                  :key="'plt-plan-' + chartThemeKey"
+                  :data="planDoughnutData"
+                  :options="planDoughnutOptions"
+                />
+              </div>
+              <PlatformInsightCard
+                class="mt-3"
+                eyebrow="قراءة التوزيع"
+                title="توزيع الباقات في عيّنة الصفحة الحالية"
+                :badge="`${planDistribution.length.toLocaleString('ar-SA')} باقة`"
+                tone="default"
+                :why="planDistributionSummary"
+                meaning="الرسم يعطي الصورة السريعة؛ التفاصيل التعاقدية تُراجع من جدول المشتركين أو مالية المنصة."
+                recommendation="استخدم التصفية حسب الباقة عند ضبط التسعير أو متابعة الترقيات."
+                cta-label="عرض المشتركين مع التصفية"
+                cta-to="/platform/companies"
+              />
+            </template>
           </div>
         </div>
-      </div>
+
+        <div class="grid gap-5 lg:grid-cols-2">
+          <div
+            class="rounded-2xl border border-slate-200/95 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            :class="{ 'lg:col-span-2': !hasSubscriptionMixChart }"
+          >
+            <h3 class="mb-2 text-sm font-bold text-slate-900 dark:text-white">
+              مكوّن الشركات (إجمالي المنصة)
+            </h3>
+            <p class="mb-3 text-[11px] text-slate-500 dark:text-slate-400">
+              تشغيل طبيعي مقابل موقوفة مقابل الحالات الأخرى — من ملخص النبض.
+            </p>
+            <div v-if="!hasCompanyMixChart" class="flex min-h-[140px] items-center text-sm text-slate-500 dark:text-slate-400">
+              غير متاح بدون بيانات ملخص المنصة.
+            </div>
+            <div v-else class="relative h-[160px] w-full">
+              <Bar
+                :key="'plt-co-' + chartThemeKey"
+                :data="companyMixBarData"
+                :options="companyMixBarOptions"
+              />
+            </div>
+          </div>
+          <div
+            v-if="hasSubscriptionMixChart"
+            class="rounded-2xl border border-slate-200/95 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          >
+            <h3 class="mb-2 text-sm font-bold text-slate-900 dark:text-white">
+              الاشتراكات حسب الحالة
+            </h3>
+            <p class="mb-3 text-[11px] text-slate-500 dark:text-slate-400">
+              عدد الاشتراكات لكل حالة مسجّلة في قاعدة المنصة.
+            </p>
+            <div class="relative h-[160px] w-full">
+              <Bar
+                :key="'plt-sub-' + chartThemeKey"
+                :data="subscriptionMixBarData"
+                :options="subscriptionMixBarOptions"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -269,11 +269,11 @@
       </div>
       <p class="mt-4 flex flex-wrap items-baseline gap-x-1 gap-y-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
         <span>للتحليل التفصيلي داخل المستأجر استخدم</span>
-        <PlatformOperationsExitLink to="/reports" ariaName="التقارير" variant="inline">التقارير</PlatformOperationsExitLink>
+        <PlatformOperationsExitLink to="/reports" aria-name="التقارير" variant="inline">التقارير</PlatformOperationsExitLink>
         <span>و</span>
-        <PlatformOperationsExitLink to="/business-intelligence" ariaName="ذكاء الأعمال" variant="inline">ذكاء الأعمال</PlatformOperationsExitLink>
+        <PlatformOperationsExitLink to="/business-intelligence" aria-name="ذكاء الأعمال" variant="inline">ذكاء الأعمال</PlatformOperationsExitLink>
         <span>(صلاحيات المستأجر). مسار</span>
-        <PlatformOperationsExitLink to="/operations/global-feed" ariaName="تدفق العمليات اليومي" variant="inline">تدفق العمليات</PlatformOperationsExitLink>
+        <PlatformOperationsExitLink to="/operations/global-feed" aria-name="تدفق العمليات اليومي" variant="inline">تدفق العمليات</PlatformOperationsExitLink>
         <span>لمتابعة التشغيل اليومي.</span>
       </p>
     </div>

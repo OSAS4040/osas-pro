@@ -113,7 +113,7 @@
         </div>
       </div>
 
-      <div :class="filtersOpen ? 'block' : 'hidden lg:block'" id="operations-feed-filters">
+      <div id="operations-feed-filters" :class="filtersOpen ? 'block' : 'hidden lg:block'">
         <OperationsFeedFilterSidebar
           :from="from"
           :to="to"

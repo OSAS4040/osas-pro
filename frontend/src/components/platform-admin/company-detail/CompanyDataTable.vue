@@ -34,7 +34,7 @@ interface LinkCell {
   external?: boolean
 }
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     columns: ColumnDef[]
     rows: Record<string, unknown>[]

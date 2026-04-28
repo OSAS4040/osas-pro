@@ -32,7 +32,7 @@
         <label class="block text-[11px] text-slate-500 mb-1">{{ typesLabel }}</label>
         <div class="flex flex-wrap gap-2">
           <label v-for="opt in typeOptions" :key="opt" class="inline-flex items-center gap-1 text-xs">
-            <input type="checkbox" :value="opt" v-model="localTypes" class="rounded border-slate-300" />
+            <input v-model="localTypes" type="checkbox" :value="opt" class="rounded border-slate-300" />
             <span>{{ opt }}</span>
           </label>
         </div>

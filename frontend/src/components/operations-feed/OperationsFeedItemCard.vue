@@ -41,7 +41,9 @@
           v-if="item.entity_route"
           :to="item.entity_route"
           class="inline-block mt-2 text-xs font-medium text-primary-600 hover:underline"
-        >{{ detailLabel }}</RouterLink>
+        >
+          {{ detailLabel }}
+        </RouterLink>
       </div>
     </div>
   </article>

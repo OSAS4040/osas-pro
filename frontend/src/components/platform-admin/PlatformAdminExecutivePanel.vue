@@ -95,14 +95,18 @@
           <RouterLink
             to="/platform/finance"
             class="inline-flex items-center rounded-lg bg-emerald-700 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500"
-          >عرض المالية</RouterLink>
+          >
+            عرض المالية
+          </RouterLink>
           <RouterLink
             to="/platform/plans"
             class="inline-flex items-center rounded-lg border border-emerald-600/50 bg-white px-3 py-1.5 text-[11px] font-bold text-emerald-900 hover:bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-100 dark:hover:bg-emerald-900/30"
-          >الاشتراكات والباقات</RouterLink>
+          >
+            الاشتراكات والباقات
+          </RouterLink>
           <PlatformOperationsExitLink
             to="/invoices"
-            ariaName="الفواتير والتحصيل في فريق العمل"
+            aria-name="الفواتير والتحصيل في فريق العمل"
             dense
             class="shrink-0 self-center"
           >

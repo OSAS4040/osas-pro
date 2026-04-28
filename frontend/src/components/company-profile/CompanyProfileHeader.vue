@@ -14,12 +14,16 @@
           v-if="showReports"
           to="/reports"
           class="btn text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
-        >{{ reportsLabel }}</RouterLink>
+        >
+          {{ reportsLabel }}
+        </RouterLink>
         <RouterLink
           v-if="showOps"
           to="/operations/global-feed"
           class="btn text-sm border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
-        >{{ opsLabel }}</RouterLink>
+        >
+          {{ opsLabel }}
+        </RouterLink>
         <RouterLink v-if="showEdit" to="/settings" class="btn btn-primary text-sm">{{ editLabel }}</RouterLink>
       </div>
     </div>

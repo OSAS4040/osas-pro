@@ -180,12 +180,16 @@
                       v-if="companyMap?.visibility.branch_directory && companyMap?.visibility.branch_settings"
                       :to="`/branches`"
                       class="text-primary-600 hover:underline truncate"
-                    >{{ b.branch_name }}</RouterLink>
+                    >
+                      {{ b.branch_name }}
+                    </RouterLink>
                     <RouterLink
                       v-else-if="companyMap?.visibility.branch_directory"
                       to="/branches/map"
                       class="text-primary-600 hover:underline truncate"
-                    >{{ b.branch_name }}</RouterLink>
+                    >
+                      {{ b.branch_name }}
+                    </RouterLink>
                     <span v-else class="truncate">{{ b.branch_name }}</span>
                     <span class="text-slate-500 tabular-nums shrink-0">{{ b.work_orders_in_period }}</span>
                   </li>

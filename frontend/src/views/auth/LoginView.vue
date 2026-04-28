@@ -36,9 +36,9 @@
           <span class="block [&_code]:text-[10px]" v-html="lt('devBuild')" />
         </div>
         <div class="mb-5 text-center">
-          <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">{{ lt('brand') }}</h1>
-          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ lt('tagline') }}</p>
-          <p class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+          <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">{{ portalHeroTitle }}</h1>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ portalHeroTagline }}</p>
+          <p v-if="isUnifiedLoginRoute" class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
             {{ lt('unifiedIntro') }}
             <RouterLink
               to="/register"
@@ -54,6 +54,9 @@
               {{ lt('linkPhoneOtp') }}
             </RouterLink>
           </p>
+          <p v-else class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+            {{ portalHeaderHint }}
+          </p>
           <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px]">
             <RouterLink
               to="/landing"
@@ -63,10 +66,33 @@
             </RouterLink>
             <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
             <RouterLink
-              to="/platform/login"
+              :to="isUnifiedLoginRoute ? '/platform/login' : '/login'"
               class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 underline underline-offset-2"
             >
-              {{ lt('linkPlatformAdmin') }}
+              {{ isUnifiedLoginRoute ? lt('linkPlatformAdmin') : 'الدخول الموحد' }}
+            </RouterLink>
+          </div>
+          <div
+            v-if="isUnifiedLoginRoute"
+            class="mt-3 grid w-full grid-cols-1 gap-2 sm:grid-cols-3"
+          >
+            <RouterLink
+              to="/platform/login"
+              class="rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-center text-[11px] font-semibold text-slate-700 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+            >
+              إدارة المنصة
+            </RouterLink>
+            <RouterLink
+              to="/customer/login"
+              class="rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-center text-[11px] font-semibold text-slate-700 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+            >
+              عميل
+            </RouterLink>
+            <RouterLink
+              to="/staff/login"
+              class="rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-center text-[11px] font-semibold text-slate-700 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+            >
+              مزود خدمة
             </RouterLink>
           </div>
           <div class="mt-4 flex flex-col items-center gap-2">
@@ -100,8 +126,8 @@
             <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">خطوتين فقط</p>
           </div>
           <div class="rounded-xl border border-slate-200 bg-white/85 px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-900/60">
-            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">موحّد</p>
-            <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">لكل البوابات</p>
+            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">{{ portalFeatureTitle }}</p>
+            <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">{{ portalFeatureHint }}</p>
           </div>
         </div>
 
@@ -120,13 +146,13 @@
         </p>
 
         <div class="overflow-hidden rounded-3xl border border-gray-200/90 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/95 dark:shadow-black/35">
-          <div class="border-b border-white/10 bg-gradient-to-l from-primary-800 via-primary-700 to-primary-600 px-6 pb-4 pt-5">
+          <div class="border-b border-white/10 px-6 pb-4 pt-5" :class="portalCardHeaderClass">
             <div>
               <h2 class="text-sm font-bold text-white">
-                {{ otpStep ? lt('cardTitleOtp') : lt('cardTitleUnified') }}
+                {{ otpStep ? lt('cardTitleOtp') : portalCardTitle }}
               </h2>
               <p class="text-xs text-white/80">
-                {{ otpStep ? lt('cardSubtitleOtp') : lt('cardSubtitleUnified') }}
+                {{ otpStep ? lt('cardSubtitleOtp') : portalCardSubtitle }}
               </p>
             </div>
             <div class="mt-4 grid grid-cols-2 gap-2 text-[11px]">
@@ -407,9 +433,65 @@ function lt(key: string): string {
 const appVersion = __APP_VERSION__
 const displayAppName = computed(() => import.meta.env.VITE_APP_NAME?.trim() || lt('brand'))
 const isDevBuild = import.meta.env.DEV
+const props = withDefaults(
+  defineProps<{
+    portalVariant?: 'staff' | 'fleet' | 'customer'
+  }>(),
+  {
+    portalVariant: 'staff',
+  },
+)
+
+const loginPortalVariant = computed<'staff' | 'fleet' | 'customer'>(() => {
+  if (props.portalVariant !== 'staff') return props.portalVariant
+  if (route.name === 'fleet-login') return 'fleet'
+  if (route.name === 'customer-login') return 'customer'
+  return 'staff'
+})
+const isUnifiedLoginRoute = computed(() => loginPortalVariant.value === 'staff')
+const portalHeroTitle = computed(() => {
+  if (loginPortalVariant.value === 'fleet') return 'بوابة الأسطول'
+  if (loginPortalVariant.value === 'customer') return 'بوابة العميل'
+  return lt('brand')
+})
+const portalHeroTagline = computed(() => {
+  if (loginPortalVariant.value === 'fleet') return 'دخول مخصص لمشرفي وموظفي الأساطيل.'
+  if (loginPortalVariant.value === 'customer') return 'دخول مخصص لعملاء المنصة.'
+  return lt('tagline')
+})
+const portalHeaderHint = computed(() => {
+  if (loginPortalVariant.value === 'fleet') return 'تسجيل دخول مخصص لبوابة الأسطول.'
+  if (loginPortalVariant.value === 'customer') return 'تسجيل دخول مخصص لبوابة العميل.'
+  return ''
+})
+const portalFeatureTitle = computed(() => {
+  if (loginPortalVariant.value === 'fleet') return 'أسطول'
+  if (loginPortalVariant.value === 'customer') return 'عملاء'
+  return 'موحّد'
+})
+const portalFeatureHint = computed(() => {
+  if (loginPortalVariant.value === 'fleet') return 'بوابة تشغيل الأسطول'
+  if (loginPortalVariant.value === 'customer') return 'بوابة خدمات العميل'
+  return 'لكل البوابات'
+})
+const portalCardTitle = computed(() => {
+  if (loginPortalVariant.value === 'fleet') return 'دخول بوابة الأسطول'
+  if (loginPortalVariant.value === 'customer') return 'دخول بوابة العميل'
+  return lt('cardTitleUnified')
+})
+const portalCardSubtitle = computed(() => {
+  if (loginPortalVariant.value === 'fleet') return 'استخدم حساب الأسطول لتفعيل جلسة مخصصة.'
+  if (loginPortalVariant.value === 'customer') return 'استخدم حساب العميل للوصول إلى خدماتك.'
+  return lt('cardSubtitleUnified')
+})
+const portalCardHeaderClass = computed(() => {
+  if (loginPortalVariant.value === 'fleet') return 'bg-gradient-to-l from-teal-800 via-teal-700 to-cyan-600'
+  if (loginPortalVariant.value === 'customer') return 'bg-gradient-to-l from-amber-700 via-orange-600 to-amber-500'
+  return 'bg-gradient-to-l from-primary-800 via-primary-700 to-primary-600'
+})
 
 const showLoginDemo = computed(
-  () => import.meta.env.DEV || import.meta.env.VITE_SHOW_LOGIN_DEMO_HINT === 'true',
+  () => isUnifiedLoginRoute.value && (import.meta.env.DEV || import.meta.env.VITE_SHOW_LOGIN_DEMO_HINT === 'true'),
 )
 
 const PORTAL_DEFS = [
@@ -595,6 +677,17 @@ async function handleLogin() {
       portalHomeFromRole: auth.portalHome,
       redirectQuery: route.query.redirect,
     })
+
+    if (loginPortalVariant.value === 'fleet' && !auth.isFleet) {
+      await auth.logout()
+      error.value = 'هذه صفحة بوابة الأسطول فقط. استخدم صفحة الدخول الموحد.'
+      return
+    }
+    if (loginPortalVariant.value === 'customer' && !auth.isCustomer) {
+      await auth.logout()
+      error.value = 'هذه صفحة بوابة العميل فقط. استخدم صفحة الدخول الموحد.'
+      return
+    }
 
     if (auth.isFleet && !enabledPortals.fleet) {
       await auth.logout()

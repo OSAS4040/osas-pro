@@ -10,7 +10,9 @@
         <RouterLink
           :to="{ name: 'platform-governance' }"
           class="font-bold text-primary-700 underline underline-offset-2 hover:text-primary-900 dark:text-primary-400"
-        >الحوكمة والسياق</RouterLink>
+        >
+          الحوكمة والسياق
+        </RouterLink>
       </p>
     </div>
     <div class="flex flex-wrap gap-3 mb-4">

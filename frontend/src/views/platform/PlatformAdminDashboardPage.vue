@@ -165,7 +165,7 @@
           </div>
           <PlatformOperationsExitLink
             to="/customers"
-            ariaName="شاشة العملاء في فريق العمل"
+            aria-name="شاشة العملاء في فريق العمل"
             variant="toolbar"
             class="shrink-0"
           >
@@ -192,64 +192,64 @@
           <button type="button" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-bold text-white hover:bg-primary-700" @click="loadPlatformCustomers(1)">بحث</button>
         </div>
         <div id="platform-customers-table" class="scroll-mt-28">
-        <div v-if="platformCustomersLoading" class="py-10 text-center text-sm text-slate-500 dark:text-slate-400">جاري تحميل عملاء المنصة…</div>
-        <div
-          v-else-if="platformCustomersError"
-          class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-6 text-center text-sm text-amber-950 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-100"
-        >
-          تعذر تحميل قائمة العملاء — تحقق من الصلاحية
-          <span class="font-mono text-xs" dir="ltr">platform.companies.read</span>
-          والشبكة ثم أعد المحاولة.
-        </div>
-        <div
-          v-else
-          class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-gray-900 dark:shadow-none"
-        >
-          <table class="w-full min-w-[720px] text-sm">
-            <thead class="bg-slate-100 dark:bg-gray-800/50">
-              <tr>
-                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">العميل</th>
-                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">الشركة</th>
-                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">الحالة</th>
-                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">تاريخ الإنشاء</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200 dark:divide-gray-800">
-              <tr v-if="platformCustomersRows.length === 0">
-                <td colspan="4" class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                  لا يوجد عملاء يطابقون التصفية — أو لا توجد بيانات عملاء بعد على المنصة.
-                </td>
-              </tr>
-              <tr v-for="row in platformCustomersRows" :key="'pc-'+row.id" class="hover:bg-slate-50 dark:hover:bg-gray-800/30">
-                <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ row.name }}</td>
-                <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ row.company_name }}<span v-if="row.company_id" class="mr-1 font-mono text-[10px] text-slate-400" dir="ltr">#{{ row.company_id }}</span></td>
-                <td class="px-4 py-3 text-xs">{{ row.status_label }}</td>
-                <td class="px-4 py-3 text-xs text-slate-500">{{ formatDate(row.created_at) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div v-if="platformCustomersPagination && platformCustomersPagination.last_page > 1" class="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400">
-          <span>صفحة {{ platformCustomersPagination.current_page }} من {{ platformCustomersPagination.last_page }} — {{ platformCustomersPagination.total.toLocaleString('ar-SA') }} عميلاً</span>
-          <div class="flex gap-2">
-            <button
-              type="button"
-              class="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold disabled:opacity-40 dark:border-slate-600"
-              :disabled="platformCustomersPagination.current_page <= 1 || platformCustomersLoading"
-              @click="loadPlatformCustomers(platformCustomersPagination.current_page - 1)"
-            >
-              السابق
-            </button>
-            <button
-              type="button"
-              class="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold disabled:opacity-40 dark:border-slate-600"
-              :disabled="platformCustomersPagination.current_page >= platformCustomersPagination.last_page || platformCustomersLoading"
-              @click="loadPlatformCustomers(platformCustomersPagination.current_page + 1)"
-            >
-              التالي
-            </button>
+          <div v-if="platformCustomersLoading" class="py-10 text-center text-sm text-slate-500 dark:text-slate-400">جاري تحميل عملاء المنصة…</div>
+          <div
+            v-else-if="platformCustomersError"
+            class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-6 text-center text-sm text-amber-950 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-100"
+          >
+            تعذر تحميل قائمة العملاء — تحقق من الصلاحية
+            <span class="font-mono text-xs" dir="ltr">platform.companies.read</span>
+            والشبكة ثم أعد المحاولة.
           </div>
-        </div>
+          <div
+            v-else
+            class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-gray-900 dark:shadow-none"
+          >
+            <table class="w-full min-w-[720px] text-sm">
+              <thead class="bg-slate-100 dark:bg-gray-800/50">
+                <tr>
+                  <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">العميل</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">الشركة</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">الحالة</th>
+                  <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">تاريخ الإنشاء</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-gray-800">
+                <tr v-if="platformCustomersRows.length === 0">
+                  <td colspan="4" class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                    لا يوجد عملاء يطابقون التصفية — أو لا توجد بيانات عملاء بعد على المنصة.
+                  </td>
+                </tr>
+                <tr v-for="row in platformCustomersRows" :key="'pc-'+row.id" class="hover:bg-slate-50 dark:hover:bg-gray-800/30">
+                  <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ row.name }}</td>
+                  <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ row.company_name }}<span v-if="row.company_id" class="mr-1 font-mono text-[10px] text-slate-400" dir="ltr">#{{ row.company_id }}</span></td>
+                  <td class="px-4 py-3 text-xs">{{ row.status_label }}</td>
+                  <td class="px-4 py-3 text-xs text-slate-500">{{ formatDate(row.created_at) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-if="platformCustomersPagination && platformCustomersPagination.last_page > 1" class="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <span>صفحة {{ platformCustomersPagination.current_page }} من {{ platformCustomersPagination.last_page }} — {{ platformCustomersPagination.total.toLocaleString('ar-SA') }} عميلاً</span>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold disabled:opacity-40 dark:border-slate-600"
+                :disabled="platformCustomersPagination.current_page <= 1 || platformCustomersLoading"
+                @click="loadPlatformCustomers(platformCustomersPagination.current_page - 1)"
+              >
+                السابق
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border border-slate-300 px-3 py-1.5 font-semibold disabled:opacity-40 dark:border-slate-600"
+                :disabled="platformCustomersPagination.current_page >= platformCustomersPagination.last_page || platformCustomersLoading"
+                @click="loadPlatformCustomers(platformCustomersPagination.current_page + 1)"
+              >
+                التالي
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -266,43 +266,43 @@
         </div>
 
         <div id="platform-plans-catalog" class="scroll-mt-28">
-        <div v-if="platformOverviewLoading" class="py-8 text-center text-sm text-slate-500 dark:text-slate-400">جاري تحميل كتالوج الباقات…</div>
-        <div
-          v-else-if="!plansLoadOk"
-          class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-6 text-center text-sm text-amber-950 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-100"
-        >
-          تعذّر تحميل كتالوج الباقات من الخادم — لن تُعرض البطاقات حتى ينجح طلب الباقات (صلاحيات مشغّل المنصة والشبكة).
-        </div>
-        <div
-          v-else-if="plans.length === 0"
-          class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400"
-        >
-          لا توجد باقات في الكتالوج — تحقق من إعدادات الخادم أو البذور التجريبية إن وُجدت.
-        </div>
-
-        <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div v-for="plan in plans" :key="plan.id"
-               class="rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-primary-500 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-primary-600"
+          <div v-if="platformOverviewLoading" class="py-8 text-center text-sm text-slate-500 dark:text-slate-400">جاري تحميل كتالوج الباقات…</div>
+          <div
+            v-else-if="!plansLoadOk"
+            class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-6 text-center text-sm text-amber-950 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-100"
           >
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ plan.name }}</h3>
-              <span class="text-xs bg-primary-600/30 text-primary-300 px-2 py-0.5 rounded-full">{{ plan.slug }}</span>
-            </div>
-            <div class="mb-1 text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 md:text-3xl">{{ formatCurrency(plan.price_monthly) }}<span class="text-sm font-medium text-slate-500 dark:text-slate-400"> شهرياً</span></div>
-            <div class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ formatCurrency(plan.price_yearly) }} سنوياً</div>
-            <div class="space-y-1.5 mb-4">
-              <div v-for="(val, feat) in (plan.features || {})" :key="feat" class="flex items-center gap-2 text-sm">
-                <CheckIcon v-if="val" class="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <XMarkIcon v-else class="w-4 h-4 text-gray-600 flex-shrink-0" />
-                <span :class="val ? 'text-gray-300' : 'text-gray-600'">{{ featureLabel(String(feat)) }}</span>
-              </div>
-            </div>
-            <div class="mb-3 text-xs text-gray-500">المشتركون: <span class="font-bold text-slate-900 dark:text-white">{{ plan.subscribers_count || 0 }}</span></div>
-            <button class="w-full rounded-lg border border-slate-300 py-2 text-sm text-slate-600 transition-all hover:border-primary-500 hover:text-slate-900 dark:border-gray-700 dark:text-gray-400 dark:hover:border-primary-500 dark:hover:text-white" @click="editPlan(plan)">
-              تعديل الباقة
-            </button>
+            تعذّر تحميل كتالوج الباقات من الخادم — لن تُعرض البطاقات حتى ينجح طلب الباقات (صلاحيات مشغّل المنصة والشبكة).
           </div>
-        </div>
+          <div
+            v-else-if="plans.length === 0"
+            class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-400"
+          >
+            لا توجد باقات في الكتالوج — تحقق من إعدادات الخادم أو البذور التجريبية إن وُجدت.
+          </div>
+
+          <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div v-for="plan in plans" :key="plan.id"
+                 class="rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-primary-500 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-primary-600"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ plan.name }}</h3>
+                <span class="text-xs bg-primary-600/30 text-primary-300 px-2 py-0.5 rounded-full">{{ plan.slug }}</span>
+              </div>
+              <div class="mb-1 text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 md:text-3xl">{{ formatCurrency(plan.price_monthly) }}<span class="text-sm font-medium text-slate-500 dark:text-slate-400"> شهرياً</span></div>
+              <div class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ formatCurrency(plan.price_yearly) }} سنوياً</div>
+              <div class="space-y-1.5 mb-4">
+                <div v-for="(val, feat) in (plan.features || {})" :key="feat" class="flex items-center gap-2 text-sm">
+                  <CheckIcon v-if="val" class="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <XMarkIcon v-else class="w-4 h-4 text-gray-600 flex-shrink-0" />
+                  <span :class="val ? 'text-gray-300' : 'text-gray-600'">{{ featureLabel(String(feat)) }}</span>
+                </div>
+              </div>
+              <div class="mb-3 text-xs text-gray-500">المشتركون: <span class="font-bold text-slate-900 dark:text-white">{{ plan.subscribers_count || 0 }}</span></div>
+              <button class="w-full rounded-lg border border-slate-300 py-2 text-sm text-slate-600 transition-all hover:border-primary-500 hover:text-slate-900 dark:border-gray-700 dark:text-gray-400 dark:hover:border-primary-500 dark:hover:text-white" @click="editPlan(plan)">
+                تعديل الباقة
+              </button>
+            </div>
+          </div>
         </div>
 
         <div
@@ -546,48 +546,48 @@
           <button type="button" class="rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-800 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @click="loadCancellationRequests">تحديث</button>
         </div>
         <div id="platform-cancellations-table" class="scroll-mt-28">
-        <div v-if="cancelLoading" class="text-gray-400 text-sm py-8 text-center">جارٍ التحميل…</div>
-        <div
-          v-else
-          class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:shadow-none"
-        >
-          <table class="w-full min-w-[720px] text-sm">
-            <thead class="bg-slate-100 dark:bg-gray-800/50">
-              <tr>
-                <th class="px-4 py-3 text-right text-gray-400">#</th>
-                <th class="px-4 py-3 text-right text-gray-400">الشركة</th>
-                <th class="px-4 py-3 text-right text-gray-400">أمر العمل</th>
-                <th class="px-4 py-3 text-right text-gray-400">الحالة</th>
-                <th class="px-4 py-3 text-right text-gray-400">السبب</th>
-                <th class="px-4 py-3 text-right text-gray-400">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200 dark:divide-gray-800">
-              <tr v-if="!cancelLoading && cancelRows.length === 0">
-                <td colspan="6" class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                  لا توجد طلبات إلغاء تطابق التصفية الحالية، أو لم يُحمَّل السجل بعد — استخدم «تحديث».
-                </td>
-              </tr>
-              <tr v-for="r in cancelRows" :key="r.id" class="hover:bg-slate-100 dark:hover:bg-gray-800/30">
-                <td class="px-4 py-3 font-mono text-gray-400">{{ r.id }}</td>
-                <td class="px-4 py-3 text-slate-900 dark:text-white">{{ r.company?.name ?? '—' }}</td>
-                <td class="px-4 py-3">
-                  <span class="font-mono text-xs text-gray-300">{{ r.work_order?.order_number ?? '—' }}</span>
-                  <span class="block text-[10px] text-gray-500">{{ workOrderStatusLabel(r.work_order?.status) }}</span>
-                </td>
-                <td class="px-4 py-3 text-xs" :class="r.status === 'pending' ? 'text-amber-300' : 'text-gray-400'">{{ cancellationRequestStatusLabel(r.status) }}</td>
-                <td class="px-4 py-3 text-gray-400 max-w-xs truncate" :title="r.reason">{{ r.reason }}</td>
-                <td class="px-4 py-3 space-x-2 space-x-reverse">
-                  <template v-if="r.status === 'pending'">
-                    <button type="button" class="text-emerald-400 hover:underline text-xs" @click="cancelAction = { id: r.id, mode: 'approve' }; cancelNote = ''">اعتماد</button>
-                    <button type="button" class="text-red-400 hover:underline text-xs" @click="cancelAction = { id: r.id, mode: 'reject' }; cancelNote = ''">رفض</button>
-                  </template>
-                  <span v-else class="text-gray-600 text-xs">—</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          <div v-if="cancelLoading" class="text-gray-400 text-sm py-8 text-center">جارٍ التحميل…</div>
+          <div
+            v-else
+            class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:shadow-none"
+          >
+            <table class="w-full min-w-[720px] text-sm">
+              <thead class="bg-slate-100 dark:bg-gray-800/50">
+                <tr>
+                  <th class="px-4 py-3 text-right text-gray-400">#</th>
+                  <th class="px-4 py-3 text-right text-gray-400">الشركة</th>
+                  <th class="px-4 py-3 text-right text-gray-400">أمر العمل</th>
+                  <th class="px-4 py-3 text-right text-gray-400">الحالة</th>
+                  <th class="px-4 py-3 text-right text-gray-400">السبب</th>
+                  <th class="px-4 py-3 text-right text-gray-400">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-gray-800">
+                <tr v-if="!cancelLoading && cancelRows.length === 0">
+                  <td colspan="6" class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                    لا توجد طلبات إلغاء تطابق التصفية الحالية، أو لم يُحمَّل السجل بعد — استخدم «تحديث».
+                  </td>
+                </tr>
+                <tr v-for="r in cancelRows" :key="r.id" class="hover:bg-slate-100 dark:hover:bg-gray-800/30">
+                  <td class="px-4 py-3 font-mono text-gray-400">{{ r.id }}</td>
+                  <td class="px-4 py-3 text-slate-900 dark:text-white">{{ r.company?.name ?? '—' }}</td>
+                  <td class="px-4 py-3">
+                    <span class="font-mono text-xs text-gray-300">{{ r.work_order?.order_number ?? '—' }}</span>
+                    <span class="block text-[10px] text-gray-500">{{ workOrderStatusLabel(r.work_order?.status) }}</span>
+                  </td>
+                  <td class="px-4 py-3 text-xs" :class="r.status === 'pending' ? 'text-amber-300' : 'text-gray-400'">{{ cancellationRequestStatusLabel(r.status) }}</td>
+                  <td class="px-4 py-3 text-gray-400 max-w-xs truncate" :title="r.reason">{{ r.reason }}</td>
+                  <td class="px-4 py-3 space-x-2 space-x-reverse">
+                    <template v-if="r.status === 'pending'">
+                      <button type="button" class="text-emerald-400 hover:underline text-xs" @click="cancelAction = { id: r.id, mode: 'approve' }; cancelNote = ''">اعتماد</button>
+                      <button type="button" class="text-red-400 hover:underline text-xs" @click="cancelAction = { id: r.id, mode: 'reject' }; cancelNote = ''">رفض</button>
+                    </template>
+                    <span v-else class="text-gray-600 text-xs">—</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

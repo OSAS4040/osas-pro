@@ -202,12 +202,16 @@
                     v-if="auth.hasPermission('branches.view')"
                     to="/branches"
                     class="text-primary-600 hover:underline truncate"
-                  >{{ b.branch_name }}</RouterLink>
+                  >
+                    {{ b.branch_name }}
+                  </RouterLink>
                   <RouterLink
                     v-else-if="auth.hasPermission('work_orders.view') || canReports"
                     to="/branches/map"
                     class="text-primary-600 hover:underline truncate"
-                  >{{ b.branch_name }}</RouterLink>
+                  >
+                    {{ b.branch_name }}
+                  </RouterLink>
                   <span v-else class="truncate">{{ b.branch_name }}</span>
                 </li>
                 <li v-if="!payload.relationships.branches.length" class="text-slate-500 text-xs">{{ l('لا بيانات', 'No data') }}</li>
