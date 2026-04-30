@@ -2,16 +2,11 @@
   <div class="app-shell-page">
     <div class="page-head" :class="{ 'gap-2': staffUi.compactMode }">
       <div class="page-title-wrap">
-        <h2 class="page-title-xl" :class="{ '!text-xl': staffUi.compactMode }">أوامر العمل</h2>
+        <h2 class="page-title-xl" :class="{ '!text-xl': staffUi.compactMode }">العمليات التي تمت من قبل المزود</h2>
         <p v-if="!staffUi.compactMode" class="page-subtitle">متابعة حالة التنفيذ، الأولويات، وتوزيع الفنيين</p>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <RouterLink to="/work-orders/batch" class="btn border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800">
-          دفعة مركبات
-        </RouterLink>
-        <RouterLink to="/work-orders/new" class="btn btn-primary">
-          + أمر عمل جديد
-        </RouterLink>
+      <div class="text-xs text-gray-500 dark:text-slate-400">
+        العرض والتنفيذ فقط
       </div>
     </div>
 
@@ -39,7 +34,7 @@
 
     <div class="table-shell">
       <div class="panel-head" :class="{ '!py-2': staffUi.compactMode }">
-        <span class="panel-title" :class="{ '!text-sm': staffUi.compactMode }">قائمة أوامر العمل</span>
+        <span class="panel-title" :class="{ '!text-sm': staffUi.compactMode }">قائمة العمليات التي تمت من قبل المزود</span>
         <span v-if="!store.loading" class="panel-muted" :class="{ '!text-xs': staffUi.compactMode }">{{ filteredOrders.length }} عنصر</span>
       </div>
       <div v-if="store.loading" class="state-loading">جارٍ التحميل...</div>
@@ -73,8 +68,8 @@
           </tr>
           <tr v-if="!filteredOrders.length">
             <td :colspan="staffUi.compactMode ? 6 : 7" class="table-empty">
-              <p class="table-empty-title">لا توجد أوامر عمل</p>
-              <p class="table-empty-sub">غيّر المرشحات أو أنشئ أمر عمل جديد</p>
+              <p class="table-empty-title">لا توجد عمليات مسجّلة</p>
+              <p class="table-empty-sub">غيّر المرشحات أو انتظر طلبات العملاء</p>
             </td>
           </tr>
         </tbody>
@@ -84,16 +79,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { useWorkOrderStore } from '@/stores/workOrder'
 import { useStaffUiStore } from '@/stores/staffUi'
 import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 
 const store        = useWorkOrderStore()
 const staffUi      = useStaffUiStore()
+const route        = useRoute()
 const filterStatus = ref('')
 const search = ref('')
+const customerIdFilter = ref<number | null>(null)
+const companyIdFilter = ref<number | null>(null)
 
 const statusFilterValues = [
   'draft',
@@ -107,11 +105,53 @@ const statusFilterValues = [
 ] as const
 const statuses = statusFilterValues.map((value) => ({ value, label: workOrderStatusLabel(value) }))
 
-async function load(): Promise<void> {
-  await store.fetchOrders({ status: filterStatus.value || undefined })
+function syncCustomerFilterFromRoute(): void {
+  const raw = route.query.customer_id
+  if (raw !== undefined && raw !== null && String(raw).match(/^\d+$/)) {
+    customerIdFilter.value = Number(raw)
+  } else {
+    customerIdFilter.value = null
+  }
 }
 
-onMounted(load)
+function syncCompanyFilterFromRoute(): void {
+  const raw = route.query.company_id
+  if (raw !== undefined && raw !== null && String(raw).match(/^\d+$/)) {
+    companyIdFilter.value = Number(raw)
+  } else {
+    companyIdFilter.value = null
+  }
+}
+
+async function load(): Promise<void> {
+  await store.fetchOrders({
+    status: filterStatus.value || undefined,
+    ...(customerIdFilter.value ? { customer_id: customerIdFilter.value } : {}),
+    ...(companyIdFilter.value ? { company_id: companyIdFilter.value } : {}),
+  })
+}
+
+onMounted(() => {
+  syncCustomerFilterFromRoute()
+  syncCompanyFilterFromRoute()
+  load()
+})
+
+watch(
+  () => route.query.customer_id,
+  () => {
+    syncCustomerFilterFromRoute()
+    load()
+  },
+)
+
+watch(
+  () => route.query.company_id,
+  () => {
+    syncCompanyFilterFromRoute()
+    load()
+  },
+)
 
 const filteredOrders = computed(() => {
   const q = search.value.trim().toLowerCase()

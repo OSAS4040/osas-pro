@@ -18,12 +18,19 @@
       @dismiss="dismissChecklistForLater"
     />
     <!-- Header -->
-    <div class="flex items-center justify-between gap-4 flex-wrap rounded-2xl border border-gray-200/80 dark:border-slate-700/80 bg-gradient-to-l from-primary-50/90 via-white to-cyan-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-primary-950/40 px-4 py-3 shadow-sm">
+    <div class="flex items-center justify-between gap-4 flex-wrap rounded-2xl border border-gray-200/80 dark:border-slate-700/80 bg-gradient-to-l from-primary-50/90 via-white to-violet-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-primary-950/40 px-4 py-3 shadow-sm">
       <div>
         <h1 class="text-xl font-bold text-gray-900 dark:text-slate-100 tracking-tight">لوحة التحكم</h1>
         <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{{ dashGreeting }} — {{ today }}</p>
       </div>
       <div class="flex items-center gap-3 flex-wrap">
+        <RouterLink
+          v-if="auth.user?.company_id"
+          :to="{ name: 'companies.profile', params: { companyId: String(auth.user.company_id) } }"
+          class="hidden sm:inline-flex text-xs font-medium text-primary-600 hover:underline px-2"
+        >
+          مركز الشركة
+        </RouterLink>
         <WeatherClock />
         <button class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors" @click="loadData">
           <ArrowPathIcon class="w-3.5 h-3.5" :class="loading ? 'animate-spin' : ''" />
@@ -87,7 +94,7 @@
         <KpiCard color="green" :icon="ChartBarIcon" :value="fmtMoney(kpi.totalRevenue)" label="حجم الفواتير (الفترة)" sub="مجموع إجمالي الفواتير بحسب الإصدار — ليس المتحصّل النقدي" />
         <KpiCard color="gray" :icon="DocumentTextIcon" :value="String(kpi.openInvoiceCount)" label="فواتير مفتوحة / قيد التحصيل" sub="عدد" />
         <KpiCard color="orange" :icon="ScaleIcon" :value="fmtMoney(kpi.totalOutstanding)" label="الذمم المدينة" sub="ر.س مستحقة" />
-        <KpiCard color="teal" :icon="CurrencyDollarIcon" :value="fmtMoney(kpi.walletBalanceTotal)" label="أرصدة المحافظ" sub="مجموع الأنواع" />
+        <KpiCard color="purple" :icon="CurrencyDollarIcon" :value="fmtMoney(kpi.walletBalanceTotal)" label="أرصدة المحافظ" sub="مجموع الأنواع" />
         <KpiCard color="blue" :icon="BanknotesIcon" :value="fmtMoney(kpi.totalCollected)" label="المتحصّل (الفترة)" sub="مدفوعات مكتملة ضمن نطاق التقرير" />
         <KpiCard color="indigo" :icon="ChartPieIcon" :value="`${kpi.collectionRate}%`" label="معدل التحصيل" sub="نسبة المتحصّل إلى حجم الفواتير في الفترة" />
         <KpiCard color="purple" :icon="UserPlusIcon" :value="String(kpi.newCustomersInPeriod)" label="عملاء جدد" sub="خلال نفس فترة التقرير" />
@@ -126,7 +133,7 @@
             >
               <td class="px-5 py-2.5 font-medium text-gray-800 dark:text-slate-200 font-mono">{{ inv.invoice_number }}</td>
               <td class="px-5 py-2.5 text-gray-600 dark:text-slate-400 truncate max-w-[120px]">{{ inv.customer_name }}</td>
-              <td class="px-5 py-2.5 text-green-700 dark:text-emerald-400 font-semibold">{{ fmtMoney(parseFloat(inv.total ?? 0)) }}</td>
+              <td class="px-5 py-2.5 text-primary-700 dark:text-primary-400 font-semibold">{{ fmtMoney(parseFloat(inv.total ?? 0)) }}</td>
               <td class="px-5 py-2.5">
                 <span class="px-2 py-0.5 rounded-full text-xs font-medium"
                       :class="invoiceStatusClass(inv.status)"
@@ -144,7 +151,7 @@
         <div class="px-5 py-3.5 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
           <h2 class="text-sm font-semibold text-gray-800 dark:text-slate-100 flex items-center gap-2">
             <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            حالة أوامر العمل
+            حالة العمليات التي تمت من قبل المزود
           </h2>
           <RouterLink to="/work-orders" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">عرض الكل ←</RouterLink>
         </div>
@@ -162,9 +169,9 @@
             <span class="text-2xl font-bold" :class="stat.color">{{ stat.value }}</span>
           </div>
           <div v-if="woStats.every(s => Number(s.value) === 0)" class="py-8 text-center text-gray-500 dark:text-slate-400">
-            <CheckCircleIcon class="w-10 h-10 text-emerald-200 dark:text-emerald-800 mx-auto mb-2" />
-            <p class="text-sm font-medium">لا أوامر عمل جديدة في الفترة الحالية</p>
-            <p class="text-xs mt-1 text-gray-400">عند استقبال أوامر عمل جديدة سيظهر التوزيع هنا (مركز خدمة أو منفذ بيع)</p>
+            <CheckCircleIcon class="w-10 h-10 text-primary-200 dark:text-primary-900/60 mx-auto mb-2" />
+            <p class="text-sm font-medium">لا عمليات جديدة في الفترة الحالية</p>
+            <p class="text-xs mt-1 text-gray-400">عند تسجيل عمليات جديدة سيظهر التوزيع هنا (مركز خدمة أو منفذ بيع)</p>
           </div>
         </div>
       </div>
@@ -175,10 +182,11 @@
       <p class="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-3">وصول سريع</p>
       <div class="flex flex-wrap gap-2">
         <QuickBtn :icon="DocumentTextIcon" label="فاتورة جديدة" to="/invoices/create" color="blue" />
-        <QuickBtn :icon="ClipboardDocumentIcon" label="أمر عمل" to="/work-orders/new" color="purple" />
+        <QuickBtn :icon="ClipboardDocumentIcon" label="العمليات التي تمت من قبل المزود" to="/work-orders" color="purple" />
         <QuickBtn :icon="ShoppingCartIcon" label="نقطة البيع" to="/pos" color="green" />
-        <QuickBtn :icon="UsersIcon" label="عميل جديد" to="/customers" color="teal" />
+        <QuickBtn :icon="UsersIcon" label="عميل جديد" to="/customers" color="green" />
         <RouterLink
+          v-if="auth.isPlatform"
           :to="{ name: 'vehicles', query: { add: '1' } }"
           class="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm hover:shadow active:scale-[0.97] bg-primary-600 hover:bg-primary-700"
         >
@@ -201,8 +209,8 @@
         />
         <QuickBtn :icon="ChartBarIcon" label="التقارير" to="/reports" color="gray" />
         <QuickBtn :icon="ScaleIcon" label="ZATCA" to="/zatca" color="orange" />
-        <QuickBtn v-if="auth.isStaff" :icon="MapPinIcon" label="خريطة الفروع" to="/branches/map" color="cyan" />
-        <QuickBtn v-if="auth.isManager" :icon="BuildingLibraryIcon" label="الفروع" to="/branches" color="teal" />
+        <QuickBtn v-if="auth.isStaff" :icon="MapPinIcon" label="خريطة الفروع" to="/branches/map" color="indigo" />
+        <QuickBtn v-if="auth.isManager" :icon="BuildingLibraryIcon" label="الفروع" to="/branches" color="green" />
       </div>
     </div>
   </div>
@@ -242,6 +250,7 @@ const biz = useBusinessProfileStore()
 
 const showBiShortcuts = computed(() => {
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   return canAccessStaffBusinessIntelligence({
     buildFlagOn: featureFlags.intelligenceCommandCenter,
@@ -251,6 +260,7 @@ const showBiShortcuts = computed(() => {
 })
 const showHeatmapShortcut = computed(() => {
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   return tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
 })
@@ -313,8 +323,8 @@ const woStats = computed(() => [
     hint: `${kpi.value.woCompletionRate}% منشأة في الفترة`,
     value: kpi.value.woCompleted,
     icon: CheckCircleIcon,
-    color: 'text-green-600 dark:text-green-400',
-    bg: 'bg-green-50 dark:bg-green-950/35',
+    color: 'text-primary-600 dark:text-primary-400',
+    bg: 'bg-primary-50 dark:bg-primary-950/35',
   },
 ])
 
@@ -390,12 +400,12 @@ function fmtMoney(v: number) {
 
 const colorMap: Record<string, Record<string, string>> = {
   red:    { bg: 'bg-red-50',    icon: 'text-red-500',    val: 'text-red-700' },
-  green:  { bg: 'bg-green-50',  icon: 'text-green-600',  val: 'text-green-700' },
+  green:  { bg: 'bg-primary-50 dark:bg-primary-950/25', icon: 'text-primary-600 dark:text-primary-400', val: 'text-primary-700 dark:text-primary-300' },
   blue:   { bg: 'bg-blue-50',   icon: 'text-blue-600',   val: 'text-blue-700' },
-  purple: { bg: 'bg-purple-50', icon: 'text-purple-600', val: 'text-purple-700' },
+  purple: { bg: 'bg-primary-50 dark:bg-primary-950/25', icon: 'text-primary-600 dark:text-primary-400', val: 'text-primary-700 dark:text-primary-300' },
   gray:   { bg: 'bg-gray-50',   icon: 'text-gray-500',   val: 'text-gray-700' },
   orange: { bg: 'bg-orange-50', icon: 'text-orange-500', val: 'text-orange-700' },
-  teal:   { bg: 'bg-teal-50',   icon: 'text-teal-600',   val: 'text-teal-700' },
+  teal:   { bg: 'bg-primary-50 dark:bg-primary-950/25', icon: 'text-primary-600 dark:text-primary-400', val: 'text-primary-700 dark:text-primary-300' },
   indigo: { bg: 'bg-indigo-50', icon: 'text-indigo-600', val: 'text-indigo-700' },
 }
 
@@ -406,7 +416,7 @@ const KpiCard = defineComponent({
       const c = colorMap[p.color ?? 'gray']
       const trendEl = p.trend
         ? h(p.trend === 'up' ? ArrowTrendingUpIcon : ArrowTrendingDownIcon, {
-            class: `w-3.5 h-3.5 ${p.trend === 'up' ? 'text-green-500' : 'text-red-400'}`
+            class: `w-3.5 h-3.5 ${p.trend === 'up' ? 'text-primary-500' : 'text-red-400'}`
           })
         : null
       return h('div', { class: 'bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5 flex items-start gap-4 hover:shadow-sm transition-shadow' }, [
@@ -429,11 +439,12 @@ const QuickBtn = defineComponent({
   props: { icon: Object, label: String, to: { type: String, required: true as const }, color: String },
   setup(p) {
     const btnColor: Record<string, string> = {
-      blue:   'bg-blue-600 hover:bg-blue-700',   purple: 'bg-purple-600 hover:bg-purple-700',
-      green:  'bg-green-600 hover:bg-green-700', teal:   'bg-teal-600 hover:bg-teal-700',
+      blue:   'bg-blue-600 hover:bg-blue-700',   purple: 'bg-primary-600 hover:bg-primary-700',
+      green:  'bg-primary-600 hover:bg-primary-700',
+      teal:   'bg-primary-600 hover:bg-primary-700',
       gray:   'bg-gray-600 hover:bg-gray-700',   orange: 'bg-orange-500 hover:bg-orange-600',
       indigo: 'bg-indigo-600 hover:bg-indigo-700',
-      cyan:   'bg-cyan-600 hover:bg-cyan-700',
+      cyan:   'bg-primary-600 hover:bg-primary-700',
     }
     return () => h(RouterLink, {
       to: p.to!,

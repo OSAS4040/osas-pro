@@ -116,6 +116,9 @@ import { NAV_SEARCH_ITEMS } from '@/config/navSearchItems'
 import { useLocale } from '@/composables/useLocale'
 import { foldSearchText, textMatchScore, routeContextBoost } from '@/utils/commandPaletteSearch'
 import apiClient from '@/lib/apiClient'
+import { mergeStaffHiddenNavKeys } from '@/config/staffProviderFocusNav'
+import { mergeExecutionPartnerNavKeys } from '@/config/executionPartnerNav'
+import { platformExecutionPartnerActiveFromStore } from '@/composables/usePlatformExecutionPartner'
 import { isStaffNavHidden, splitStaffNavHref } from '@/lib/staffNavKey'
 import {
   MagnifyingGlassIcon,
@@ -222,7 +225,7 @@ const allItems: PaletteNavItem[] = [
   { label: 'نقطة البيع', to: '/pos', icon: ShoppingCartIcon, group: 'الرئيسي' },
   { label: 'الفواتير', to: '/invoices', icon: DocumentTextIcon, group: 'الرئيسي' },
   { label: 'عروض الأسعار', to: '/crm/quotes', icon: DocumentTextIcon, group: 'الرئيسي' },
-  { label: 'أوامر العمل', to: '/work-orders', icon: ClipboardDocumentIcon, group: 'الرئيسي' },
+  { label: 'العمليات التي تمت من قبل المزود', to: '/work-orders', icon: ClipboardDocumentIcon, group: 'الرئيسي' },
   { label: 'الرافعات والمنافذ', to: '/bays', icon: BuildingOfficeIcon, group: 'مركز الخدمة' },
   { label: 'المواعيد والحجوزات', to: '/bookings', icon: CalendarDaysIcon, group: 'مركز الخدمة' },
   {
@@ -307,10 +310,6 @@ const allItems: PaletteNavItem[] = [
   { label: 'حسابات الفريق', to: '/settings/team-users', icon: UserGroupIcon, group: 'أخرى' },
   { label: 'هيكل القطاعات', to: '/settings/org-units', icon: BuildingOffice2Icon, group: 'أخرى' },
   { label: 'التكاملات', to: '/settings/integrations', icon: WrenchScrewdriverIcon, group: 'أخرى' },
-  { label: 'اشتراكي', to: '/subscription', icon: StarIcon, group: 'الاشتراك' },
-  { label: 'إضافات الاشتراك', to: '/subscription#subscription-addons', icon: StarIcon, group: 'الاشتراك' },
-  { label: 'الباقات', to: '/plans', icon: StarIcon, group: 'الاشتراك' },
-  { label: 'سوق الإضافات', to: '/plugins', icon: SparklesIcon, group: 'الاشتراك' },
   { label: 'الإحالات والولاء', to: '/referrals', icon: GiftIcon, group: 'العمليات' },
   { label: 'مركز الدعم', to: '/support', icon: MagnifyingGlassCircleIcon, group: 'أخرى' },
   { label: 'سجل العمليات', to: '/activity', icon: ClipboardDocumentListIcon, group: 'أخرى' },
@@ -400,8 +399,11 @@ function roleAllowed(item: PaletteNavItem): boolean {
     return false
   }
   if (item.to === '/branches/map' && !auth.isStaff) return false
-  const hiddenStaff = auth.user?.hidden_staff_nav_keys
-  if (Array.isArray(hiddenStaff) && hiddenStaff.length > 0) {
+  const hiddenStaff = mergeExecutionPartnerNavKeys(
+    mergeStaffHiddenNavKeys(auth.user?.hidden_staff_nav_keys, biz.businessType, biz.loaded),
+    platformExecutionPartnerActiveFromStore(),
+  )
+  if (hiddenStaff.length > 0) {
     const { path: hp, hash: hh } = splitStaffNavHref(item.to)
     if (isStaffNavHidden(hp, hh, new Set(hiddenStaff))) return false
   }

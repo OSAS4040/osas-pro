@@ -116,6 +116,8 @@ import { NAV_SEARCH_ITEMS } from '@/config/navSearchItems'
 import { useLocale } from '@/composables/useLocale'
 import { foldSearchText, textMatchScore, routeContextBoost } from '@/utils/commandPaletteSearch'
 import apiClient from '@/lib/apiClient'
+import { mergeStaffHiddenNavKeys } from '@/config/staffProviderFocusNav'
+import { isStaffNavHidden, splitStaffNavHref } from '@/lib/staffNavKey'
 import {
   MagnifyingGlassIcon,
   ArrowUpLeftIcon,
@@ -168,6 +170,8 @@ type PaletteNavItem = {
   group: string
   requiresPermission?: string
   requiresAnyPermission?: string[]
+  /** مفتاح ملف نشاط المنشأة — إخفاء عن الموظف عند التعطيل */
+  requiresTenantFeature?: string
   /** فريق العمل (موظف/مدير/مالك) — يستبعد عميل الأسطول وبوابة العميل */
   requiresStaff?: boolean
 }
@@ -219,7 +223,7 @@ const allItems: PaletteNavItem[] = [
   { label: 'نقطة البيع', to: '/pos', icon: ShoppingCartIcon, group: 'الرئيسي' },
   { label: 'الفواتير', to: '/invoices', icon: DocumentTextIcon, group: 'الرئيسي' },
   { label: 'عروض الأسعار', to: '/crm/quotes', icon: DocumentTextIcon, group: 'الرئيسي' },
-  { label: 'أوامر العمل', to: '/work-orders', icon: ClipboardDocumentIcon, group: 'الرئيسي' },
+  { label: 'العمليات التي تمت من قبل المزود', to: '/work-orders', icon: ClipboardDocumentIcon, group: 'الرئيسي' },
   { label: 'الرافعات والمنافذ', to: '/bays', icon: BuildingOfficeIcon, group: 'مركز الخدمة' },
   { label: 'المواعيد والحجوزات', to: '/bookings', icon: CalendarDaysIcon, group: 'مركز الخدمة' },
   {
@@ -277,6 +281,14 @@ const allItems: PaletteNavItem[] = [
   { label: 'دفتر الأستاذ', to: '/ledger', icon: BookOpenIcon, group: 'المالية والمحاسبة' },
   { label: 'دليل الحسابات', to: '/chart-of-accounts', icon: TableCellsIcon, group: 'المالية والمحاسبة' },
   { label: 'ZATCA', to: '/zatca', icon: ScaleIcon, group: 'الامتثال' },
+  {
+    label: 'الأصول الثابتة',
+    to: '/fixed-assets',
+    icon: ArchiveBoxIcon,
+    group: 'المالية والمحاسبة',
+    requiresPermission: 'reports.accounting.view',
+    requiresTenantFeature: 'fixed_assets',
+  },
   { label: 'المنتجات', to: '/products', icon: CubeIcon, group: 'المخزون' },
   { label: 'المخزون', to: '/inventory', icon: ArchiveBoxIcon, group: 'المخزون' },
   { label: 'الموردون', to: '/suppliers', icon: TruckIcon, group: 'المخزون' },
@@ -296,9 +308,6 @@ const allItems: PaletteNavItem[] = [
   { label: 'حسابات الفريق', to: '/settings/team-users', icon: UserGroupIcon, group: 'أخرى' },
   { label: 'هيكل القطاعات', to: '/settings/org-units', icon: BuildingOffice2Icon, group: 'أخرى' },
   { label: 'التكاملات', to: '/settings/integrations', icon: WrenchScrewdriverIcon, group: 'أخرى' },
-  { label: 'اشتراكي', to: '/subscription', icon: StarIcon, group: 'الاشتراك' },
-  { label: 'الباقات', to: '/plans', icon: StarIcon, group: 'الاشتراك' },
-  { label: 'سوق الإضافات', to: '/plugins', icon: SparklesIcon, group: 'الاشتراك' },
   { label: 'الإحالات والولاء', to: '/referrals', icon: GiftIcon, group: 'العمليات' },
   { label: 'مركز الدعم', to: '/support', icon: MagnifyingGlassCircleIcon, group: 'أخرى' },
   { label: 'سجل العمليات', to: '/activity', icon: ClipboardDocumentListIcon, group: 'أخرى' },
@@ -330,6 +339,13 @@ function roleAllowed(item: PaletteNavItem): boolean {
   if (item.requiresAnyPermission?.length) {
     const ok = item.requiresAnyPermission.some((p) => auth.hasPermission(p))
     if (!ok) return false
+  }
+  if (
+    typeof item.requiresTenantFeature === 'string'
+    && item.requiresTenantFeature.length > 0
+    && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), item.requiresTenantFeature)
+  ) {
+    return false
   }
   if (item.to === '/branches' && !auth.isManager) return false
   if (
@@ -374,22 +390,34 @@ function roleAllowed(item: PaletteNavItem): boolean {
   ) {
     if (!tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')) return false
   }
+  if (item.to.startsWith('/crm/') && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'crm')) {
+    return false
+  }
   if (item.to.startsWith('/workshop') && !canAccessWorkshopArea(auth.isOwner, (k) => biz.isEnabled(k))) {
     return false
   }
   if (item.to === '/branches/map' && !auth.isStaff) return false
+  const hiddenStaff = mergeStaffHiddenNavKeys(auth.user?.hidden_staff_nav_keys, biz.businessType, biz.loaded)
+  if (hiddenStaff.length > 0) {
+    const { path: hp, hash: hh } = splitStaffNavHref(item.to)
+    if (isStaffNavHidden(hp, hh, new Set(hiddenStaff))) return false
+  }
   return true
 }
 
 function portalAllowed(item: PaletteNavItem): boolean {
-  if (item.to.startsWith('/fleet/') && !enabledPortals.fleet) return false
-  if (item.to.startsWith('/admin') && !enabledPortals.admin) return false
+  if (item.to.startsWith('/fleet/')) {
+    if (!enabledPortals.fleet) return false
+    if (!tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'fleet')) return false
+  }
+  if ((item.to.startsWith('/admin') || item.to.startsWith('/platform')) && !enabledPortals.admin) return false
   return true
 }
 
 const scoredRoutes = computed((): RouteRow[] => {
   void locale.lang.value
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   const q = normQuery.value
   const path = route.path

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors" :dir="locale.langInfo.value.dir">
+  <div class="min-h-screen flex bg-[color:var(--bg-base)] transition-colors" :dir="locale.langInfo.value.dir">
     <!-- Mobile Sidebar Overlay -->
     <Transition name="overlay-fade">
       <div
@@ -15,7 +15,7 @@
       data-print-chrome
       class="print:hidden"
       :class="[
-        'flex flex-col flex-shrink-0 overflow-hidden bg-white dark:bg-slate-800 border-l dark:border-slate-700 border-gray-200 shadow-sm',
+        'flex flex-col flex-shrink-0 overflow-hidden bg-[color:var(--bg-sidebar)] border-l border-[color:var(--border-color)] shadow-[0_0_0_1px_rgba(13,148,136,0.06)] dark:border-slate-700 dark:shadow-none',
         'fixed lg:relative inset-y-0 right-0 z-50 lg:z-auto',
         mobileOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0',
         collapsed ? 'w-[60px]' : 'w-64',
@@ -25,14 +25,27 @@
       <!-- عنوان المنصّة (متعدد اللغات) + طيّ -->
       <div
         v-if="!collapsed"
-        class="flex min-h-14 items-center justify-between gap-2 border-b border-gray-200 px-4 py-2.5 dark:border-slate-700 sticky top-0 z-10 flex-shrink-0 bg-white transition-colors dark:bg-slate-800"
+        class="flex min-h-14 items-start justify-between gap-2 border-b border-[color:var(--border-color)] bg-[color:var(--bg-header)] px-4 py-3 dark:border-slate-700 sticky top-0 z-10 flex-shrink-0 transition-colors"
       >
-        <span class="min-w-0 flex-1 text-sm font-bold leading-snug text-gray-900 dark:text-slate-100">
-          {{ locale.t('app.sidebarTitle') }}
-        </span>
+        <div class="flex min-w-0 flex-1 items-start gap-2.5">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 text-center text-[9px] font-extrabold leading-tight text-white shadow-sm ring-1 ring-primary-400/40"
+            aria-hidden="true"
+          >
+            {{ locale.t('app.name') }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <span class="block text-sm font-bold leading-snug text-[color:var(--text-primary)] dark:text-slate-100">
+              {{ locale.t('app.sidebarTitle') }}
+            </span>
+            <span class="mt-0.5 block text-[10px] font-medium leading-relaxed text-gray-500 dark:text-slate-400 line-clamp-2">
+              {{ locale.t('app.tagline') }}
+            </span>
+          </div>
+        </div>
         <button
           type="button"
-          class="flex-shrink-0 rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+          class="flex-shrink-0 rounded-lg p-1 text-gray-400 transition-colors hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
           title="طيّ القائمة"
           @click="collapsed = true"
         >
@@ -50,198 +63,273 @@
       <!-- Nav -->
       <nav class="flex-1 overflow-y-auto" :class="collapsed ? 'p-1.5 space-y-1' : 'p-3 space-y-4 pb-6'">
         <template v-if="collapsed">
-          <!-- Icon-only mode -->
-          <NavIconItem v-for="item in flatItems" :key="item.to" v-bind="item" />
+          <div v-if="!staffShellReady" class="space-y-2 p-1" aria-busy="true" aria-label="جاري تهيئة القائمة">
+            <div v-for="sk in 9" :key="'skc-'+sk" class="mx-auto h-10 w-10 rounded-xl bg-gray-100 dark:bg-slate-700 animate-pulse" />
+          </div>
+          <NavIconItem v-for="item in flatItems" v-else :key="item.to" v-bind="item" />
         </template>
         <template v-else>
-          <!-- بحث سريع في أقسام القائمة -->
-          <div class="space-y-1.5 sticky top-0 z-[5] -mx-1 px-1 pb-2 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-b border-gray-100 dark:border-slate-700/80">
-            <div class="relative">
-              <MagnifyingGlassIcon class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
-              <input
-                v-model="navQuickFilter"
-                type="search"
-                enterkeyhint="search"
-                autocomplete="off"
-                :placeholder="l('بحث في القائمة…', 'Search menu…')"
-                class="w-full rounded-xl border border-gray-200 bg-gray-50/90 py-2 pr-9 pl-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/25 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100 dark:placeholder:text-slate-500"
-                @keydown.escape="navQuickFilter = ''"
-              />
-            </div>
-            <div
-              v-if="navQuickFilterTrimmed && filteredNavQuick.length"
-              class="max-h-[min(42vh,16rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:shadow-xl"
-            >
-              <RouterLink
-                v-for="item in filteredNavQuick"
-                :key="item.to + item.label"
-                :to="item.to"
-                class="flex flex-col gap-px border-b border-gray-50 px-3 py-2.5 text-right last:border-0 hover:bg-primary-50 dark:border-slate-700/80 dark:hover:bg-primary-950/35"
-                @click="mobileOpen = false; navQuickFilter = ''"
-              >
-                <span class="text-sm font-medium text-gray-800 dark:text-slate-100">{{ item.label }}</span>
-                <span class="text-[10px] text-gray-400 dark:text-slate-500">{{ item.section }}</span>
-              </RouterLink>
-            </div>
-            <p v-else-if="navQuickFilterTrimmed" class="px-1 text-[11px] text-gray-400 dark:text-slate-500">
-              {{ l('لا نتائج — جرّب Ctrl+K للبحث الشامل', 'No results — try Ctrl+K for global search') }}
-            </p>
-          </div>
-
-          <NavSection v-if="sectionEnabled('operations')" section-key="operations" :label="l('تشغيلي', 'Operations')">
-            <NavItem to="/" :icon="HomeIcon" :label="locale.t('nav.dashboard')" :exact="true" />
-            <NavItem to="/pos" :icon="ShoppingCartIcon" :label="locale.t('nav.pos')" />
-            <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
-            <NavItem to="/bays" :icon="BuildingOfficeIcon" label="مناطق العمل" />
-            <NavItem to="/bookings" :icon="CalendarDaysIcon" label="الحجوزات" />
-            <NavItem
-              v-if="auth.hasPermission('meetings.update')"
-              to="/meetings"
-              :icon="CalendarIcon"
-              label="الاجتماعات"
-            />
-            <NavItem to="/bays/heatmap" :icon="FireIcon" label="الخريطة الحرارية" />
-            <NavItem to="/customers" :icon="UsersIcon" :label="locale.t('nav.customers')" />
-            <NavItem v-if="sectionEnabled('crm')" to="/crm/quotes" :icon="DocumentTextIcon" label="عروض الأسعار" />
-            <NavItem v-if="sectionEnabled('crm')" to="/crm/relations" :icon="HeartIcon" label="علاقات العملاء" />
-            <NavItem to="/vehicles" :icon="TruckIcon" :label="locale.t('nav.vehicles')" />
-            <NavItem v-if="enabledPortals.fleet && sectionEnabled('fleet')" to="/fleet/verify-plate" :icon="MagnifyingGlassIcon" label="التحقق من اللوحة" />
-            <NavItem v-if="enabledPortals.fleet && sectionEnabled('fleet')" to="/fleet/wallet" :icon="CreditCardIcon" label="محافظ الأسطول" />
-          </NavSection>
-
-          <NavSection v-if="sectionEnabled('hr')" section-key="hr" label="الموارد البشرية">
-            <NavItem to="/workshop/employees" :icon="UserGroupIcon" label="إدارة الموظفين" />
-            <NavItem to="/workshop/tasks" :icon="ClipboardDocumentCheckIcon" label="إدارة المهام" />
-            <NavItem to="/workshop/attendance" :icon="ClockIcon" label="الحضور" />
-            <NavItem to="/workshop/leaves" :icon="CalendarDaysIcon" label="الإجازات" />
-            <NavItem to="/workshop/salaries" :icon="BanknotesIcon" label="مسير الرواتب" />
-            <NavItem to="/workshop/commissions" :icon="CurrencyDollarIcon" label="العمولات" />
-            <NavItem to="/workshop/commission-policies" :icon="AdjustmentsHorizontalIcon" label="سياسات العمولات" />
-            <NavItem to="/workshop/hr-comms" :icon="ChatBubbleLeftRightIcon" label="اتصالات إدارية" />
-          </NavSection>
-
-          <NavSection
-            v-if="sectionEnabled('finance') || sectionEnabled('accounting')"
-            section-key="finance_accounting"
-            :label="l('المالية والمحاسبة', 'Finance & Accounting')"
+          <div
+            v-if="!staffShellReady"
+            class="space-y-3 px-1 pb-4"
+            aria-busy="true"
+            aria-label="جاري تهيئة القائمة والصلاحيات"
           >
-            <template v-if="sectionEnabled('finance')">
-              <NavItem to="/invoices" :icon="DocumentTextIcon" :label="locale.t('nav.invoices')" />
+            <div class="h-10 w-full rounded-xl bg-gray-100 dark:bg-slate-700 animate-pulse" />
+            <div class="space-y-2 rounded-2xl border border-gray-100/90 dark:border-slate-700/80 bg-gray-50/60 dark:bg-slate-900/35 p-3">
+              <div class="h-3 w-24 rounded bg-gray-200 dark:bg-slate-600 animate-pulse" />
+              <div v-for="j in 5" :key="'skn-'+j" class="h-9 w-full rounded-xl bg-white/80 dark:bg-slate-800/50 animate-pulse" />
+            </div>
+            <div class="space-y-2 rounded-2xl border border-gray-100/90 dark:border-slate-700/80 bg-gray-50/60 dark:bg-slate-900/35 p-3">
+              <div class="h-3 w-28 rounded bg-gray-200 dark:bg-slate-600 animate-pulse" />
+              <div v-for="k in 4" :key="'skn2-'+k" class="h-9 w-full rounded-xl bg-white/80 dark:bg-slate-800/50 animate-pulse" />
+            </div>
+          </div>
+          <!-- بحث سريع في أقسام القائمة -->
+          <template v-else>
+            <div
+              class="sticky top-0 z-[5] -mx-1 space-y-1.5 border-b border-[color:var(--border-color)] bg-[color:var(--bg-sidebar)]/95 px-1 pb-2 backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/95"
+            >
+              <div class="relative">
+                <MagnifyingGlassIcon class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
+                <input
+                  v-model="navQuickFilter"
+                  type="search"
+                  enterkeyhint="search"
+                  autocomplete="off"
+                  :placeholder="l('بحث في القائمة…', 'Search menu…')"
+                  class="w-full rounded-xl border border-gray-200 bg-gray-50/90 py-2 pr-9 pl-3 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-500/25 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100 dark:placeholder:text-slate-500"
+                  @keydown.escape="navQuickFilter = ''"
+                />
+              </div>
+              <div
+                v-if="navQuickFilterTrimmed && filteredNavQuick.length"
+                class="max-h-[min(42vh,16rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-800 dark:shadow-xl"
+              >
+                <RouterLink
+                  v-for="item in filteredNavQuick"
+                  :key="item.to + item.label"
+                  :to="item.to"
+                  class="flex flex-col gap-px border-b border-gray-50 px-3 py-2.5 text-right last:border-0 hover:bg-primary-50 dark:border-slate-700/80 dark:hover:bg-primary-950/35"
+                  @click="mobileOpen = false; navQuickFilter = ''"
+                >
+                  <span class="text-sm font-medium text-gray-800 dark:text-slate-100">{{ item.label }}</span>
+                  <span class="text-[10px] text-gray-400 dark:text-slate-500">{{ item.section }}</span>
+                </RouterLink>
+              </div>
+              <p v-else-if="navQuickFilterTrimmed" class="px-1 text-[11px] text-gray-400 dark:text-slate-500">
+                {{ l('لا نتائج — جرّب Ctrl+K للبحث الشامل', 'No results — try Ctrl+K for global search') }}
+              </p>
+            </div>
+
+            <!-- القائمة الجانبية: مرجع خريطة API ↔ الراوتر — docs/Tenant_Navigation_API_Map.md | npm run docs:nav-api-check -->
+            <!-- ترتيب الأقسام: تشغيلي → مخزون → مالية → تحليلات → موارد بشرية → إداري → منصة (نفس أسلوب الطي/التوسيع) -->
+            <NavSection v-if="navSectionVisible('operations')" section-key="operations" :label="l('تشغيلي', 'Operations')">
+              <NavItem to="/" :icon="HomeIcon" :label="locale.t('nav.dashboard')" :exact="true" />
+              <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
+              <NavItem to="/vehicles" :icon="TruckIcon" :label="locale.t('nav.vehicles')" />
               <NavItem
-                v-if="sectionEnabled('crm')"
-                to="/crm/quotes"
-                :icon="ClipboardDocumentIcon"
-                label="عروض الأسعار"
+                v-if="enabledPortals.fleet && sectionEnabled('fleet')"
+                to="/fleet/verify-plate"
+                :icon="MagnifyingGlassIcon"
+                label="التحقق من اللوحة"
               />
               <NavItem
-                v-if="auth.hasPermission('reports.financial.view')"
-                to="/financial-reconciliation"
-                :icon="ArrowsRightLeftIcon"
-                label="المطابقة المالية"
+                v-if="enabledPortals.fleet && sectionEnabled('fleet')"
+                to="/fleet/wallet"
+                :icon="CreditCardIcon"
+                label="محافظ الأسطول"
               />
-              <NavItem to="/wallet" :icon="CreditCardIcon" label="المحفظة" />
+              <NavItem to="/customers" :icon="UsersIcon" :label="locale.t('nav.customers')" />
+              <NavItem v-if="sectionEnabled('crm')" to="/crm/quotes" :icon="DocumentTextIcon" label="عروض الأسعار" />
+              <NavItem v-if="sectionEnabled('crm')" to="/crm/relations" :icon="HeartIcon" label="علاقات العملاء" />
+              <NavItem to="/pos" :icon="ShoppingCartIcon" :label="locale.t('nav.pos')" />
+              <NavItem v-if="opsNavOpen" to="/bays" :icon="BuildingOfficeIcon" label="مناطق العمل" />
+              <NavItem v-if="opsNavOpen" to="/bookings" :icon="CalendarDaysIcon" label="الحجوزات" />
+              <NavItem
+                v-if="opsNavOpen && auth.hasPermission('meetings.update')"
+                to="/meetings"
+                :icon="CalendarIcon"
+                label="الاجتماعات"
+              />
+              <NavItem v-if="opsNavOpen" to="/bays/heatmap" :icon="FireIcon" label="الخريطة الحرارية" />
+            </NavSection>
+
+            <NavSection
+              v-if="sectionEnabled('inventory') && navSectionVisible('inventory')"
+              section-key="inventory"
+              :label="l('المخزون والكتالوج', 'Inventory & catalog')"
+            >
+              <NavItem to="/products" :icon="CubeIcon" label="المنتجات" />
+              <NavItem to="/inventory" :icon="ArchiveBoxIcon" :label="locale.t('nav.inventory')" />
+              <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
+            </NavSection>
+
+            <NavSection
+              v-if="(sectionEnabled('finance') || sectionEnabled('accounting')) && navSectionVisible('finance_accounting')"
+              section-key="finance_accounting"
+              :label="l('المالية والمحاسبة', 'Finance & Accounting')"
+            >
+              <template v-if="sectionEnabled('finance')">
+                <NavItem to="/invoices" :icon="DocumentTextIcon" :label="locale.t('nav.invoices')" />
+                <NavItem
+                  v-if="sectionEnabled('crm')"
+                  to="/crm/quotes"
+                  :icon="ClipboardDocumentIcon"
+                  label="عروض الأسعار"
+                />
+                <NavSubGroup v-if="navGroupVisible('purchases')" group-key="purchases" label="المشتريات">
+                  <NavItem to="/purchases" :icon="ShoppingBagIcon" label="قائمة المشتريات" />
+                  <NavItem to="/purchases/new" :icon="ClipboardDocumentIcon" label="أوامر شراء" />
+                  <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
+                </NavSubGroup>
+                <NavItem to="/wallet" :icon="CreditCardIcon" label="المحفظة" />
+                <NavItem
+                  v-if="
+                    auth.hasPermission('wallet.top_up_requests.create')
+                      || auth.hasPermission('wallet.top_up_requests.view')
+                      || auth.hasPermission('wallet.top_up_requests.review')
+                  "
+                  to="/wallet/top-up-requests"
+                  :icon="QueueListIcon"
+                  label="طلبات شحن الرصيد"
+                />
+                <NavItem
+                  v-if="auth.hasPermission('reports.financial.view')"
+                  to="/financial-reconciliation"
+                  :icon="ArrowsRightLeftIcon"
+                  label="المطابقة المالية"
+                />
+              </template>
+              <template v-if="sectionEnabled('accounting')">
+                <NavSubGroup v-if="navGroupVisible('accountant')" group-key="accountant" label="المحاسب">
+                  <NavItem to="/ledger" :icon="BookOpenIcon" label="القيود اليومية" />
+                  <NavItem to="/chart-of-accounts" :icon="TableCellsIcon" label="شجرة الحسابات" />
+                  <NavItem to="/zatca" :icon="BuildingOffice2Icon" label="الضرائب" />
+                  <NavItem
+                    v-if="biz.isEnabled('fixed_assets') && auth.hasPermission('reports.accounting.view')"
+                    to="/fixed-assets"
+                    :icon="ArchiveBoxIcon"
+                    label="الأصول الثابتة"
+                  />
+                </NavSubGroup>
+              </template>
+            </NavSection>
+
+            <NavSection
+              v-if="(sectionEnabled('reports') || sectionEnabled('intelligence')) && navSectionVisible('analytics')"
+              section-key="analytics"
+              :label="l('التقارير والتحليلات', 'Reports & analytics')"
+            >
+              <NavItem v-if="sectionEnabled('reports')" to="/reports" :icon="ChartBarIcon" :label="locale.t('nav.reports')" />
               <NavItem
                 v-if="
-                  auth.hasPermission('wallet.top_up_requests.create')
-                    || auth.hasPermission('wallet.top_up_requests.view')
-                    || auth.hasPermission('wallet.top_up_requests.review')
+                  canAccessStaffBusinessIntelligence({
+                    buildFlagOn: featureFlags.intelligenceCommandCenter,
+                    isOwner: auth.isOwner,
+                    isEnabled: (k) => biz.isEnabled(k),
+                  })
                 "
-                to="/wallet/top-up-requests"
-                :icon="QueueListIcon"
-                label="طلبات شحن الرصيد"
+                to="/business-intelligence"
+                :icon="PresentationChartLineIcon"
+                label="ذكاء الأعمال"
               />
-              <NavSubGroup group-key="purchases" label="المشتريات">
-                <NavItem to="/purchases" :icon="ShoppingBagIcon" label="قائمة المشتريات" />
-                <NavItem to="/purchases/new" :icon="ClipboardDocumentIcon" label="أوامر شراء" />
-                <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
+              <NavItem to="/governance" :icon="ShieldCheckIcon" label="السياسات والموافقات" />
+              <NavItem
+                v-if="
+                  canAccessStaffCommandCenter({
+                    buildFlagOn: featureFlags.intelligenceCommandCenter,
+                    isOwner: auth.isOwner,
+                    isEnabled: (k) => biz.isEnabled(k),
+                    hasIntelligenceReportPermission: auth.hasPermission('reports.intelligence.view'),
+                  })
+                "
+                to="/internal/intelligence"
+                :icon="SignalIcon"
+                label="مركز العمليات الذكي"
+              />
+            </NavSection>
+
+            <NavSection
+              v-if="sectionEnabled('hr') && navSectionVisible('hr') && !providerFocusNavActive"
+              section-key="hr"
+              label="الموارد البشرية"
+            >
+              <NavItem to="/workshop/employees" :icon="UserGroupIcon" label="إدارة الموظفين" />
+              <NavItem to="/workshop/tasks" :icon="ClipboardDocumentCheckIcon" label="إدارة المهام" />
+              <NavItem to="/workshop/attendance" :icon="ClockIcon" label="الحضور" />
+              <NavItem to="/workshop/leaves" :icon="CalendarDaysIcon" label="الإجازات" />
+              <NavItem to="/workshop/salaries" :icon="BanknotesIcon" label="مسير الرواتب" />
+              <NavItem to="/workshop/commissions" :icon="CurrencyDollarIcon" label="العمولات" />
+              <NavItem to="/workshop/commission-policies" :icon="AdjustmentsHorizontalIcon" label="سياسات العمولات" />
+              <NavItem to="/workshop/hr-comms" :icon="ChatBubbleLeftRightIcon" label="اتصالات إدارية" />
+            </NavSection>
+
+            <NavSection v-if="navSectionVisible('admin')" section-key="admin" :label="l('إداري', 'Admin')">
+              <NavSubGroup v-if="navGroupVisible('admin_branches')" group-key="admin_branches" :label="l('الفروع والمواقع', 'Branches & map')">
+                <NavItem v-if="auth.isManager" to="/branches" :icon="BuildingLibraryIcon" label="إدارة الفروع" />
+                <NavItem v-if="auth.isStaff" to="/branches/map" :icon="MapPinIcon" label="خريطة الفروع (Google)" />
               </NavSubGroup>
-            </template>
-            <template v-if="sectionEnabled('accounting')">
-              <NavSubGroup group-key="accountant" label="المحاسب">
-                <NavItem to="/ledger" :icon="BookOpenIcon" label="القيود اليومية" />
-                <NavItem to="/chart-of-accounts" :icon="TableCellsIcon" label="شجرة الحسابات" />
-                <NavItem to="/zatca" :icon="BuildingOffice2Icon" label="الضرائب" />
-                <NavItem to="/fixed-assets" :icon="ArchiveBoxIcon" label="الأصول الثابتة" />
+              <NavSubGroup
+                v-if="navGroupVisible('admin_contracts_docs')"
+                group-key="admin_contracts_docs"
+                :label="l('العقود والوثائق', 'Contracts & documents')"
+              >
+                <NavItem to="/contracts" :icon="DocumentCheckIcon" label="العقود" />
+                <NavItem to="/documents/company" :icon="FolderOpenIcon" label="مستندات المنشأة" />
               </NavSubGroup>
-            </template>
-          </NavSection>
+              <NavSubGroup
+                v-if="navGroupVisible('admin_company_settings')"
+                group-key="admin_company_settings"
+                :label="l('إعدادات المنشأة والفريق', 'Company & team setup')"
+              >
+                <NavItem to="/settings" :icon="Cog6ToothIcon" :label="locale.t('nav.settings')" />
+                <NavItem
+                  v-if="auth.isManager"
+                  to="/settings/team-users"
+                  :icon="UserGroupIcon"
+                  :label="teamUsersNavLabel"
+                />
+                <NavItem
+                  v-if="auth.isManager && biz.isEnabled('org_structure')"
+                  to="/settings/org-units"
+                  :icon="BuildingOffice2Icon"
+                  :label="orgUnitsNavLabel"
+                />
+                <NavItem to="/settings/integrations" :icon="WrenchScrewdriverIcon" label="التكاملات" />
+                <NavItem
+                  v-if="auth.hasPermission('api_keys.manage')"
+                  to="/settings/api-keys"
+                  :icon="LockClosedIcon"
+                  label="مفاتيح API"
+                />
+              </NavSubGroup>
+              <NavSubGroup
+                v-if="navGroupVisible('admin_security_logs')"
+                group-key="admin_security_logs"
+                :label="l('الأمان والسجلات', 'Security & logs')"
+              >
+                <NavItem v-if="auth.isStaff" to="/account/sessions" :icon="DevicePhoneMobileIcon" label="الأجهزة والجلسات" />
+                <NavItem to="/activity" :icon="ClipboardDocumentListIcon" label="سجل العمليات" />
+              </NavSubGroup>
+              <NavSubGroup v-if="navGroupVisible('admin_support')" group-key="admin_support" :label="l('الدعم والولاء', 'Support & loyalty')">
+                <NavItem to="/referrals" :icon="GiftIcon" label="الإحالات والولاء" />
+                <NavItem to="/support" :icon="LifebuoyIcon" label="مركز الدعم الفني" />
+              </NavSubGroup>
+            </NavSection>
 
-          <NavSection v-if="sectionEnabled('inventory')" section-key="inventory" :label="l('المخزون', 'Inventory')">
-            <NavItem to="/products" :icon="CubeIcon" label="المنتجات" />
-            <NavItem to="/inventory" :icon="ArchiveBoxIcon" :label="locale.t('nav.inventory')" />
-            <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
-          </NavSection>
+            <NavSection
+              v-if="auth.isPlatform && enabledPortals.admin && navSectionVisible('platform')"
+              section-key="platform"
+              label="إدارة منصة أسس برو"
+            >
+              <NavSubGroup v-if="navGroupVisible('platform-center')" group-key="platform-center" label="مركز إدارة المنصة">
+                <NavItem to="/platform/overview" :icon="CpuChipIcon" label="مركز المنصة" />
+                <NavItem to="/admin/qa" :icon="BeakerIcon" label="فحص الجودة (QA)" />
+              </NavSubGroup>
+            </NavSection>
 
-          <NavSection v-if="sectionEnabled('reports') || sectionEnabled('intelligence')" section-key="analytics" :label="l('التحليلات وذكاء الأعمال', 'Analytics & Intelligence')">
-            <NavItem
-              v-if="
-                canAccessStaffBusinessIntelligence({
-                  buildFlagOn: featureFlags.intelligenceCommandCenter,
-                  isOwner: auth.isOwner,
-                  isEnabled: (k) => biz.isEnabled(k),
-                })
-              "
-              to="/business-intelligence"
-              :icon="PresentationChartLineIcon"
-              label="ذكاء الأعمال"
-            />
-            <NavItem v-if="sectionEnabled('reports')" to="/reports" :icon="ChartBarIcon" :label="locale.t('nav.reports')" />
-            <NavItem to="/governance" :icon="ShieldCheckIcon" label="السياسات والموافقات" />
-            <NavItem
-              v-if="
-                canAccessStaffCommandCenter({
-                  buildFlagOn: featureFlags.intelligenceCommandCenter,
-                  isOwner: auth.isOwner,
-                  isEnabled: (k) => biz.isEnabled(k),
-                  hasIntelligenceReportPermission: auth.hasPermission('reports.intelligence.view'),
-                })
-              "
-              to="/internal/intelligence"
-              :icon="SignalIcon"
-              label="مركز العمليات الذكي"
-            />
-          </NavSection>
-
-          <NavSection section-key="admin" :label="l('إداري', 'Admin')">
-            <NavItem v-if="auth.isManager" to="/branches" :icon="BuildingLibraryIcon" label="إدارة الفروع" />
-            <NavItem v-if="auth.isStaff" to="/branches/map" :icon="MapPinIcon" label="خريطة الفروع (Google)" />
-            <NavItem to="/contracts" :icon="DocumentCheckIcon" label="العقود" />
-            <NavItem to="/documents/company" :icon="FolderOpenIcon" label="مستندات المنشأة" />
-            <NavItem to="/activity" :icon="ClipboardDocumentListIcon" label="سجل العمليات" />
-            <NavItem to="/settings" :icon="Cog6ToothIcon" :label="locale.t('nav.settings')" />
-            <NavItem
-              v-if="auth.isManager"
-              to="/settings/team-users"
-              :icon="UserGroupIcon"
-              :label="teamUsersNavLabel"
-            />
-            <NavItem
-              v-if="auth.isManager && biz.isEnabled('org_structure')"
-              to="/settings/org-units"
-              :icon="BuildingOffice2Icon"
-              :label="orgUnitsNavLabel"
-            />
-            <NavItem to="/settings/integrations" :icon="WrenchScrewdriverIcon" label="التكاملات" />
-            <NavItem
-              v-if="auth.hasPermission('api_keys.manage')"
-              to="/settings/api-keys"
-              :icon="LockClosedIcon"
-              label="مفاتيح API"
-            />
-            <NavItem to="/referrals" :icon="GiftIcon" label="الإحالات والولاء" />
-            <NavItem to="/support" :icon="LifebuoyIcon" label="مركز الدعم الفني" />
-          </NavSection>
-
-          <NavSection v-if="auth.isOwner && enabledPortals.admin" section-key="platform" label="إدارة المنصة">
-            <NavItem to="/admin" :icon="CpuChipIcon" label="لوحة الأدمن" />
-            <NavItem to="/admin/qa" :icon="BeakerIcon" label="التحقق من النظام (QA)" />
-          </NavSection>
-
-          <NavSection section-key="subscription" :label="l('الاشتراك', 'Subscription')">
-            <NavItem to="/subscription" :icon="StarIcon" label="اشتراكي" />
-            <NavItem to="/plans" :icon="RectangleStackIcon" label="الباقات" />
-            <NavItem to="/plugins" :icon="SparklesIcon" label="سوق الإضافات AI" />
-          </NavSection>
+          </template>
         </template>
       </nav>
 
@@ -327,144 +415,152 @@
       <!-- Header -->
       <header
         data-print-chrome
-        class="print:hidden h-16 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10 gap-3 transition-colors"
+        class="print:hidden sticky top-0 z-10 flex h-16 items-center border-b border-[color:var(--border-color)] bg-[color:var(--bg-header)]/95 px-4 shadow-[0_1px_0_rgba(13,148,136,0.06)] backdrop-blur-md transition-colors dark:border-slate-700 dark:bg-slate-900/90 dark:shadow-none lg:px-6"
       >
-        <div class="flex items-center gap-3 min-w-0">
-          <!-- Mobile Hamburger -->
-          <button class="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex-shrink-0" @click="mobileOpen = !mobileOpen">
-            <Bars3Icon class="w-5 h-5 text-gray-600 dark:text-slate-300" />
-          </button>
-          <h1 class="text-base font-semibold text-gray-900 dark:text-slate-100 truncate">{{ pageTitle }}</h1>
-          <span class="hidden sm:block text-xs text-gray-400 dark:text-slate-500 font-normal">|</span>
-          <span class="hidden sm:block text-xs text-primary-600 dark:text-primary-400 font-medium whitespace-nowrap">{{ greeting }}، {{ auth.user?.name?.split(' ')[0] }}</span>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <!-- Command Palette Trigger -->
-          <button
-            class="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
-            @click="openPalette"
-          >
-            <MagnifyingGlassIcon class="w-4 h-4" />
-            <span class="text-xs">بحث...</span>
-            <kbd class="text-xs bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1 text-gray-400">Ctrl+K</kbd>
-          </button>
-
-          <button
-            v-if="showStaffCompactToggle"
-            type="button"
-            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors"
-            :class="
-              staffUi.compactMode
-                ? 'border-amber-400 bg-amber-100 text-amber-950 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100'
-                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-            "
-            :title="l('وضع مركز الخدمة السريع: إخفاء تفاصيل ثانوية', 'Compact service center mode: fewer secondary details')"
-            @click="staffUi.toggleCompact()"
-          >
-            <BoltIcon class="w-4 h-4 flex-shrink-0" />
-            <span class="hidden sm:inline max-w-[7rem] truncate">{{ l('وضع سريع', 'Compact') }}</span>
-          </button>
-
-          <!-- Language Switcher -->
-          <div ref="langMenuRef" class="relative">
-            <button class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                    @click="langMenuOpen = !langMenuOpen"
-            >
-              <span class="text-base leading-none">{{ locale.langInfo.value.flag }}</span>
-              <span class="hidden sm:block text-xs font-medium">{{ locale.langInfo.value.native }}</span>
-              <ChevronDownIcon class="w-3 h-3 text-gray-400" />
+        <div class="mx-auto flex h-full w-full max-w-[1600px] items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <!-- Mobile Hamburger -->
+            <button class="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors flex-shrink-0" @click="mobileOpen = !mobileOpen">
+              <Bars3Icon class="w-5 h-5 text-gray-600 dark:text-slate-300" />
             </button>
-            <div v-if="langMenuOpen"
-                 class="absolute top-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg z-50 py-1 min-w-[160px]"
-                 :class="locale.langInfo.value.dir === 'rtl' ? 'left-0' : 'right-0'"
-            >
-              <button v-for="lang in LANGUAGES" :key="lang.code"
-                      class="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-                      :class="locale.lang.value === lang.code ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-gray-700 dark:text-slate-300'"
-                      @click="locale.setLang(lang.code); langMenuOpen = false"
-              >
-                <span class="text-base leading-none">{{ lang.flag }}</span>
-                <span>{{ lang.native }}</span>
-                <CheckIcon v-if="locale.lang.value === lang.code" class="w-3.5 h-3.5 mr-auto text-primary-600 dark:text-primary-400" />
-              </button>
-            </div>
+            <h1 class="text-base font-semibold text-gray-900 dark:text-slate-100 truncate">{{ pageTitle }}</h1>
+            <span class="hidden sm:block text-xs text-gray-400 dark:text-slate-500 font-normal">|</span>
+            <span class="hidden sm:block text-xs text-primary-600 dark:text-primary-400 font-medium whitespace-nowrap">{{ greeting }}، {{ auth.user?.name?.split(' ')[0] }}</span>
           </div>
 
-          <!-- Dark Mode Toggle -->
-          <button class="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                  :title="darkMode.isDark.value ? 'الوضع النهاري' : 'الوضع الليلي'"
-                  @click="darkMode.toggle()"
-          >
-            <SunIcon v-if="darkMode.isDark.value" class="w-5 h-5" />
-            <MoonIcon v-else class="w-5 h-5" />
-          </button>
+          <div class="flex items-center gap-2">
+            <!-- Command Palette Trigger -->
+            <button
+              class="hidden items-center gap-2 rounded-xl border border-gray-200/90 bg-gray-50/90 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:border-primary-200/80 hover:bg-primary-50/60 hover:text-primary-800 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:border-primary-800/50 dark:hover:bg-primary-900/30 dark:hover:text-primary-200 md:flex"
+              @click="openPalette"
+            >
+              <MagnifyingGlassIcon class="w-4 h-4" />
+              <span class="text-xs">بحث...</span>
+              <kbd class="text-xs bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1 text-gray-400">Ctrl+K</kbd>
+            </button>
 
-          <NotificationCenter class="flex-shrink-0" :api-security-notice="apiSecurityNotice" />
+            <button
+              v-if="showStaffCompactToggle"
+              type="button"
+              class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+              :class="
+                staffUi.compactMode
+                  ? 'border-amber-400 bg-amber-100 text-amber-950 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-100'
+                  : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+              "
+              :title="l('وضع مركز الخدمة السريع: إخفاء تفاصيل ثانوية', 'Compact service center mode: fewer secondary details')"
+              @click="staffUi.toggleCompact()"
+            >
+              <BoltIcon class="w-4 h-4 flex-shrink-0" />
+              <span class="hidden sm:inline max-w-[7rem] truncate">{{ l('وضع سريع', 'Compact') }}</span>
+            </button>
 
-          <!-- تسجيل الخروج — أعلى الصفحة، نقرة واحدة + إعادة توجيه فورية -->
-          <button
-            type="button"
-            data-testid="app-header-logout"
-            class="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 disabled:opacity-50 disabled:pointer-events-none"
-            :title="locale.t('nav.logout')"
-            :aria-label="locale.t('nav.logout')"
-            :disabled="loggingOut"
-            @click="handleLogout"
-          >
-            <ArrowLeftOnRectangleIcon class="h-5 w-5 flex-shrink-0" />
-            <span class="hidden sm:inline max-w-[7rem] truncate">{{ locale.t('nav.logout') }}</span>
-          </button>
-
-          <!-- Portal Switcher -->
-          <PortalSwitcher />
-
-          <!-- Plan badge — يظهر الباقة + حالة الفوترة من `/auth/me` مباشرة -->
-          <RouterLink to="/subscription"
-                      class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg text-xs font-medium hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
-                      :title="billingBadgeTitle"
-          >
-            <StarIcon class="w-3.5 h-3.5 flex-shrink-0" />
-            <span class="flex flex-col items-start min-w-0 leading-tight">
-              <span class="truncate max-w-[9.5rem]">{{ sub.planName }}</span>
-              <span v-if="billingStateShort" class="text-[10px] font-normal opacity-80">{{ billingStateShort }}</span>
-            </span>
-          </RouterLink>
-
-          <!-- User Avatar -->
-          <RouterLink to="/profile" class="flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg px-2 py-1 transition-colors">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-sm font-bold shadow-sm">
-              {{ auth.user?.name?.charAt(0) }}
+            <!-- Language Switcher -->
+            <div ref="langMenuRef" class="relative">
+              <button class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                      @click="langMenuOpen = !langMenuOpen"
+              >
+                <span class="text-base leading-none">{{ locale.langInfo.value.flag }}</span>
+                <span class="hidden sm:block text-xs font-medium">{{ locale.langInfo.value.native }}</span>
+                <ChevronDownIcon class="w-3 h-3 text-gray-400" />
+              </button>
+              <div v-if="langMenuOpen"
+                   class="absolute top-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg z-50 py-1 min-w-[160px]"
+                   :class="locale.langInfo.value.dir === 'rtl' ? 'left-0' : 'right-0'"
+              >
+                <button v-for="lang in LANGUAGES" :key="lang.code"
+                        class="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                        :class="locale.lang.value === lang.code ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-gray-700 dark:text-slate-300'"
+                        @click="locale.setLang(lang.code); langMenuOpen = false"
+                >
+                  <span class="text-base leading-none">{{ lang.flag }}</span>
+                  <span>{{ lang.native }}</span>
+                  <CheckIcon v-if="locale.lang.value === lang.code" class="w-3.5 h-3.5 mr-auto text-primary-600 dark:text-primary-400" />
+                </button>
+              </div>
             </div>
-            <span class="hidden lg:block text-sm text-gray-700 dark:text-slate-300 font-medium">{{ auth.user?.name }}</span>
-          </RouterLink>
+
+            <!-- Dark Mode Toggle -->
+            <button class="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                    :title="darkMode.isDark.value ? 'الوضع النهاري' : 'الوضع الليلي'"
+                    @click="darkMode.toggle()"
+            >
+              <SunIcon v-if="darkMode.isDark.value" class="w-5 h-5" />
+              <MoonIcon v-else class="w-5 h-5" />
+            </button>
+
+            <NotificationCenter class="flex-shrink-0" :api-security-notice="apiSecurityNotice" />
+
+            <!-- تسجيل الخروج — أعلى الصفحة، نقرة واحدة + إعادة توجيه فورية -->
+            <button
+              type="button"
+              data-testid="app-header-logout"
+              class="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 disabled:opacity-50 disabled:pointer-events-none"
+              :title="locale.t('nav.logout')"
+              :aria-label="locale.t('nav.logout')"
+              :disabled="loggingOut"
+              @click="handleLogout"
+            >
+              <ArrowLeftOnRectangleIcon class="h-5 w-5 flex-shrink-0" />
+              <span class="hidden sm:inline max-w-[7rem] truncate">{{ locale.t('nav.logout') }}</span>
+            </button>
+
+            <!-- Portal Switcher -->
+            <PortalSwitcher />
+
+
+            <!-- User Avatar -->
+            <RouterLink to="/profile" class="flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg px-2 py-1 transition-colors">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                {{ auth.user?.name?.charAt(0) }}
+              </div>
+              <span class="hidden lg:block text-sm text-gray-700 dark:text-slate-300 font-medium">{{ auth.user?.name }}</span>
+            </RouterLink>
+          </div>
         </div>
       </header>
 
       <PlatformPromoBanner class="relative z-[10] print:hidden" data-print-chrome />
 
-      <!-- رجوع + فتات خبز -->
+      <!-- شريط سياق أسس برو: اسم المنتج + المسار + رجوع -->
       <div
         v-if="route.name !== 'dashboard'"
         data-print-chrome
-        class="no-print print:hidden px-6 py-2 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800"
+        class="osos-context-strip no-print print:hidden px-4 py-3 md:px-6"
       >
-        <PageBackButton :fallback-to="breadcrumbParentPath" />
-        <nav
-          v-if="breadcrumbs.length > 1"
-          class="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500 mt-1.5"
-          aria-label="breadcrumb"
-        >
-          <template v-for="(crumb, i) in breadcrumbs" :key="crumb.path">
-            <RouterLink v-if="i < breadcrumbs.length - 1" :to="crumb.path" class="hover:text-primary-600 transition-colors">{{ crumb.label }}</RouterLink>
-            <span v-else class="text-gray-600 dark:text-slate-300 font-medium">{{ crumb.label }}</span>
-            <ChevronRightIcon v-if="i < breadcrumbs.length - 1" class="w-3 h-3 text-gray-300" />
-          </template>
-        </nav>
+        <div class="mx-auto flex max-w-[1600px] flex-col gap-2 md:flex-row md:items-start md:justify-between">
+          <div class="min-w-0 flex-1 space-y-1.5">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-right">
+              <span class="text-[11px] font-bold text-primary-600 dark:text-primary-400">{{ locale.t('app.name') }}</span>
+              <span class="hidden text-[11px] text-gray-300 dark:text-slate-600 sm:inline" aria-hidden="true">/</span>
+              <span class="text-sm font-bold text-[color:var(--text-primary)] dark:text-slate-100">{{ pageTitle }}</span>
+            </div>
+            <nav
+              v-if="breadcrumbs.length > 1"
+              class="flex flex-wrap items-center gap-1 text-[11px] text-gray-500 dark:text-slate-400"
+              aria-label="breadcrumb"
+            >
+              <template v-for="(crumb, i) in breadcrumbs" :key="crumb.path">
+                <RouterLink
+                  v-if="i < breadcrumbs.length - 1"
+                  :to="crumb.path"
+                  class="font-medium text-primary-600 transition-colors hover:text-primary-700 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
+                >
+                  {{ crumb.label }}
+                </RouterLink>
+                <span v-else class="font-semibold text-gray-700 dark:text-slate-200">{{ crumb.label }}</span>
+                <ChevronRightIcon v-if="i < breadcrumbs.length - 1" class="h-3 w-3 shrink-0 text-gray-300 dark:text-slate-600" aria-hidden="true" />
+              </template>
+            </nav>
+          </div>
+          <div class="shrink-0 md:pt-0.5">
+            <PageBackButton :fallback-to="breadcrumbParentPath" />
+          </div>
+        </div>
       </div>
 
       <!-- Page -->
-      <main class="flex-1 overflow-auto p-4 md:p-6 bg-gray-50 dark:bg-slate-900 transition-colors">
+      <main class="flex-1 overflow-auto bg-[color:var(--bg-base)] p-4 transition-colors md:p-6">
         <div
           v-if="billingNotice"
           data-print-chrome
@@ -527,7 +623,7 @@ import {
   ChatBubbleLeftRightIcon, FolderOpenIcon,
   AdjustmentsHorizontalIcon, HeartIcon, InformationCircleIcon,
   BuildingLibraryIcon, MapPinIcon, BoltIcon, ArrowsRightLeftIcon, CalendarIcon,
-  QueueListIcon,
+  QueueListIcon, DevicePhoneMobileIcon, PlusCircleIcon, TagIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { useStaffUiStore } from '@/stores/staffUi'
@@ -537,6 +633,7 @@ import { featureFlags } from '@/config/featureFlags'
 import {
   canAccessStaffBusinessIntelligence,
   canAccessStaffCommandCenter,
+  canAccessStaffOperationsArea,
   canAccessWorkshopArea,
   tenantSectionOpen,
 } from '@/config/staffFeatureGate'
@@ -561,9 +658,14 @@ import {
   buildTimeUtcDisplay,
 } from '@/config/appRelease'
 import { useToast } from '@/composables/useToast'
+import { useNavigationContext } from '@/composables/useNavigationContext'
 import apiClient from '@/lib/apiClient'
+import { DEFAULT_NAV_VISIBILITY } from '@/config/navigationVisibility'
+import { isStaffProviderFocusNavEnabled, mergeStaffHiddenNavKeys } from '@/config/staffProviderFocusNav'
+import { isStaffNavHidden, splitStaffNavHref } from '@/lib/staffNavKey'
 
 const auth = useAuthStore()
+const { staffShellReady } = useNavigationContext()
 const staffUi = useStaffUiStore()
 const sub  = useSubscriptionStore()
 const biz = useBusinessProfileStore()
@@ -591,7 +693,7 @@ const appVersionShort = APP_VERSION
 const releaseEnvLabel = releaseEnvironmentLabel()
 const releaseEnvChipClass = computed(() => {
   if (DEPLOY_ENV === 'production') {
-    return 'bg-emerald-100 text-emerald-900 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800/50'
+    return 'bg-primary-100 text-primary-900 border-primary-200/80 dark:bg-primary-950/40 dark:text-primary-200 dark:border-primary-800/50'
   }
   if (DEPLOY_ENV === 'staging') {
     return 'bg-sky-100 text-sky-900 border-sky-200/80 dark:bg-sky-950/50 dark:text-sky-200 dark:border-sky-800/60'
@@ -718,6 +820,27 @@ function sectionEnabled(key: string): boolean {
   return biz.isEnabled(key)
 }
 
+function navSectionVisible(key: string): boolean {
+  const policy = auth.user?.navigation_visibility ?? DEFAULT_NAV_VISIBILITY
+  return policy.sections?.[key] !== false
+}
+
+function navGroupVisible(key: string): boolean {
+  const policy = auth.user?.navigation_visibility ?? DEFAULT_NAV_VISIBILITY
+  return policy.groups?.[key] !== false
+}
+
+const providerFocusNavActive = computed(() => isStaffProviderFocusNavEnabled(biz.businessType, biz.loaded))
+
+const mergedStaffHiddenNavSet = computed(
+  () => new Set(mergeStaffHiddenNavKeys(auth.user?.hidden_staff_nav_keys, biz.businessType, biz.loaded)),
+)
+
+/** بيارات / حجوزات / اجتماعات / خريطة حرارية — فقط عند تفعيل بوابة «operations» في ملف النشاط */
+const opsNavOpen = computed(() =>
+  canAccessStaffOperationsArea(auth.isOwner, (k) => biz.isEnabled(k)),
+)
+
 watch(collapsed, v => localStorage.setItem('sidebar_collapsed', String(v)))
 watch(openNavSection, (v) => localStorage.setItem('open_nav_section', v))
 watch(openNavGroups, (v) => localStorage.setItem('open_nav_groups', JSON.stringify(v)), { deep: true })
@@ -764,14 +887,13 @@ watch(
       || p.startsWith('/activity')
       || p.startsWith('/contracts')
       || p.startsWith('/referrals')
+      || p.startsWith('/account')
     ) {
       openNavSection.value = 'admin'
-    } else if (p.startsWith('/admin')) {
+    } else if (p.startsWith('/admin') || p.startsWith('/platform')) {
       openNavSection.value = 'platform'
     } else if (p.startsWith('/meetings')) {
       openNavSection.value = 'operations'
-    } else if (p.startsWith('/subscription') || p.startsWith('/plans') || p.startsWith('/plugins')) {
-      openNavSection.value = 'subscription'
     } else {
       openNavSection.value = 'operations'
     }
@@ -788,6 +910,24 @@ watch(
     ) {
       openNavGroups.value = { ...openNavGroups.value, accountant: true }
     }
+    if (p.startsWith('/branches')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_branches: true }
+    }
+    if (p.startsWith('/contracts') || p.startsWith('/documents')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_contracts_docs: true }
+    }
+    if (p.startsWith('/settings')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_company_settings: true }
+    }
+    if (p.startsWith('/account')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_security_logs: true }
+    }
+    if (p.startsWith('/activity')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_security_logs: true }
+    }
+    if (p.startsWith('/support') || p.startsWith('/referrals')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_support: true }
+    }
   },
   { immediate: true },
 )
@@ -796,6 +936,7 @@ const navQuickFilterTrimmed = computed(() => normNavSearch(navQuickFilter.value)
 const filteredNavQuick = computed(() => {
   void locale.lang.value
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   const q = navQuickFilterTrimmed.value
   if (!q) return []
@@ -808,6 +949,7 @@ const filteredNavQuick = computed(() => {
     if (!navSearchItemVisibleForPortals(item, enabledPortals)) return false
     if (item.requiresManager && !auth.isManager) return false
     if (item.requiresStaff && !auth.isStaff) return false
+    if (item.requiresPlatform && !auth.isPlatform) return false
     if (item.requiresOwner && !auth.isOwner) return false
     if (item.requiresIntelligence && !featureFlags.intelligenceCommandCenter) return false
     if (item.to === '/business-intelligence') {
@@ -836,6 +978,15 @@ const filteredNavQuick = computed(() => {
     if (item.to === '/settings/org-units' && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'org_structure')) {
       return false
     }
+    if (item.to.startsWith('/crm/') && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'crm')) {
+      return false
+    }
+    if (
+      item.to.startsWith('/fleet/')
+      && (!enabledPortals.fleet || !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'fleet'))
+    ) {
+      return false
+    }
     if (
       (item.to.startsWith('/bays') || item.to.startsWith('/bookings') || item.to.startsWith('/meetings')) &&
       !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
@@ -847,6 +998,18 @@ const filteredNavQuick = computed(() => {
     if (item.requiresAnyPermission?.length) {
       const ok = item.requiresAnyPermission.some((p) => auth.hasPermission(p))
       if (!ok) return false
+    }
+    if (
+      typeof item.requiresTenantFeature === 'string'
+      && item.requiresTenantFeature.length > 0
+      && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), item.requiresTenantFeature)
+    ) {
+      return false
+    }
+    const hiddenStaff = mergedStaffHiddenNavSet.value
+    if (hiddenStaff.size > 0) {
+      const { path: hp, hash: hh } = splitStaffNavHref(item.to)
+      if (isStaffNavHidden(hp, hh, hiddenStaff)) return false
     }
     return itemMatchesNavQuery(item, q)
   })
@@ -928,32 +1091,35 @@ function prefetchRoute(path?: string) {
 
 const flatItems = computed(() => {
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
-  const opsOpen = tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
+  const opsOpen = canAccessStaffOperationsArea(auth.isOwner, (k) => biz.isEnabled(k))
+  const hrOpen = canAccessWorkshopArea(auth.isOwner, (k) => biz.isEnabled(k))
   const items: { to: string; icon: object; label: string; locked: boolean }[] = [
-    { to: '/',                     icon: HomeIcon,                label: 'الرئيسية',          locked: false },
-    { to: '/pos',                  icon: ShoppingCartIcon,        label: 'نقطة البيع',         locked: false },
-    { to: '/invoices',             icon: DocumentTextIcon,        label: 'الفواتير',           locked: false },
+    { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
+    { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات التي تمت من قبل المزود', locked: false },
+    { to: '/vehicles', icon: TruckIcon, label: 'المركبات', locked: false },
+    { to: '/customers', icon: UsersIcon, label: 'العملاء', locked: false },
+    { to: '/invoices', icon: DocumentTextIcon, label: 'الفواتير', locked: false },
     ...(auth.hasPermission('reports.financial.view')
       ? [{ to: '/financial-reconciliation', icon: ArrowsRightLeftIcon, label: 'مطابقة مالية', locked: false }]
       : []),
-    { to: '/work-orders',          icon: ClipboardDocumentIcon,   label: 'أوامر العمل',        locked: false },
-    ...(opsOpen ? [{ to: '/bays', icon: BuildingOfficeIcon, label: 'مناطق العمل', locked: false }] : []),
-    ...(opsOpen ? [{ to: '/bookings', icon: CalendarDaysIcon, label: 'الحجوزات', locked: false }] : []),
-    ...(opsOpen && auth.hasPermission('meetings.update')
-      ? [{ to: '/meetings', icon: CalendarIcon, label: 'الاجتماعات', locked: false }]
-      : []),
-    ...(auth.isManager ? [{ to: '/branches', icon: BuildingLibraryIcon, label: 'الفروع', locked: false }] : []),
-    ...(auth.isStaff ? [{ to: '/branches/map', icon: MapPinIcon, label: 'خريطة الفروع', locked: false }] : []),
-    { to: '/customers',            icon: UsersIcon,               label: 'العملاء',            locked: false },
-    { to: '/vehicles',             icon: TruckIcon,               label: 'المركبات',           locked: false },
-    { to: '/wallet',               icon: CreditCardIcon,          label: 'المحفظة',            locked: false },
+    { to: '/wallet', icon: CreditCardIcon, label: 'المحفظة', locked: false },
     ...(auth.hasPermission('wallet.top_up_requests.create')
       || auth.hasPermission('wallet.top_up_requests.view')
       || auth.hasPermission('wallet.top_up_requests.review')
       ? [{ to: '/wallet/top-up-requests', icon: QueueListIcon, label: 'طلبات شحن الرصيد', locked: false }]
       : []),
-    { to: '/products',             icon: CubeIcon,                label: 'المنتجات',           locked: false },
+    ...(auth.isManager ? [{ to: '/branches', icon: BuildingLibraryIcon, label: 'الفروع', locked: false }] : []),
+    ...(auth.isStaff ? [{ to: '/branches/map', icon: MapPinIcon, label: 'خريطة الفروع', locked: false }] : []),
+    { to: '/products', icon: CubeIcon, label: 'المنتجات', locked: false },
+    { to: '/pos', icon: ShoppingCartIcon, label: 'نقطة البيع', locked: false },
+    ...(opsOpen ? [{ to: '/bays', icon: BuildingOfficeIcon, label: 'مناطق العمل', locked: false }] : []),
+    ...(opsOpen ? [{ to: '/bookings', icon: CalendarDaysIcon, label: 'الحجوزات', locked: false }] : []),
+    ...(opsOpen && auth.hasPermission('meetings.update')
+      ? [{ to: '/meetings', icon: CalendarIcon, label: 'الاجتماعات', locked: false }]
+      : []),
+    { to: '/reports', icon: ChartBarIcon, label: 'التقارير', locked: false },
     ...(canAccessStaffBusinessIntelligence({
       buildFlagOn: featureFlags.intelligenceCommandCenter,
       isOwner: auth.isOwner,
@@ -961,8 +1127,8 @@ const flatItems = computed(() => {
     })
       ? [{ to: '/business-intelligence', icon: PresentationChartLineIcon, label: 'ذكاء الأعمال', locked: false }]
       : []),
-    { to: '/reports',              icon: ChartBarIcon,            label: 'التقارير',           locked: false },
-    { to: '/settings',             icon: Cog6ToothIcon,           label: 'الإعدادات',          locked: false },
+    { to: '/settings', icon: Cog6ToothIcon, label: 'الإعدادات', locked: false },
+    ...(hrOpen ? [{ to: '/workshop/employees', icon: UserGroupIcon, label: 'الموظفون', locked: false }] : []),
     ...(canAccessStaffCommandCenter({
       buildFlagOn: featureFlags.intelligenceCommandCenter,
       isOwner: auth.isOwner,
@@ -972,16 +1138,29 @@ const flatItems = computed(() => {
       ? [{ to: '/internal/intelligence', icon: SignalIcon, label: 'مركز العمليات', locked: false }]
       : []),
   ]
-  if (auth.isOwner && enabledPortals.admin) {
+  if (auth.isPlatform && enabledPortals.admin) {
+    items.push({ to: '/platform/overview', icon: CpuChipIcon, label: 'مركز المنصة', locked: false })
     items.push({ to: '/admin/qa', icon: BeakerIcon, label: 'التحقق من النظام', locked: false })
   }
-  return items
+  const hiddenSet = mergedStaffHiddenNavSet.value
+  if (!hiddenSet.size) return items
+  return items.filter((item) => {
+    const { path: hp, hash: hh } = splitStaffNavHref(item.to)
+    return !isStaffNavHidden(hp, hh, hiddenSet)
+  })
 })
 
 const NavIconItem = defineComponent({
   props: { to: String, icon: Object, label: String, locked: Boolean },
   setup(props) {
     return () => {
+      if (!props.locked && props.to) {
+        const hidden = mergedStaffHiddenNavSet.value
+        if (hidden.size > 0) {
+          const { path: hp, hash: hh } = splitStaffNavHref(String(props.to))
+          if (isStaffNavHidden(hp, hh, hidden)) return null
+        }
+      }
       if (props.locked) {
         return h('div', {
           class: 'flex justify-center p-2 rounded-xl text-gray-300 cursor-not-allowed',
@@ -990,8 +1169,9 @@ const NavIconItem = defineComponent({
       }
       return h(RouterLink as any, {
         to: props.to,
-        class: 'flex justify-center p-2 rounded-xl text-gray-500 dark:text-slate-400 hover:bg-primary-50 dark:hover:bg-primary-950/30 hover:text-primary-700 dark:hover:text-primary-300 transition-colors',
-        activeClass: 'bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 ring-1 ring-primary-200/70 dark:ring-primary-800/60',
+        class: 'flex justify-center p-2 rounded-xl text-gray-500 dark:text-slate-400 hover:bg-primary-50/90 dark:hover:bg-primary-950/35 hover:text-primary-800 dark:hover:text-primary-200 transition-all duration-200',
+        activeClass:
+          '!bg-primary-600 !text-white shadow-md ring-1 ring-primary-500/30 hover:!bg-primary-600 hover:!text-white dark:!bg-primary-500 dark:ring-primary-400/25',
         title: props.label,
         'data-smart-tip': props.label,
         onMouseenter: () => prefetchRoute(props.to),
@@ -1005,6 +1185,13 @@ const NavItem = defineComponent({
   props: { to: String, icon: Object, label: String, exact: Boolean, locked: Boolean },
   setup(props) {
     return () => {
+      if (!props.locked && props.to) {
+        const hidden = mergedStaffHiddenNavSet.value
+        if (hidden.size > 0) {
+          const { path: hp, hash: hh } = splitStaffNavHref(String(props.to))
+          if (isStaffNavHidden(hp, hh, hidden)) return null
+        }
+      }
       if (props.locked) {
         return h('div', {
           class: 'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-300 cursor-not-allowed select-none',
@@ -1017,9 +1204,13 @@ const NavItem = defineComponent({
       }
       return h(RouterLink as any, {
         to: props.to,
-        class: 'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-slate-300 hover:bg-primary-50 dark:hover:bg-primary-950/30 hover:text-primary-700 dark:hover:text-primary-300 transition-colors',
-        activeClass: 'bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 ring-1 ring-primary-200/70 dark:ring-primary-800/60',
-        exactActiveClass: props.exact ? 'bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 ring-1 ring-primary-200/70 dark:ring-primary-800/60' : undefined,
+        class:
+          'flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-slate-300 hover:bg-primary-50/90 dark:hover:bg-primary-950/35 hover:text-primary-800 dark:hover:text-primary-200 transition-all duration-200',
+        activeClass:
+          '!bg-primary-600 !text-white shadow-md ring-1 ring-primary-500/30 hover:!bg-primary-600 hover:!text-white dark:!bg-primary-500 dark:ring-primary-400/25',
+        exactActiveClass: props.exact
+          ? '!bg-primary-600 !text-white shadow-md ring-1 ring-primary-500/30 hover:!bg-primary-600 hover:!text-white dark:!bg-primary-500 dark:ring-primary-400/25'
+          : undefined,
         'data-smart-tip': props.label,
         onMouseenter: () => prefetchRoute(props.to),
         onFocus: () => prefetchRoute(props.to),
@@ -1040,17 +1231,18 @@ const NavSection = defineComponent({
       openNavSection.value = openNavSection.value === key ? '' : key
     }
     return () => h('section', {
-      class: 'rounded-2xl border border-gray-100/90 dark:border-slate-700/80 bg-gray-50/60 dark:bg-slate-900/35 px-2 py-2.5 space-y-1',
+      class:
+        'rounded-2xl border border-gray-100/90 dark:border-slate-700/80 bg-white/70 dark:bg-slate-900/40 px-2 py-2.5 space-y-1 shadow-sm shadow-primary-900/[0.03] dark:shadow-none',
     }, [
       h(
         'button',
         {
           type: 'button',
-          class: 'w-full px-2 mb-1.5 flex items-center gap-2 text-right hover:bg-white/70 dark:hover:bg-slate-800/50 rounded-lg py-1 transition-colors',
+          class:
+            'w-full px-2 mb-1.5 flex items-center gap-2 text-right rounded-lg py-1 transition-colors hover:bg-primary-50/50 dark:hover:bg-slate-800/60',
           onClick: toggle,
         },
         [
-          h('span', { class: 'inline-flex h-1.5 w-1.5 rounded-full bg-primary-500/80' }),
           h('p', { class: 'flex-1 text-[12px] font-bold text-gray-600 dark:text-slate-300 tracking-wide' }, props.label),
           h(ChevronDownIcon, { class: `w-3.5 h-3.5 text-gray-400 transition-transform duration-150 ease-out ${isOpen.value ? 'rotate-180' : ''}` }),
         ],
@@ -1089,8 +1281,8 @@ const NavSubGroup = defineComponent({
 const pageTitles: Record<string, string> = {
   dashboard: 'الرئيسية', pos: 'نقطة البيع', customers: 'العملاء',
   vehicles: 'المركبات', 'vehicles.show': 'تفاصيل المركبة',
-  'work-orders': 'أوامر العمل', 'work-orders.show': 'تفاصيل أمر العمل',
-  'work-orders.create': 'أمر عمل جديد', invoices: 'الفواتير',
+  'work-orders': 'العمليات التي تمت من قبل المزود', 'work-orders.show': 'تفاصيل العملية',
+  'work-orders.create': 'عملية جديدة', invoices: 'الفواتير',
   'financial-reconciliation': 'المطابقة المالية',
   meetings: 'الاجتماعات',
   'invoices.show': 'تفاصيل الفاتورة', products: 'المنتجات',
@@ -1143,8 +1335,8 @@ const breadcrumbMap: Record<string, { label: string; parent?: string }> = {
   'financial-reconciliation': { label: 'المطابقة المالية', parent: 'dashboard' },
   meetings:               { label: 'الاجتماعات', parent: 'dashboard' },
   'invoices.show':        { label: 'تفاصيل الفاتورة', parent: 'invoices' },
-  'work-orders':          { label: 'أوامر العمل', parent: 'dashboard' },
-  'work-orders.show':     { label: 'تفاصيل أمر العمل', parent: 'work-orders' },
+  'work-orders':          { label: 'العمليات التي تمت من قبل المزود', parent: 'dashboard' },
+  'work-orders.show':     { label: 'تفاصيل العملية', parent: 'work-orders' },
   products:               { label: 'المنتجات', parent: 'dashboard' },
   'products.create':      { label: 'منتج جديد', parent: 'products' },
   customers:              { label: 'العملاء', parent: 'dashboard' },
@@ -1172,7 +1364,7 @@ const breadcrumbMap: Record<string, { label: string; parent?: string }> = {
 }
 
 const routePaths: Record<string, string> = {
-  dashboard: '/', admin: '/admin', AdminQA: '/admin/qa', pos: '/pos', invoices: '/invoices',
+  dashboard: '/', admin: '/platform/overview', AdminQA: '/admin/qa', pos: '/pos', invoices: '/invoices',
   'financial-reconciliation': '/financial-reconciliation',
   meetings: '/meetings',
   'work-orders': '/work-orders',

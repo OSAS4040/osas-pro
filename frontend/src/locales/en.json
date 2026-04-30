@@ -1,6 +1,6 @@
 {
   "app": { "name": "Osas Pro", "tagline": "One platform for operations, finance, people, inventory, and customers", "sidebarTitle": "Osas Pro — Unified Operations & Business Platform" },
-  "nav": { "dashboard": "Dashboard", "pos": "Point of Sale", "invoices": "Invoices", "work_orders": "Work Orders", "customers": "Customers", "vehicles": "Vehicles", "inventory": "Inventory", "reports": "Reports", "settings": "Settings", "logout": "Logout" },
+  "nav": { "dashboard": "Dashboard", "pos": "Point of Sale", "invoices": "Invoices", "work_orders": "Operations performed by the provider", "customers": "Customers", "vehicles": "Vehicles", "inventory": "Inventory", "reports": "Reports", "settings": "Settings", "logout": "Logout" },
   "auth": { "email": "Email", "password": "Password", "login": "Login", "staff_portal": "Staff Portal", "fleet_portal": "Fleet Portal", "customer_portal": "Customer Portal" },
   "pages": { "accessDenied": "Access denied", "capabilities": "System capabilities", "taxonomy": "Platform & tenant glossary" },
   "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "confirmDelete": "Confirm deletion", "edit": "Edit", "create": "Create", "search": "Search", "loading": "Loading", "no_data": "No data", "confirm": "Confirm", "back": "Back", "print": "Print", "export": "Export", "import": "Import" },
@@ -150,7 +150,7 @@
     "features": {
       "pos": "Point of sale",
       "invoices": "Invoicing",
-      "work_orders": "Work orders",
+      "work_orders": "Operations performed by the provider",
       "fleet": "Fleet portal & vehicles",
       "wallet": "Customer & fleet wallet",
       "governance": "Governance & approvals",

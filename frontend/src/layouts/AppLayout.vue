@@ -123,10 +123,32 @@
             </div>
 
             <!-- القائمة الجانبية: مرجع خريطة API ↔ الراوتر — docs/Tenant_Navigation_API_Map.md | npm run docs:nav-api-check -->
+            <!-- ترتيب الأقسام: تشغيلي → مخزون → مالية → تحليلات → موارد بشرية → إداري → منصة (نفس أسلوب الطي/التوسيع) -->
             <NavSection v-if="navSectionVisible('operations')" section-key="operations" :label="l('تشغيلي', 'Operations')">
               <NavItem to="/" :icon="HomeIcon" :label="locale.t('nav.dashboard')" :exact="true" />
-              <NavItem to="/pos" :icon="ShoppingCartIcon" :label="locale.t('nav.pos')" />
+              <NavItem
+                to="/execution-hub"
+                :icon="MagnifyingGlassCircleIcon"
+                :label="l('بحث أمر / لوحة', 'WO / plate lookup')"
+              />
               <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
+              <NavItem to="/vehicles" :icon="TruckIcon" :label="locale.t('nav.vehicles')" />
+              <NavItem
+                v-if="enabledPortals.fleet && sectionEnabled('fleet')"
+                to="/fleet/verify-plate"
+                :icon="MagnifyingGlassIcon"
+                label="التحقق من اللوحة"
+              />
+              <NavItem
+                v-if="enabledPortals.fleet && sectionEnabled('fleet')"
+                to="/fleet/wallet"
+                :icon="CreditCardIcon"
+                label="محافظ الأسطول"
+              />
+              <NavItem to="/customers" :icon="UsersIcon" :label="locale.t('nav.customers')" />
+              <NavItem v-if="sectionEnabled('crm')" to="/crm/quotes" :icon="DocumentTextIcon" label="عروض الأسعار" />
+              <NavItem v-if="sectionEnabled('crm')" to="/crm/relations" :icon="HeartIcon" label="علاقات العملاء" />
+              <NavItem to="/pos" :icon="ShoppingCartIcon" :label="locale.t('nav.pos')" />
               <NavItem v-if="opsNavOpen" to="/bays" :icon="BuildingOfficeIcon" label="مناطق العمل" />
               <NavItem v-if="opsNavOpen" to="/bookings" :icon="CalendarDaysIcon" label="الحجوزات" />
               <NavItem
@@ -136,23 +158,16 @@
                 label="الاجتماعات"
               />
               <NavItem v-if="opsNavOpen" to="/bays/heatmap" :icon="FireIcon" label="الخريطة الحرارية" />
-              <NavItem to="/customers" :icon="UsersIcon" :label="locale.t('nav.customers')" />
-              <NavItem v-if="sectionEnabled('crm')" to="/crm/quotes" :icon="DocumentTextIcon" label="عروض الأسعار" />
-              <NavItem v-if="sectionEnabled('crm')" to="/crm/relations" :icon="HeartIcon" label="علاقات العملاء" />
-              <NavItem to="/vehicles" :icon="TruckIcon" :label="locale.t('nav.vehicles')" />
-              <NavItem v-if="enabledPortals.fleet && sectionEnabled('fleet')" to="/fleet/verify-plate" :icon="MagnifyingGlassIcon" label="التحقق من اللوحة" />
-              <NavItem v-if="enabledPortals.fleet && sectionEnabled('fleet')" to="/fleet/wallet" :icon="CreditCardIcon" label="محافظ الأسطول" />
             </NavSection>
 
-            <NavSection v-if="sectionEnabled('hr') && navSectionVisible('hr')" section-key="hr" label="الموارد البشرية">
-              <NavItem to="/workshop/employees" :icon="UserGroupIcon" label="إدارة الموظفين" />
-              <NavItem to="/workshop/tasks" :icon="ClipboardDocumentCheckIcon" label="إدارة المهام" />
-              <NavItem to="/workshop/attendance" :icon="ClockIcon" label="الحضور" />
-              <NavItem to="/workshop/leaves" :icon="CalendarDaysIcon" label="الإجازات" />
-              <NavItem to="/workshop/salaries" :icon="BanknotesIcon" label="مسير الرواتب" />
-              <NavItem to="/workshop/commissions" :icon="CurrencyDollarIcon" label="العمولات" />
-              <NavItem to="/workshop/commission-policies" :icon="AdjustmentsHorizontalIcon" label="سياسات العمولات" />
-              <NavItem to="/workshop/hr-comms" :icon="ChatBubbleLeftRightIcon" label="اتصالات إدارية" />
+            <NavSection
+              v-if="sectionEnabled('inventory') && navSectionVisible('inventory')"
+              section-key="inventory"
+              :label="l('المخزون والكتالوج', 'Inventory & catalog')"
+            >
+              <NavItem to="/products" :icon="CubeIcon" label="المنتجات" />
+              <NavItem to="/inventory" :icon="ArchiveBoxIcon" :label="locale.t('nav.inventory')" />
+              <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
             </NavSection>
 
             <NavSection
@@ -168,12 +183,11 @@
                   :icon="ClipboardDocumentIcon"
                   label="عروض الأسعار"
                 />
-                <NavItem
-                  v-if="auth.hasPermission('reports.financial.view')"
-                  to="/financial-reconciliation"
-                  :icon="ArrowsRightLeftIcon"
-                  label="المطابقة المالية"
-                />
+                <NavSubGroup v-if="navGroupVisible('purchases')" group-key="purchases" label="المشتريات">
+                  <NavItem to="/purchases" :icon="ShoppingBagIcon" label="قائمة المشتريات" />
+                  <NavItem to="/purchases/new" :icon="ClipboardDocumentIcon" label="أوامر شراء" />
+                  <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
+                </NavSubGroup>
                 <NavItem to="/wallet" :icon="CreditCardIcon" label="المحفظة" />
                 <NavItem
                   v-if="
@@ -185,11 +199,12 @@
                   :icon="QueueListIcon"
                   label="طلبات شحن الرصيد"
                 />
-                <NavSubGroup v-if="navGroupVisible('purchases')" group-key="purchases" label="المشتريات">
-                  <NavItem to="/purchases" :icon="ShoppingBagIcon" label="قائمة المشتريات" />
-                  <NavItem to="/purchases/new" :icon="ClipboardDocumentIcon" label="أوامر شراء" />
-                  <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
-                </NavSubGroup>
+                <NavItem
+                  v-if="auth.hasPermission('reports.financial.view')"
+                  to="/financial-reconciliation"
+                  :icon="ArrowsRightLeftIcon"
+                  label="المطابقة المالية"
+                />
               </template>
               <template v-if="sectionEnabled('accounting')">
                 <NavSubGroup v-if="navGroupVisible('accountant')" group-key="accountant" label="المحاسب">
@@ -206,13 +221,12 @@
               </template>
             </NavSection>
 
-            <NavSection v-if="sectionEnabled('inventory') && navSectionVisible('inventory')" section-key="inventory" :label="l('المخزون', 'Inventory')">
-              <NavItem to="/products" :icon="CubeIcon" label="المنتجات" />
-              <NavItem to="/inventory" :icon="ArchiveBoxIcon" :label="locale.t('nav.inventory')" />
-              <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
-            </NavSection>
-
-            <NavSection v-if="(sectionEnabled('reports') || sectionEnabled('intelligence')) && navSectionVisible('analytics')" section-key="analytics" :label="l('التحليلات وذكاء الأعمال', 'Analytics & Intelligence')">
+            <NavSection
+              v-if="(sectionEnabled('reports') || sectionEnabled('intelligence')) && navSectionVisible('analytics')"
+              section-key="analytics"
+              :label="l('التقارير والتحليلات', 'Reports & analytics')"
+            >
+              <NavItem v-if="sectionEnabled('reports')" to="/reports" :icon="ChartBarIcon" :label="locale.t('nav.reports')" />
               <NavItem
                 v-if="
                   canAccessStaffBusinessIntelligence({
@@ -225,7 +239,6 @@
                 :icon="PresentationChartLineIcon"
                 label="ذكاء الأعمال"
               />
-              <NavItem v-if="sectionEnabled('reports')" to="/reports" :icon="ChartBarIcon" :label="locale.t('nav.reports')" />
               <NavItem to="/governance" :icon="ShieldCheckIcon" label="السياسات والموافقات" />
               <NavItem
                 v-if="
@@ -242,42 +255,72 @@
               />
             </NavSection>
 
+            <NavSection
+              v-if="sectionEnabled('hr') && navSectionVisible('hr') && !providerFocusNavActive"
+              section-key="hr"
+              label="الموارد البشرية"
+            >
+              <NavItem to="/workshop/employees" :icon="UserGroupIcon" label="إدارة الموظفين" />
+              <NavItem to="/workshop/tasks" :icon="ClipboardDocumentCheckIcon" label="إدارة المهام" />
+              <NavItem to="/workshop/attendance" :icon="ClockIcon" label="الحضور" />
+              <NavItem to="/workshop/leaves" :icon="CalendarDaysIcon" label="الإجازات" />
+              <NavItem to="/workshop/salaries" :icon="BanknotesIcon" label="مسير الرواتب" />
+              <NavItem to="/workshop/commissions" :icon="CurrencyDollarIcon" label="العمولات" />
+              <NavItem to="/workshop/commission-policies" :icon="AdjustmentsHorizontalIcon" label="سياسات العمولات" />
+              <NavItem to="/workshop/hr-comms" :icon="ChatBubbleLeftRightIcon" label="اتصالات إدارية" />
+            </NavSection>
+
             <NavSection v-if="navSectionVisible('admin')" section-key="admin" :label="l('إداري', 'Admin')">
-              <NavSubGroup v-if="auth.isManager" group-key="saas_pricing" :label="l('الاشتراك والتسعير', 'Subscription & pricing')">
-                <NavItem to="/plans" :icon="TagIcon" :label="l('الباقات والأسعار', 'Plans & pricing')" />
-                <NavItem to="/subscription" :icon="SparklesIcon" :label="l('اشتراك المنشأة', 'Company subscription')" />
-                <NavItem to="/subscription/plans" :icon="RectangleStackIcon" :label="l('مقارنة الباقات', 'Compare plans')" />
-                <NavItem to="/subscription/payment" :icon="BanknotesIcon" :label="l('الدفع والتجديد', 'Payment & renewal')" />
-                <NavItem to="/subscription/invoices" :icon="DocumentTextIcon" :label="l('فواتير الاشتراك', 'Subscription invoices')" />
+              <NavSubGroup v-if="navGroupVisible('admin_branches')" group-key="admin_branches" :label="l('الفروع والمواقع', 'Branches & map')">
+                <NavItem v-if="auth.isManager" to="/branches" :icon="BuildingLibraryIcon" label="إدارة الفروع" />
+                <NavItem v-if="auth.isStaff" to="/branches/map" :icon="MapPinIcon" label="خريطة الفروع (Google)" />
               </NavSubGroup>
-              <NavItem v-if="auth.isManager" to="/branches" :icon="BuildingLibraryIcon" label="إدارة الفروع" />
-              <NavItem v-if="auth.isStaff" to="/branches/map" :icon="MapPinIcon" label="خريطة الفروع (Google)" />
-              <NavItem to="/contracts" :icon="DocumentCheckIcon" label="العقود" />
-              <NavItem to="/documents/company" :icon="FolderOpenIcon" label="مستندات المنشأة" />
-              <NavItem to="/activity" :icon="ClipboardDocumentListIcon" label="سجل العمليات" />
-              <NavItem v-if="auth.isStaff" to="/account/sessions" :icon="DevicePhoneMobileIcon" label="الأجهزة والجلسات" />
-              <NavItem to="/settings" :icon="Cog6ToothIcon" :label="locale.t('nav.settings')" />
-              <NavItem
-                v-if="auth.isManager"
-                to="/settings/team-users"
-                :icon="UserGroupIcon"
-                :label="teamUsersNavLabel"
-              />
-              <NavItem
-                v-if="auth.isManager && biz.isEnabled('org_structure')"
-                to="/settings/org-units"
-                :icon="BuildingOffice2Icon"
-                :label="orgUnitsNavLabel"
-              />
-              <NavItem to="/settings/integrations" :icon="WrenchScrewdriverIcon" label="التكاملات" />
-              <NavItem
-                v-if="auth.hasPermission('api_keys.manage')"
-                to="/settings/api-keys"
-                :icon="LockClosedIcon"
-                label="مفاتيح API"
-              />
-              <NavItem to="/referrals" :icon="GiftIcon" label="الإحالات والولاء" />
-              <NavItem to="/support" :icon="LifebuoyIcon" label="مركز الدعم الفني" />
+              <NavSubGroup
+                v-if="navGroupVisible('admin_contracts_docs')"
+                group-key="admin_contracts_docs"
+                :label="l('العقود والوثائق', 'Contracts & documents')"
+              >
+                <NavItem to="/contracts" :icon="DocumentCheckIcon" label="العقود" />
+                <NavItem to="/documents/company" :icon="FolderOpenIcon" label="مستندات المنشأة" />
+              </NavSubGroup>
+              <NavSubGroup
+                v-if="navGroupVisible('admin_company_settings')"
+                group-key="admin_company_settings"
+                :label="l('إعدادات المنشأة والفريق', 'Company & team setup')"
+              >
+                <NavItem to="/settings" :icon="Cog6ToothIcon" :label="locale.t('nav.settings')" />
+                <NavItem
+                  v-if="auth.isManager"
+                  to="/settings/team-users"
+                  :icon="UserGroupIcon"
+                  :label="teamUsersNavLabel"
+                />
+                <NavItem
+                  v-if="auth.isManager && biz.isEnabled('org_structure')"
+                  to="/settings/org-units"
+                  :icon="BuildingOffice2Icon"
+                  :label="orgUnitsNavLabel"
+                />
+                <NavItem to="/settings/integrations" :icon="WrenchScrewdriverIcon" label="التكاملات" />
+                <NavItem
+                  v-if="auth.hasPermission('api_keys.manage')"
+                  to="/settings/api-keys"
+                  :icon="LockClosedIcon"
+                  label="مفاتيح API"
+                />
+              </NavSubGroup>
+              <NavSubGroup
+                v-if="navGroupVisible('admin_security_logs')"
+                group-key="admin_security_logs"
+                :label="l('الأمان والسجلات', 'Security & logs')"
+              >
+                <NavItem v-if="auth.isStaff" to="/account/sessions" :icon="DevicePhoneMobileIcon" label="الأجهزة والجلسات" />
+                <NavItem to="/activity" :icon="ClipboardDocumentListIcon" label="سجل العمليات" />
+              </NavSubGroup>
+              <NavSubGroup v-if="navGroupVisible('admin_support')" group-key="admin_support" :label="l('الدعم والولاء', 'Support & loyalty')">
+                <NavItem to="/referrals" :icon="GiftIcon" label="الإحالات والولاء" />
+                <NavItem to="/support" :icon="LifebuoyIcon" label="مركز الدعم الفني" />
+              </NavSubGroup>
             </NavSection>
 
             <NavSection
@@ -291,12 +334,6 @@
               </NavSubGroup>
             </NavSection>
 
-            <NavSection v-if="navSectionVisible('subscription')" section-key="subscription" :label="l('الاشتراك', 'Subscription')">
-              <NavItem to="/subscription" :icon="StarIcon" label="اشتراكي" />
-              <NavItem to="/subscription#subscription-addons" :icon="PlusCircleIcon" :label="l('إضافات الاشتراك', 'Subscription add-ons')" />
-              <NavItem to="/plans" :icon="RectangleStackIcon" label="الباقات" />
-              <NavItem to="/plugins" :icon="SparklesIcon" label="سوق الإضافات AI" />
-            </NavSection>
           </template>
         </template>
       </nav>
@@ -476,17 +513,6 @@
             <!-- Portal Switcher -->
             <PortalSwitcher />
 
-            <!-- Plan badge — يظهر الباقة + حالة الفوترة من `/auth/me` مباشرة -->
-            <RouterLink to="/subscription"
-                        class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg text-xs font-medium hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
-                        :title="billingBadgeTitle"
-            >
-              <StarIcon class="w-3.5 h-3.5 flex-shrink-0" />
-              <span class="flex flex-col items-start min-w-0 leading-tight">
-                <span class="truncate max-w-[9.5rem]">{{ sub.planName }}</span>
-                <span v-if="billingStateShort" class="text-[10px] font-normal opacity-80">{{ billingStateShort }}</span>
-              </span>
-            </RouterLink>
 
             <!-- User Avatar -->
             <RouterLink to="/profile" class="flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg px-2 py-1 transition-colors">
@@ -594,7 +620,7 @@ import {
   BuildingOfficeIcon, CalendarDaysIcon, FireIcon, UserGroupIcon, ClockIcon,
   CurrencyDollarIcon, CreditCardIcon, BookOpenIcon, TableCellsIcon, BanknotesIcon,
   ArchiveBoxIcon, ShoppingBagIcon, ShieldCheckIcon, StarIcon, RectangleStackIcon, LifebuoyIcon,
-  MagnifyingGlassIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, WrenchScrewdriverIcon, DocumentCheckIcon,
+  MagnifyingGlassIcon, MagnifyingGlassCircleIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, WrenchScrewdriverIcon, DocumentCheckIcon,
   LockClosedIcon, ChevronRightIcon, ChevronLeftIcon,
   SunIcon, MoonIcon, CheckIcon, ChevronDownIcon,
   BuildingOffice2Icon, CpuChipIcon, GiftIcon, Bars3Icon, SparklesIcon,
@@ -640,6 +666,9 @@ import { useToast } from '@/composables/useToast'
 import { useNavigationContext } from '@/composables/useNavigationContext'
 import apiClient from '@/lib/apiClient'
 import { DEFAULT_NAV_VISIBILITY } from '@/config/navigationVisibility'
+import { isStaffProviderFocusNavEnabled, mergeStaffHiddenNavKeys } from '@/config/staffProviderFocusNav'
+import { mergeExecutionPartnerNavKeys } from '@/config/executionPartnerNav'
+import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
 import { isStaffNavHidden, splitStaffNavHref } from '@/lib/staffNavKey'
 
 const auth = useAuthStore()
@@ -808,6 +837,18 @@ function navGroupVisible(key: string): boolean {
   return policy.groups?.[key] !== false
 }
 
+const providerFocusNavActive = computed(() => isStaffProviderFocusNavEnabled(biz.businessType, biz.loaded))
+const { active: platformExecutionPartnerActive } = usePlatformExecutionPartner()
+
+const mergedStaffHiddenNavSet = computed(() =>
+  new Set(
+    mergeExecutionPartnerNavKeys(
+      mergeStaffHiddenNavKeys(auth.user?.hidden_staff_nav_keys, biz.businessType, biz.loaded),
+      platformExecutionPartnerActive.value,
+    ),
+  ),
+)
+
 /** بيارات / حجوزات / اجتماعات / خريطة حرارية — فقط عند تفعيل بوابة «operations» في ملف النشاط */
 const opsNavOpen = computed(() =>
   canAccessStaffOperationsArea(auth.isOwner, (k) => biz.isEnabled(k)),
@@ -859,14 +900,13 @@ watch(
       || p.startsWith('/activity')
       || p.startsWith('/contracts')
       || p.startsWith('/referrals')
+      || p.startsWith('/account')
     ) {
       openNavSection.value = 'admin'
     } else if (p.startsWith('/admin') || p.startsWith('/platform')) {
       openNavSection.value = 'platform'
-    } else if (p.startsWith('/meetings')) {
+    } else if (p.startsWith('/meetings') || p.startsWith('/execution-hub')) {
       openNavSection.value = 'operations'
-    } else if (p.startsWith('/subscription') || p.startsWith('/plans') || p.startsWith('/plugins')) {
-      openNavSection.value = 'subscription'
     } else {
       openNavSection.value = 'operations'
     }
@@ -882,6 +922,24 @@ watch(
       || p.startsWith('/fixed-assets')
     ) {
       openNavGroups.value = { ...openNavGroups.value, accountant: true }
+    }
+    if (p.startsWith('/branches')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_branches: true }
+    }
+    if (p.startsWith('/contracts') || p.startsWith('/documents')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_contracts_docs: true }
+    }
+    if (p.startsWith('/settings')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_company_settings: true }
+    }
+    if (p.startsWith('/account')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_security_logs: true }
+    }
+    if (p.startsWith('/activity')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_security_logs: true }
+    }
+    if (p.startsWith('/support') || p.startsWith('/referrals')) {
+      openNavGroups.value = { ...openNavGroups.value, admin_support: true }
     }
   },
   { immediate: true },
@@ -961,10 +1019,10 @@ const filteredNavQuick = computed(() => {
     ) {
       return false
     }
-    const hiddenStaff = auth.user?.hidden_staff_nav_keys
-    if (Array.isArray(hiddenStaff) && hiddenStaff.length > 0) {
+    const hiddenStaff = mergedStaffHiddenNavSet.value
+    if (hiddenStaff.size > 0) {
       const { path: hp, hash: hh } = splitStaffNavHref(item.to)
-      if (isStaffNavHidden(hp, hh, new Set(hiddenStaff))) return false
+      if (isStaffNavHidden(hp, hh, hiddenStaff)) return false
     }
     return itemMatchesNavQuery(item, q)
   })
@@ -1051,37 +1109,31 @@ const flatItems = computed(() => {
   const opsOpen = canAccessStaffOperationsArea(auth.isOwner, (k) => biz.isEnabled(k))
   const hrOpen = canAccessWorkshopArea(auth.isOwner, (k) => biz.isEnabled(k))
   const items: { to: string; icon: object; label: string; locked: boolean }[] = [
-    { to: '/',                     icon: HomeIcon,                label: 'الرئيسية',          locked: false },
-    { to: '/pos',                  icon: ShoppingCartIcon,        label: 'نقطة البيع',         locked: false },
-    { to: '/invoices',             icon: DocumentTextIcon,        label: 'الفواتير',           locked: false },
+    { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
+    { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'بحث أمر / لوحة', locked: false },
+    { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات التي تمت من قبل المزود', locked: false },
+    { to: '/vehicles', icon: TruckIcon, label: 'المركبات', locked: false },
+    { to: '/customers', icon: UsersIcon, label: 'العملاء', locked: false },
+    { to: '/invoices', icon: DocumentTextIcon, label: 'الفواتير', locked: false },
     ...(auth.hasPermission('reports.financial.view')
       ? [{ to: '/financial-reconciliation', icon: ArrowsRightLeftIcon, label: 'مطابقة مالية', locked: false }]
       : []),
-    { to: '/work-orders',          icon: ClipboardDocumentIcon,   label: 'أوامر العمل',        locked: false },
-    ...(opsOpen ? [{ to: '/bays', icon: BuildingOfficeIcon, label: 'مناطق العمل', locked: false }] : []),
-    ...(opsOpen ? [{ to: '/bookings', icon: CalendarDaysIcon, label: 'الحجوزات', locked: false }] : []),
-    ...(opsOpen && auth.hasPermission('meetings.update')
-      ? [{ to: '/meetings', icon: CalendarIcon, label: 'الاجتماعات', locked: false }]
-      : []),
-    ...(auth.isManager
-      ? [
-          { to: '/plans', icon: TagIcon, label: 'الباقات والأسعار', locked: false },
-          { to: '/subscription', icon: SparklesIcon, label: 'اشتراك المنشأة', locked: false },
-          { to: '/subscription/invoices', icon: DocumentTextIcon, label: 'فواتير الاشتراك', locked: false },
-          { to: '/branches', icon: BuildingLibraryIcon, label: 'الفروع', locked: false },
-        ]
-      : []),
-    ...(auth.isStaff ? [{ to: '/branches/map', icon: MapPinIcon, label: 'خريطة الفروع', locked: false }] : []),
-    { to: '/customers',            icon: UsersIcon,               label: 'العملاء',            locked: false },
-    ...(hrOpen ? [{ to: '/workshop/employees', icon: UserGroupIcon, label: 'الموظفون', locked: false }] : []),
-    { to: '/vehicles',             icon: TruckIcon,               label: 'المركبات',           locked: false },
-    { to: '/wallet',               icon: CreditCardIcon,          label: 'المحفظة',            locked: false },
+    { to: '/wallet', icon: CreditCardIcon, label: 'المحفظة', locked: false },
     ...(auth.hasPermission('wallet.top_up_requests.create')
       || auth.hasPermission('wallet.top_up_requests.view')
       || auth.hasPermission('wallet.top_up_requests.review')
       ? [{ to: '/wallet/top-up-requests', icon: QueueListIcon, label: 'طلبات شحن الرصيد', locked: false }]
       : []),
-    { to: '/products',             icon: CubeIcon,                label: 'المنتجات',           locked: false },
+    ...(auth.isManager ? [{ to: '/branches', icon: BuildingLibraryIcon, label: 'الفروع', locked: false }] : []),
+    ...(auth.isStaff ? [{ to: '/branches/map', icon: MapPinIcon, label: 'خريطة الفروع', locked: false }] : []),
+    { to: '/products', icon: CubeIcon, label: 'المنتجات', locked: false },
+    { to: '/pos', icon: ShoppingCartIcon, label: 'نقطة البيع', locked: false },
+    ...(opsOpen ? [{ to: '/bays', icon: BuildingOfficeIcon, label: 'مناطق العمل', locked: false }] : []),
+    ...(opsOpen ? [{ to: '/bookings', icon: CalendarDaysIcon, label: 'الحجوزات', locked: false }] : []),
+    ...(opsOpen && auth.hasPermission('meetings.update')
+      ? [{ to: '/meetings', icon: CalendarIcon, label: 'الاجتماعات', locked: false }]
+      : []),
+    { to: '/reports', icon: ChartBarIcon, label: 'التقارير', locked: false },
     ...(canAccessStaffBusinessIntelligence({
       buildFlagOn: featureFlags.intelligenceCommandCenter,
       isOwner: auth.isOwner,
@@ -1089,8 +1141,8 @@ const flatItems = computed(() => {
     })
       ? [{ to: '/business-intelligence', icon: PresentationChartLineIcon, label: 'ذكاء الأعمال', locked: false }]
       : []),
-    { to: '/reports',              icon: ChartBarIcon,            label: 'التقارير',           locked: false },
-    { to: '/settings',             icon: Cog6ToothIcon,           label: 'الإعدادات',          locked: false },
+    { to: '/settings', icon: Cog6ToothIcon, label: 'الإعدادات', locked: false },
+    ...(hrOpen ? [{ to: '/workshop/employees', icon: UserGroupIcon, label: 'الموظفون', locked: false }] : []),
     ...(canAccessStaffCommandCenter({
       buildFlagOn: featureFlags.intelligenceCommandCenter,
       isOwner: auth.isOwner,
@@ -1104,9 +1156,8 @@ const flatItems = computed(() => {
     items.push({ to: '/platform/overview', icon: CpuChipIcon, label: 'مركز المنصة', locked: false })
     items.push({ to: '/admin/qa', icon: BeakerIcon, label: 'التحقق من النظام', locked: false })
   }
-  const hiddenStaff = auth.user?.hidden_staff_nav_keys
-  if (!Array.isArray(hiddenStaff) || !hiddenStaff.length) return items
-  const hiddenSet = new Set(hiddenStaff)
+  const hiddenSet = mergedStaffHiddenNavSet.value
+  if (!hiddenSet.size) return items
   return items.filter((item) => {
     const { path: hp, hash: hh } = splitStaffNavHref(item.to)
     return !isStaffNavHidden(hp, hh, hiddenSet)
@@ -1118,10 +1169,10 @@ const NavIconItem = defineComponent({
   setup(props) {
     return () => {
       if (!props.locked && props.to) {
-        const hidden = auth.user?.hidden_staff_nav_keys
-        if (Array.isArray(hidden) && hidden.length > 0) {
+        const hidden = mergedStaffHiddenNavSet.value
+        if (hidden.size > 0) {
           const { path: hp, hash: hh } = splitStaffNavHref(String(props.to))
-          if (isStaffNavHidden(hp, hh, new Set(hidden))) return null
+          if (isStaffNavHidden(hp, hh, hidden)) return null
         }
       }
       if (props.locked) {
@@ -1149,10 +1200,10 @@ const NavItem = defineComponent({
   setup(props) {
     return () => {
       if (!props.locked && props.to) {
-        const hidden = auth.user?.hidden_staff_nav_keys
-        if (Array.isArray(hidden) && hidden.length > 0) {
+        const hidden = mergedStaffHiddenNavSet.value
+        if (hidden.size > 0) {
           const { path: hp, hash: hh } = splitStaffNavHref(String(props.to))
-          if (isStaffNavHidden(hp, hh, new Set(hidden))) return null
+          if (isStaffNavHidden(hp, hh, hidden)) return null
         }
       }
       if (props.locked) {
@@ -1206,7 +1257,6 @@ const NavSection = defineComponent({
           onClick: toggle,
         },
         [
-          h('span', { class: 'inline-flex h-1.5 w-1.5 rounded-full bg-primary-500/80' }),
           h('p', { class: 'flex-1 text-[12px] font-bold text-gray-600 dark:text-slate-300 tracking-wide' }, props.label),
           h(ChevronDownIcon, { class: `w-3.5 h-3.5 text-gray-400 transition-transform duration-150 ease-out ${isOpen.value ? 'rotate-180' : ''}` }),
         ],
@@ -1245,8 +1295,8 @@ const NavSubGroup = defineComponent({
 const pageTitles: Record<string, string> = {
   dashboard: 'الرئيسية', pos: 'نقطة البيع', customers: 'العملاء',
   vehicles: 'المركبات', 'vehicles.show': 'تفاصيل المركبة',
-  'work-orders': 'أوامر العمل', 'work-orders.show': 'تفاصيل أمر العمل',
-  'work-orders.create': 'أمر عمل جديد', invoices: 'الفواتير',
+  'work-orders': 'العمليات التي تمت من قبل المزود', 'work-orders.show': 'تفاصيل العملية',
+  'work-orders.create': 'عملية جديدة', invoices: 'الفواتير',
   'financial-reconciliation': 'المطابقة المالية',
   meetings: 'الاجتماعات',
   'invoices.show': 'تفاصيل الفاتورة', products: 'المنتجات',
@@ -1299,8 +1349,8 @@ const breadcrumbMap: Record<string, { label: string; parent?: string }> = {
   'financial-reconciliation': { label: 'المطابقة المالية', parent: 'dashboard' },
   meetings:               { label: 'الاجتماعات', parent: 'dashboard' },
   'invoices.show':        { label: 'تفاصيل الفاتورة', parent: 'invoices' },
-  'work-orders':          { label: 'أوامر العمل', parent: 'dashboard' },
-  'work-orders.show':     { label: 'تفاصيل أمر العمل', parent: 'work-orders' },
+  'work-orders':          { label: 'العمليات التي تمت من قبل المزود', parent: 'dashboard' },
+  'work-orders.show':     { label: 'تفاصيل العملية', parent: 'work-orders' },
   products:               { label: 'المنتجات', parent: 'dashboard' },
   'products.create':      { label: 'منتج جديد', parent: 'products' },
   customers:              { label: 'العملاء', parent: 'dashboard' },

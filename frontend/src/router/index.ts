@@ -10,6 +10,9 @@ import {
   canAccessWorkshopArea,
 } from '@/config/staffFeatureGate'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
+import { mergeStaffHiddenNavKeys } from '@/config/staffProviderFocusNav'
+import { mergeExecutionPartnerNavKeys } from '@/config/executionPartnerNav'
+import { platformExecutionPartnerActiveFromStore } from '@/composables/usePlatformExecutionPartner'
 import { enabledPortals } from '@/config/portalAccess'
 import { logActivity } from '@/composables/useActivityLog'
 import { useTheme } from '@/composables/useTheme'
@@ -23,10 +26,47 @@ function resolveHistoryBase(): string {
   return raw
 }
 
+/**
+ * وجهة الزائر غير المسجّل عند طلب `/` (جذر التطبيق).
+ * - `landing`: الصفحة التعريفية — مناسب للإنتاج والتجريب العام دون إظهار لوحة التشغيل.
+ * - `login`: السلوك السابق (متابعة الحارس العادي → دخول مزوّد الخدمة).
+ *
+ * `VITE_GUEST_ROOT_REDIRECT=landing` أو `login`. إن وُضع غير صالح يُ ignored.
+ * عند عدم الضبط: **build إنتاجي** → landing، **تطوير (vite dev)** → login لتسريع اختبار فريق العمل.
+ *
+ * لا يؤثر على المستخدمين المسجّلين؛ عزل البوابات (عميل / أسطول / منصة) يبقى لاحقاً في هذا الملف.
+ */
+function resolveGuestRootRedirectTarget(): 'landing' | 'login' {
+  const raw = String(import.meta.env.VITE_GUEST_ROOT_REDIRECT ?? '').trim().toLowerCase()
+  if (raw === 'landing' || raw === 'login') {
+    return raw
+  }
+  return import.meta.env.PROD ? 'landing' : 'login'
+}
+
+function mapLegacyPathToCustomerPortal(path: string): string | null {
+  if (path === '/customers' || path.startsWith('/customers/')) return '/customer/dashboard'
+  if (path === '/branches' || path.startsWith('/branches/')) return '/customer/coverage-locations'
+  if (path === '/work-orders' || path.startsWith('/work-orders/')) return '/customer/work-orders'
+  if (path === '/bookings' || path.startsWith('/bookings/')) return '/customer/bookings'
+  if (path === '/vehicles' || path.startsWith('/vehicles/')) return '/customer/vehicles'
+  if (path === '/invoices' || path.startsWith('/invoices/')) return '/customer/invoices'
+  if (path === '/wallet' || path.startsWith('/wallet/')) return '/customer/wallet'
+  if (path === '/support' || path.startsWith('/support/')) return '/customer/notifications'
+  if (path === '/settings' || path.startsWith('/settings/')) return '/customer/settings'
+  if (path === '/reports' || path.startsWith('/reports/')) return '/customer/reports'
+  if (path === '/business-intelligence' || path.startsWith('/business-intelligence/')) return '/customer/business-intelligence'
+  if (path === '/plans' || path.startsWith('/plans/')) return '/customer/plans'
+  if (path === '/subscription' || path.startsWith('/subscription/')) return '/customer/subscription'
+  if (path === '/activity' || path.startsWith('/activity/')) return '/customer/activity'
+  if (path === '/zatca' || path.startsWith('/zatca/')) return '/customer/zatca'
+  return null
+}
+
 const routes: RouteRecordRaw[] = [
   /** توافق مع توجيه «غير مشغّل المنصة» بعيداً عن `/admin` */
   { path: '/dashboard', redirect: '/' },
-  // ── Auth — صفحة دخول موحّدة لجميع البوابات ──
+  // ── Auth — دخول مزوّد الخدمة (/login)؛ بوابات أخرى في مسارات منفصلة ──
   {
     path: '/login',
     name: 'login',
@@ -42,12 +82,8 @@ const routes: RouteRecordRaw[] = [
   },
   { path: '/admin/login', redirect: '/platform/login' },
   // تسجيل دخول مخصص لكل بوابة (فصل تدريجي دون كسر المصادقة الحالية)
-  {
-    path: '/fleet/login',
-    name: 'fleet-login',
-    component: () => import('@/views/auth/FleetLoginView.vue'),
-    meta: { guest: true, portalLogin: 'fleet' },
-  },
+  /** أسطول بدون صفحة دخول منفصلة — نفس نموذج مزوّد الخدمة (`/login`) */
+  { path: '/fleet/login', redirect: '/login' },
   {
     path: '/customer/login',
     name: 'customer-login',
@@ -477,8 +513,14 @@ const routes: RouteRecordRaw[] = [
       { path: 'vehicles/:id/passport', name: 'vehicles.passport', component: () => import('@/views/vehicles/VehiclePassportView.vue') },
       { path: 'pos',                 name: 'pos',                component: () => import('@/views/pos/POSView.vue') },
       { path: 'work-orders',         name: 'work-orders',        component: () => import('@/views/work-orders/WorkOrderListView.vue') },
-      { path: 'work-orders/new',     name: 'work-orders.create', component: () => import('@/views/work-orders/WorkOrderCreateView.vue') },
-      { path: 'work-orders/batch',   name: 'work-orders.batch',  component: () => import('@/views/work-orders/WorkOrderBatchCreateView.vue') },
+      {
+        path:      'execution-hub',
+        name:      'execution-hub',
+        component: () => import('@/views/execution/ProviderExecutionHubView.vue'),
+        meta:      { requiresAuth: true, title: 'مركز التنفيذ والبحث', titleEn: 'Execution hub' },
+      },
+      { path: 'work-orders/new',     name: 'work-orders.create', redirect: '/work-orders' },
+      { path: 'work-orders/batch',   name: 'work-orders.batch',  redirect: '/work-orders' },
       { path: 'work-orders/:id',     name: 'work-orders.show',   component: () => import('@/views/work-orders/WorkOrderShowView.vue') },
       { path: 'services',            name: 'services',           component: () => import('@/views/services/ServicesView.vue') },
       { path: 'bundles',             name: 'bundles',            component: () => import('@/views/services/BundlesView.vue') },
@@ -730,11 +772,33 @@ const routes: RouteRecordRaw[] = [
       { path: '',          name: 'customer',           redirect: '/customer/dashboard' },
       { path: 'dashboard', name: 'customer.dashboard', component: () => import('@/views/customer/CustomerDashboardView.vue') },
       { path: 'bookings',  name: 'customer.bookings',  component: () => import('@/views/customer/CustomerBookingsView.vue') },
+      { path: 'coverage-locations', name: 'customer.coverage-locations', component: () => import('@/views/customer/CustomerCoverageLocationsView.vue') },
+      { path: 'work-orders', name: 'customer.work-orders', component: () => import('@/views/customer/CustomerWorkOrdersView.vue') },
       { path: 'vehicles',  name: 'customer.vehicles',  component: () => import('@/views/customer/CustomerVehiclesView.vue') },
+      { path: 'vehicles/:id', name: 'customer.vehicles.show', component: () => import('@/views/vehicles/VehicleShowView.vue') },
+      { path: 'vehicles/:id/card', name: 'customer.vehicles.card', component: () => import('@/views/vehicles/VehicleDigitalCardView.vue') },
+      { path: 'vehicles/:id/passport', name: 'customer.vehicles.passport', component: () => import('@/views/vehicles/VehiclePassportView.vue') },
       { path: 'invoices',  name: 'customer.invoices',  component: () => import('@/views/customer/CustomerInvoicesView.vue') },
+      { path: 'invoices/:id', name: 'customer.invoices.show', component: () => import('@/views/invoices/InvoiceShowView.vue') },
+      { path: 'reports',   name: 'customer.reports',   component: () => import('@/views/customer/CustomerReportsView.vue') },
+      { path: 'business-intelligence', name: 'customer.business-intelligence', component: () => import('@/views/customer/CustomerBusinessIntelligenceView.vue') },
       { path: 'wallet',    name: 'customer.wallet',    component: () => import('@/views/customer/CustomerWalletView.vue') },
+      { path: 'wallet/top-up-requests', name: 'customer.wallet.top-up-requests', component: () => import('@/views/wallet/WalletTopUpRequestsView.vue') },
       { path: 'pricing',   name: 'customer.pricing',   component: () => import('@/views/customer/CustomerPricingView.vue') },
       { path: 'notifications', name: 'customer.notifications', component: () => import('@/views/customer/CustomerNotificationsView.vue') },
+      { path: 'settings', name: 'customer.settings', component: () => import('@/views/customer/CustomerSettingsView.vue') },
+      { path: 'profile', name: 'customer.profile', component: () => import('@/views/profile/ProfileView.vue') },
+      { path: 'company-settings', name: 'customer.company-settings', component: () => import('@/views/customer/CustomerSettingsView.vue') },
+      { path: 'team-users', name: 'customer.team-users', component: () => import('@/views/customer/CustomerTeamUsersView.vue') },
+      { path: 'org-units', name: 'customer.org-units', component: () => import('@/views/customer/CustomerOrgUnitsView.vue') },
+      { path: 'activity', name: 'customer.activity', component: () => import('@/views/ActivityLogView.vue') },
+      { path: 'plans', name: 'customer.plans', component: () => import('@/modules/subscriptions/pages/ClientPlansPage.vue') },
+      { path: 'subscription', name: 'customer.subscription', component: () => import('@/modules/subscriptions/pages/ClientSubscriptionOverviewPage.vue') },
+      { path: 'subscription/plans', name: 'customer.subscription.plans', component: () => import('@/modules/subscriptions/pages/ClientPlansPage.vue') },
+      { path: 'subscription/payment', name: 'customer.subscription.payment', component: () => import('@/modules/subscriptions/pages/ClientPaymentPage.vue') },
+      { path: 'subscription/invoices', name: 'customer.subscription.invoices', component: () => import('@/modules/subscriptions/pages/ClientInvoicesPage.vue') },
+      { path: 'zatca', name: 'customer.zatca', component: () => import('@/views/customer/CustomerZatcaView.vue') },
+      { path: 'api-keys', name: 'customer.api-keys', component: () => import('@/views/customer/CustomerApiKeysView.vue') },
     ],
   },
 
@@ -758,6 +822,8 @@ const router = createRouter({
   history: createWebHistory(resolveHistoryBase()),
   routes,
 })
+
+const LOGIN_ROUTE_NAMES = new Set(['login', 'customer-login', 'platform-login'])
 
 /**
  * مسارات بوابة «فريق العمل» (المستأجر): المحاسبة، الفواتير، العملاء، الموظفون، إلخ.
@@ -834,6 +900,19 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore()
   const sub  = useSubscriptionStore()
   const theme = useTheme()
+  const accountKind = String(auth.accountContext?.principal_kind ?? '')
+  const guardHint = String(auth.accountContext?.guard_hint ?? '')
+
+  // توحيد بوابة العميل: أي مسار عميل قديم ينتقل إلى /customer/*.
+  const customerPortalTarget = mapLegacyPathToCustomerPortal(to.path)
+  if (customerPortalTarget) {
+    if (!auth.isAuthenticated) {
+      return { name: 'customer-login', query: { redirect: customerPortalTarget } }
+    }
+    if (!auth.isStaff || auth.isCustomer) {
+      return { path: customerPortalTarget }
+    }
+  }
 
   if (auth.token) {
     const u = auth.user
@@ -853,10 +932,18 @@ router.beforeEach(async (to) => {
     theme.loadCompanyTheme().catch(() => {})
   }
 
+  if (
+    !auth.isAuthenticated
+    && resolveGuestRootRedirectTarget() === 'landing'
+    && to.path === '/'
+  ) {
+    return { path: '/landing' }
+  }
+
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     const targetPortal = String(to.meta.portal ?? '')
     if (targetPortal === 'fleet') {
-      return { name: 'fleet-login', query: { redirect: to.fullPath } }
+      return { name: 'login', query: { redirect: to.fullPath } }
     }
     if (targetPortal === 'customer') {
       return { name: 'customer-login', query: { redirect: to.fullPath } }
@@ -865,6 +952,19 @@ router.beforeEach(async (to) => {
       return { name: 'platform-login', query: { redirect: to.fullPath } }
     }
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  // Hard isolation by backend account context (stronger than role-only checks).
+  if (to.meta.requiresAuth && auth.isAuthenticated) {
+    if ((accountKind === 'customer_user' || guardHint === 'customer') && !to.path.startsWith('/customer')) {
+      return { path: '/customer/dashboard' }
+    }
+    if ((accountKind === 'customer_user' || guardHint === 'fleet') && auth.isFleet && !to.path.startsWith('/fleet-portal')) {
+      return { path: '/fleet-portal' }
+    }
+    if (accountKind === 'tenant_user' && (to.path.startsWith('/customer') || to.path.startsWith('/fleet-portal'))) {
+      return { path: '/' }
+    }
   }
 
   if (to.meta.requiresPlatformAdmin === true && auth.isAuthenticated && !auth.isPlatform) {
@@ -895,6 +995,11 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.guest && auth.isAuthenticated) {
+    // Root fix: keep login pages renderable even with stale tokens/session.
+    // This avoids blank screens caused by forced redirect to heavy async routes.
+    if (typeof to.name === 'string' && LOGIN_ROUTE_NAMES.has(to.name)) {
+      return true
+    }
     return { path: auth.portalHome }
   }
 
@@ -1019,8 +1124,8 @@ router.beforeEach(async (to) => {
 
   // بوابات اختيارية معطّلة في البناء — لا تُعرَض ولا تُحمَّل لأدوارها
   if (auth.isAuthenticated && auth.isFleet && !enabledPortals.fleet) {
-    if (to.name === 'fleet-login') return true
-    return { name: 'fleet-login', query: { notice: 'portal_disabled', portal: 'fleet' } }
+    if (to.name === 'login') return true
+    return { name: 'login', query: { notice: 'portal_disabled', portal: 'fleet' } }
   }
   if (auth.isAuthenticated && auth.isCustomer && !enabledPortals.customer) {
     if (to.name === 'customer-login') return true
@@ -1053,6 +1158,23 @@ router.beforeEach(async (to) => {
     return { path: '/customer' }
   }
 
+  // Staff tenant users are isolated from customer portal paths.
+  if (
+    to.meta.requiresAuth
+    && auth.isStaff
+    && !auth.isFleet
+    && !auth.isCustomer
+    && !auth.isPlatform
+    && to.path.startsWith('/customer')
+  ) {
+    return { path: '/' }
+  }
+
+  // Platform users stay within platform/admin surfaces.
+  if (to.meta.requiresAuth && auth.isPlatform && to.path.startsWith('/customer')) {
+    return { path: '/platform/overview' }
+  }
+
   if (
     auth.isAuthenticated &&
     auth.isStaff &&
@@ -1061,7 +1183,15 @@ router.beforeEach(async (to) => {
     !auth.isPhoneOnboarding &&
     to.meta.requiresAuth
   ) {
-    const hidden = auth.user?.hidden_staff_nav_keys
+    const bizProfile = useBusinessProfileStore()
+    const hidden = mergeExecutionPartnerNavKeys(
+      mergeStaffHiddenNavKeys(
+        auth.user?.hidden_staff_nav_keys,
+        bizProfile.businessType,
+        bizProfile.loaded,
+      ),
+      platformExecutionPartnerActiveFromStore(),
+    )
     if (Array.isArray(hidden) && hidden.length > 0) {
       const p = to.path
       const skip =
@@ -1103,6 +1233,19 @@ router.afterEach((to) => {
     return
   if (to.path.startsWith('/fleet-portal') || to.path.startsWith('/customer')) return
   logActivity('زيارة صفحة', String(to.name))
+})
+
+router.onError((error) => {
+  const msg = String((error as Error)?.message ?? '')
+  const isViteChunkGlitch =
+    msg.includes('Failed to fetch dynamically imported module')
+    || msg.includes('Outdated Optimize Dep')
+  if (!isViteChunkGlitch) return
+  if (typeof window === 'undefined') return
+  const onceKey = '__vite_chunk_retry_once__'
+  if (sessionStorage.getItem(onceKey) === '1') return
+  sessionStorage.setItem(onceKey, '1')
+  window.location.reload()
 })
 
 export default router

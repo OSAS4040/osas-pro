@@ -1,6 +1,6 @@
 {
   "app": { "name": "أسس برو", "tagline": "منصة متكاملة للتشغيل والمالية والموارد والمخزون وعلاقات العملاء", "sidebarTitle": "أسس برو — منصة إدارة التشغيل والأعمال" },
-  "nav": { "dashboard": "لوحة التحكم", "pos": "نقطة البيع", "invoices": "الفواتير", "work_orders": "أوامر العمل", "customers": "العملاء", "vehicles": "المركبات", "inventory": "المخزون", "reports": "التقارير", "settings": "الإعدادات", "logout": "تسجيل الخروج" },
+  "nav": { "dashboard": "لوحة التحكم", "pos": "نقطة البيع", "invoices": "الفواتير", "work_orders": "العمليات التي تمت من قبل المزود", "customers": "العملاء", "vehicles": "المركبات", "inventory": "المخزون", "reports": "التقارير", "settings": "الإعدادات", "logout": "تسجيل الخروج" },
   "auth": { "email": "البريد الإلكتروني", "password": "كلمة المرور", "login": "تسجيل الدخول", "staff_portal": "بوابة فريق العمل", "fleet_portal": "بوابة إدارة الأسطول", "customer_portal": "بوابة العميل" },
   "pages": { "accessDenied": "لا صلاحية", "capabilities": "قدرات النظام", "taxonomy": "مسرد المنصة والمستأجر" },
   "common": { "save": "حفظ", "cancel": "إلغاء", "delete": "حذف", "confirmDelete": "تأكيد الحذف", "edit": "تعديل", "create": "إنشاء", "search": "بحث", "loading": "جارٍ التحميل", "no_data": "لا توجد بيانات", "confirm": "تأكيد", "back": "رجوع", "print": "طباعة", "export": "تصدير", "import": "استيراد" },
@@ -106,6 +106,27 @@
     "planFeatures": "مميزات باقتك",
     "planFeaturesHint": "القدرات المفعّلة ضمن مستوى اشتراكك.",
     "noFeatures": "لم تُرجع الخادم قائمة ميزات لهذه الباقة — تواصل مع الدعم إن بدا ذلك غير صحيح.",
+    "addonsTitle": "إضافات اختيارية على باقتك",
+    "addonsSubtitle": "ميزات مدفوعة بشكل منفصل — دون ترقية الباقة بالكامل. تظهر هنا الإضافات المسموح بها لباقتك الحالية.",
+    "addonsEmpty": "لا توجد إضافات متاحة لباقتك الحالية حالياً.",
+    "addonsMonthly": "شهرياً",
+    "addonsYearly": "سنوياً",
+    "addonsEligible": "متاح لباقتك",
+    "addonsActive": "مفعّل على اشتراكك",
+    "addonsBuy": "اشترِ الإضافة",
+    "addonsRemove": "إلغاء الإضافة",
+    "addonsProcessing": "جاري التنفيذ…",
+    "addonsConfirmTitle": "تأكيد الإضافة",
+    "addonsConfirmIntro": "سيتم تفعيل التمكين على اشتراك مساحة العمل فور تأكيدك.",
+    "addonsConfirmPrice": "الالتزام الشهري التقديري",
+    "addonsGatewayHint": "عند ربط بوابة دفع، يمكن فتح صفحة الدفع ثم إكمال التفعيل هنا بعد نجاح الدفع.",
+    "addonsPayAtGateway": "الدفع عبر البوابة",
+    "addonsActivateAfterPay": "تفعيل الآن (بعد إتمام الدفع)",
+    "addonsActivateDirect": "تفعيل الإضافة",
+    "addonsCancel": "إلغاء",
+    "addonsRemoveConfirm": "إلغاء هذه الإضافة من اشتراكك؟ قد تتوقف الميزات المرتبطة بها فوراً.",
+    "addonsSuccess": "تم تحديث الإضافات.",
+    "addonsError": "تعذّر إكمال العملية.",
     "changePlan": "تغيير الباقة",
     "startDate": "تاريخ البداية",
     "endDate": "تاريخ الانتهاء",
@@ -129,7 +150,7 @@
     "features": {
       "pos": "نقطة البيع",
       "invoices": "الفواتير",
-      "work_orders": "أوامر العمل",
+      "work_orders": "العمليات التي تمت من قبل المزود",
       "fleet": "الأسطول والمركبات",
       "wallet": "محفظة العملاء والأسطول",
       "governance": "الحوكمة والموافقات",
@@ -149,7 +170,9 @@
       "analytics": "تحليلات متقدمة",
       "multi_branch": "تعدد الفروع",
       "inventory": "المخزون",
-      "purchases": "المشتريات"
+      "purchases": "المشتريات",
+      "smart_reports": "التقارير الذكية والتنبيهات",
+      "work_order_advanced_pricing": "تسعير أوامر عمل متقدم"
     }
   }
 }

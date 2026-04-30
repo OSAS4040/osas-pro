@@ -119,7 +119,11 @@
           </div>
           <p class="text-sm font-medium text-gray-600 dark:text-slate-300">لا توجد فواتير في القائمة</p>
           <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">ابدأ بإصدار فاتورة أو استيراد من أمر عمل</p>
-          <RouterLink to="/invoices/create" class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400">
+          <RouterLink
+            v-if="!platformExecutionPartner"
+            to="/invoices/create"
+            class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400"
+          >
             + إنشاء فاتورة
           </RouterLink>
         </div>
@@ -151,7 +155,7 @@
         <div class="px-5 py-3.5 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
           <h2 class="text-sm font-semibold text-gray-800 dark:text-slate-100 flex items-center gap-2">
             <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            حالة أوامر العمل
+            حالة العمليات التي تمت من قبل المزود
           </h2>
           <RouterLink to="/work-orders" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">عرض الكل ←</RouterLink>
         </div>
@@ -170,8 +174,8 @@
           </div>
           <div v-if="woStats.every(s => Number(s.value) === 0)" class="py-8 text-center text-gray-500 dark:text-slate-400">
             <CheckCircleIcon class="w-10 h-10 text-primary-200 dark:text-primary-900/60 mx-auto mb-2" />
-            <p class="text-sm font-medium">لا أوامر عمل جديدة في الفترة الحالية</p>
-            <p class="text-xs mt-1 text-gray-400">عند استقبال أوامر عمل جديدة سيظهر التوزيع هنا (مركز خدمة أو منفذ بيع)</p>
+            <p class="text-sm font-medium">لا عمليات جديدة في الفترة الحالية</p>
+            <p class="text-xs mt-1 text-gray-400">عند تسجيل عمليات جديدة سيظهر التوزيع هنا (مركز خدمة أو منفذ بيع)</p>
           </div>
         </div>
       </div>
@@ -181,11 +185,13 @@
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-5 py-4">
       <p class="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-3">وصول سريع</p>
       <div class="flex flex-wrap gap-2">
-        <QuickBtn :icon="DocumentTextIcon" label="فاتورة جديدة" to="/invoices/create" color="blue" />
-        <QuickBtn :icon="ClipboardDocumentIcon" label="أمر عمل" to="/work-orders/new" color="purple" />
+        <QuickBtn v-if="!platformExecutionPartner" :icon="DocumentTextIcon" label="فاتورة جديدة" to="/invoices/create" color="blue" />
+        <QuickBtn :icon="MagnifyingGlassCircleIcon" label="بحث أمر / لوحة" to="/execution-hub" color="blue" />
+        <QuickBtn :icon="ClipboardDocumentIcon" label="العمليات التي تمت من قبل المزود" to="/work-orders" color="purple" />
         <QuickBtn :icon="ShoppingCartIcon" label="نقطة البيع" to="/pos" color="green" />
-        <QuickBtn :icon="UsersIcon" label="عميل جديد" to="/customers" color="green" />
+        <QuickBtn v-if="!platformExecutionPartner" :icon="UsersIcon" label="عميل جديد" to="/customers" color="green" />
         <RouterLink
+          v-if="auth.isPlatform"
           :to="{ name: 'vehicles', query: { add: '1' } }"
           class="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm hover:shadow active:scale-[0.97] bg-primary-600 hover:bg-primary-700"
         >
@@ -226,6 +232,7 @@ import {
   ArrowTrendingUpIcon, ArrowTrendingDownIcon, PresentationChartLineIcon, TruckIcon,
   BuildingLibraryIcon, MapPinIcon, FireIcon, BanknotesIcon, UserPlusIcon, ChartPieIcon,
   ReceiptPercentIcon,
+  MagnifyingGlassCircleIcon,
 } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 import { useAuthStore } from '@/stores/auth'
@@ -242,10 +249,12 @@ import { invoiceStatusClass, invoiceStatusLabel } from '@/utils/financialLabels'
 import { featureFlags } from '@/config/featureFlags'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { canAccessStaffBusinessIntelligence, tenantSectionOpen } from '@/config/staffFeatureGate'
+import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
 
 const $router = useRouter()
 const auth = useAuthStore()
 const biz = useBusinessProfileStore()
+const { active: platformExecutionPartner } = usePlatformExecutionPartner()
 
 const showBiShortcuts = computed(() => {
   void biz.loaded

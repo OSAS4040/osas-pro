@@ -18,12 +18,16 @@ export type NavSearchItem = {
   requiresPermission?: string
   /** يكفي أحد الصلاحيات */
   requiresAnyPermission?: string[]
+  /** مسارات إدارة المنصة — يظهر فقط لمستخدمي platform_employee */
+  requiresPlatform?: boolean
+  /** مفتاح من `business_profile.feature_matrix` — يُخفى عن الموظفين عند التعطيل (المالك يراه للتهيئة) */
+  requiresTenantFeature?: string
 }
 
 export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/', label: 'الرئيسية', section: 'تشغيلي', keywords: ['لوحة', 'dashboard', 'home'] },
   { to: '/pos', label: 'نقطة البيع', section: 'تشغيلي', keywords: ['كاشير', 'بيع', 'pos'] },
-  { to: '/work-orders', label: 'أوامر العمل', section: 'تشغيلي', keywords: ['مركز خدمة', 'منفذ بيع', 'صيانة', 'wo'] },
+  { to: '/work-orders', label: 'العمليات التي تمت من قبل المزود', section: 'تشغيلي', keywords: ['مركز خدمة', 'منفذ بيع', 'صيانة', 'wo', 'عمليات', 'مزود'] },
   { to: '/bays', label: 'مناطق العمل', section: 'تشغيلي', keywords: ['رافعة', 'خليج', 'bay'] },
   { to: '/bookings', label: 'الحجوزات', section: 'تشغيلي', keywords: ['موعد', 'حجز'] },
   {
@@ -75,6 +79,14 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/ledger', label: 'دفتر الأستاذ', section: 'المالية والمحاسبة', keywords: ['محاسبة', 'قيود'] },
   { to: '/chart-of-accounts', label: 'دليل الحسابات', section: 'المالية والمحاسبة' },
   { to: '/zatca', label: 'ZATCA الزكاة والضريبة', section: 'المالية والمحاسبة', keywords: ['vat', 'tax'] },
+  {
+    to: '/fixed-assets',
+    label: 'الأصول الثابتة',
+    section: 'المالية والمحاسبة',
+    requiresPermission: 'reports.accounting.view',
+    requiresTenantFeature: 'fixed_assets',
+    keywords: ['أصول', 'إهلاك', 'asset', 'fixed'],
+  },
   { to: '/products', label: 'المنتجات', section: 'المخزون' },
   { to: '/inventory', label: 'المخزون', section: 'المخزون' },
   { to: '/suppliers', label: 'الموردون', section: 'المخزون' },
@@ -107,9 +119,6 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/settings/team-users', label: 'حسابات الفريق', section: 'إداري', requiresManager: true, keywords: ['مستخدم', 'users', 'صلاحيات'] },
   { to: '/settings/org-units', label: 'هيكل القطاعات', section: 'إداري', requiresManager: true, keywords: ['org', 'قطاع', 'قسم', 'هيكل'] },
   { to: '/settings/integrations', label: 'التكاملات', section: 'إداري', requiresManager: true },
-  { to: '/subscription', label: 'اشتراكي', section: 'الاشتراك' },
-  { to: '/plans', label: 'الباقات', section: 'الاشتراك' },
-  { to: '/plugins', label: 'سوق الإضافات', section: 'الاشتراك', keywords: ['إضافات', 'ai'] },
   {
     to: '/about/capabilities',
     label: 'قدرات النظام',
@@ -118,12 +127,19 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
     keywords: ['capabilities', 'ميزات', 'نشاط', 'صلاحيات', 'وضع المنتج'],
   },
   { to: '/support', label: 'مركز الدعم', section: 'إداري', keywords: ['دعم', 'تذكرة'] },
+  {
+    to: '/account/sessions',
+    label: 'الأجهزة والجلسات',
+    section: 'أمان',
+    requiresStaff: true,
+    keywords: ['session', 'جلسة', 'device', 'token', 'logout'],
+  },
   { to: '/activity', label: 'سجل العمليات', section: 'إداري' },
   { to: '/branches', label: 'إدارة الفروع', section: 'إداري', requiresManager: true, keywords: ['فرع', 'موقع'] },
   { to: '/branches/map', label: 'خريطة الفروع', section: 'إداري', requiresStaff: true, keywords: ['google', 'خريطة', 'map'] },
   { to: '/documents/company', label: 'مستندات المنشأة', section: 'إداري', keywords: ['documents'] },
-  { to: '/admin', label: 'لوحة الأدمن', section: 'الإدارة', requiresOwner: true },
-  { to: '/admin/qa', label: 'التحقق من النظام', section: 'الإدارة', requiresOwner: true, keywords: ['qa'] },
+  { to: '/platform/overview', label: 'مركز المنصة', section: 'إدارة منصة أسس برو', requiresPlatform: true, keywords: ['admin', 'منصة'] },
+  { to: '/admin/qa', label: 'فحص الجودة (QA)', section: 'إدارة منصة أسس برو', requiresPlatform: true, keywords: ['qa'] },
 ]
 
 export function normNavSearch(s: string): string {
@@ -132,7 +148,7 @@ export function normNavSearch(s: string): string {
 
 /** إخفاء عناصر التنقل المرتبطة ببوابة معطّلة (build-time). */
 export function navSearchItemVisibleForPortals(item: NavSearchItem, p: EnabledPortals): boolean {
-  if (item.to.startsWith('/admin') && !p.admin) return false
+  if ((item.to.startsWith('/admin') || item.to.startsWith('/platform')) && !p.admin) return false
   if (item.to.startsWith('/fleet/') && !p.fleet) return false
   return true
 }

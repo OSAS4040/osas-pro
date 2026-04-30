@@ -2,8 +2,8 @@
   <div class="app-shell-page max-w-4xl" dir="rtl">
     <div class="flex items-center justify-between gap-4 mb-6">
       <div>
-        <RouterLink to="/work-orders" class="text-sm text-primary-600 hover:underline">← أوامر العمل</RouterLink>
-        <h2 class="page-title-xl mt-1">دفعة أوامر عمل (عدة مركبات)</h2>
+        <RouterLink to="/work-orders" class="text-sm text-primary-600 hover:underline">← العمليات التي تمت من قبل المزود</RouterLink>
+        <h2 class="page-title-xl mt-1">دفعة عمليات (عدة مركبات)</h2>
         <p class="page-subtitle text-sm text-gray-500 dark:text-slate-400 mt-1">
           اختر العميل ثم المركبة من القوائم الذكية (بحث بالاسم، اللوحة، الهاتف…). كل سطر يُنفَّذ كأمر مستقل.
         </p>
@@ -150,7 +150,7 @@
       :loading="reviewLoading"
       :error="reviewError"
       confirm-text="تنفيذ الدفعة"
-      title="مراجعة دفعة أوامر العمل"
+      title="مراجعة دفعة العمليات"
       @confirm="executeBatch"
     />
   </div>

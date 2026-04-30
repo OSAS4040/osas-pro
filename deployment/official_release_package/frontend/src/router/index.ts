@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { isCustomerNavHidden, isStaffNavHidden } from '@/lib/staffNavKey'
 import { useSubscriptionStore } from '@/stores/subscription'
 import { featureFlags } from '@/config/featureFlags'
 import {
@@ -9,9 +10,11 @@ import {
   canAccessWorkshopArea,
 } from '@/config/staffFeatureGate'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
+import { mergeStaffHiddenNavKeys } from '@/config/staffProviderFocusNav'
 import { enabledPortals } from '@/config/portalAccess'
 import { logActivity } from '@/composables/useActivityLog'
 import { useTheme } from '@/composables/useTheme'
+import { platformPathFromAdminHash } from '@/config/platformAdminNav'
 /** ضمان تطابق Vue Router مع Vite حتى لا يصبح base ‎./‎ أو فارغًا في بعض البيئات. */
 function resolveHistoryBase(): string {
   const raw = import.meta.env.BASE_URL
@@ -21,14 +24,54 @@ function resolveHistoryBase(): string {
   return raw
 }
 
+/**
+ * وجهة الزائر غير المسجّل عند طلب `/` (جذر التطبيق).
+ * - `landing`: الصفحة التعريفية — مناسب للإنتاج والتجريب العام دون إظهار لوحة التشغيل.
+ * - `login`: السلوك السابق (متابعة الحارس العادي → دخول مزوّد الخدمة).
+ *
+ * `VITE_GUEST_ROOT_REDIRECT=landing` أو `login`. إن وُضع غير صالح يُ ignored.
+ * عند عدم الضبط: **build إنتاجي** → landing، **تطوير (vite dev)** → login لتسريع اختبار فريق العمل.
+ *
+ * لا يؤثر على المستخدمين المسجّلين؛ عزل البوابات (عميل / أسطول / منصة) يبقى لاحقاً في هذا الملف.
+ */
+function resolveGuestRootRedirectTarget(): 'landing' | 'login' {
+  const raw = String(import.meta.env.VITE_GUEST_ROOT_REDIRECT ?? '').trim().toLowerCase()
+  if (raw === 'landing' || raw === 'login') {
+    return raw
+  }
+  return import.meta.env.PROD ? 'landing' : 'login'
+}
+
+function mapLegacyPathToCustomerPortal(path: string): string | null {
+  if (path === '/customers' || path.startsWith('/customers/')) return '/customer/dashboard'
+  if (path === '/branches' || path.startsWith('/branches/')) return '/customer/coverage-locations'
+  if (path === '/work-orders' || path.startsWith('/work-orders/')) return '/customer/work-orders'
+  if (path === '/bookings' || path.startsWith('/bookings/')) return '/customer/bookings'
+  if (path === '/vehicles' || path.startsWith('/vehicles/')) return '/customer/vehicles'
+  if (path === '/invoices' || path.startsWith('/invoices/')) return '/customer/invoices'
+  if (path === '/wallet' || path.startsWith('/wallet/')) return '/customer/wallet'
+  if (path === '/support' || path.startsWith('/support/')) return '/customer/notifications'
+  if (path === '/settings' || path.startsWith('/settings/')) return '/customer/settings'
+  if (path === '/reports' || path.startsWith('/reports/')) return '/customer/reports'
+  if (path === '/business-intelligence' || path.startsWith('/business-intelligence/')) return '/customer/business-intelligence'
+  if (path === '/plans' || path.startsWith('/plans/')) return '/customer/plans'
+  if (path === '/subscription' || path.startsWith('/subscription/')) return '/customer/subscription'
+  if (path === '/activity' || path.startsWith('/activity/')) return '/customer/activity'
+  if (path === '/zatca' || path.startsWith('/zatca/')) return '/customer/zatca'
+  return null
+}
+
 const routes: RouteRecordRaw[] = [
-  // ── Auth — صفحة دخول موحّدة لجميع البوابات ──
+  /** توافق مع توجيه «غير مشغّل المنصة» بعيداً عن `/admin` */
+  { path: '/dashboard', redirect: '/' },
+  // ── Auth — دخول مزوّد الخدمة (/login)؛ بوابات أخرى في مسارات منفصلة ──
   {
     path: '/login',
     name: 'login',
     component: () => import('@/views/auth/LoginView.vue'),
     meta: { guest: true },
   },
+  { path: '/staff/login', redirect: '/login' },
   {
     path: '/platform/login',
     name: 'platform-login',
@@ -36,9 +79,15 @@ const routes: RouteRecordRaw[] = [
     meta: { guest: true, platformAdminLogin: true },
   },
   { path: '/admin/login', redirect: '/platform/login' },
-  // Redirect الروابط القديمة للصفحة الموحّدة
-  { path: '/fleet/login',    redirect: '/login' },
-  { path: '/customer/login', redirect: '/login' },
+  // تسجيل دخول مخصص لكل بوابة (فصل تدريجي دون كسر المصادقة الحالية)
+  /** أسطول بدون صفحة دخول منفصلة — نفس نموذج مزوّد الخدمة (`/login`) */
+  { path: '/fleet/login', redirect: '/login' },
+  {
+    path: '/customer/login',
+    name: 'customer-login',
+    component: () => import('@/views/auth/CustomerLoginView.vue'),
+    meta: { guest: true, portalLogin: 'customer' },
+  },
   {
     path: '/forgot-password',
     name: 'forgot-password',
@@ -51,6 +100,60 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/ResetPasswordView.vue'),
     meta: { guest: true },
   },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/auth/RegisterView.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/phone',
+    name: 'phone-auth',
+    component: () => import('@/views/phone/PhoneAuthView.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/phone/verify',
+    name: 'phone-verify',
+    component: () => import('@/views/phone/PhoneOtpVerifyView.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/phone/onboarding',
+    name: 'phone-onboarding',
+    component: () => import('@/views/phone/PhoneOnboardingHubView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/type',
+    name: 'phone-onboarding-type',
+    component: () => import('@/views/phone/RegistrationAccountTypeView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/individual',
+    name: 'phone-onboarding-individual',
+    component: () => import('@/views/phone/RegistrationIndividualView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/company',
+    name: 'phone-onboarding-company',
+    component: () => import('@/views/phone/RegistrationCompanyView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/pending-review',
+    name: 'phone-onboarding-pending',
+    component: () => import('@/views/phone/CompanyPendingReviewView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/phone/onboarding/done',
+    name: 'phone-onboarding-done',
+    component: () => import('@/views/phone/PhoneOnboardingDoneView.vue'),
+    meta: { requiresAuth: true },
+  },
 
   {
     path:      '/admin/qa',
@@ -59,21 +162,321 @@ const routes: RouteRecordRaw[] = [
     meta:      {
       requiresAuth: true,
       portal:     'admin',
-      requiresOwner: true,
+      requiresPlatformAdmin: true,
       title:      'QA Dashboard',
     },
   },
   {
-    path:      '/admin',
-    name:      'admin',
-    component: () => import('@/views/admin/AdminDashboardView.vue'),
-    meta:      {
+    path: '/admin/registration-profiles',
+    name: 'admin-registration-profiles',
+    component: () => import('@/views/admin/AdminRegistrationQueueView.vue'),
+    meta: {
       requiresAuth: true,
-      portal:     'admin',
-      requiresOwner: true,
+      portal: 'admin',
+      requiresPlatformAdmin: true,
     },
   },
+  {
+    path: '/admin/companies/:id(\\d+)',
+    redirect: (to) => ({ path: `/platform/companies/${String(to.params.id)}`, replace: true }),
+    meta: {
+      requiresAuth: true,
+      portal: 'admin',
+      requiresPlatformAdmin: true,
+    },
+  },
+  {
+    path: '/admin/subscriptions',
+    component: () => import('@/layouts/PlatformAdminLayout.vue'),
+    meta: {
+      requiresAuth: true,
+      portal: 'admin',
+      requiresPlatformAdmin: true,
+      platformSubscriptionOps: true,
+    },
+    children: [
+      {
+        path: '',
+        component: () => import('@/modules/subscriptions/layouts/AdminSubscriptionsShellLayout.vue'),
+        meta: {
+          requiresAuth: true,
+          portal: 'admin',
+          requiresPlatformAdmin: true,
+          platformSubscriptionOps: true,
+        },
+        children: [
+          {
+            path: 'list',
+            name: 'admin-subscriptions-list',
+            component: () => import('@/modules/subscriptions/pages/AdminSubscriptionsListPage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+          {
+            path: 'control',
+            name: 'admin-subscriptions-control',
+            component: () => import('@/modules/subscriptions/pages/AdminSubscriptionsControlPage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+          {
+            path: 'transactions',
+            name: 'admin-subscriptions-transactions',
+            component: () => import('@/modules/subscriptions/pages/AdminSubscriptionsTransactionsPage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+          {
+            path: 'wallets',
+            name: 'admin-subscriptions-wallets',
+            component: () => import('@/modules/subscriptions/pages/AdminSubscriptionsWalletMonitorPage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+          {
+            path: 'invoices/:invoiceId(\\d+)',
+            name: 'admin-subscriptions-invoice-detail',
+            component: () => import('@/modules/subscriptions/pages/AdminInvoiceDetailPage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+          {
+            path: 'invoices',
+            name: 'admin-subscriptions-invoices',
+            component: () => import('@/modules/subscriptions/pages/AdminSubscriptionsInvoicesPage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+          {
+            path: 'payment-orders/:id(\\d+)',
+            name: 'admin-subscriptions-payment-order',
+            component: () => import('@/modules/subscriptions/pages/AdminPaymentOrderDetailPage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+          {
+            path: 'bank-transactions/:id(\\d+)',
+            name: 'admin-subscriptions-bank-tx',
+            component: () => import('@/modules/subscriptions/pages/AdminBankTransactionDetailPage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+          {
+            path: ':subscriptionId(\\d+)',
+            name: 'admin-subscriptions-detail',
+            component: () => import('@/modules/subscriptions/pages/AdminSubscriptionDetailPage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+          {
+            path: '',
+            name: 'admin-subscriptions-review',
+            component: () => import('@/modules/subscriptions/pages/AdminSubscriptionsReviewQueuePage.vue'),
+            meta: { requiresAuth: true, portal: 'admin', requiresPlatformAdmin: true, platformSubscriptionOps: true },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: '/admin',
+    name: 'admin-legacy',
+    redirect: (to) => ({ path: platformPathFromAdminHash(to.hash || ''), replace: true }),
+  },
+  { path: '/admin/overview', redirect: '/platform/overview' },
+  {
+    path: '/platform',
+    component: () => import('@/layouts/PlatformAdminLayout.vue'),
+    meta: {
+      requiresAuth: true,
+      portal: 'admin',
+      requiresPlatformAdmin: true,
+    },
+    children: [
+      { path: '', redirect: { name: 'platform-overview' } },
+      {
+        path: 'overview',
+        name: 'platform-overview',
+        component: () => import('@/views/platform/PlatformOverviewView.vue'),
+      },
+      {
+        path: 'governance',
+        name: 'platform-governance',
+        component: () => import('@/views/platform/PlatformGovernanceView.vue'),
+      },
+      {
+        path: 'ops',
+        name: 'platform-ops',
+        component: () => import('@/views/platform/PlatformOpsView.vue'),
+      },
+      {
+        path: 'companies',
+        name: 'platform-companies',
+        component: () => import('@/views/platform/PlatformCompaniesView.vue'),
+      },
+      {
+        path: 'companies/:id',
+        name: 'platform-company-detail',
+        component: () => import('@/views/platform/PlatformCompanyDetailView.vue'),
+      },
+      {
+        path: 'customers',
+        name: 'platform-customers',
+        component: () => import('@/views/platform/PlatformCustomersView.vue'),
+      },
+      {
+        path: 'plans',
+        name: 'platform-plans',
+        component: () => import('@/views/platform/PlatformPlansView.vue'),
+      },
+      {
+        path: 'operator-commands',
+        name: 'platform-operator-commands',
+        component: () => import('@/views/platform/PlatformOperatorCommandsView.vue'),
+      },
+      {
+        path: 'audit',
+        name: 'platform-audit',
+        component: () => import('@/views/platform/PlatformAuditView.vue'),
+      },
+      {
+        path: 'finance',
+        name: 'platform-finance',
+        component: () => import('@/views/platform/PlatformFinanceView.vue'),
+      },
+      {
+        path: 'cancellations',
+        name: 'platform-cancellations',
+        component: () => import('@/views/platform/PlatformCancellationsView.vue'),
+      },
+      {
+        path: 'support',
+        name: 'platform-support',
+        component: () => import('@/views/platform/PlatformSupportView.vue'),
+      },
+      {
+        path: 'announcements',
+        name: 'platform-announcements',
+        component: () => import('@/views/platform/PlatformAnnouncementsView.vue'),
+      },
+      {
+        path: 'intelligence/incidents',
+        name: 'platform-incidents',
+        component: () => import('@/views/platform/PlatformIncidentCenterView.vue'),
+      },
+      {
+        path: 'intelligence/command',
+        name: 'platform-intelligence-command',
+        component: () => import('@/views/platform/PlatformCommandSurfaceView.vue'),
+      },
+      {
+        path: 'notifications',
+        name: 'platform-notifications',
+        component: () => import('@/views/platform/PlatformNotificationsView.vue'),
+      },
+      {
+        path: 'intelligence/incidents/:incidentKey',
+        name: 'platform-incident-detail',
+        component: () => import('@/views/platform/PlatformIncidentDetailView.vue'),
+      },
+      {
+        path: 'providers/new',
+        name: 'platform-providers-new',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'إضافة مزود خدمة',
+          platformPricingHint: 'تسجيل مزود وربط الخدمات والمناطق وتكاليف المزود (لا تُعرض للعميل).',
+        },
+      },
+      {
+        path: 'providers/costs',
+        name: 'platform-provider-costs',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'أسعار المزود',
+          platformPricingHint: 'تكاليف المزود المستخدمة في التسعير والتحليل فقط.',
+        },
+      },
+      {
+        path: 'providers',
+        name: 'platform-providers-list',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'قائمة المزودين',
+          platformPricingHint: 'مزودو الخدمة المرتبطون بالخدمات والمناطق.',
+        },
+      },
+      {
+        path: 'pricing/requests',
+        name: 'platform-pricing-requests',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'طلبات التسعير',
+          platformPricingHint: 'إنشاء الطلبات (مسودة) وإرسالها لمراجعة الموظف وفق سير العمل.',
+        },
+      },
+      {
+        path: 'pricing/review',
+        name: 'platform-pricing-review',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'مراجعة طلبات التسعير',
+          platformPricingHint: 'تحليل الطلب ومقارنة عروض المزودين والتوصية قبل تصعيد اعتماد المنصة.',
+        },
+      },
+      {
+        path: 'pricing/approve',
+        name: 'platform-pricing-approve',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'اعتماد طلبات التسعير',
+          platformPricingHint: 'اعتماد أو رفض أو إعادة للمراجعة بعد مرور الطلب بمرحلة مراجعة موثّقة.',
+        },
+      },
+      {
+        path: 'pricing/price-lists',
+        name: 'platform-pricing-catalogs',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'قوائم الأسعار',
+          platformPricingHint: 'عرض قوائم الأسعار والنسخ — كل تعديل ينشئ نسخة جديدة دون تعديل مباشر للمعتمد.',
+        },
+      },
+      {
+        path: 'pricing/customer-prices',
+        name: 'platform-pricing-customer-prices',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'أسعار العملاء',
+          platformPricingHint: 'ربط العميل بالعقد وقائمة الأسعار وعرض السعر الحالي والنسخ السابقة.',
+        },
+      },
+      {
+        path: 'pricing/price-activation',
+        name: 'platform-pricing-price-activation',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'اعتماد الأسعار',
+          platformPricingHint: 'تفعيل النسخة المرجعية (is_reference) بعد اعتماد المنصة فقط.',
+        },
+      },
+      {
+        path: 'contracts',
+        name: 'platform-contracts',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'العقود',
+          platformPricingHint: 'العقود المرتبطة بتسعير العملاء وسير الاعتماد.',
+        },
+      },
+      {
+        path: 'reports',
+        name: 'platform-reports',
+        component: () => import('@/views/platform/pricing/PlatformPricingModulePlaceholder.vue'),
+        meta: {
+          platformPricingTitle: 'التقارير',
+          platformPricingHint: 'تقارير تجارية وتسعير على مستوى المنصة.',
+        },
+      },
+    ],
+  },
 
+  /**
+   * Staff portal — قائمة المسارات يجب أن تبقى متوافقة مع
+   * `docs/Tenant_Navigation_API_Map.md` (كتل nav-doc-route-anchors*).
+   * تحقق: من `frontend` شغّل `npm run docs:nav-api-check`.
+   */
   // ── Staff portal (مسارات /workshop تقنية؛ العرض للمستخدم: مركز خدمة / منفذ بيع) ──
   {
     path: '/',
@@ -82,14 +485,34 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '',                    name: 'dashboard',          component: () => import('@/views/DashboardView.vue') },
       { path: 'customers',           name: 'customers',          component: () => import('@/views/customers/CustomerListView.vue') },
+      {
+        path:      'customers/:customerId/reports',
+        name:      'customers.reports',
+        component: () => import('@/views/customers/CustomerReportsPulseView.vue'),
+        meta:      {
+          requiresAllPermissions: ['reports.view', 'reports.operations.view'],
+          title:    'لوحة العميل',
+          titleEn:  'Customer pulse',
+        },
+      },
+      {
+        path:      'customers/:customerId',
+        name:      'customers.profile',
+        component: () => import('@/views/customers/CustomerProfileView.vue'),
+        meta:      {
+          requiresPermission: 'customers.view',
+          title:    'مركز العميل',
+          titleEn:  'Customer hub',
+        },
+      },
       { path: 'vehicles',            name: 'vehicles',           component: () => import('@/views/vehicles/VehicleListView.vue') },
       { path: 'vehicles/:id',        name: 'vehicles.show',      component: () => import('@/views/vehicles/VehicleShowView.vue') },
       { path: 'vehicles/:id/card',   name: 'vehicles.card',      component: () => import('@/views/vehicles/VehicleDigitalCardView.vue') },
       { path: 'vehicles/:id/passport', name: 'vehicles.passport', component: () => import('@/views/vehicles/VehiclePassportView.vue') },
       { path: 'pos',                 name: 'pos',                component: () => import('@/views/pos/POSView.vue') },
       { path: 'work-orders',         name: 'work-orders',        component: () => import('@/views/work-orders/WorkOrderListView.vue') },
-      { path: 'work-orders/new',     name: 'work-orders.create', component: () => import('@/views/work-orders/WorkOrderCreateView.vue') },
-      { path: 'work-orders/batch',   name: 'work-orders.batch',  component: () => import('@/views/work-orders/WorkOrderBatchCreateView.vue') },
+      { path: 'work-orders/new',     name: 'work-orders.create', redirect: '/work-orders' },
+      { path: 'work-orders/batch',   name: 'work-orders.batch',  redirect: '/work-orders' },
       { path: 'work-orders/:id',     name: 'work-orders.show',   component: () => import('@/views/work-orders/WorkOrderShowView.vue') },
       { path: 'services',            name: 'services',           component: () => import('@/views/services/ServicesView.vue') },
       { path: 'bundles',             name: 'bundles',            component: () => import('@/views/services/BundlesView.vue') },
@@ -113,6 +536,16 @@ const routes: RouteRecordRaw[] = [
       { path: 'goods-receipts/:id',  name: 'goods-receipts.show', component: () => import('@/views/purchases/GoodsReceiptShowView.vue') },
       { path: 'reports',             name: 'reports',            component: () => import('@/views/reports/ReportsView.vue') },
       {
+        path:      'operations/global-feed',
+        name:      'operations.global-feed',
+        component: () => import('@/views/operations/GlobalOperationsFeedView.vue'),
+        meta:      {
+          requiresAllPermissions: ['reports.view', 'reports.operations.view'],
+          title:    'تدفق العمليات',
+          titleEn:  'Global operations feed',
+        },
+      },
+      {
         path:      'business-intelligence',
         name:      'business-intelligence',
         component: () => import('@/views/analytics/BusinessIntelligenceView.vue'),
@@ -124,6 +557,16 @@ const routes: RouteRecordRaw[] = [
         name:      'contracts.catalog',
         component: () => import('@/views/contracts/ContractCatalogView.vue'),
         meta:      { requiresPermission: 'contracts.service_items.view', title: 'بنود العقد' },
+      },
+      {
+        path:      'companies/:companyId',
+        name:      'companies.profile',
+        component: () => import('@/views/companies/CompanyProfileView.vue'),
+        meta:      {
+          requiresAuth: true,
+          title:    'مركز الشركة',
+          titleEn:  'Company hub',
+        },
       },
       { path: 'settings',            name: 'settings',           component: () => import('@/views/settings/SettingsView.vue'), meta: { requiresManager: true } },
       { path: 'settings/integrations', name: 'settings.integrations', component: () => import('@/views/settings/IntegrationsView.vue'), meta: { requiresManager: true } },
@@ -139,6 +582,12 @@ const routes: RouteRecordRaw[] = [
       /** عرض الخريطة لجميع موظفي مركز الخدمة؛ التعديل يبقى من صفحة الفروع (مدير/مالك). */
       { path: 'branches/map',        name: 'branches.map',       component: () => import('@/views/branches/BranchesMapView.vue') },
       { path: 'profile',             name: 'profile',            component: () => import('@/views/profile/ProfileView.vue') },
+      {
+        path:      'account/sessions',
+        name:      'account.sessions',
+        component: () => import('@/views/account/AuthSessionsView.vue'),
+        meta:      { requiresAuth: true, title: 'الأجهزة والجلسات' },
+      },
       { path: 'about/deployment',    name: 'about.deployment',   component: () => import('@/views/AboutDeploymentView.vue') },
       { path: 'about/taxonomy',       name: 'about.taxonomy',     component: () => import('@/views/about/PlatformTaxonomyView.vue') },
       {
@@ -172,7 +621,16 @@ const routes: RouteRecordRaw[] = [
       { path: 'ledger',              name: 'ledger',             component: () => import('@/views/ledger/LedgerView.vue') },
       { path: 'ledger/:id',          name: 'ledger.show',        component: () => import('@/views/ledger/LedgerEntryView.vue') },
       { path: 'chart-of-accounts',   name: 'chart-of-accounts',  component: () => import('@/views/ledger/ChartOfAccountsView.vue') },
-      { path: 'fixed-assets',        name: 'fixed-assets',       component: () => import('@/views/ledger/FixedAssetsView.vue') },
+      {
+        path:      'fixed-assets',
+        name:      'fixed-assets',
+        component: () => import('@/views/ledger/FixedAssetsView.vue'),
+        meta:      {
+          requiresBusinessFeature: 'fixed_assets',
+          requiresPermission:      'reports.accounting.view',
+          title:                   'الأصول الثابتة',
+        },
+      },
       // Fleet Wallet (جانب مركز الخدمة / المنفذ)
       { path: 'fleet/wallet',        name: 'fleet.wallet',       component: () => import('@/views/fleet/FleetWalletView.vue') },
       { path: 'fleet/verify-plate',  name: 'fleet.verify-plate', component: () => import('@/views/fleet/PlateVerificationView.vue') },
@@ -259,8 +717,11 @@ const routes: RouteRecordRaw[] = [
       { path: 'bays/heatmap',        name: 'bays.heatmap',       component: () => import('@/views/bays/HeatmapView.vue') },
       { path: 'bookings',            name: 'bookings',           component: () => import('@/views/bookings/BookingsView.vue') },
       // SaaS
-      { path: 'plans',               name: 'plans',              component: () => import('@/views/saas/PlansView.vue') },
-      { path: 'subscription',        name: 'subscription',       component: () => import('@/views/saas/SubscriptionView.vue') },
+      { path: 'plans',               name: 'plans',              component: () => import('@/modules/subscriptions/pages/ClientPlansPage.vue') },
+      { path: 'subscription',        name: 'subscription',       component: () => import('@/modules/subscriptions/pages/ClientSubscriptionOverviewPage.vue') },
+      { path: 'subscription/plans',  name: 'subscription.plans', component: () => import('@/modules/subscriptions/pages/ClientPlansPage.vue') },
+      { path: 'subscription/payment', name: 'subscription.payment', component: () => import('@/modules/subscriptions/pages/ClientPaymentPage.vue') },
+      { path: 'subscription/invoices', name: 'subscription.invoices', component: () => import('@/modules/subscriptions/pages/ClientInvoicesPage.vue') },
       {
         path: 'fuel',
         name: 'fuel',
@@ -303,10 +764,33 @@ const routes: RouteRecordRaw[] = [
       { path: '',          name: 'customer',           redirect: '/customer/dashboard' },
       { path: 'dashboard', name: 'customer.dashboard', component: () => import('@/views/customer/CustomerDashboardView.vue') },
       { path: 'bookings',  name: 'customer.bookings',  component: () => import('@/views/customer/CustomerBookingsView.vue') },
+      { path: 'coverage-locations', name: 'customer.coverage-locations', component: () => import('@/views/customer/CustomerCoverageLocationsView.vue') },
+      { path: 'work-orders', name: 'customer.work-orders', component: () => import('@/views/customer/CustomerWorkOrdersView.vue') },
       { path: 'vehicles',  name: 'customer.vehicles',  component: () => import('@/views/customer/CustomerVehiclesView.vue') },
+      { path: 'vehicles/:id', name: 'customer.vehicles.show', component: () => import('@/views/vehicles/VehicleShowView.vue') },
+      { path: 'vehicles/:id/card', name: 'customer.vehicles.card', component: () => import('@/views/vehicles/VehicleDigitalCardView.vue') },
+      { path: 'vehicles/:id/passport', name: 'customer.vehicles.passport', component: () => import('@/views/vehicles/VehiclePassportView.vue') },
       { path: 'invoices',  name: 'customer.invoices',  component: () => import('@/views/customer/CustomerInvoicesView.vue') },
+      { path: 'invoices/:id', name: 'customer.invoices.show', component: () => import('@/views/invoices/InvoiceShowView.vue') },
+      { path: 'reports',   name: 'customer.reports',   component: () => import('@/views/customer/CustomerReportsView.vue') },
+      { path: 'business-intelligence', name: 'customer.business-intelligence', component: () => import('@/views/customer/CustomerBusinessIntelligenceView.vue') },
       { path: 'wallet',    name: 'customer.wallet',    component: () => import('@/views/customer/CustomerWalletView.vue') },
+      { path: 'wallet/top-up-requests', name: 'customer.wallet.top-up-requests', component: () => import('@/views/wallet/WalletTopUpRequestsView.vue') },
+      { path: 'pricing',   name: 'customer.pricing',   component: () => import('@/views/customer/CustomerPricingView.vue') },
       { path: 'notifications', name: 'customer.notifications', component: () => import('@/views/customer/CustomerNotificationsView.vue') },
+      { path: 'settings', name: 'customer.settings', component: () => import('@/views/customer/CustomerSettingsView.vue') },
+      { path: 'profile', name: 'customer.profile', component: () => import('@/views/profile/ProfileView.vue') },
+      { path: 'company-settings', name: 'customer.company-settings', component: () => import('@/views/customer/CustomerSettingsView.vue') },
+      { path: 'team-users', name: 'customer.team-users', component: () => import('@/views/customer/CustomerTeamUsersView.vue') },
+      { path: 'org-units', name: 'customer.org-units', component: () => import('@/views/customer/CustomerOrgUnitsView.vue') },
+      { path: 'activity', name: 'customer.activity', component: () => import('@/views/ActivityLogView.vue') },
+      { path: 'plans', name: 'customer.plans', component: () => import('@/modules/subscriptions/pages/ClientPlansPage.vue') },
+      { path: 'subscription', name: 'customer.subscription', component: () => import('@/modules/subscriptions/pages/ClientSubscriptionOverviewPage.vue') },
+      { path: 'subscription/plans', name: 'customer.subscription.plans', component: () => import('@/modules/subscriptions/pages/ClientPlansPage.vue') },
+      { path: 'subscription/payment', name: 'customer.subscription.payment', component: () => import('@/modules/subscriptions/pages/ClientPaymentPage.vue') },
+      { path: 'subscription/invoices', name: 'customer.subscription.invoices', component: () => import('@/modules/subscriptions/pages/ClientInvoicesPage.vue') },
+      { path: 'zatca', name: 'customer.zatca', component: () => import('@/views/customer/CustomerZatcaView.vue') },
+      { path: 'api-keys', name: 'customer.api-keys', component: () => import('@/views/customer/CustomerApiKeysView.vue') },
     ],
   },
 
@@ -331,10 +815,96 @@ const router = createRouter({
   routes,
 })
 
+const LOGIN_ROUTE_NAMES = new Set(['login', 'customer-login', 'platform-login'])
+
+/**
+ * مسارات بوابة «فريق العمل» (المستأجر): المحاسبة، الفواتير، العملاء، الموظفون، إلخ.
+ * يُسمح بها لمشغّل المنصة حتى بدون company_id حتى لا يُحبَس في /admin فقط
+ * (رابط «العودة للتطبيق» وروابط الإدارة).
+ */
+function isStaffTenantAppExplorationPath(path: string): boolean {
+  const raw = path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path
+  if (raw === '' || raw === '/') return true
+  const prefixes = [
+    '/about',
+    '/access-denied',
+    '/account',
+    '/activity',
+    '/bays',
+    '/bookings',
+    '/branches',
+    '/bundles',
+    '/business-intelligence',
+    '/chart-of-accounts',
+    '/companies',
+    '/compliance',
+    '/contracts',
+    '/crm',
+    '/customers',
+    '/dashboard',
+    '/documents',
+    '/electronic-archive',
+    '/financial-reconciliation',
+    '/fixed-assets',
+    '/fleet',
+    '/goods-receipts',
+    '/governance',
+    '/integrations',
+    '/internal',
+    '/inventory',
+    '/invoices',
+    '/ledger',
+    '/meetings',
+    '/operations',
+    '/plans',
+    '/plugins',
+    '/pos',
+    '/products',
+    '/profile',
+    '/purchases',
+    '/referrals',
+    '/reports',
+    '/services',
+    '/settings',
+    '/subscription',
+    '/suppliers',
+    '/support',
+    '/vehicles',
+    '/wallet',
+    '/work-orders',
+    '/workshop',
+    '/zatca',
+  ]
+  return prefixes.some((pre) => raw === pre || raw.startsWith(`${pre}/`))
+}
+
+async function ensureStaffBusinessProfileForShell(): Promise<void> {
+  const auth = useAuthStore()
+  const biz = useBusinessProfileStore()
+  if (!auth.isAuthenticated) return
+  if (!auth.isStaff || auth.isFleet || auth.isCustomer || auth.isPhoneOnboarding) return
+  if (typeof auth.user?.company_id !== 'number' || auth.user.company_id <= 0) return
+  if (biz.loaded) return
+  await biz.load().catch(() => {})
+}
+
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
   const sub  = useSubscriptionStore()
   const theme = useTheme()
+  const accountKind = String(auth.accountContext?.principal_kind ?? '')
+  const guardHint = String(auth.accountContext?.guard_hint ?? '')
+
+  // توحيد بوابة العميل: أي مسار عميل قديم ينتقل إلى /customer/*.
+  const customerPortalTarget = mapLegacyPathToCustomerPortal(to.path)
+  if (customerPortalTarget) {
+    if (!auth.isAuthenticated) {
+      return { name: 'customer-login', query: { redirect: customerPortalTarget } }
+    }
+    if (!auth.isStaff || auth.isCustomer) {
+      return { path: customerPortalTarget }
+    }
+  }
 
   if (auth.token) {
     const u = auth.user
@@ -350,14 +920,78 @@ router.beforeEach(async (to) => {
   }
 
   if (auth.isAuthenticated) {
+    await ensureStaffBusinessProfileForShell()
     theme.loadCompanyTheme().catch(() => {})
   }
 
+  if (
+    !auth.isAuthenticated
+    && resolveGuestRootRedirectTarget() === 'landing'
+    && to.path === '/'
+  ) {
+    return { path: '/landing' }
+  }
+
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    const targetPortal = String(to.meta.portal ?? '')
+    if (targetPortal === 'fleet') {
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+    if (targetPortal === 'customer') {
+      return { name: 'customer-login', query: { redirect: to.fullPath } }
+    }
+    if (targetPortal === 'admin') {
+      return { name: 'platform-login', query: { redirect: to.fullPath } }
+    }
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
+  // Hard isolation by backend account context (stronger than role-only checks).
+  if (to.meta.requiresAuth && auth.isAuthenticated) {
+    if ((accountKind === 'customer_user' || guardHint === 'customer') && !to.path.startsWith('/customer')) {
+      return { path: '/customer/dashboard' }
+    }
+    if ((accountKind === 'customer_user' || guardHint === 'fleet') && auth.isFleet && !to.path.startsWith('/fleet-portal')) {
+      return { path: '/fleet-portal' }
+    }
+    if (accountKind === 'tenant_user' && (to.path.startsWith('/customer') || to.path.startsWith('/fleet-portal'))) {
+      return { path: '/' }
+    }
+  }
+
+  if (to.meta.requiresPlatformAdmin === true && auth.isAuthenticated && !auth.isPlatform) {
+    return { path: '/dashboard' }
+  }
+
+  if (auth.isAuthenticated && auth.isPlatform && to.meta.portal === 'staff' && to.name !== 'access-denied') {
+    const u = auth.user
+    const hasTenantAnchor = typeof u?.company_id === 'number' && u.company_id > 0
+    if (!hasTenantAnchor) {
+      const p = to.path
+      const allowStaffPath =
+        p.startsWith('/about')
+        || p.startsWith('/profile')
+        || p.startsWith('/account/')
+      const allowTenantApp = isStaffTenantAppExplorationPath(p)
+      if (!allowStaffPath && !allowTenantApp) {
+        return { path: '/platform/overview' }
+      }
+    }
+  }
+
+  if (auth.isAuthenticated && String(auth.user?.role ?? '') === 'phone_onboarding' && !to.path.startsWith('/phone')) {
+    if (to.meta.publicPage === true) {
+      return true
+    }
+    return { path: '/phone/onboarding' }
+  }
+
   if (to.meta.guest && auth.isAuthenticated) {
+    // Root fix: keep login pages renderable even with stale tokens/session.
+    // This avoids blank screens caused by forced redirect to heavy async routes.
+    if (typeof to.name === 'string' && LOGIN_ROUTE_NAMES.has(to.name)) {
+      return true
+    }
     return { path: auth.portalHome }
   }
 
@@ -371,6 +1005,14 @@ router.beforeEach(async (to) => {
   const deny = (reason: 'manager' | 'owner' | 'permission' | 'feature' | 'portal' | 'preview' | 'inactive') => {
     const from = to.fullPath.length > 512 ? to.fullPath.slice(0, 512) : to.fullPath
     return { name: 'access-denied' as const, query: { reason, from } }
+  }
+
+  if (
+    auth.isAuthenticated &&
+    to.matched.some((r) => r.meta.platformSubscriptionOps === true) &&
+    !auth.hasPermission('platform.subscription.manage')
+  ) {
+    return deny('permission')
   }
 
   if (to.meta.unavailablePreview === true) {
@@ -413,6 +1055,12 @@ router.beforeEach(async (to) => {
   if (Array.isArray(anyPerms) && anyPerms.length > 0) {
     const ok = anyPerms.some((p) => auth.hasPermission(p))
     if (!ok) return deny('permission')
+  }
+
+  const allPerms = to.meta.requiresAllPermissions
+  if (Array.isArray(allPerms) && allPerms.length > 0) {
+    const okAll = allPerms.every((p) => auth.hasPermission(p))
+    if (!okAll) return deny('permission')
   }
 
   if (to.meta.requiresOwner && !auth.isOwner) {
@@ -472,8 +1120,8 @@ router.beforeEach(async (to) => {
     return { name: 'login', query: { notice: 'portal_disabled', portal: 'fleet' } }
   }
   if (auth.isAuthenticated && auth.isCustomer && !enabledPortals.customer) {
-    if (to.name === 'login') return true
-    return { name: 'login', query: { notice: 'portal_disabled', portal: 'customer' } }
+    if (to.name === 'customer-login') return true
+    return { name: 'customer-login', query: { notice: 'portal_disabled', portal: 'customer' } }
   }
   if (auth.isAuthenticated && auth.isStaff) {
     if (to.path.startsWith('/fleet-portal') && !enabledPortals.fleet) {
@@ -482,7 +1130,7 @@ router.beforeEach(async (to) => {
     if (to.path.startsWith('/customer') && !enabledPortals.customer) {
       return deny('portal')
     }
-    if (to.path.startsWith('/admin') && !enabledPortals.admin) {
+    if ((to.path.startsWith('/admin') || to.path.startsWith('/platform')) && !enabledPortals.admin) {
       return deny('portal')
     }
   }
@@ -501,6 +1149,62 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAuth && auth.isCustomer && !to.path.startsWith('/customer')) {
     return { path: '/customer' }
   }
+
+  // Staff tenant users are isolated from customer portal paths.
+  if (
+    to.meta.requiresAuth
+    && auth.isStaff
+    && !auth.isFleet
+    && !auth.isCustomer
+    && !auth.isPlatform
+    && to.path.startsWith('/customer')
+  ) {
+    return { path: '/' }
+  }
+
+  // Platform users stay within platform/admin surfaces.
+  if (to.meta.requiresAuth && auth.isPlatform && to.path.startsWith('/customer')) {
+    return { path: '/platform/overview' }
+  }
+
+  if (
+    auth.isAuthenticated &&
+    auth.isStaff &&
+    !auth.isFleet &&
+    !auth.isCustomer &&
+    !auth.isPhoneOnboarding &&
+    to.meta.requiresAuth
+  ) {
+    const bizProfile = useBusinessProfileStore()
+    const hidden = mergeStaffHiddenNavKeys(
+      auth.user?.hidden_staff_nav_keys,
+      bizProfile.businessType,
+      bizProfile.loaded,
+    )
+    if (Array.isArray(hidden) && hidden.length > 0) {
+      const p = to.path
+      const skip =
+        to.name === 'access-denied'
+        || p.startsWith('/phone')
+        || p.startsWith('/platform')
+        || p.startsWith('/admin')
+      if (!skip && isStaffNavHidden(to.path, to.hash, new Set(hidden))) {
+        return { name: 'access-denied', query: { reason: 'feature', from: to.fullPath } }
+      }
+    }
+  }
+
+  if (auth.isAuthenticated && auth.isCustomer && to.path.startsWith('/customer')) {
+    const hidden = auth.user?.hidden_customer_nav_keys
+    if (
+      Array.isArray(hidden)
+      && hidden.length > 0
+      && to.name !== 'access-denied'
+      && isCustomerNavHidden(to.path, new Set(hidden))
+    ) {
+      return { name: 'access-denied', query: { reason: 'feature', from: to.fullPath } }
+    }
+  }
 })
 
 router.afterEach((to) => {
@@ -518,6 +1222,19 @@ router.afterEach((to) => {
     return
   if (to.path.startsWith('/fleet-portal') || to.path.startsWith('/customer')) return
   logActivity('زيارة صفحة', String(to.name))
+})
+
+router.onError((error) => {
+  const msg = String((error as Error)?.message ?? '')
+  const isViteChunkGlitch =
+    msg.includes('Failed to fetch dynamically imported module')
+    || msg.includes('Outdated Optimize Dep')
+  if (!isViteChunkGlitch) return
+  if (typeof window === 'undefined') return
+  const onceKey = '__vite_chunk_retry_once__'
+  if (sessionStorage.getItem(onceKey) === '1') return
+  sessionStorage.setItem(onceKey, '1')
+  window.location.reload()
 })
 
 export default router
