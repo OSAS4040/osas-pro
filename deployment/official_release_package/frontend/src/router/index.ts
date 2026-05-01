@@ -530,7 +530,7 @@ const routes: RouteRecordRaw[] = [
         path:      'provider/purchase-claims',
         name:      'provider.purchase-claims',
         component: () => import('@/views/provider/ProviderPurchaseClaimsView.vue'),
-        meta:      { requiresAuth: true, title: 'مطالبات المشتريات', titleEn: 'Purchase claims' },
+        meta:      { requiresAuth: true, title: 'صرف المستحقات', titleEn: 'Payout claims' },
       },
       { path: 'work-orders/new',     name: 'work-orders.create', redirect: '/work-orders' },
       { path: 'work-orders/batch',   name: 'work-orders.batch',  redirect: '/work-orders' },

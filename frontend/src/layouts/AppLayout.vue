@@ -147,22 +147,34 @@
                 />
                 <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
               </template>
-              <NavItem to="/vehicles" :icon="TruckIcon" :label="locale.t('nav.vehicles')" />
+              <NavItem v-if="!platformExecutionPartnerActive" to="/vehicles" :icon="TruckIcon" :label="locale.t('nav.vehicles')" />
               <NavItem
-                v-if="enabledPortals.fleet && sectionEnabled('fleet')"
+                v-if="!platformExecutionPartnerActive && enabledPortals.fleet && sectionEnabled('fleet')"
                 to="/fleet/verify-plate"
                 :icon="MagnifyingGlassIcon"
                 label="التحقق من اللوحة"
               />
               <NavItem
-                v-if="enabledPortals.fleet && sectionEnabled('fleet')"
+                v-if="!platformExecutionPartnerActive && enabledPortals.fleet && sectionEnabled('fleet')"
                 to="/fleet/wallet"
                 :icon="CreditCardIcon"
                 label="محافظ الأسطول"
               />
-              <NavItem to="/customers" :icon="UsersIcon" :label="locale.t('nav.customers')" />
-              <NavItem v-if="sectionEnabled('crm')" to="/crm/quotes" :icon="DocumentTextIcon" label="عروض الأسعار" />
-              <NavItem v-if="sectionEnabled('crm')" to="/crm/relations" :icon="HeartIcon" label="علاقات العملاء" />
+              <NavItem v-if="!platformExecutionPartnerActive" to="/customers" :icon="UsersIcon" :label="locale.t('nav.customers')" />
+              <NavItem
+                v-if="platformExecutionPartnerActive && auth.isManager"
+                to="/branches"
+                :icon="BuildingLibraryIcon"
+                :label="l('الفروع', 'Branches')"
+              />
+              <NavItem
+                v-if="platformExecutionPartnerActive"
+                to="/contracts"
+                :icon="DocumentCheckIcon"
+                :label="l('عقود المنصّة', 'Platform contracts')"
+              />
+              <NavItem v-if="sectionEnabled('crm') && !platformExecutionPartnerActive" to="/crm/quotes" :icon="DocumentTextIcon" label="عروض الأسعار" />
+              <NavItem v-if="sectionEnabled('crm') && !platformExecutionPartnerActive" to="/crm/relations" :icon="HeartIcon" label="علاقات العملاء" />
               <NavItem v-if="opsNavOpen" to="/bays" :icon="BuildingOfficeIcon" label="مناطق العمل" />
               <NavItem v-if="opsNavOpen" to="/bookings" :icon="CalendarDaysIcon" label="الحجوزات" />
               <NavItem
@@ -201,7 +213,7 @@
                   v-if="auth.hasPermission('purchases.claims.view')"
                   to="/provider/purchase-claims"
                   :icon="ClipboardDocumentListIcon"
-                  :label="l('مطالبات المشتريات', 'Purchase claims')"
+                  :label="l('صرف المستحقات', 'Payout claims')"
                 />
               </template>
               <template v-else-if="sectionEnabled('finance')">
@@ -1120,6 +1132,7 @@ const flatItems = computed(() => {
   const opsOpen = canAccessStaffOperationsArea(auth.isOwner, (k) => biz.isEnabled(k))
   const hrOpen = canAccessWorkshopArea(auth.isOwner, (k) => biz.isEnabled(k))
   const pfa = providerFocusNavActive.value
+  const compactMobileStaffNav = pfa || platformExecutionPartnerActive.value
   const hiddenSet = mergedStaffHiddenNavSet.value
 
   const applyHidden = (rows: { to: string; icon: object; label: string; locked: boolean }[]) => {
@@ -1130,18 +1143,24 @@ const flatItems = computed(() => {
     })
   }
 
-  if (pfa) {
+  if (compactMobileStaffNav) {
     const rows: { to: string; icon: object; label: string; locked: boolean }[] = [
       { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
       { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات', locked: false },
       { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'تنفيذ العمليات', locked: false },
       { to: '/wallet', icon: CreditCardIcon, label: 'المحفظة', locked: false },
     ]
+    if (platformExecutionPartnerActive.value) {
+      rows.push({ to: '/contracts', icon: DocumentCheckIcon, label: 'عقود المنصّة', locked: false })
+      if (auth.isManager) {
+        rows.push({ to: '/branches', icon: BuildingLibraryIcon, label: 'الفروع', locked: false })
+      }
+    }
     if (auth.hasPermission('purchases.platform_settlement.view')) {
       rows.push({ to: '/provider/platform-purchases', icon: ShoppingBagIcon, label: 'مشتريات المنصّة', locked: false })
     }
     if (auth.hasPermission('purchases.claims.view')) {
-      rows.push({ to: '/provider/purchase-claims', icon: ClipboardDocumentListIcon, label: 'مطالبات المشتريات', locked: false })
+      rows.push({ to: '/provider/purchase-claims', icon: ClipboardDocumentListIcon, label: 'صرف المستحقات', locked: false })
     }
     rows.push({ to: '/settings', icon: Cog6ToothIcon, label: 'الإعدادات', locked: false })
     if (auth.isPlatform && enabledPortals.admin) {

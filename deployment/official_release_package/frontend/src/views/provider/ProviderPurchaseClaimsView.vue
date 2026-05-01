@@ -2,12 +2,12 @@
   <div class="app-shell-page space-y-6">
     <div class="page-head">
       <div class="page-title-wrap">
-        <h2 class="page-title-xl">{{ l('مطالبات المشتريات', 'Purchase claims') }}</h2>
+        <h2 class="page-title-xl">{{ l('صرف المستحقات', 'Payout claims') }}</h2>
         <p class="page-subtitle">
           {{
             l(
-              'أرسل مطالبة للإدارة للمراجعة؛ يمكن الموافقة أو الرفض أو إضافة ملاحظات.',
-              'Submit a claim for management review — approve, reject, or add notes.',
+              'قدّم طلب صرف مستحقات أو تسوية للمراجعة؛ تُسجَّل الحالة (موافقة / رفض) مع ملاحظات الإدارة.',
+              'Submit a payout or settlement claim for review — recorded as approved or rejected with admin notes.',
             )
           }}
         </p>

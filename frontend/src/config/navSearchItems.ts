@@ -42,10 +42,10 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   },
   {
     to: '/provider/purchase-claims',
-    label: 'مطالبات المشتريات',
+    label: 'صرف المستحقات',
     section: 'المحفظة والمشتريات',
     requiresPermission: 'purchases.claims.view',
-    keywords: ['مطالبة', 'إدارة', 'claim', 'شراء'],
+    keywords: ['مطالبة', 'صرف', 'مستحقات', 'مزود', 'claim', 'شراء', 'payout'],
   },
   { to: '/bays', label: 'مناطق العمل', section: 'تشغيلي', keywords: ['رافعة', 'خليج', 'bay'] },
   { to: '/bookings', label: 'الحجوزات', section: 'تشغيلي', keywords: ['موعد', 'حجز'] },
