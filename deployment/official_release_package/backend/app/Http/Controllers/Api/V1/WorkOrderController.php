@@ -74,7 +74,20 @@ class WorkOrderController extends Controller
 
         $orders = (clone $base)
             ->with(['customer', 'vehicle', 'assignedTechnician', 'branch'])
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+            ->when($request->filled('status'), function ($q) use ($request): void {
+                $raw = (string) $request->status;
+                $parts = array_values(array_unique(array_filter(array_map('trim', explode(',', $raw)))));
+                $allowed = array_map(static fn (WorkOrderStatus $c): string => $c->value, WorkOrderStatus::cases());
+                $parts = array_values(array_intersect($parts, $allowed));
+                if ($parts === []) {
+                    return;
+                }
+                if (count($parts) === 1) {
+                    $q->where('status', $parts[0]);
+                } else {
+                    $q->whereIn('status', $parts);
+                }
+            })
             ->orderByDesc('id')
             ->paginate($perPage);
         $orders->getCollection()->transform(fn (WorkOrder $order): WorkOrder => $this->sanitizeMediaForViewer($order, $viewer));

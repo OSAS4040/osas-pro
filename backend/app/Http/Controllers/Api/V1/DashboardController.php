@@ -23,8 +23,8 @@ class DashboardController extends Controller
         $to   = $request->input('to', now()->endOfMonth()->toDateString());
         $companyId = (int) app('tenant_company_id');
 
-        /* v2: يتضمن charts — تغيير المفتاح يبطل الكاش القديم */
-        $cacheKey = "dashboard:summary:v2:{$companyId}:{$from}:{$to}";
+        /* v3: محافظ حسب WalletType الحقيقي + أوامر عمل آخر 7 أيام في كتلة work_orders */
+        $cacheKey = "dashboard:summary:v3:{$companyId}:{$from}:{$to}";
         $ttl      = now()->diffInHours(now()->endOfDay()) < 2 ? 300 : 1800;
 
         $data = Cache::remember($cacheKey, $ttl, function () use ($companyId, $from, $to) {
@@ -64,15 +64,12 @@ class DashboardController extends Controller
                 ->whereIn('status', ['pending', 'partial_paid'])
                 ->sum('due_amount');
 
-            $walletTotals = [
-                'cash'        => (float) CustomerWallet::where('company_id', $companyId)->where('wallet_type', 'cash')->sum('balance'),
-                'promotional' => (float) CustomerWallet::where('company_id', $companyId)->where('wallet_type', 'promotional')->sum('balance'),
-                'reserved'    => (float) CustomerWallet::where('company_id', $companyId)->where('wallet_type', 'reserved')->sum('balance'),
-                'credit'      => (float) CustomerWallet::where('company_id', $companyId)->where('wallet_type', 'credit')->sum('balance'),
-            ];
+            $walletTotals = CustomerWallet::totalsByTypeForCompany($companyId);
 
             $revenueLast7Days = [];
             $workOrdersLast7Days = [];
+            $woLast7Created = 0;
+            $woLast7Completed = 0;
             for ($i = 6; $i >= 0; $i--) {
                 $day = now()->subDays($i)->toDateString();
                 $revenueLast7Days[] = [
@@ -82,12 +79,19 @@ class DashboardController extends Controller
                         ->whereNotIn('status', ['cancelled', 'draft'])
                         ->sum('total'), 2),
                 ];
+                $woDayCreated = WorkOrder::where('company_id', $companyId)
+                    ->whereDate('created_at', $day)
+                    ->count();
+                $woDayCompleted = WorkOrder::where('company_id', $companyId)
+                    ->whereDate('updated_at', $day)
+                    ->where('status', 'completed')
+                    ->count();
                 $workOrdersLast7Days[] = [
                     'date'  => $day,
-                    'count' => WorkOrder::where('company_id', $companyId)
-                        ->whereDate('created_at', $day)
-                        ->count(),
+                    'count' => $woDayCreated,
                 ];
+                $woLast7Created += $woDayCreated;
+                $woLast7Completed += $woDayCompleted;
             }
 
             return [
@@ -109,6 +113,11 @@ class DashboardController extends Controller
                     'created_in_period' => $woTotal,
                     'completed_in_period' => $woCompleted,
                     'completion_rate'     => $woTotal > 0 ? round(($woCompleted / $woTotal) * 100, 1) : 0.0,
+                    'created_last_7_days' => $woLast7Created,
+                    'completed_last_7_days' => $woLast7Completed,
+                    'completion_rate_last_7_days' => $woLast7Created > 0
+                        ? round(($woLast7Completed / $woLast7Created) * 100, 1)
+                        : 0.0,
                 ],
                 'wallets' => [
                     'balance_by_type' => array_map(fn ($v) => round($v, 2), $walletTotals),

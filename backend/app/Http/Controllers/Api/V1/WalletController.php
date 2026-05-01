@@ -51,12 +51,7 @@ class WalletController extends Controller
             ->orderByDesc('updated_at')
             ->paginate(50);
 
-        $totals = [
-            'cash'        => CustomerWallet::where('company_id', $companyId)->where('wallet_type', 'cash')->sum('balance'),
-            'promotional' => CustomerWallet::where('company_id', $companyId)->where('wallet_type', 'promotional')->sum('balance'),
-            'reserved'    => CustomerWallet::where('company_id', $companyId)->where('wallet_type', 'reserved')->sum('balance'),
-            'credit'      => CustomerWallet::where('company_id', $companyId)->where('wallet_type', 'credit')->sum('balance'),
-        ];
+        $totals = CustomerWallet::totalsByTypeForCompany($companyId);
 
         return response()->json(['wallets' => $wallets, 'totals' => $totals]);
     }

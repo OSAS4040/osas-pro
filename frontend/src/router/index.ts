@@ -636,7 +636,7 @@ const routes: RouteRecordRaw[] = [
         meta:      { title: 'قدرات النظام', titleEn: 'System capabilities' },
       },
       // Wallet
-      { path: 'wallet',              name: 'wallet',             component: () => import('@/views/wallet/WalletView.vue') },
+      { path: 'wallet',              name: 'wallet',             component: () => import('@/views/wallet/WalletRouteView.vue') },
       {
         path:      'wallet/top-up-requests',
         name:      'wallet.top-up-requests',

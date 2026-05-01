@@ -26,7 +26,7 @@ export type NavSearchItem = {
 
 export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/', label: 'الرئيسية', section: 'تشغيلي', keywords: ['لوحة', 'dashboard', 'home'] },
-  { to: '/work-orders', label: 'العمليات التي نفّذها المزوّد', section: 'تشغيلي', keywords: ['مركز خدمة', 'منفذ بيع', 'صيانة', 'wo', 'عمليات', 'مزود', 'تنفيذ', 'سجل'] },
+  { to: '/work-orders', label: 'العمليات', section: 'تشغيلي', keywords: ['مركز خدمة', 'منفذ بيع', 'صيانة', 'wo', 'عمليات', 'مزود', 'تنفيذ', 'سجل', 'أوامر عمل'] },
   {
     to: '/execution-hub',
     label: 'مركز التنفيذ والبحث',

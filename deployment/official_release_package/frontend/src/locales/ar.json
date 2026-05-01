@@ -1,6 +1,6 @@
 {
   "app": { "name": "أسس برو", "tagline": "منصة متكاملة للتشغيل والمالية والموارد والمخزون وعلاقات العملاء", "sidebarTitle": "أسس برو — منصة إدارة التشغيل والأعمال" },
-  "nav": { "dashboard": "لوحة التحكم", "pos": "نقطة البيع", "invoices": "الفواتير", "work_orders": "العمليات التي نفّذها المزوّد", "customers": "العملاء", "vehicles": "المركبات", "inventory": "المخزون", "reports": "التقارير", "settings": "الإعدادات", "logout": "تسجيل الخروج" },
+  "nav": { "dashboard": "لوحة التحكم", "pos": "نقطة البيع", "invoices": "الفواتير", "work_orders": "العمليات", "customers": "العملاء", "vehicles": "المركبات", "inventory": "المخزون", "reports": "التقارير", "settings": "الإعدادات", "logout": "تسجيل الخروج" },
   "auth": { "email": "البريد الإلكتروني", "password": "كلمة المرور", "login": "تسجيل الدخول", "staff_portal": "بوابة فريق العمل", "fleet_portal": "بوابة إدارة الأسطول", "customer_portal": "بوابة العميل" },
   "pages": { "accessDenied": "لا صلاحية", "capabilities": "قدرات النظام", "taxonomy": "مسرد المنصة والمستأجر" },
   "common": { "save": "حفظ", "cancel": "إلغاء", "delete": "حذف", "confirmDelete": "تأكيد الحذف", "edit": "تعديل", "create": "إنشاء", "search": "بحث", "loading": "جارٍ التحميل", "no_data": "لا توجد بيانات", "confirm": "تأكيد", "back": "رجوع", "print": "طباعة", "export": "تصدير", "import": "استيراد" },
@@ -150,7 +150,7 @@
     "features": {
       "pos": "نقطة البيع",
       "invoices": "الفواتير",
-      "work_orders": "العمليات التي نفّذها المزوّد",
+      "work_orders": "العمليات",
       "fleet": "الأسطول والمركبات",
       "wallet": "محفظة العملاء والأسطول",
       "governance": "الحوكمة والموافقات",

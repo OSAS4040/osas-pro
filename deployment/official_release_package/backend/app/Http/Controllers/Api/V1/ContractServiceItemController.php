@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\ContractServiceItem;
+use App\Support\TenantBusinessFeatures;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Vehicle;
@@ -457,7 +458,12 @@ final class ContractServiceItemController extends Controller
 
     private function assertSameTenantContract(Contract $contract): void
     {
-        if ((int) $contract->company_id !== (int) app('tenant_company_id')) {
+        $tenantId = (int) app('tenant_company_id');
+        if ((int) $contract->company_id !== $tenantId) {
+            abort(404);
+        }
+
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant($tenantId) && ! $contract->isPlatformProviderAgreement()) {
             abort(404);
         }
     }

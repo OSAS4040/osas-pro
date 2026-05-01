@@ -208,17 +208,36 @@
                 </button>
                 <button
                   type="button"
-                  class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  @click="shareOrder(o)"
+                  class="px-2 py-1 rounded text-xs border border-primary-200 bg-primary-50 text-primary-900 hover:bg-primary-100 disabled:opacity-50"
+                  :disabled="shareBusyId === o.id"
+                  @click="copyPublicVerifyLink(o)"
                 >
-                  مشاركة
+                  نسخ رابط التحقق
                 </button>
                 <button
                   type="button"
-                  class="px-2 py-1 rounded text-xs bg-violet-100 text-violet-700 hover:bg-violet-200"
-                  @click="copyOrderLink(o)"
+                  class="px-2 py-1 rounded text-xs border border-primary-200 text-primary-800 hover:bg-primary-50 disabled:opacity-50"
+                  :disabled="shareBusyId === o.id"
+                  @click="copyShareMessageText(o)"
                 >
-                  نسخ الرابط
+                  نسخ نص المشاركة
+                </button>
+                <button
+                  v-if="canWebShare"
+                  type="button"
+                  class="px-2 py-1 rounded text-xs border border-sky-200 bg-sky-50 text-sky-900 hover:bg-sky-100 disabled:opacity-50"
+                  :disabled="shareBusyId === o.id"
+                  @click="systemShareWorkOrder(o)"
+                >
+                  مشاركة النظام
+                </button>
+                <button
+                  type="button"
+                  class="px-2 py-1 rounded text-xs border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  :disabled="shareBusyId === o.id"
+                  @click="openWhatsAppShare(o)"
+                >
+                  واتساب
                 </button>
                 <button
                   type="button"
@@ -226,6 +245,14 @@
                   @click="printOrder(o)"
                 >
                   طباعة
+                </button>
+                <button
+                  type="button"
+                  class="px-2 py-1 rounded text-xs border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  :disabled="shareBusyId === o.id"
+                  @click="shareWorkOrderByEmail(o)"
+                >
+                  بريد + PDF
                 </button>
                 <button
                   v-if="canCancel(o.status)"
@@ -275,6 +302,7 @@ const servicesLoading = ref(false)
 const usersLoading = ref(false)
 const createError = ref('')
 const busyId = ref<number | null>(null)
+const shareBusyId = ref<number | null>(null)
 const orders = ref<any[]>([])
 const ordersTotal = ref(0)
 const ordersLastPage = ref(1)
@@ -309,6 +337,7 @@ const currentPage = ref(1)
 const auth = useAuthStore()
 const toast = useToast()
 const demoMode = ref(false)
+const canWebShare = computed(() => typeof navigator !== 'undefined' && typeof navigator.share === 'function')
 
 const statusFilters = [
   { value: 'all', label: 'الكل' },
@@ -666,24 +695,115 @@ async function exportJSON(): Promise<void> {
 function printList(): void {
   void printDocument({ rootSelector: '.print-container' })
 }
-async function shareOrder(order: any): Promise<void> {
-  const text = `أمر العمل ${order.order_number || ('#' + order.id)} - الحالة: ${statusLabel(order.status)}`
-  const url = `${window.location.origin}/customer/work-orders`
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: 'أمر عمل', text, url })
-      return
-    } catch {
-      // fallback below
-    }
+async function fetchShareLinks(orderId: number) {
+  const { data } = await apiClient.get(`/work-orders/${orderId}/share-links`, { skipGlobalErrorToast: true })
+  return data.data as {
+    public_verify_url: string
+    whatsapp_open_href: string
+    share_text: string
   }
-  await navigator.clipboard.writeText(`${text}\n${url}`).catch(() => {})
-  toast.success('تمت المشاركة', 'تم نسخ تفاصيل أمر العمل للمشاركة.')
 }
-async function copyOrderLink(order: any): Promise<void> {
-  const url = `${window.location.origin}/customer/work-orders?order=${order.id}`
-  await navigator.clipboard.writeText(url).catch(() => {})
-  toast.success('تم النسخ', 'تم نسخ رابط أمر العمل.')
+
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    /* fallback */
+  }
+  try {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.setAttribute('readonly', '')
+    ta.style.position = 'fixed'
+    ta.style.left = '-9999px'
+    document.body.appendChild(ta)
+    ta.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(ta)
+    return ok
+  } catch {
+    return false
+  }
+}
+
+async function copyPublicVerifyLink(order: any): Promise<void> {
+  shareBusyId.value = Number(order.id)
+  try {
+    const links = await fetchShareLinks(Number(order.id))
+    const ok = await copyToClipboard(links.public_verify_url)
+    if (ok) toast.success('تم النسخ', 'تم نسخ رابط التحقق.')
+    else toast.error('تعذر النسخ', 'يرجى السماح بالنسخ من المتصفح.')
+  } catch (e: unknown) {
+    toast.error('تعذّر جلب الرابط', summarizeAxiosError(e))
+  } finally {
+    shareBusyId.value = null
+  }
+}
+
+async function copyShareMessageText(order: any): Promise<void> {
+  shareBusyId.value = Number(order.id)
+  try {
+    const links = await fetchShareLinks(Number(order.id))
+    const ok = await copyToClipboard(links.share_text)
+    if (ok) toast.success('تم النسخ', 'تم نسخ نص المشاركة.')
+    else toast.error('تعذر النسخ', 'يرجى السماح بالنسخ من المتصفح.')
+  } catch (e: unknown) {
+    toast.error('تعذّر جلب النص', summarizeAxiosError(e))
+  } finally {
+    shareBusyId.value = null
+  }
+}
+
+async function systemShareWorkOrder(order: any): Promise<void> {
+  shareBusyId.value = Number(order.id)
+  try {
+    const links = await fetchShareLinks(Number(order.id))
+    if (typeof navigator.share !== 'function') {
+      await copyShareMessageText(order)
+      return
+    }
+    await navigator.share({
+      title: `أمر عمل ${order.order_number || ('#' + order.id)}`,
+      text: links.share_text,
+      url: links.public_verify_url,
+    })
+  } catch (e: unknown) {
+    const err = e as { name?: string }
+    if (err?.name !== 'AbortError') {
+      toast.error('تعذّرت المشاركة', summarizeAxiosError(e))
+    }
+  } finally {
+    shareBusyId.value = null
+  }
+}
+
+async function openWhatsAppShare(order: any): Promise<void> {
+  shareBusyId.value = Number(order.id)
+  try {
+    const links = await fetchShareLinks(Number(order.id))
+    window.open(links.whatsapp_open_href, '_blank', 'noopener,noreferrer')
+  } catch (e: unknown) {
+    toast.error('تعذّر فتح واتساب', summarizeAxiosError(e))
+  } finally {
+    shareBusyId.value = null
+  }
+}
+
+async function shareWorkOrderByEmail(order: any): Promise<void> {
+  const email = window.prompt('أدخل البريد الإلكتروني للمستلم:')
+  if (!email || !email.trim()) return
+  shareBusyId.value = Number(order.id)
+  try {
+    await apiClient.post(`/work-orders/${order.id}/share-email`, { email: email.trim() })
+    toast.success('تم الإرسال', 'أُرسل البريد مع مرفق PDF.')
+  } catch (e: unknown) {
+    toast.error('تعذّر الإرسال', summarizeAxiosError(e))
+  } finally {
+    shareBusyId.value = null
+  }
 }
 function toAbsoluteUrl(value: string): string {
   if (!value) return ''

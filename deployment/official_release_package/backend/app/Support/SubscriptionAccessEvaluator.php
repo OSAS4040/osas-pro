@@ -22,6 +22,10 @@ final class SubscriptionAccessEvaluator
      */
     public static function evaluate(int $companyId, Request $request, bool $isLoginAttempt): ?array
     {
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId)) {
+            return null;
+        }
+
         if (! self::subscriptionsTableExists()) {
             self::logDecision($companyId, 'block', 'no_subscriptions_table', 402, $isLoginAttempt, '');
 

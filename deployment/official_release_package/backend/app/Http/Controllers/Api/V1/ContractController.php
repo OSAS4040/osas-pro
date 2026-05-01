@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Support\Media\TenantUploadDisk;
+use App\Support\TenantBusinessFeatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -15,8 +16,14 @@ class ContractController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $companyId = (int) app('tenant_company_id');
+
         $q = Contract::with('creator:id,name')
             ->withCount('serviceItems')
+            ->when(
+                TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId),
+                static fn ($q) => $q->platformProviderAgreements(),
+            )
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->party_type, fn($q) => $q->where('party_type', $request->party_type))
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
@@ -31,6 +38,13 @@ class ContractController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
+            return response()->json([
+                'message'  => 'عقود الإطار مع المنصّة تُدار من فريق المنصّة. يمكنك الاطلاع على العقد والأسعار المتفق عليها من هذه الصفحة.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
         $validated = $request->validate([
             'title'             => 'required|string|max:255',
             'party_name'        => 'required|string|max:255',
@@ -61,11 +75,22 @@ class ContractController extends Controller
 
     public function show(Contract $contract): JsonResponse
     {
+        $this->assertExecutionPartnerCanAccessContract($contract);
+
         return response()->json(['data' => $contract->load('creator:id,name', 'notifications'), 'trace_id' => app('trace_id')]);
     }
 
     public function update(Request $request, Contract $contract): JsonResponse
     {
+        $this->assertExecutionPartnerCanAccessContract($contract);
+
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
+            return response()->json([
+                'message'  => 'تعديل عقد المنصّة غير متاح من بوابة المزوّد.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
         $validated = $request->validate([
             'title'             => 'sometimes|string|max:255',
             'status'            => 'sometimes|in:draft,pending_signature,active,expired,terminated',
@@ -88,12 +113,30 @@ class ContractController extends Controller
 
     public function destroy(Contract $contract): JsonResponse
     {
+        $this->assertExecutionPartnerCanAccessContract($contract);
+
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
+            return response()->json([
+                'message'  => 'حذف عقد المنصّة غير متاح من بوابة المزوّد.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
         $contract->delete();
         return response()->json(['message' => 'تم حذف العقد', 'trace_id' => app('trace_id')]);
     }
 
     public function uploadDocument(Request $request, Contract $contract): JsonResponse
     {
+        $this->assertExecutionPartnerCanAccessContract($contract);
+
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
+            return response()->json([
+                'message'  => 'رفع مستندات العقد غير متاح من بوابة المزوّد.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
         $request->validate(['document' => 'required|file|mimes:pdf,doc,docx|max:10240']);
 
         if ($contract->document_url) {
@@ -109,6 +152,15 @@ class ContractController extends Controller
 
     public function sendForSignature(Request $request, Contract $contract): JsonResponse
     {
+        $this->assertExecutionPartnerCanAccessContract($contract);
+
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
+            return response()->json([
+                'message'  => 'إرسال العقد للتوقيع غير متاح من بوابة المزوّد.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
         $request->validate([
             'channels' => 'required|array|min:1',
             'channels.*' => 'in:email,whatsapp',
@@ -143,9 +195,13 @@ class ContractController extends Controller
 
     public function expiringContracts(): JsonResponse
     {
-        $companyId = app('tenant_company_id');
+        $companyId = (int) app('tenant_company_id');
 
         $contracts = Contract::where('company_id', $companyId)
+            ->when(
+                TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId),
+                static fn ($q) => $q->platformProviderAgreements(),
+            )
             ->where('status', 'active')
             ->whereDate('end_date', '<=', now()->addDays(60))
             ->whereDate('end_date', '>=', now())
@@ -156,6 +212,20 @@ class ContractController extends Controller
             ]));
 
         return response()->json(['data' => $contracts, 'trace_id' => app('trace_id')]);
+    }
+
+    private function assertExecutionPartnerCanAccessContract(Contract $contract): void
+    {
+        $companyId = (int) app('tenant_company_id');
+        if (! TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId)) {
+            return;
+        }
+        if ((int) $contract->company_id !== $companyId) {
+            abort(404);
+        }
+        if (! $contract->isPlatformProviderAgreement()) {
+            abort(404);
+        }
     }
 
     private function sendEmailNotification(Contract $contract, string $type): void

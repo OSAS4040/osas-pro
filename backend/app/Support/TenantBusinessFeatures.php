@@ -38,4 +38,18 @@ final class TenantBusinessFeatures
     {
         return (self::effectiveMatrix($company)['platform_execution_partner'] ?? false) === true;
     }
+
+    /**
+     * نفس {@see platformExecutionPartner} لمعرّف شركة — لبوابات الاشتراك دون تمرير نموذج محمّل مسبقاً.
+     */
+    public static function isPlatformExecutionPartnerTenant(int $companyId): bool
+    {
+        if ($companyId < 1) {
+            return false;
+        }
+
+        $company = Company::query()->find($companyId);
+
+        return $company !== null && self::platformExecutionPartner($company);
+    }
 }

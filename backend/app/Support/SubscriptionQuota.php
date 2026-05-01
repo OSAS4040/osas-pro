@@ -14,6 +14,10 @@ final class SubscriptionQuota
 {
     public static function assertCanCreateBranch(int $companyId): void
     {
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId)) {
+            return;
+        }
+
         $sub = self::latestSubscription($companyId);
         if ($sub === null) {
             self::deny(422, 'لا يوجد اشتراك مرتبط بهذه الشركة.');
@@ -32,6 +36,10 @@ final class SubscriptionQuota
 
     public static function assertCanCreateUser(int $companyId): void
     {
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId)) {
+            return;
+        }
+
         $sub = self::latestSubscription($companyId);
         if ($sub === null) {
             self::deny(422, 'لا يوجد اشتراك مرتبط بهذه الشركة.');

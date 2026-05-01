@@ -3,15 +3,26 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">إدارة العقود</h1>
-        <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">عقود الشركات ومراكز الخدمة ومنفذي البيع</p>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ isExecutionPartner ? 'عقد المنصّة والأسعار المتفق عليها' : 'إدارة العقود' }}
+        </h1>
+        <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">
+          <template v-if="isExecutionPartner">
+            عرض عقد الإطار بين المنصّة ومنشأتك، والقيمة الإجمالية وبنود التسعير المعتمدة.
+          </template>
+          <template v-else>عقود الشركات ومراكز الخدمة ومنفذي البيع</template>
+        </p>
       </div>
-      <button class="btn btn-primary flex items-center gap-2 text-sm" @click="showForm = true">
+      <button
+        v-if="!isExecutionPartner"
+        class="btn btn-primary flex items-center gap-2 text-sm"
+        @click="showForm = true"
+      >
         <span class="text-lg">+</span> عقد جديد
       </button>
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-4">
+    <div v-if="!isExecutionPartner" class="grid lg:grid-cols-2 gap-4">
       <div class="rounded-2xl border border-primary-200/80 dark:border-primary-900/50 bg-gradient-to-br from-primary-50/90 to-white dark:from-slate-900 dark:to-slate-800 p-5 space-y-3">
         <h2 class="text-sm font-bold text-primary-900 dark:text-primary-200">قالب التعاقد الإلكتروني</h2>
         <p class="text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
@@ -39,6 +50,14 @@
       </div>
     </div>
 
+    <div
+      v-if="isExecutionPartner"
+      class="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/40 p-4 text-xs text-gray-600 dark:text-slate-400 leading-relaxed"
+    >
+      هذه الصفحة مخصّصة لعقد الإطار بين منشأتك والمنصّة فقط — دون عقود أطراف أخرى.
+      لربط عقد أو تعديل الأسعار المعتمدة، تواصل مع فريق المنصّة.
+    </div>
+
     <!-- Expiring Soon Alert -->
     <div v-if="expiring.length" class="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 p-4">
       <div class="flex items-start gap-3">
@@ -55,7 +74,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="flex flex-wrap gap-2 items-center">
+    <div v-if="!isExecutionPartner" class="flex flex-wrap gap-2 items-center">
       <input v-model="search" type="text" placeholder="ابحث باسم الطرف أو العقد..." class="field text-sm w-60" @input="load" />
       <select v-model="filterStatus" class="field text-sm w-36" @change="load">
         <option value="">كل الحالات</option>
@@ -82,7 +101,9 @@
           <tr class="bg-gray-50 dark:bg-slate-700/40 text-right border-b dark:border-slate-700">
             <th class="px-4 py-3 font-medium text-gray-600 dark:text-slate-400">العقد</th>
             <th class="px-4 py-3 font-medium text-gray-600 dark:text-slate-400">الطرف</th>
-            <th class="px-4 py-3 font-medium text-gray-600 dark:text-slate-400">القيمة</th>
+            <th class="px-4 py-3 font-medium text-gray-600 dark:text-slate-400">
+              {{ isExecutionPartner ? 'القيمة المتفق عليها' : 'القيمة' }}
+            </th>
             <th class="px-4 py-3 font-medium text-gray-600 dark:text-slate-400">سريان</th>
             <th class="px-4 py-3 font-medium text-gray-600 dark:text-slate-400">الحالة</th>
             <th class="px-4 py-3"></th>
@@ -121,20 +142,29 @@
                   :to="{ name: 'contracts.catalog', params: { contractId: c.id } }"
                   class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  بنود العقد
+                  {{ isExecutionPartner ? 'أسعار الخدمات (البنود)' : 'بنود العقد' }}
                 </RouterLink>
-                <button class="text-xs text-primary-600 hover:underline" @click="editContract(c)">تعديل</button>
-                <button v-if="c.status === 'draft'" class="text-xs text-teal-600 hover:underline" @click="sendForSignature(c)">إرسال</button>
+                <template v-if="!isExecutionPartner">
+                  <button class="text-xs text-primary-600 hover:underline" @click="editContract(c)">تعديل</button>
+                  <button v-if="c.status === 'draft'" class="text-xs text-teal-600 hover:underline" @click="sendForSignature(c)">إرسال</button>
+                </template>
               </div>
             </td>
           </tr>
-          <tr v-if="!contracts.length"><td colspan="6" class="text-center py-8 text-gray-400">لا توجد عقود</td></tr>
+          <tr v-if="!contracts.length">
+            <td colspan="6" class="text-center py-8 text-gray-400">
+              <template v-if="isExecutionPartner">
+                لا يوجد عقد إطار مسجّل مع المنصّة بعد. عند الربط سيظهر العقد والقيمة وبنود التسعير هنا.
+              </template>
+              <template v-else>لا توجد عقود</template>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Contract Form Modal -->
-    <div v-if="showForm" class="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto" @click.self="showForm = false">
+    <div v-if="showForm && !isExecutionPartner" class="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto" @click.self="showForm = false">
       <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl my-8">
         <div class="p-5 border-b dark:border-slate-700">
           <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ editing ? 'تعديل عقد' : 'عقد جديد' }}</h3>
@@ -216,7 +246,7 @@
     </div>
 
     <!-- Send for Signature Modal -->
-    <div v-if="showSendModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="showSendModal = false">
+    <div v-if="showSendModal && !isExecutionPartner" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="showSendModal = false">
       <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-sm space-y-4">
         <h3 class="font-bold text-gray-900 dark:text-white">إرسال للتوقيع</h3>
         <p class="text-sm text-gray-600 dark:text-slate-400">اختر قنوات الإرسال لـ {{ sendingContract?.party_name }}</p>
@@ -244,16 +274,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useApi } from '@/composables/useApi'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
+import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
 import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
 
 const api   = useApi()
 const toast = useToast()
 const auth  = useAuthStore()
+const { active: executionPartnerActive } = usePlatformExecutionPartner()
+const isExecutionPartner = computed(() => executionPartnerActive.value)
 
 function canOpenContractCatalog() {
   return auth.hasPermission('contracts.service_items.view')
@@ -338,16 +371,27 @@ function applyTemplateToForm() {
   toast.success('تم إدراج القالب في الوصف — راجع التفاصيل')
 }
 
+function normalizePaginatedRows(payload: unknown): any[] {
+  const body = payload as { data?: unknown } | null | undefined
+  const outer = body?.data
+  if (Array.isArray(outer)) return outer
+  const inner = (outer as { data?: unknown } | null | undefined)?.data
+  return Array.isArray(inner) ? inner : []
+}
+
 async function load() {
   loading.value = true
   try {
     const r = await api.get('/governance/contracts', { status: filterStatus.value, party_type: filterType.value, search: search.value })
-    contracts.value = r.data?.data ?? r.data ?? []
+    contracts.value = normalizePaginatedRows(r.data)
   } finally { loading.value = false }
 }
 
 async function loadExpiring() {
-  try { const r = await api.get('/governance/contracts-expiring'); expiring.value = r.data ?? [] } catch {}
+  try {
+    const r = await api.get('/governance/contracts-expiring')
+    expiring.value = normalizePaginatedRows(r.data)
+  } catch { /* */ }
 }
 
 function editContract(c: any) {

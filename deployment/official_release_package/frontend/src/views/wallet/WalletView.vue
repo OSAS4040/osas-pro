@@ -34,9 +34,9 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
       <template v-if="loading">
-        <div v-for="i in 4" :key="i" class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm animate-pulse">
+        <div v-for="i in 3" :key="i" class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5 shadow-sm animate-pulse">
           <div class="h-10 w-10 rounded-xl bg-gray-200 dark:bg-slate-600 mb-3" />
           <div class="h-8 bg-gray-200 dark:bg-slate-600 rounded w-2/3 mb-2" />
           <div class="h-3 bg-gray-100 dark:bg-slate-700 rounded w-1/2" />
@@ -71,10 +71,9 @@
                 @change="load"
         >
           <option value="">كل الأنواع</option>
-          <option value="cash">نقدية</option>
-          <option value="promotional">ترويجية</option>
-          <option value="reserved">محجوزة</option>
-          <option value="credit">ائتمان</option>
+          <option value="customer_main">محفظة عميل (فرد)</option>
+          <option value="fleet_main">محفظة أسطول</option>
+          <option value="vehicle_wallet">محفظة مركبة</option>
         </select>
         <select v-model="filterStatus" class="px-3 py-2 border border-gray-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white rounded-xl text-sm focus:ring-2 focus:ring-primary-500"
                 @change="load"
@@ -359,24 +358,26 @@ function txnDisplay(t: any): { credit: boolean } {
 }
 
 const walletTypes = [
-  { key: 'cash', label: 'نقدية', bg: 'bg-green-100 dark:bg-green-900/30', iconColor: 'text-green-600', icon: CreditCardIcon, badge: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
-  { key: 'promotional', label: 'ترويجية', bg: 'bg-primary-100 dark:bg-primary-900/30', iconColor: 'text-primary-600', icon: CreditCardIcon, badge: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300' },
-  { key: 'reserved', label: 'محجوزة', bg: 'bg-yellow-100 dark:bg-yellow-900/30', iconColor: 'text-yellow-600', icon: CreditCardIcon, badge: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' },
-  { key: 'credit', label: 'ائتمان', bg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600', icon: CreditCardIcon, badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
+  { key: 'customer_main', label: 'محفظة عميل (فرد)', bg: 'bg-green-100 dark:bg-green-900/30', iconColor: 'text-green-600', icon: CreditCardIcon, badge: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
+  { key: 'fleet_main', label: 'محفظة أسطول', bg: 'bg-primary-100 dark:bg-primary-900/30', iconColor: 'text-primary-600', icon: CreditCardIcon, badge: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300' },
+  { key: 'vehicle_wallet', label: 'محفظة مركبة', bg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600', icon: CreditCardIcon, badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
 ]
 
 const fmt = (n: any) => new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(parseFloat(n) || 0)
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('ar-SA', { day: 'numeric', month: 'short', year: 'numeric' })
 
 function typeLabel(t: string) {
-  return { cash: 'نقدية', promotional: 'ترويجية', reserved: 'محجوزة', credit: 'ائتمان' }[t] ?? t
+  return {
+    customer_main: 'عميل (فرد)',
+    fleet_main: 'أسطول',
+    vehicle_wallet: 'مركبة',
+  }[t] ?? t
 }
 function typeClass(t: string) {
   return {
-    cash: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-    promotional: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
-    reserved: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
-    credit: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    customer_main: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+    fleet_main: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
+    vehicle_wallet: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   }[t] ?? 'bg-gray-100 text-gray-700'
 }
 function statusLabel(s: string) {

@@ -71,4 +71,20 @@ class CustomerWallet extends Model
     {
         return $this->wallet_type === WalletType::CustomerMain;
     }
+
+    /**
+     * @return array<string, float>
+     */
+    public static function totalsByTypeForCompany(int $companyId): array
+    {
+        $out = [];
+        foreach (WalletType::cases() as $case) {
+            $out[$case->value] = (float) static::query()
+                ->where('company_id', $companyId)
+                ->where('wallet_type', $case)
+                ->sum('balance');
+        }
+
+        return $out;
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -34,6 +35,36 @@ class Contract extends Model
     public function serviceItems()
     {
         return $this->hasMany(ContractServiceItem::class, 'contract_id');
+    }
+
+    /**
+     * عقد الإطار بين المنصّة والمزوّد (شريك التنفيذ) — يُميّز عبر metadata عند إنشاء/ربط العقد من الإدارة.
+     *
+     * @param  array<string, mixed>  $metadata
+     */
+    public static function metadataMarksPlatformProviderAgreement(array $metadata): bool
+    {
+        if (($metadata['platform_provider_agreement'] ?? false) === true) {
+            return true;
+        }
+
+        return ($metadata['agreement_scope'] ?? null) === 'platform_provider';
+    }
+
+    public function isPlatformProviderAgreement(): bool
+    {
+        $m = is_array($this->metadata) ? $this->metadata : [];
+
+        return self::metadataMarksPlatformProviderAgreement($m);
+    }
+
+    /** @param  Builder<Contract>  $query */
+    public function scopePlatformProviderAgreements(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q): void {
+            $q->where('metadata->platform_provider_agreement', true)
+                ->orWhere('metadata->agreement_scope', 'platform_provider');
+        });
     }
 
     public function getDaysUntilExpiryAttribute(): int

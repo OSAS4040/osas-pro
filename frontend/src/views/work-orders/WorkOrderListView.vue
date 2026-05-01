@@ -2,26 +2,29 @@
   <div class="app-shell-page">
     <div class="page-head" :class="{ 'gap-2': staffUi.compactMode }">
       <div class="page-title-wrap">
-        <h2 class="page-title-xl" :class="{ '!text-xl': staffUi.compactMode }">العمليات التي نفّذها المزوّد</h2>
+        <h2 class="page-title-xl" :class="{ '!text-xl': staffUi.compactMode }">العمليات</h2>
         <p v-if="!staffUi.compactMode" class="page-subtitle">
-          مراجعة ما تم تنفيذه وتسجيله في النظام — تتبّع الحالة والأولويات والفني عند التوفر.
+          <template v-if="isExecutionPartner">
+            متابعة العمليات المنفذة وقيد التنفيذ والملغاة — بحث وتصفية حسب الحالة.
+          </template>
+          <template v-else>
+            مراجعة أوامر العمل وتسجيلها في النظام — تتبّع الحالة والأولويات والفني عند التوفر.
+          </template>
         </p>
       </div>
-      <div class="text-xs text-gray-500 dark:text-slate-400">
-        سجل التنفيذ للمراجعة
-      </div>
+      <div class="text-xs text-gray-500 dark:text-slate-400">سجل العمليات</div>
     </div>
 
     <div class="table-toolbar" :class="{ '!py-2 !gap-1.5': staffUi.compactMode }">
       <input
         v-model="search"
         type="search"
-        placeholder="بحث في سجل التنفيذ: رقم العملية أو العميل أو اللوحة..."
+        placeholder="بحث: رقم العملية، العميل، اللوحة..."
         class="table-search"
         :class="{ '!py-1.5 !text-sm': staffUi.compactMode }"
       />
       <button
-        v-for="s in statuses"
+        v-for="s in statusChips"
         :key="s.value"
         class="rounded-xl font-medium transition-colors"
         :class="[
@@ -36,7 +39,9 @@
 
     <div class="table-shell">
       <div class="panel-head" :class="{ '!py-2': staffUi.compactMode }">
-        <span class="panel-title" :class="{ '!text-sm': staffUi.compactMode }">قائمة ما نفّذه المزوّد (للمراجعة)</span>
+        <span class="panel-title" :class="{ '!text-sm': staffUi.compactMode }">
+          قائمة العمليات
+        </span>
         <span v-if="!store.loading" class="panel-muted" :class="{ '!text-xs': staffUi.compactMode }">{{ filteredOrders.length }} عنصر</span>
       </div>
       <div v-if="store.loading" class="state-loading">جارٍ التحميل...</div>
@@ -70,8 +75,8 @@
           </tr>
           <tr v-if="!filteredOrders.length">
             <td :colspan="staffUi.compactMode ? 6 : 7" class="table-empty">
-              <p class="table-empty-title">لا يوجد في السجل عمليات منفّذة بعد</p>
-              <p class="table-empty-sub">غيّر المرشحات أو انتظر طلبات عمل جديدة للتنفيذ</p>
+              <p class="table-empty-title">{{ isExecutionPartner ? 'لا توجد عمليات ضمن التصفية الحالية' : 'لا يوجد في السجل عمليات منفّذة بعد' }}</p>
+              <p class="table-empty-sub">{{ isExecutionPartner ? 'جرّب حالة أخرى أو امسح التصفية لعرض كل العمليات المعروضة' : 'غيّر المرشحات أو انتظر طلبات عمل جديدة للتنفيذ' }}</p>
             </td>
           </tr>
         </tbody>
@@ -85,12 +90,17 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useWorkOrderStore } from '@/stores/workOrder'
 import { useStaffUiStore } from '@/stores/staffUi'
+import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
 import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 
 const store        = useWorkOrderStore()
 const staffUi      = useStaffUiStore()
 const route        = useRoute()
-const filterStatus = ref('')
+const { active: executionPartnerActive } = usePlatformExecutionPartner()
+const isExecutionPartner = computed(() => executionPartnerActive.value)
+
+/** شريك تنفيذ: فلاتر مبسّطة — قيم افتراضية للـ API (ليس مفاتيح WorkOrderStatus مباشرة) */
+const filterStatus = ref<string>('')
 const search = ref('')
 const customerIdFilter = ref<number | null>(null)
 const companyIdFilter = ref<number | null>(null)
@@ -105,7 +115,31 @@ const statusFilterValues = [
   'completed',
   'delivered',
 ] as const
-const statuses = statusFilterValues.map((value) => ({ value, label: workOrderStatusLabel(value) }))
+
+const executionPartnerStatusChips = [
+  { value: 'executed', label: 'المنفذة' },
+  { value: 'in_progress', label: 'قيد التنفيذ' },
+  { value: 'cancelled', label: 'الملغاة' },
+] as const
+
+const statusChips = computed(() => {
+  if (isExecutionPartner.value) {
+    return [...executionPartnerStatusChips]
+  }
+  return statusFilterValues.map((value) => ({ value, label: workOrderStatusLabel(value) }))
+})
+
+function statusQueryForApi(): string | undefined {
+  if (!isExecutionPartner.value) {
+    return filterStatus.value || undefined
+  }
+  const v = filterStatus.value
+  if (v === 'executed') return 'completed,delivered'
+  if (v === 'in_progress') return 'in_progress'
+  if (v === 'cancelled') return 'cancelled'
+  /* بدون شريط محدد: نعرض فقط العمليات ذات الصلة بتجربة المزوّد */
+  return 'completed,delivered,in_progress,cancelled'
+}
 
 function syncCustomerFilterFromRoute(): void {
   const raw = route.query.customer_id
@@ -127,7 +161,7 @@ function syncCompanyFilterFromRoute(): void {
 
 async function load(): Promise<void> {
   await store.fetchOrders({
-    status: filterStatus.value || undefined,
+    status: statusQueryForApi(),
     ...(customerIdFilter.value ? { customer_id: customerIdFilter.value } : {}),
     ...(companyIdFilter.value ? { company_id: companyIdFilter.value } : {}),
   })
@@ -154,6 +188,11 @@ watch(
     load()
   },
 )
+
+watch(executionPartnerActive, () => {
+  filterStatus.value = ''
+  load()
+})
 
 const filteredOrders = computed(() => {
   const q = search.value.trim().toLowerCase()

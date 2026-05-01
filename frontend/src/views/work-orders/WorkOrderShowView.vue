@@ -27,6 +27,7 @@
     <template v-else-if="order">
       <!-- مشاركة و PDF — مهمّة في الوضع المضغوط أيضاً (الفني/الورشة) -->
       <div
+        v-if="!isExecutionPartner"
         class="bg-white rounded-xl border border-gray-200 space-y-3"
         :class="staffUi.compactMode ? 'p-3 space-y-2' : 'p-4'"
       >
@@ -398,12 +399,15 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import { useStaffUiStore } from '@/stores/staffUi'
 import { useToast } from '@/composables/useToast'
+import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
 import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 
 const route = useRoute()
 const staffUi = useStaffUiStore()
 const auth = useAuthStore()
 const toast = useToast()
+const { active: executionPartnerActive } = usePlatformExecutionPartner()
+const isExecutionPartner = computed(() => executionPartnerActive.value)
 const id    = Number(route.params.id)
 
 const services = ref<Array<{ id: number; name?: string; name_ar?: string }>>([])

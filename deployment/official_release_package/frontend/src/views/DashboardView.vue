@@ -20,8 +20,15 @@
     <!-- Header -->
     <div class="flex items-center justify-between gap-4 flex-wrap rounded-2xl border border-gray-200/80 dark:border-slate-700/80 bg-gradient-to-l from-primary-50/90 via-white to-violet-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-primary-950/40 px-4 py-3 shadow-sm">
       <div>
-        <h1 class="text-xl font-bold text-gray-900 dark:text-slate-100 tracking-tight">لوحة التحكم</h1>
-        <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{{ dashGreeting }} — {{ today }}</p>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-slate-100 tracking-tight">
+          {{ platformExecutionPartner ? 'لوحة المزوّد' : 'لوحة التحكم' }}
+        </h1>
+        <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+          {{ dashGreeting }} — {{ today }}
+          <span v-if="platformExecutionPartner" class="block mt-1 text-[11px] text-gray-400 dark:text-slate-500">
+            عرض العمليات والمؤشرات التشغيلية فقط — إصدار الفواتير وإدارة العملاء من نطاق العميل/المنشأة المالكة.
+          </span>
+        </p>
       </div>
       <div class="flex items-center gap-3 flex-wrap">
         <RouterLink
@@ -79,7 +86,7 @@
       v-else-if="showChartsSection"
       :revenue="chartRevenue"
       :work-orders="chartWo"
-      :show-revenue-chart="tenantOpen('finance')"
+      :show-revenue-chart="tenantOpen('finance') && !platformExecutionPartner"
       :show-work-order-chart="tenantOpen('operations')"
     />
 
@@ -158,7 +165,7 @@
         <div class="px-5 py-3.5 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
           <h2 class="text-sm font-semibold text-gray-800 dark:text-slate-100 flex items-center gap-2">
             <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            حالة العمليات التي نفّذها المزوّد
+            حالة العمليات
           </h2>
           <RouterLink to="/work-orders" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">عرض الكل ←</RouterLink>
         </div>
@@ -190,7 +197,7 @@
       <div class="flex flex-wrap gap-2">
         <QuickBtn v-if="quickInvoiceCreate" :icon="DocumentTextIcon" label="فاتورة جديدة" to="/invoices/create" color="blue" />
         <QuickBtn :icon="MagnifyingGlassCircleIcon" label="بحث أمر / لوحة" to="/execution-hub" color="blue" />
-        <QuickBtn v-if="quickWorkOrders" :icon="ClipboardDocumentIcon" label="العمليات التي نفّذها المزوّد" to="/work-orders" color="purple" />
+        <QuickBtn v-if="quickWorkOrders" :icon="ClipboardDocumentIcon" label="العمليات" to="/work-orders" color="purple" />
         <QuickBtn v-if="quickNewCustomer" :icon="UsersIcon" label="عميل جديد" to="/customers" color="green" />
         <RouterLink
           v-if="auth.isPlatform"
@@ -262,6 +269,7 @@ const showBiShortcuts = computed(() => {
   void biz.loaded
   void biz.businessType
   void biz.effectiveFeatureMatrix
+  if (platformExecutionPartner.value) return false
   return canAccessStaffBusinessIntelligence({
     buildFlagOn: featureFlags.intelligenceCommandCenter,
     isOwner: auth.isOwner,
@@ -338,6 +346,14 @@ const kpi = ref({
 const recentInvoices = ref<any[]>([])
 const chartRevenue = ref<{ date: string; revenue: number }[]>([])
 const chartWo = ref<{ date: string; count: number }[]>([])
+
+/** يوم تقويمي بالتوقيت المحلي — يطابق مفاتيح التاريخ من الخادم (مثل Asia/Riyadh) ولا يستخدم UTC من toISOString */
+function localDateYmd(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
 function fmtMoney(v: number) {
   return v.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -452,7 +468,12 @@ const visibleKpiItems = computed(() => {
 
   const pri = pillarPriority.value
   return defs
-    .filter((d) => tenantOpen(d.feature))
+    .filter((d) => {
+      if (platformExecutionPartner.value && (d.pillar === 'finance' || d.pillar === 'crm')) {
+        return false
+      }
+      return tenantOpen(d.feature)
+    })
     .sort((a, b) => {
       const ia = pri.indexOf(a.pillar)
       const ib = pri.indexOf(b.pillar)
@@ -461,18 +482,23 @@ const visibleKpiItems = computed(() => {
     })
 })
 
-const showChartsSection = computed(() => tenantOpen('finance') || tenantOpen('operations'))
+const showChartsSection = computed(() => {
+  if (platformExecutionPartner.value) {
+    return tenantOpen('operations')
+  }
+  return tenantOpen('finance') || tenantOpen('operations')
+})
 
 const chartSkeletonCount = computed(() => {
   let n = 0
-  if (tenantOpen('finance')) n++
+  if (tenantOpen('finance') && !platformExecutionPartner.value) n++
   if (tenantOpen('operations')) n++
   return Math.max(n, 1)
 })
 
 const kpiSkeletonCount = computed(() => Math.min(8, Math.max(visibleKpiItems.value.length || 4, 4)))
 
-const showRecentInvoicesPanel = computed(() => tenantOpen('finance'))
+const showRecentInvoicesPanel = computed(() => tenantOpen('finance') && !platformExecutionPartner.value)
 const showWorkOrdersPanel = computed(() => tenantOpen('operations'))
 
 const middleRowGridClass = computed(() => {
@@ -485,13 +511,13 @@ const middleRowGridClass = computed(() => {
 const quickInvoiceCreate = computed(() => tenantOpen('finance') && !platformExecutionPartner)
 const quickWorkOrders = computed(() => tenantOpen('operations'))
 const quickNewCustomer = computed(() => tenantOpen('crm') && !platformExecutionPartner)
-const quickReports = computed(() => tenantOpen('reports'))
-const quickZatca = computed(() => tenantOpen('accounting'))
+const quickReports = computed(() => tenantOpen('reports') && !platformExecutionPartner.value)
+const quickZatca = computed(() => tenantOpen('accounting') && !platformExecutionPartner.value)
 
 const woStats = computed(() => [
   {
     label: 'أوامر عمل جديدة',
-    hint: 'ضمن فترة التقرير',
+    hint: 'آخر 7 أيام (نفس نطاق الرسم البياني)',
     value: kpi.value.woCreated,
     icon: ClipboardDocumentIcon,
     color: 'text-blue-600 dark:text-blue-400',
@@ -499,7 +525,7 @@ const woStats = computed(() => [
   },
   {
     label: 'مكتملة',
-    hint: `${kpi.value.woCompletionRate}% منشأة في الفترة`,
+    hint: `${kpi.value.woCompletionRate}% من أوامر آخر 7 أيام`,
     value: kpi.value.woCompleted,
     icon: CheckCircleIcon,
     color: 'text-primary-600 dark:text-primary-400',
@@ -519,7 +545,7 @@ function fillChartsFromApi(d: Record<string, unknown> | null) {
   for (let i = 6; i >= 0; i--) {
     const x = new Date()
     x.setDate(x.getDate() - i)
-    const ds = x.toISOString().slice(0, 10)
+    const ds = localDateYmd(x)
     const rRow = revIn.find((r: any) => r?.date === ds)
     const wRow = woIn.find((r: any) => r?.date === ds)
     rev.push({ date: ds, revenue: rRow != null ? Number(rRow.revenue) : 0 })
@@ -532,10 +558,11 @@ function fillChartsFromApi(d: Record<string, unknown> | null) {
 async function loadData() {
   loading.value = true
   try {
-    const [sumRes, invRes] = await Promise.allSettled([
-      apiClient.get('/dashboard/summary'),
-      apiClient.get('/invoices', { params: { per_page: 5 } }),
-    ])
+    const summaryReq = apiClient.get('/dashboard/summary')
+    const invReq = platformExecutionPartner.value
+      ? Promise.resolve({ data: {} } as Awaited<ReturnType<typeof apiClient.get>>)
+      : apiClient.get('/invoices', { params: { per_page: 5 } })
+    const [sumRes, invRes] = await Promise.allSettled([summaryReq, invReq])
     if (sumRes.status === 'fulfilled') {
       const d = sumRes.value.data?.data
       if (d) {
@@ -548,9 +575,15 @@ async function loadData() {
         kpi.value.totalOutstanding = Number(d.receivables?.total_outstanding ?? 0)
         const bal = d.wallets?.balance_by_type ?? {}
         kpi.value.walletBalanceTotal = Object.values(bal).reduce((s: number, v) => s + Number(v ?? 0), 0)
-        kpi.value.woCreated = Number(d.work_orders?.created_in_period ?? 0)
-        kpi.value.woCompleted = Number(d.work_orders?.completed_in_period ?? 0)
-        kpi.value.woCompletionRate = Number(d.work_orders?.completion_rate ?? 0)
+        kpi.value.woCreated = Number(
+          d.work_orders?.created_last_7_days ?? d.work_orders?.created_in_period ?? 0,
+        )
+        kpi.value.woCompleted = Number(
+          d.work_orders?.completed_last_7_days ?? d.work_orders?.completed_in_period ?? 0,
+        )
+        kpi.value.woCompletionRate = Number(
+          d.work_orders?.completion_rate_last_7_days ?? d.work_orders?.completion_rate ?? 0,
+        )
         fillChartsFromApi(d as Record<string, unknown>)
       } else {
         fillChartsFromApi(null)
@@ -558,10 +591,12 @@ async function loadData() {
     } else {
       fillChartsFromApi(null)
     }
-    if (invRes.status === 'fulfilled') {
+    if (!platformExecutionPartner.value && invRes.status === 'fulfilled') {
       const raw = invRes.value.data?.data
       const items = Array.isArray(raw) ? raw : raw?.data ?? []
       recentInvoices.value = items.slice(0, 5)
+    } else if (platformExecutionPartner.value) {
+      recentInvoices.value = []
     }
   } catch {
     fillChartsFromApi(null)

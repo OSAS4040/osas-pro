@@ -9,6 +9,7 @@ services:
     volumes:
       - ./backend:/var/www
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./docker/php/zz-dev-opcache.ini:/usr/local/etc/php/conf.d/zz-dev-opcache.ini
       - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
     env_file:
       - ./backend/.env

@@ -220,9 +220,12 @@
                 <NavItem to="/wallet" :icon="CreditCardIcon" label="المحفظة" />
                 <NavItem
                   v-if="
-                    auth.hasPermission('wallet.top_up_requests.create')
+                    !platformExecutionPartnerActive
+                    && (
+                      auth.hasPermission('wallet.top_up_requests.create')
                       || auth.hasPermission('wallet.top_up_requests.view')
                       || auth.hasPermission('wallet.top_up_requests.review')
+                    )
                   "
                   to="/wallet/top-up-requests"
                   :icon="QueueListIcon"
@@ -774,6 +777,8 @@ function handleLogout(): void {
 
 const greeting = computed(() => locale.greeting.value)
 
+const { active: platformExecutionPartnerActive } = usePlatformExecutionPartner()
+
 const showStaffCompactToggle = computed(
   () => auth.isStaff && !auth.isFleet && !auth.isCustomer && route.path.startsWith('/work-orders'),
 )
@@ -802,6 +807,7 @@ const billingBadgeTitle = computed(() => {
 
 const billingNotice = computed((): { text: string; boxClass: string; showPlanLink: boolean } | null => {
   if (!auth.isStaff || auth.isFleet || auth.isCustomer) return null
+  if (platformExecutionPartnerActive.value) return null
   const s = auth.user?.subscription
   if (!s) return null
 
@@ -867,7 +873,6 @@ function navGroupVisible(key: string): boolean {
 }
 
 const providerFocusNavActive = computed(() => isStaffProviderFocusNavEnabled(biz.businessType, biz.loaded))
-const { active: platformExecutionPartnerActive } = usePlatformExecutionPartner()
 
 const mergedStaffHiddenNavSet = computed(() =>
   new Set(
@@ -1152,7 +1157,7 @@ const flatItems = computed(() => {
   if (pfa) {
     const rows: { to: string; icon: object; label: string; locked: boolean }[] = [
       { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
-      { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات التي نفّذها المزوّد', locked: false },
+      { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات', locked: false },
       { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'بحث لوحة وباركود', locked: false },
       { to: '/wallet', icon: CreditCardIcon, label: 'المحفظة', locked: false },
     ]
@@ -1173,7 +1178,7 @@ const flatItems = computed(() => {
   const items: { to: string; icon: object; label: string; locked: boolean }[] = [
     { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
     { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'بحث أمر / لوحة', locked: false },
-    { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات التي نفّذها المزوّد', locked: false },
+    { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات', locked: false },
     { to: '/vehicles', icon: TruckIcon, label: 'المركبات', locked: false },
     { to: '/customers', icon: UsersIcon, label: 'العملاء', locked: false },
     { to: '/invoices', icon: DocumentTextIcon, label: 'الفواتير', locked: false },
@@ -1181,9 +1186,10 @@ const flatItems = computed(() => {
       ? [{ to: '/financial-reconciliation', icon: ArrowsRightLeftIcon, label: 'مطابقة مالية', locked: false }]
       : []),
     { to: '/wallet', icon: CreditCardIcon, label: 'المحفظة', locked: false },
-    ...(auth.hasPermission('wallet.top_up_requests.create')
-      || auth.hasPermission('wallet.top_up_requests.view')
-      || auth.hasPermission('wallet.top_up_requests.review')
+    ...(!platformExecutionPartnerActive.value
+      && (auth.hasPermission('wallet.top_up_requests.create')
+        || auth.hasPermission('wallet.top_up_requests.view')
+        || auth.hasPermission('wallet.top_up_requests.review'))
       ? [{ to: '/wallet/top-up-requests', icon: QueueListIcon, label: 'طلبات شحن الرصيد', locked: false }]
       : []),
     ...(auth.isManager ? [{ to: '/branches', icon: BuildingLibraryIcon, label: 'الفروع', locked: false }] : []),
@@ -1351,7 +1357,7 @@ const NavSubGroup = defineComponent({
 const pageTitles: Record<string, string> = {
   dashboard: 'الرئيسية', customers: 'العملاء',
   vehicles: 'المركبات', 'vehicles.show': 'تفاصيل المركبة',
-  'work-orders': 'العمليات التي نفّذها المزوّد', 'work-orders.show': 'تفاصيل العملية المنفّذة',
+  'work-orders': 'العمليات', 'work-orders.show': 'تفاصيل العملية',
   'work-orders.create': 'عملية جديدة', invoices: 'الفواتير',
   'financial-reconciliation': 'المطابقة المالية',
   meetings: 'الاجتماعات',
@@ -1407,8 +1413,8 @@ const breadcrumbMap: Record<string, { label: string; parent?: string }> = {
   'financial-reconciliation': { label: 'المطابقة المالية', parent: 'dashboard' },
   meetings:               { label: 'الاجتماعات', parent: 'dashboard' },
   'invoices.show':        { label: 'تفاصيل الفاتورة', parent: 'invoices' },
-  'work-orders':          { label: 'العمليات التي نفّذها المزوّد', parent: 'dashboard' },
-  'work-orders.show':     { label: 'تفاصيل العملية المنفّذة', parent: 'work-orders' },
+  'work-orders':          { label: 'العمليات', parent: 'dashboard' },
+  'work-orders.show':     { label: 'تفاصيل العملية', parent: 'work-orders' },
   catalog:                { label: 'الخدمات والمنتجات', parent: 'dashboard' },
   'catalog.products':     { label: 'المنتجات', parent: 'catalog' },
   'catalog.services':     { label: 'الخدمات', parent: 'catalog' },

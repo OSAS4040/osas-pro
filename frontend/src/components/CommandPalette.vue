@@ -221,7 +221,7 @@ const allItems: PaletteNavItem[] = [
   { label: 'الرئيسية', to: '/', icon: HomeIcon, group: 'الرئيسي' },
   { label: 'الفواتير', to: '/invoices', icon: DocumentTextIcon, group: 'الرئيسي' },
   { label: 'عروض الأسعار', to: '/crm/quotes', icon: DocumentTextIcon, group: 'الرئيسي' },
-  { label: 'العمليات التي نفّذها المزوّد', to: '/work-orders', icon: ClipboardDocumentIcon, group: 'الرئيسي' },
+  { label: 'العمليات', to: '/work-orders', icon: ClipboardDocumentIcon, group: 'الرئيسي' },
   { label: 'الرافعات والمنافذ', to: '/bays', icon: BuildingOfficeIcon, group: 'مركز الخدمة' },
   { label: 'المواعيد والحجوزات', to: '/bookings', icon: CalendarDaysIcon, group: 'مركز الخدمة' },
   {
