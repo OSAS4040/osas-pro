@@ -39,7 +39,7 @@
           مركز الشركة
         </RouterLink>
         <WeatherClock />
-        <button class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors" @click="loadData">
+        <button class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors" @click="loadData({ refresh: true })">
           <ArrowPathIcon class="w-3.5 h-3.5" :class="loading ? 'animate-spin' : ''" />
           تحديث
         </button>
@@ -356,7 +356,8 @@ function localDateYmd(d: Date): string {
 }
 
 function fmtMoney(v: number) {
-  return v.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const n = Number.isFinite(v) ? v : 0
+  return n.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 type DashPillar = 'operations' | 'finance' | 'crm' | 'accounting'
@@ -376,6 +377,28 @@ const visibleKpiItems = computed(() => {
     label: string
     sub: string
   }> = [
+    {
+      id: 'woNew7d',
+      pillar: 'operations',
+      feature: 'operations',
+      sortKey: 2,
+      color: 'blue',
+      icon: ClipboardDocumentIcon,
+      value: String(kpi.value.woCreated),
+      label: 'أوامر عمل جديدة (آخر 7 أيام)',
+      sub: 'عدد التسجيلات — يطابق عمود الرسم البياني',
+    },
+    {
+      id: 'woDone7d',
+      pillar: 'operations',
+      feature: 'operations',
+      sortKey: 3,
+      color: 'teal',
+      icon: CheckCircleIcon,
+      value: String(kpi.value.woCompleted),
+      label: 'أوامر مكتملة (آخر 7 أيام)',
+      sub: 'حسب تاريخ إكمال الحالة',
+    },
     {
       id: 'totalRevenue',
       pillar: 'finance',
@@ -469,6 +492,9 @@ const visibleKpiItems = computed(() => {
   const pri = pillarPriority.value
   return defs
     .filter((d) => {
+      if ((d.id === 'woNew7d' || d.id === 'woDone7d') && !platformExecutionPartner.value) {
+        return false
+      }
       if (platformExecutionPartner.value && (d.pillar === 'finance' || d.pillar === 'crm')) {
         return false
       }
@@ -555,10 +581,14 @@ function fillChartsFromApi(d: Record<string, unknown> | null) {
   chartWo.value = wo
 }
 
-async function loadData() {
+async function loadData(opts?: { refresh?: boolean }) {
   loading.value = true
   try {
-    const summaryReq = apiClient.get('/dashboard/summary')
+    const summaryParams: Record<string, string> = {}
+    if (opts?.refresh) {
+      summaryParams.refresh = '1'
+    }
+    const summaryReq = apiClient.get('/dashboard/summary', { params: summaryParams })
     const invReq = platformExecutionPartner.value
       ? Promise.resolve({ data: {} } as Awaited<ReturnType<typeof apiClient.get>>)
       : apiClient.get('/invoices', { params: { per_page: 5 } })

@@ -109,6 +109,8 @@ import apiClient from '@/lib/apiClient'
 const emit = defineEmits<{
   (e: 'plate', value: string): void
   (e: 'order', value: string): void
+  /** نفس هيكل GET intake-lookup — بعد POST intake-lookup-camera لتجنّب طلب إضافي */
+  (e: 'intake', payload: Record<string, unknown>): void
 }>()
 
 const locale = useLocale()
@@ -195,14 +197,45 @@ async function startCamera(): Promise<boolean> {
       video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false,
     })
-    if (videoRef.value) {
-      videoRef.value.srcObject = stream
+    const el = videoRef.value
+    if (el) {
+      el.srcObject = stream
+      el.setAttribute('playsinline', 'true')
+      const tryPlay = () => void el.play().catch(() => {})
+      tryPlay()
+      el.addEventListener('loadedmetadata', tryPlay, { once: true })
     }
     return true
   } catch {
     error.value = l('تعذّر فتح الكاميرا.', 'Could not open camera.')
     return false
   }
+}
+
+/** يستخرج هيكل «data» من استجابة Laravel ({ data, trace_id }) أو يمرّر كما هو */
+function unwrapIntakeAxiosBody(body: unknown): Record<string, unknown> | null {
+  if (!body || typeof body !== 'object') return null
+  const o = body as Record<string, unknown>
+  const inner = o.data
+  if (inner && typeof inner === 'object') return inner as Record<string, unknown>
+  return o
+}
+
+function plateReadableFromIntake(inner: Record<string, unknown> | null): string | null {
+  if (!inner) return null
+  const cam = inner.camera_lookup as Record<string, unknown> | undefined
+  if (cam?.success === true) {
+    const cands = cam.candidates as Array<{ plate?: string }> | undefined
+    const p = cands?.[0]?.plate
+    if (typeof p === 'string' && p.trim()) return p.trim()
+  }
+  const lk = inner.lookup as Record<string, unknown> | undefined
+  const lp = lk?.plate_number
+  if (typeof lp === 'string' && lp.trim()) return lp.trim()
+  const veh = inner.vehicle as Record<string, unknown> | undefined
+  const vpn = veh?.plate_number
+  if (typeof vpn === 'string' && vpn.trim()) return vpn.trim()
+  return null
 }
 
 function emitBarcodeResult(raw: string) {
@@ -261,16 +294,28 @@ async function processPlateImage(canvas: HTMLCanvasElement) {
   error.value = ''
   try {
     const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1] ?? ''
-    const { data: json } = await apiClient.post('/governance/ocr/plate', {
+    /* مسار أوامر العمل — صلاحية work_orders.view فقط (لا users.update كمسار الحوكمة) */
+    const { data: laravelBody } = await apiClient.post('/work-orders/intake-lookup-camera', {
       image: base64,
-      resolve_vehicle: false,
     })
-    const pn = json.plate_normalized as { display?: string } | null | undefined
-    const normalized = pn?.display ?? (json.plate as string) ?? ''
-    const plate = sanitizePlateFromApi(String(normalized))
-    if (plate) {
-      emit('plate', plate)
+    const inner = unwrapIntakeAxiosBody(laravelBody)
+    const plateRaw = plateReadableFromIntake(inner)
+    const plate = plateRaw ? sanitizePlateFromApi(plateRaw) : ''
+    const cam = inner?.camera_lookup as Record<string, unknown> | undefined
+    const ocrUsed = cam?.used === true
+    const ocrOk = cam?.success === true
+
+    if (inner && (plate || inner.work_order || inner.vehicle || (ocrUsed && ocrOk))) {
+      emit('intake', inner)
       close()
+      return
+    }
+
+    if (ocrUsed && !ocrOk) {
+      error.value = l(
+        'لم تُستخرج لوحة واضحة من الصورة — أعد المحاولة أو أدخل اللوحة يدوياً.',
+        'Could not read a plate from the photo — retry or enter the plate manually.',
+      )
       return
     }
     error.value = l('لم تُستخرج لوحة واضحة من الصورة.', 'Could not read plate from image.')
@@ -353,6 +398,11 @@ async function open() {
       'Live barcode needs Chrome/Edge — use shutter or gallery for plate.',
     )
   }
+  const ocrTip = l(
+    'لقراءة اللوحة: إضاءة جيدة، صورة ثابتة، وتفضيل HTTPS. إن فشل التعرف أعد المحاولة أو أدخل اللوحة يدوياً.',
+    'For plate OCR: good light, steady shot, HTTPS preferred. If recognition fails, retry or enter the plate manually.',
+  )
+  hint.value = hint.value ? `${hint.value} ${ocrTip}` : ocrTip
   const camOk = await startCamera()
   if (camOk && detOk) {
     startBarcodeLoop()

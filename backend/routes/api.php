@@ -601,7 +601,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:work_orders.view');
             Route::post('/line-pricing-preview', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'linePricingPreview'])
                 ->middleware('permission:work_orders.view');
-            Route::get('/',              [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'index']);
+            Route::get('/',              [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'index'])
+                ->middleware('permission:work_orders.view');
             Route::post('/',             [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'store'])
                 ->middleware('permission:work_orders.create');
             Route::post('/bulk', [\App\Http\Controllers\Api\V1\WorkOrderBulkController::class, 'store'])

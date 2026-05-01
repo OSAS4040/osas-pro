@@ -249,7 +249,7 @@ class CompanyReportingPulseTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $n);
     }
 
-    public function test_invalid_branch_returns_422(): void
+    public function test_invalid_branch_returns_403_from_branch_scope(): void
     {
         $tenant = $this->createTenant('owner');
 
@@ -257,6 +257,6 @@ class CompanyReportingPulseTest extends TestCase
 
         $this->actingAsUser($tenant['user'])
             ->getJson($this->companyPulseUrl().'?'.http_build_query($q))
-            ->assertStatus(422);
+            ->assertForbidden();
     }
 }

@@ -11,6 +11,14 @@
             )
           }}
         </p>
+        <p class="mt-2 text-xs text-gray-500 dark:text-slate-400">
+          {{
+            l(
+              'يُقيَّد البحث تلقائياً بفرعك الحالي ما لم يكن لدى دورك صلاحية عرض جميع الفروع.',
+              'Lookup is scoped to your current branch unless your role has cross-branch access.',
+            )
+          }}
+        </p>
       </div>
     </div>
 
@@ -76,7 +84,7 @@
       </div>
 
       <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4 dark:border-slate-700">
-        <CameraIntakeScanner @plate="onPlateScanned" @order="onOrderFromScan" />
+        <CameraIntakeScanner @plate="onPlateScanned" @order="onOrderFromScan" @intake="applyCameraIntake" />
         <span class="text-xs text-gray-500 dark:text-slate-400">
           {{
             l(
@@ -364,6 +372,24 @@ function applyPlatePartsFromString(p: string) {
   if (m) {
     plateLetters.value = m[1] ?? ''
     plateDigits.value = m[2] ?? ''
+  }
+}
+
+/** نتيجة كاميرا intake-lookup-camera — بدون إعادة طلب GET */
+function applyCameraIntake(inner: Record<string, unknown>) {
+  errorMsg.value = ''
+  loading.value = false
+  payload.value = inner as any
+  const lk = inner.lookup as Record<string, unknown> | undefined
+  const ord = typeof lk?.order_number === 'string' ? lk.order_number.trim() : ''
+  const pn = typeof lk?.plate_number === 'string' ? lk.plate_number.trim() : ''
+  if (ord) {
+    orderQuery.value = ord
+    plateLetters.value = ''
+    plateDigits.value = ''
+  } else if (pn) {
+    orderQuery.value = ''
+    applyPlatePartsFromString(pn.replace(/\s+/g, ' '))
   }
 }
 

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class WorkOrderTechnician extends Model
 {
+    use HasTenantScope;
+
     public $timestamps = false;
 
     protected $fillable = [

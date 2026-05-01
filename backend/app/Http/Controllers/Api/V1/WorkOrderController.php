@@ -55,6 +55,12 @@ class WorkOrderController extends Controller
     {
         /** @var User $viewer */
         $viewer = $request->user();
+        if ($request->filled('company_id') && (int) $request->company_id !== (int) app('tenant_company_id')) {
+            return response()->json([
+                'message' => 'company_id does not match your tenant.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
         $base = $this->workOrdersBaseQuery($request);
 
         $statusCounts = null;
@@ -105,12 +111,13 @@ class WorkOrderController extends Controller
      */
     private function workOrdersBaseQuery(Request $request): \Illuminate\Database\Eloquent\Builder
     {
+        $branchScope = $this->workOrderBranchConstraint($request);
+
         return WorkOrder::query()
-            ->when($request->company_id, fn ($q) => $q->where('company_id', (int) $request->company_id))
+            ->when($branchScope !== null, fn ($q) => $q->where((new WorkOrder)->getTable().'.branch_id', $branchScope))
             ->when($request->customer_id, fn ($q) => $q->where('customer_id', $request->customer_id))
             ->when($request->vehicle_id, fn ($q) => $q->where('vehicle_id', $request->vehicle_id))
             ->when($request->technician_id, fn ($q) => $q->where('assigned_technician_id', $request->technician_id))
-            ->when($request->branch_id, fn ($q) => $q->where('branch_id', $request->branch_id))
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = trim((string) $request->search);
                 $q->where(function ($q) use ($s) {
@@ -120,6 +127,30 @@ class WorkOrderController extends Controller
                         ->orWhereHas('vehicle', fn ($vq) => $vq->where('plate_number', 'ilike', "%{$s}%"));
                 });
             });
+    }
+
+    /**
+     * Branch narrowing for work orders: enforced for roles without cross_branch_access.
+     * Roles with cross_branch_access see all branches unless the client selects a branch (query / header),
+     * which BranchScopeMiddleware maps to tenant_branch_id.
+     */
+    private function workOrderBranchConstraint(Request $request): ?int
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+        if (! $user || ! app()->has('tenant_branch_id')) {
+            return null;
+        }
+        $branchId = (int) app('tenant_branch_id');
+        if ($user->hasPermission('cross_branch_access')) {
+            if ($request->filled('branch_id') || $request->header('X-Branch-Id')) {
+                return $branchId;
+            }
+
+            return null;
+        }
+
+        return $branchId;
     }
 
     public function intakeLookup(Request $request): JsonResponse
@@ -140,7 +171,12 @@ class WorkOrderController extends Controller
         }
 
         return response()->json(
-            $this->buildIntakeLookupPayload($user, $orderNumber !== '' ? $orderNumber : null, $plateNumber !== '' ? $plateNumber : null)
+            $this->buildIntakeLookupPayload(
+                $user,
+                $orderNumber !== '' ? $orderNumber : null,
+                $plateNumber !== '' ? $plateNumber : null,
+                $this->workOrderBranchConstraint($request)
+            )
         );
     }
 
@@ -155,6 +191,10 @@ class WorkOrderController extends Controller
         $orderNumber = trim((string) ($data['order_number'] ?? ''));
         $plateFallback = trim((string) ($data['plate_number'] ?? ''));
         $imageBase64 = trim((string) ($data['image'] ?? ''));
+        if ($imageBase64 !== '' && str_starts_with($imageBase64, 'data:')) {
+            $parts = explode(',', $imageBase64, 2);
+            $imageBase64 = trim($parts[1] ?? '');
+        }
 
         if ($orderNumber === '' && $plateFallback === '' && $imageBase64 === '') {
             return response()->json([
@@ -237,7 +277,8 @@ class WorkOrderController extends Controller
         $payload = $this->buildIntakeLookupPayload(
             $user,
             $orderNumber !== '' ? $orderNumber : null,
-            $resolvedPlate
+            $resolvedPlate,
+            $this->workOrderBranchConstraint($request)
         );
         $payload['data']['camera_lookup'] = $ocrMeta;
         $payload['data']['arrival'] = [
@@ -322,7 +363,7 @@ class WorkOrderController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function buildIntakeLookupPayload($user, ?string $orderNumber, ?string $plateNumber): array
+    private function buildIntakeLookupPayload(User $user, ?string $orderNumber, ?string $plateNumber, ?int $restrictToBranchId = null): array
     {
         $companyId = (int) $user->company_id;
         $query = WorkOrder::query()
@@ -331,23 +372,33 @@ class WorkOrderController extends Controller
             ->with(['vehicle:id,customer_id,plate_number,make,model', 'customer:id,name,type'])
             ->orderByDesc('id');
 
+        if ($restrictToBranchId !== null) {
+            $query->where('branch_id', $restrictToBranchId);
+        }
+
         if (($orderNumber ?? '') !== '') {
             $query->where(static function ($q) use ($orderNumber): void {
                 $q->where('order_number', $orderNumber)->orWhere('work_order_number', $orderNumber);
             });
         }
         if (($plateNumber ?? '') !== '') {
-            $query->whereHas('vehicle', static fn ($q) => $q->where('plate_number', 'ilike', $plateNumber));
+            $query->whereHas('vehicle', static function ($q) use ($plateNumber, $companyId): void {
+                $q->where('vehicles.company_id', $companyId)
+                    ->where('plate_number', 'ilike', $plateNumber);
+            });
         }
 
         $order = $query->first();
 
         $vehicle = $order?->vehicle;
         if ($vehicle === null && ($plateNumber ?? '') !== '') {
-            $vehicle = Vehicle::query()
+            $vQ = Vehicle::query()
                 ->where('company_id', $companyId)
-                ->where('plate_number', 'ilike', $plateNumber)
-                ->first();
+                ->where('plate_number', 'ilike', $plateNumber);
+            if ($restrictToBranchId !== null) {
+                $vQ->where('branch_id', $restrictToBranchId);
+            }
+            $vehicle = $vQ->first();
         }
 
         $activeStatuses = [

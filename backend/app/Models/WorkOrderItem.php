@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class WorkOrderItem extends Model
 {
+    use HasTenantScope;
+
     protected $fillable = [
         'company_id', 'work_order_id', 'product_id', 'service_id', 'item_type', 'name', 'sku',
         'quantity', 'unit_price', 'discount_amount', 'tax_rate', 'tax_amount', 'subtotal', 'total',

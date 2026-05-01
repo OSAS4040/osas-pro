@@ -198,4 +198,31 @@ class ExecutionPartnerOperationalFlowsTest extends TestCase
             ->getJson('/api/v1/purchases?platform_settlement=1')
             ->assertOk();
     }
+
+    public function test_intake_lookup_camera_accepts_data_url_prefix_on_image(): void
+    {
+        $t = $this->createTenant();
+        $payload = random_bytes(180);
+        $this->assertGreaterThan(100, strlen($payload));
+        $wrapped = 'data:image/jpeg;base64,'.base64_encode($payload);
+
+        $this->actingAsUser($t['user'])
+            ->postJson('/api/v1/work-orders/intake-lookup-camera', ['image' => $wrapped])
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['camera_lookup', 'lookup']]);
+    }
+
+    public function test_technician_can_use_intake_lookup_camera_without_users_update_permission(): void
+    {
+        $t = $this->createTenant('technician');
+        $payload = random_bytes(200);
+        $this->assertGreaterThan(100, strlen($payload));
+
+        $this->actingAsUser($t['user'])
+            ->postJson('/api/v1/work-orders/intake-lookup-camera', [
+                'image' => base64_encode($payload),
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.camera_lookup.used', true);
+    }
 }

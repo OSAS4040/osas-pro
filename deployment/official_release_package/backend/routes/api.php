@@ -181,11 +181,23 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:pricing_policies.manage');
 
         Route::prefix('work-orders')->group(function () {
+            Route::get('/intake-lookup', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'intakeLookup'])
+                ->middleware('permission:work_orders.view');
+            Route::post('/intake-lookup-camera', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'intakeLookupCamera'])
+                ->middleware('permission:work_orders.view');
+            Route::post('/intake-odometer-ocr', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'intakeOdometerOcr'])
+                ->middleware('permission:work_orders.view');
             Route::post('/line-pricing-preview', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'linePricingPreview'])
                 ->middleware('permission:work_orders.view');
-            Route::get('/',              [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'index']);
+            Route::get('/',              [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'index'])
+                ->middleware('permission:work_orders.view');
             Route::post('/',             [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'store'])
                 ->middleware('permission:work_orders.create');
+            Route::post('/bulk', [\App\Http\Controllers\Api\V1\WorkOrderBulkController::class, 'store'])
+                ->middleware('permission:work_orders.create');
+            Route::get('/batches/{batchUuid}', [\App\Http\Controllers\Api\V1\WorkOrderBulkController::class, 'showBatch'])
+                ->where('batchUuid', '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
+                ->middleware('permission:work_orders.view');
             Route::post('/batches',      [\App\Http\Controllers\Api\V1\WorkOrderBatchController::class, 'store'])
                 ->middleware('permission:work_orders.create');
             Route::get('/{id}/pdf', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'downloadPdf'])
@@ -196,7 +208,12 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:work_orders.view');
             Route::post('/{id}/share-whatsapp-driver', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'shareWhatsAppDriver'])
                 ->middleware('permission:work_orders.view');
-            Route::get('/{id}',          [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'show']);
+            Route::post('/{id}/service-media', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'uploadServiceMedia'])
+                ->middleware('permission:work_orders.update');
+            Route::patch('/{id}/execution-report', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'updateExecutionReport'])
+                ->middleware('permission:work_orders.update');
+            Route::get('/{id}',          [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'show'])
+                ->middleware('permission:work_orders.view');
             Route::put('/{id}',          [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'update'])
                 ->middleware('permission:work_orders.update');
             Route::patch('/{id}/status', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'updateStatus'])

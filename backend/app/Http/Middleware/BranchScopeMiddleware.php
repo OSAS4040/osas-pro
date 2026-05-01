@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Branch;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,7 +21,22 @@ class BranchScopeMiddleware
             ?? $request->query('branch_id')
             ?? $user->branch_id;
 
-        if ($requestedBranchId && $user->branch_id && (int) $requestedBranchId !== $user->branch_id) {
+        if ($requestedBranchId && $user->company_id) {
+            $branchOk = Branch::query()
+                ->withoutGlobalScope('tenant')
+                ->where('id', (int) $requestedBranchId)
+                ->where('company_id', (int) $user->company_id)
+                ->whereNull('deleted_at')
+                ->exists();
+            if (! $branchOk) {
+                return response()->json([
+                    'message'  => 'Invalid branch context for your company.',
+                    'trace_id' => app('trace_id'),
+                ], 403);
+            }
+        }
+
+        if ($requestedBranchId && $user->branch_id && (int) $requestedBranchId !== (int) $user->branch_id) {
             $hasCrossBranchAccess = $user->hasPermission('cross_branch_access');
 
             if (! $hasCrossBranchAccess) {
