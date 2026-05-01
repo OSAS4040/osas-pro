@@ -23,7 +23,24 @@ final class TenantBusinessFeatures
 
         $defaults = BusinessFeatureProfileDefaults::featureMatrixForType($businessType);
 
-        return array_merge($defaults, $custom);
+        $result = array_merge($defaults, $custom);
+
+        foreach (config('tenant_features.platform_execution_partner_company_ids', []) as $id) {
+            if ((int) $company->id === (int) $id) {
+                $result['platform_execution_partner'] = true;
+                break;
+            }
+        }
+
+        $emails = config('tenant_features.platform_execution_partner_company_emails', []);
+        if ($emails !== []) {
+            $email = strtolower(trim((string) ($company->email ?? '')));
+            if ($email !== '' && in_array($email, $emails, true)) {
+                $result['platform_execution_partner'] = true;
+            }
+        }
+
+        return $result;
     }
 
     public static function isEnabled(Company $company, string $key): bool

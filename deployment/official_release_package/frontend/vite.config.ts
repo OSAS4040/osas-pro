@@ -27,11 +27,15 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  const appVersion = getGit('describe --tags --always') || 'dev'
-  const gitCommit = getGit('rev-parse --short HEAD')
-  const gitBranch = getGit('rev-parse --abbrev-ref HEAD')
-  const buildTimeIso = new Date().toISOString()
-  const deployEnv = mode
+  const appVersion =
+    String(env.VITE_APP_VERSION ?? '').trim() || getGit('describe --tags --always') || 'dev'
+  const gitCommit =
+    String(env.VITE_BUILD_GIT_COMMIT ?? '').trim() || getGit('rev-parse --short HEAD')
+  const gitBranch =
+    String(env.VITE_BUILD_GIT_BRANCH ?? '').trim() || getGit('rev-parse --abbrev-ref HEAD')
+  const buildTimeIso =
+    String(env.VITE_BUILD_TIME ?? '').trim() || new Date().toISOString()
+  const deployEnv = String(env.VITE_DEPLOY_ENV ?? '').trim() || mode
 
   const proxyTarget = resolveViteApiProxyTarget(insideDocker, env, process.env)
 
