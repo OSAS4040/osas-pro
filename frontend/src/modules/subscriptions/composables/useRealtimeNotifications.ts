@@ -10,6 +10,11 @@ export function useRealtimeNotifications() {
   const toast = useToast()
   let pollTimer: number | null = null
   let ws: WebSocket | null = null
+  /**
+   * أول استطلاع **ناجح** يستورد الأحداث إلى المتجر ويحدّث `lastId` دون toasts
+   * (يمنع إظهار دفعة كبيرة من أحداث الاشتراك القديمة عند `after_id=0`).
+   */
+  let initialSubscriptionPollCompleted = false
 
   async function pollOnce() {
     if (!auth.isAuthenticated || !auth.isStaff) return
@@ -17,6 +22,9 @@ export function useRealtimeNotifications() {
       const res = await subscriptionsApi.notifications(store.lastId)
       const rows = (res.data?.data ?? []) as Array<any>
       store.pushBatch(rows)
+      const skipToasts = !initialSubscriptionPollCompleted
+      initialSubscriptionPollCompleted = true
+      if (skipToasts) return
       for (const row of rows) {
         const message = String(row?.payload?.message ?? row?.event_type ?? 'Notification')
         toast.info('تنبيه اشتراك', message)
