@@ -136,14 +136,14 @@
                 <NavItem
                   to="/execution-hub"
                   :icon="MagnifyingGlassCircleIcon"
-                  :label="l('بحث لوحة وباركود', 'Plate & barcode lookup')"
+                  :label="l('تنفيذ العمليات', 'Operations execution')"
                 />
               </template>
               <template v-else>
                 <NavItem
                   to="/execution-hub"
                   :icon="MagnifyingGlassCircleIcon"
-                  :label="l('بحث أمر / لوحة', 'WO / plate lookup')"
+                  :label="l('تنفيذ العمليات', 'Operations execution')"
                 />
                 <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
               </template>
@@ -365,7 +365,6 @@
                 <NavItem to="/admin/qa" :icon="BeakerIcon" label="فحص الجودة (QA)" />
               </NavSubGroup>
             </NavSection>
-
           </template>
         </template>
       </nav>
@@ -647,24 +646,23 @@ import router from '@/router'
 import { NAV_SEARCH_ITEMS, itemMatchesNavQuery, normNavSearch, navSearchItemVisibleForPortals } from '@/config/navSearchItems'
 import { enabledPortals } from '@/config/portalAccess'
 import {
-  HomeIcon, DocumentTextIcon, CubeIcon, UsersIcon, ChartBarIcon, Cog6ToothIcon,
+  HomeIcon, DocumentTextIcon, UsersIcon, ChartBarIcon, Cog6ToothIcon,
   ArrowLeftOnRectangleIcon, TruckIcon, ClipboardDocumentIcon,
   BuildingOfficeIcon, CalendarDaysIcon, FireIcon, UserGroupIcon, ClockIcon,
   CurrencyDollarIcon, CreditCardIcon, BookOpenIcon, TableCellsIcon, BanknotesIcon,
-  ArchiveBoxIcon, ShoppingBagIcon, ShieldCheckIcon, StarIcon, RectangleStackIcon, LifebuoyIcon,
+  ArchiveBoxIcon, ShoppingBagIcon, ShieldCheckIcon, RectangleStackIcon, LifebuoyIcon,
   MagnifyingGlassIcon, MagnifyingGlassCircleIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, WrenchScrewdriverIcon, DocumentCheckIcon,
   LockClosedIcon, ChevronRightIcon, ChevronLeftIcon,
   SunIcon, MoonIcon, CheckIcon, ChevronDownIcon,
-  BuildingOffice2Icon, CpuChipIcon, GiftIcon, Bars3Icon, SparklesIcon,
+  BuildingOffice2Icon, CpuChipIcon, GiftIcon, Bars3Icon,
   SignalIcon, PresentationChartLineIcon, BeakerIcon,
   ChatBubbleLeftRightIcon, FolderOpenIcon,
   AdjustmentsHorizontalIcon, HeartIcon, InformationCircleIcon,
   BuildingLibraryIcon, MapPinIcon, BoltIcon, ArrowsRightLeftIcon, CalendarIcon,
-  QueueListIcon, DevicePhoneMobileIcon, PlusCircleIcon, TagIcon,
+  QueueListIcon, DevicePhoneMobileIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { useStaffUiStore } from '@/stores/staffUi'
-import { useSubscriptionStore } from '@/stores/subscription'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { featureFlags } from '@/config/featureFlags'
 import {
@@ -706,7 +704,6 @@ import { isStaffNavHidden, splitStaffNavHref } from '@/lib/staffNavKey'
 const auth = useAuthStore()
 const { staffShellReady } = useNavigationContext()
 const staffUi = useStaffUiStore()
-const sub  = useSubscriptionStore()
 const biz = useBusinessProfileStore()
 const route = useRoute()
 const locale = useLocale()
@@ -784,27 +781,6 @@ const showStaffCompactToggle = computed(
 )
 
 /** تنبيه فوترة خفيف: فترة سماح / انتهاء قريب — بدون تعقيد إضافي */
-const BILLING_STATE_AR: Record<string, string> = {
-  active: 'نشط',
-  grace: 'فترة سماح',
-  expired: 'منتهٍ',
-  suspended: 'موقوف',
-  none: 'غير مربوط',
-}
-
-const billingStateShort = computed(() => {
-  const st = auth.user?.subscription?.billing_state
-  if (!st || !auth.isStaff || auth.isFleet || auth.isCustomer) return ''
-  return BILLING_STATE_AR[st] ?? st
-})
-
-const billingBadgeTitle = computed(() => {
-  const s = auth.user?.subscription
-  if (!s) return 'الاشتراك والفوترة'
-  const parts = [s.plan ? `باقة: ${s.plan}` : '', s.ends_at ? `ينتهي: ${new Date(s.ends_at).toLocaleDateString('ar-SA')}` : '']
-  return parts.filter(Boolean).join(' · ') || 'الاشتراك والفوترة'
-})
-
 const billingNotice = computed((): { text: string; boxClass: string; showPlanLink: boolean } | null => {
   if (!auth.isStaff || auth.isFleet || auth.isCustomer) return null
   if (platformExecutionPartnerActive.value) return null
@@ -1158,7 +1134,7 @@ const flatItems = computed(() => {
     const rows: { to: string; icon: object; label: string; locked: boolean }[] = [
       { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
       { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات', locked: false },
-      { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'بحث لوحة وباركود', locked: false },
+      { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'تنفيذ العمليات', locked: false },
       { to: '/wallet', icon: CreditCardIcon, label: 'المحفظة', locked: false },
     ]
     if (auth.hasPermission('purchases.platform_settlement.view')) {
@@ -1177,7 +1153,7 @@ const flatItems = computed(() => {
 
   const items: { to: string; icon: object; label: string; locked: boolean }[] = [
     { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
-    { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'بحث أمر / لوحة', locked: false },
+    { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'تنفيذ العمليات', locked: false },
     { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات', locked: false },
     { to: '/vehicles', icon: TruckIcon, label: 'المركبات', locked: false },
     { to: '/customers', icon: UsersIcon, label: 'العملاء', locked: false },

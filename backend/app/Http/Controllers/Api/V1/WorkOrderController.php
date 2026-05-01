@@ -386,6 +386,29 @@ class WorkOrderController extends Controller
         $financialModelValue = $financialModel instanceof \BackedEnum ? $financialModel->value : (string) $financialModel;
         $isPrepaid = $financialModelValue === 'prepaid';
         $hasPositivePrepaidBalance = ($fleetMainBalance + $vehicleWalletBalance) > 0.0001;
+        $hasAnyWalletCredit = ($fleetMainBalance + $vehicleWalletBalance + $customerMainBalance) > 0.0001;
+        $isTerminalOrder = $order !== null && in_array($order->status, [
+            WorkOrderStatus::Completed,
+            WorkOrderStatus::Delivered,
+            WorkOrderStatus::Cancelled,
+        ], true);
+        $showServiceLines = $order !== null && ! $isTerminalOrder && ($isActiveOrder || $hasAnyWalletCredit);
+        $serviceLines = [];
+        if ($showServiceLines) {
+            $order->load(['items' => static fn (\Illuminate\Database\Eloquent\Relations\HasMany $q) => $q->orderBy('id')]);
+            $serviceLines = $order->items->map(static function (\App\Models\WorkOrderItem $it): array {
+                return [
+                    'id' => $it->id,
+                    'item_type' => $it->item_type instanceof \BackedEnum ? $it->item_type->value : (string) $it->item_type,
+                    'name' => $it->name,
+                    'quantity' => (float) $it->quantity,
+                    'unit_price' => (float) $it->unit_price,
+                    'total' => (float) $it->total,
+                    'service_id' => $it->service_id,
+                    'product_id' => $it->product_id,
+                ];
+            })->values()->all();
+        }
 
         return [
             'data' => [
@@ -406,12 +429,15 @@ class WorkOrderController extends Controller
                     'make' => $vehicle->make,
                     'model' => $vehicle->model,
                 ] : null,
+                'show_service_lines' => $showServiceLines,
+                'service_lines' => $serviceLines,
                 'prepaid' => [
                     'is_prepaid_company' => $isPrepaid,
                     'fleet_main_balance' => $fleetMainBalance,
                     'vehicle_wallet_balance' => $vehicleWalletBalance,
                     'customer_main_balance' => $customerMainBalance,
                     'has_positive_balance' => $hasPositivePrepaidBalance,
+                    'has_any_wallet_balance' => $hasAnyWalletCredit,
                 ],
                 'execution' => [
                     'provider_can_execute_service' => $user->role->isWorkshopSide(),

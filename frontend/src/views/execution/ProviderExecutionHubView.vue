@@ -2,12 +2,12 @@
   <div class="app-shell-page space-y-6" dir="rtl">
     <div class="page-head">
       <div class="page-title-wrap">
-        <h1 class="page-title-xl">{{ l('مركز التنفيذ والبحث', 'Execution & lookup hub') }}</h1>
+        <h1 class="page-title-xl">{{ l('تنفيذ العمليات', 'Operations execution') }}</h1>
         <p class="page-subtitle">
           {{
             l(
-              'أدخل رقم أمر العمل، أو لوحة بحروف وأرقام منفصلة، أو استخدم الكاميرا لمسح باركود/QR (أمر عمل أو مركبة) أو التقاط صورة للوحة. تُعرض بيانات المركبة وأمر العمل النشط والرصيد عند التوفر.',
-              'Enter a work order, or plate letters/digits, or use the camera for barcode/QR (work order or vehicle) or a plate photo. Vehicle, active work order, and balance appear when available.',
+              'ابحث برقم أمر العمل أو اللوحة أو عبر الكاميرا (باركود/QR/لوحة). عند وجود أمر عمل نشط أو رصيد متاح تُعرض خدمات أمر العمل لمتابعة التنفيذ حتى مرحلة الاعتماد.',
+              'Search by work order, plate, or camera (barcode/QR/plate). When the order is active or wallets have balance, service lines appear so you can continue execution through approval.',
             )
           }}
         </p>
@@ -141,11 +141,68 @@
         <p v-if="payload.execution" class="mt-3 text-xs text-gray-500">
           {{
             payload.execution.can_execute_now
-              ? l('يمكن المتابعة لتنفيذ الخدمة حسب صلاحياتك.', 'You may proceed to execute per your permissions.')
+              ? l('يمكن المتابعة لتنفيذ الخدمة حتى الاعتماد حسب صلاحياتك.', 'You may proceed with services through approval, per your permissions.')
               : l('تحقق من حالة الأمر أو الرصيد قبل التنفيذ.', 'Check work order status or balance before execution.')
           }}
         </p>
       </div>
+    </div>
+
+    <div
+      v-if="payload && showServiceLinesPanel"
+      class="rounded-2xl border border-primary-200/80 bg-primary-50/40 p-5 shadow-sm dark:border-primary-900/50 dark:bg-primary-950/25"
+    >
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-base font-bold text-gray-900 dark:text-slate-100">
+            {{ l('خدمات أمر العمل (التنفيذ حتى الاعتماد)', 'Work order services (through approval)') }}
+          </h2>
+          <p class="mt-1 text-xs text-gray-600 dark:text-slate-400">
+            {{
+              l(
+                'نفّذ أو حدّث البنود من صفحة أمر العمل الكاملة؛ تبقى المراحل حتى اعتماد المشرف عند الحاجة.',
+                'Record or update lines from the full work order; workflow may require manager approval.',
+              )
+            }}
+          </p>
+        </div>
+        <RouterLink
+          v-if="payload.work_order?.id"
+          :to="{ name: 'work-orders.show', params: { id: String(payload.work_order.id) } }"
+          class="inline-flex shrink-0 items-center justify-center rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-primary-700"
+        >
+          {{ l('متابعة التنفيذ في أمر العمل', 'Continue on work order') }} →
+        </RouterLink>
+      </div>
+
+      <div v-if="serviceLinesList.length" class="mt-4 overflow-x-auto rounded-xl border border-gray-200/90 bg-white dark:border-slate-600 dark:bg-slate-900/40">
+        <table class="min-w-full divide-y divide-gray-100 text-sm dark:divide-slate-700">
+          <thead class="bg-gray-50/90 text-xs font-semibold uppercase text-gray-500 dark:bg-slate-800 dark:text-slate-400">
+            <tr>
+              <th class="px-3 py-2 text-right">{{ l('النوع', 'Type') }}</th>
+              <th class="px-3 py-2 text-right">{{ l('البند', 'Item') }}</th>
+              <th class="px-3 py-2 text-left">{{ l('الكمية', 'Qty') }}</th>
+              <th class="px-3 py-2 text-left">{{ l('الإجمالي', 'Total') }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+            <tr v-for="row in serviceLinesList" :key="row.id" class="text-gray-800 dark:text-slate-200">
+              <td class="whitespace-nowrap px-3 py-2 text-xs text-gray-500">{{ itemTypeLabel(row.item_type) }}</td>
+              <td class="px-3 py-2 font-medium">{{ row.name }}</td>
+              <td class="whitespace-nowrap px-3 py-2 font-mono text-xs" dir="ltr">{{ row.quantity }}</td>
+              <td class="whitespace-nowrap px-3 py-2 font-mono text-xs" dir="ltr">{{ formatMoney(row.total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else class="mt-4 rounded-xl border border-dashed border-gray-300 bg-white/80 px-4 py-3 text-sm text-gray-600 dark:border-slate-600 dark:bg-slate-900/30 dark:text-slate-400">
+        {{
+          l(
+            'لا توجد بنود خدمة بعد على هذا الأمر. افتح أمر العمل لإضافة الخدمات ومتابعة التنفيذ.',
+            'No line items yet. Open the work order to add services and continue execution.',
+          )
+        }}
+      </p>
     </div>
 
     <div class="rounded-2xl border border-gray-200/90 bg-white p-5 dark:border-slate-700 dark:bg-slate-900/50">
@@ -191,6 +248,40 @@ const plateDigits = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
 const payload = ref<any>(null)
+
+const serviceLinesList = computed(() => {
+  const raw = payload.value?.service_lines
+  return Array.isArray(raw) ? raw : []
+})
+
+/** يطابق الخادم: أمر غير منتهٍ + (نشط أو يوجد رصيد في أي محفظة مرتبطة) */
+const showServiceLinesPanel = computed(() => {
+  const p = payload.value
+  if (!p?.work_order?.id) return false
+  if (typeof p.show_service_lines === 'boolean') return p.show_service_lines
+  const wo = p.work_order
+  const anyBal =
+    (Number(p.prepaid?.fleet_main_balance) || 0) +
+      (Number(p.prepaid?.vehicle_wallet_balance) || 0) +
+      (Number(p.prepaid?.customer_main_balance) || 0) >
+    0.0001
+  const status = String(wo.status ?? '')
+  const terminal = ['completed', 'delivered', 'cancelled'].includes(status)
+  if (terminal) return false
+  return wo.is_active === true || anyBal
+})
+
+function itemTypeLabel(t: string | null | undefined): string {
+  const key = String(t ?? '')
+  if (locale.lang.value !== 'ar') return key || '—'
+  const m: Record<string, string> = {
+    service: 'خدمة',
+    labor: 'أجور',
+    part: 'قطعة',
+    other: 'أخرى',
+  }
+  return m[key] ?? key || '—'
+}
 
 const odoFileRef = ref<HTMLInputElement | null>(null)
 const odoLoading = ref(false)

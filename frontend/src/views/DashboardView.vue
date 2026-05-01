@@ -196,7 +196,7 @@
       <p class="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-3">وصول سريع</p>
       <div class="flex flex-wrap gap-2">
         <QuickBtn v-if="quickInvoiceCreate" :icon="DocumentTextIcon" label="فاتورة جديدة" to="/invoices/create" color="blue" />
-        <QuickBtn :icon="MagnifyingGlassCircleIcon" label="بحث أمر / لوحة" to="/execution-hub" color="blue" />
+        <QuickBtn :icon="MagnifyingGlassCircleIcon" label="تنفيذ العمليات" to="/execution-hub" color="blue" />
         <QuickBtn v-if="quickWorkOrders" :icon="ClipboardDocumentIcon" label="العمليات" to="/work-orders" color="purple" />
         <QuickBtn v-if="quickNewCustomer" :icon="UsersIcon" label="عميل جديد" to="/customers" color="green" />
         <RouterLink

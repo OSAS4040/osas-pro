@@ -29,9 +29,9 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/work-orders', label: 'العمليات', section: 'تشغيلي', keywords: ['مركز خدمة', 'منفذ بيع', 'صيانة', 'wo', 'عمليات', 'مزود', 'تنفيذ', 'سجل', 'أوامر عمل'] },
   {
     to: '/execution-hub',
-    label: 'مركز التنفيذ والبحث',
+    label: 'تنفيذ العمليات',
     section: 'تشغيلي',
-    keywords: ['لوحة', 'أمر عمل', 'plate', 'work order', 'intake', 'بحث'],
+    keywords: ['لوحة', 'أمر عمل', 'plate', 'work order', 'intake', 'بحث', 'تنفيذ', 'اعتماد', 'خدمات'],
   },
   {
     to: '/provider/platform-purchases',

@@ -136,14 +136,14 @@
                 <NavItem
                   to="/execution-hub"
                   :icon="MagnifyingGlassCircleIcon"
-                  :label="l('بحث لوحة وباركود', 'Plate & barcode lookup')"
+                  :label="l('تنفيذ العمليات', 'Operations execution')"
                 />
               </template>
               <template v-else>
                 <NavItem
                   to="/execution-hub"
                   :icon="MagnifyingGlassCircleIcon"
-                  :label="l('بحث أمر / لوحة', 'WO / plate lookup')"
+                  :label="l('تنفيذ العمليات', 'Operations execution')"
                 />
                 <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
               </template>
@@ -1134,7 +1134,7 @@ const flatItems = computed(() => {
     const rows: { to: string; icon: object; label: string; locked: boolean }[] = [
       { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
       { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات', locked: false },
-      { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'بحث لوحة وباركود', locked: false },
+      { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'تنفيذ العمليات', locked: false },
       { to: '/wallet', icon: CreditCardIcon, label: 'المحفظة', locked: false },
     ]
     if (auth.hasPermission('purchases.platform_settlement.view')) {
@@ -1153,7 +1153,7 @@ const flatItems = computed(() => {
 
   const items: { to: string; icon: object; label: string; locked: boolean }[] = [
     { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
-    { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'بحث أمر / لوحة', locked: false },
+    { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'تنفيذ العمليات', locked: false },
     { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات', locked: false },
     { to: '/vehicles', icon: TruckIcon, label: 'المركبات', locked: false },
     { to: '/customers', icon: UsersIcon, label: 'العملاء', locked: false },

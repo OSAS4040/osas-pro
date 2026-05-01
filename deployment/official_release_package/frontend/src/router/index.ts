@@ -518,7 +518,7 @@ const routes: RouteRecordRaw[] = [
         path:      'execution-hub',
         name:      'execution-hub',
         component: () => import('@/views/execution/ProviderExecutionHubView.vue'),
-        meta:      { requiresAuth: true, title: 'مركز التنفيذ والبحث', titleEn: 'Execution hub' },
+        meta:      { requiresAuth: true, title: 'تنفيذ العمليات', titleEn: 'Operations execution' },
       },
       {
         path:      'provider/platform-purchases',
