@@ -53,6 +53,14 @@ export function localizeBackendMessage(message: unknown): string {
     if (/forbidden/i.test(raw)) return 'ليس لديك صلاحية لتنفيذ هذا الإجراء.'
     if (/too many requests/i.test(raw)) return 'عدد الطلبات كبير جدًا. حاول مرة أخرى بعد قليل.'
     if (/server error|internal server error/i.test(raw)) return 'حدث خطأ داخلي في الخادم.'
+    /** لا تعرض نص SQL أو PDO للمستخدم — رسالة عامة آمنة */
+    if (
+      /SQLSTATE\[|SQLSTATE\s|relation\s+"[^"]+"\s+does not exist|Undefined table|Connection\.php|pgsql:/i.test(
+        raw,
+      )
+    ) {
+      return 'تعذّر إكمال الطلب بسبب إعداد قاعدة البيانات أو توفر الخدمة. إن استمرّ الأمر، يُرجى التواصل مع الدعم الفني.'
+    }
   }
 
   return raw

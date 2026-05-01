@@ -1,7 +1,7 @@
 # خريطة التنقل (المستأجر) ↔ واجهات API — المرحلة 0
 
 **الغرض:** جدول تركيز يربط مسارات الواجهة (`AppLayout.vue` + `router`) بمسارات HTTP تحت **`/api/v1`** بعد وسائط `auth:sanctum` + `tenant` + `financial.protection` + `branch.scope` (حيث ينطبق) + `subscription`.  
-**المصدر البرمجي للقائمة الجانبية:** `frontend/src/layouts/AppLayout.vue` (أقسام `NavSection` / `NavItem`).  
+**المصدر البرمجي للقائمة الجانبية:** `frontend/src/layouts/AppLayout.vue` (أقسام `NavSection` / `NavItem` / `NavSubGroup`). **ترتيب العرض:** تشغيلي → مخزون وكتالوج → مالية ومحاسبة → تقارير وتحليلات → موارد بشرية → إداري (مجموعات فرعية: فروع، عقود، إعدادات، أمان، دعم) → منصة.  
 **المصدر البرمجي لمسارات الواجهة (Staff / Fleet / Customer):** `frontend/src/router/index.ts` — يُستخرج منها تلقائياً قائمة المسارات أدناه.  
 **المصدر البرمجي للـ API:** `backend/routes/api.php` (المجموعة من السطر ~336 تقريباً).
 
@@ -27,6 +27,7 @@
 | مسار الواجهة | بوابة الواجهة (ملخص) | واجهات API رئيسية (`GET`/`POST` …) | حالة |
 |--------------|----------------------|--------------------------------------|------|
 | `/` | لوحة التحكم | `GET /dashboard/summary`؛ إعداد: `GET /onboarding/setup-status` | OK |
+| `/execution-hub` | مركز التنفيذ والبحث (لوحة / رقم أمر عمل) | `GET /work-orders/intake-lookup`؛ `POST /work-orders/intake-lookup-camera`؛ `POST /work-orders/intake-odometer-ocr` | OK |
 | `/pos` | نقطة البيع | `POST /pos/sale`؛ كائنات: `customers`، `services`، `products` حسب الشاشة | PARTIAL |
 | `/work-orders` | أوامر العمل | `GET/POST /work-orders`؛ `POST /work-orders/line-pricing-preview`؛ `POST /sensitive-operations/preview` | OK |
 | `/bays`، `/bookings` | مناطق العمل / الحجوزات | `GET/POST /bays`؛ `GET/POST /bookings`؛ `PATCH /bookings/{id}` | OK |

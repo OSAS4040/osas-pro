@@ -125,11 +125,12 @@
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white resize-none outline-none focus:ring-2 focus:ring-blue-500"
               ></textarea>
               <div class="flex items-center justify-between mt-3">
-                <label class="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
+                <label v-if="!auth.isCustomer" class="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
                   <input v-model="replyInternal" type="checkbox" class="rounded" />
                   ملاحظة داخلية (غير مرئية للعميل)
                 </label>
-                <button :disabled="!replyBody || sendingReply" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+                <span v-else class="text-[10px] text-gray-400">الردود العامة تظهر لفريق الدعم والعميل.</span>
+                <button :disabled="!replyBody || sendingReply" class="ms-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2"
                         @click="sendReply"
                 >
                   <ArrowPathIcon v-if="sendingReply" class="w-4 h-4 animate-spin" />
@@ -139,8 +140,8 @@
             </div>
           </div>
 
-          <!-- Satisfaction Tab -->
-          <div v-if="tab === 'satisfaction'" class="text-center py-8">
+          <!-- Satisfaction Tab (واجهة المستأجر فقط — لا يُعرض من مشغّل المنصة) -->
+          <div v-if="tab === 'satisfaction' && showSatisfactionTab" class="text-center py-8">
             <StarIcon class="w-16 h-16 text-amber-400 mx-auto mb-4" />
             <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">تقييم جودة الدعم</h3>
             <p class="text-gray-500 mb-6 text-sm">كيف تقيّم تجربتك مع فريق الدعم؟</p>
@@ -169,33 +170,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { XMarkIcon, ArrowPathIcon, StarIcon } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '@/stores/auth'
 import PriorityBadge from './PriorityBadge.vue'
 import StatusBadge from './StatusBadge.vue'
 import SlaIndicator from './SlaIndicator.vue'
 
-const props = defineProps<{ ticket: any }>()
-const emit  = defineEmits(['close', 'updated'])
+const auth = useAuthStore()
 
-const tab    = ref('details')
+const props = withDefaults(
+  defineProps<{
+    ticket: any
+    /** جذر مسار التذاكر، مثال: `/api/v1/support/tickets` أو `/api/v1/platform/support/tickets` */
+    ticketsApiBase?: string
+  }>(),
+  { ticketsApiBase: '/api/v1/support/tickets' },
+)
+const emit = defineEmits(['close', 'updated'])
+
+const tab = ref('details')
 const detail = ref<any>(null)
 const suggestedArticles = ref<any[]>([])
 
-const replyBody     = ref('')
+const replyBody = ref('')
 const replyInternal = ref(false)
-const sendingReply  = ref(false)
-const satScore      = ref(0)
-const satComment    = ref('')
+const sendingReply = ref(false)
+const satScore = ref(0)
+const satComment = ref('')
 
-const tabs = [
-  { key: 'details', label: 'التفاصيل' },
-  { key: 'replies', label: 'الردود والسجل' },
-  { key: 'satisfaction', label: 'التقييم ⭐' },
-]
+const ticketsApiRoot = computed(() => String(props.ticketsApiBase || '/api/v1/support/tickets').replace(/\/$/, ''))
+const showSatisfactionTab = computed(() => !ticketsApiRoot.value.includes('/platform/support'))
 
-const statusOptions = [
+const tabs = computed(() => {
+  const base = [
+    { key: 'details', label: 'التفاصيل' },
+    { key: 'replies', label: 'الردود والسجل' },
+  ] as { key: string; label: string }[]
+  if (showSatisfactionTab.value) {
+    base.push({ key: 'satisfaction', label: 'التقييم ⭐' })
+  }
+  return base
+})
+
+const statusOptionsStaff = [
   { value: 'open',             label: 'مفتوحة',          color: '#3B82F6' },
   { value: 'in_progress',      label: 'قيد المعالجة',    color: '#6366F1' },
   { value: 'pending_customer', label: 'انتظار العميل',   color: '#F59E0B' },
@@ -203,14 +222,22 @@ const statusOptions = [
   { value: 'closed',           label: 'مغلقة',           color: '#6B7280' },
 ]
 
+/** يطابق قيود الخادم لحسابات بوابة العميل */
+const statusOptionsCustomer = [
+  { value: 'pending_customer', label: 'تعليق — بانتظار الورشة', color: '#F59E0B' },
+  { value: 'closed',           label: 'إغلاق بعد الحل',         color: '#6B7280' },
+]
+
+const statusOptions = computed(() => (auth.isCustomer ? statusOptionsCustomer : statusOptionsStaff))
+
 async function load() {
-  const res = await axios.get(`/api/v1/support/tickets/${props.ticket.id}`)
+  const res = await axios.get(`${ticketsApiRoot.value}/${props.ticket.id}`)
   detail.value = res.data.data
   suggestedArticles.value = res.data.suggested_articles ?? []
 }
 
 async function changeStatus(status: string) {
-  await axios.patch(`/api/v1/support/tickets/${props.ticket.id}/status`, { status })
+  await axios.patch(`${ticketsApiRoot.value}/${props.ticket.id}/status`, { status })
   await load()
 }
 
@@ -218,7 +245,7 @@ async function sendReply() {
   if (!replyBody.value) return
   sendingReply.value = true
   try {
-    await axios.post(`/api/v1/support/tickets/${props.ticket.id}/replies`, {
+    await axios.post(`${ticketsApiRoot.value}/${props.ticket.id}/replies`, {
       body: replyBody.value, is_internal: replyInternal.value,
     })
     replyBody.value = ''
@@ -227,7 +254,8 @@ async function sendReply() {
 }
 
 async function submitRating() {
-  await axios.post(`/api/v1/support/tickets/${props.ticket.id}/rate`, {
+  if (!showSatisfactionTab.value) return
+  await axios.post(`${ticketsApiRoot.value}/${props.ticket.id}/rate`, {
     score: satScore.value, comment: satComment.value,
   })
   emit('updated')
@@ -246,4 +274,18 @@ const eventTypeLabel = (e: string) => ({ status_change: 'تغيير حالة', a
 const formatDate = (d: string) => new Date(d).toLocaleDateString('ar-SA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 onMounted(load)
+
+watch(
+  () => props.ticket.id,
+  () => {
+    tab.value = 'details'
+    void load()
+  },
+)
+
+watch(showSatisfactionTab, (show) => {
+  if (!show && tab.value === 'satisfaction') {
+    tab.value = 'details'
+  }
+})
 </script>

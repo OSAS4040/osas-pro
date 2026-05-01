@@ -3,7 +3,7 @@
     <!-- شريط علوي: عودة + مشاركة (أيقونات صغيرة وواضحة) -->
     <div class="no-print space-y-1.5">
       <div class="flex flex-wrap items-start justify-between gap-3">
-        <RouterLink :to="`/vehicles/${vehicleId}`" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 text-sm flex items-center gap-1 transition-colors shrink-0">
+        <RouterLink :to="vehicleProfilePath" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 text-sm flex items-center gap-1 transition-colors shrink-0">
           <ArrowRightIcon class="w-4 h-4" /> عودة لملف المركبة
         </RouterLink>
 
@@ -21,7 +21,7 @@
             </button>
             <button
               type="button"
-              class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-200 bg-white p-2.5 text-violet-700 shadow-sm transition hover:bg-violet-50 disabled:opacity-45 dark:border-slate-600 dark:bg-slate-800 dark:text-violet-300 dark:hover:bg-slate-700"
+              class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-gray-200 bg-white p-2.5 text-primary-700 shadow-sm transition hover:bg-primary-50 disabled:opacity-45 dark:border-slate-600 dark:bg-slate-800 dark:text-primary-300 dark:hover:bg-slate-700"
               title="مشاركة البطاقة كصورة"
               aria-label="مشاركة كصورة"
               :disabled="shareImageBusy"
@@ -130,7 +130,7 @@
             <button
               v-if="identityHasActiveLink"
               type="button"
-              class="rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-medium text-violet-800 hover:bg-violet-100 disabled:opacity-50 dark:border-violet-500/40 dark:bg-violet-950/50 dark:text-violet-200 dark:hover:bg-violet-900/40"
+              class="rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-xs font-medium text-primary-800 hover:bg-primary-100 disabled:opacity-50 dark:border-primary-500/40 dark:bg-primary-950/50 dark:text-primary-200 dark:hover:bg-primary-900/40"
               :disabled="identityBusy"
               title="إلغاء الرمز الحالي وإنشاء رمز جديد — يُبطل الطباعات السابقة"
               @click="rotateVehicleIdentity"
@@ -316,7 +316,7 @@
         <div class="no-print relative mx-auto mt-5 h-12 w-[92%] max-w-[22rem]">
           <div class="wallet-stack-layer wallet-stack-layer--3 absolute bottom-0 left-[6%] right-[6%] h-3 rounded-t-xl bg-amber-200/95 shadow-md dark:bg-amber-900/50" />
           <div class="wallet-stack-layer wallet-stack-layer--2 absolute bottom-1 left-[10%] right-[10%] h-3 rounded-t-xl bg-sky-300/95 shadow-md dark:bg-sky-800/60" />
-          <div class="wallet-stack-layer wallet-stack-layer--1 absolute bottom-2 left-[14%] right-[14%] h-3.5 rounded-t-xl bg-violet-300/90 shadow-md dark:bg-violet-900/55" />
+          <div class="wallet-stack-layer wallet-stack-layer--1 absolute bottom-2 left-[14%] right-[14%] h-3.5 rounded-t-xl bg-primary-300/90 shadow-md dark:bg-primary-900/55" />
         </div>
       </div>
 
@@ -329,7 +329,7 @@
           <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
             <ClipboardDocumentIcon class="w-4 h-4 text-primary-600 shrink-0" /> أوامر العمل
           </h3>
-          <RouterLink :to="`/work-orders?vehicle=${vehicleId}`" class="text-xs text-primary-600 hover:underline shrink-0">عرض الكل</RouterLink>
+          <RouterLink :to="workOrdersPathWithVehicle" class="text-xs text-primary-600 hover:underline shrink-0">عرض الكل</RouterLink>
         </div>
         <div v-if="workOrders.length" class="divide-y divide-gray-50 dark:divide-slate-700">
           <div
@@ -512,11 +512,15 @@ import { ensurePrintFontsReady } from '@/composables/useAppPrint'
 import ShareModal from '@/components/ShareModal.vue'
 import { getQRImageUrl } from '@/utils/zatca'
 import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
+import { demoCustomerVehicles, demoCustomerWorkOrders } from '@/utils/customerDemoData'
 
 const route = useRoute()
 const toast = useToast()
 const auth = useAuthStore()
 const vehicleId = Number(route.params.id)
+const isCustomerRoute = route.path.startsWith('/customer/')
+const vehicleProfilePath = isCustomerRoute ? `/customer/vehicles/${vehicleId}` : `/vehicles/${vehicleId}`
+const workOrdersPathWithVehicle = isCustomerRoute ? `/customer/work-orders?vehicle=${vehicleId}` : `/work-orders?vehicle=${vehicleId}`
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const vehicle = ref<any>(null)
@@ -525,6 +529,7 @@ const transactions = ref<any[]>([])
 const cardRef = ref<HTMLElement | null>(null)
 const shareImageBusy = ref(false)
 const identityBusy = ref(false)
+const routeVehicleId = Number(route.params.id)
 
 const canManageIdentity = computed(() => auth.hasPermission('vehicles.update'))
 const identityHasActiveLink = computed(() => {
@@ -628,14 +633,14 @@ const loyaltyNextTier = computed(() => {
 })
 const loyaltyTierClass = computed(() => {
   const t = loyaltyTier.value
-  if (t === 'بلاتيني') return 'bg-purple-100 text-purple-700'
+  if (t === 'بلاتيني') return 'bg-primary-100 text-primary-700'
   if (t === 'ذهبي') return 'bg-yellow-100 text-yellow-700'
   if (t === 'فضي') return 'bg-gray-100 text-gray-600'
   return 'bg-orange-100 text-orange-700'
 })
 const loyaltyBarClass = computed(() => {
   const t = loyaltyTier.value
-  if (t === 'بلاتيني') return 'bg-purple-500'
+  if (t === 'بلاتيني') return 'bg-primary-500'
   if (t === 'ذهبي') return 'bg-yellow-400'
   return 'bg-gray-400'
 })
@@ -844,7 +849,29 @@ async function fetchDigitalCard() {
     vehicle.value = data
     workOrders.value = res.data.work_orders || []
     transactions.value = res.data.transactions || []
+    if (!workOrders.value.length) {
+      workOrders.value = demoCustomerWorkOrders.filter((wo) => Number(wo.vehicle?.id) === routeVehicleId)
+    }
   } catch (e: unknown) {
+    const demoVehicle = demoCustomerVehicles.find((v) => Number(v.id) === routeVehicleId) || null
+    if (demoVehicle) {
+      vehicle.value = {
+        ...demoVehicle,
+        wallet_balance: 0,
+        loyalty_points: 120,
+        total_spent: 0,
+        points_redeemed: 0,
+        identity: {
+          public_url: `${window.location.origin}/customer/vehicles/${routeVehicleId}/card`,
+          status: 'active',
+          public_code: `DEMO-${routeVehicleId}`,
+        },
+      }
+      workOrders.value = demoCustomerWorkOrders.filter((wo) => Number(wo.vehicle?.id) === routeVehicleId)
+      transactions.value = []
+      loadError.value = null
+      return
+    }
     const msg =
       (e as { response?: { data?: { message?: string } } })?.response?.data?.message
     loadError.value =

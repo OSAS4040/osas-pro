@@ -2,11 +2,13 @@
   <div class="app-shell-page">
     <div class="page-head" :class="{ 'gap-2': staffUi.compactMode }">
       <div class="page-title-wrap">
-        <h2 class="page-title-xl" :class="{ '!text-xl': staffUi.compactMode }">العمليات التي تمت من قبل المزود</h2>
-        <p v-if="!staffUi.compactMode" class="page-subtitle">متابعة حالة التنفيذ، الأولويات، وتوزيع الفنيين</p>
+        <h2 class="page-title-xl" :class="{ '!text-xl': staffUi.compactMode }">العمليات التي نفّذها المزوّد</h2>
+        <p v-if="!staffUi.compactMode" class="page-subtitle">
+          مراجعة ما تم تنفيذه وتسجيله في النظام — تتبّع الحالة والأولويات والفني عند التوفر.
+        </p>
       </div>
       <div class="text-xs text-gray-500 dark:text-slate-400">
-        العرض والتنفيذ فقط
+        سجل التنفيذ للمراجعة
       </div>
     </div>
 
@@ -14,7 +16,7 @@
       <input
         v-model="search"
         type="search"
-        placeholder="بحث برقم الأمر أو العميل أو اللوحة..."
+        placeholder="بحث في سجل التنفيذ: رقم العملية أو العميل أو اللوحة..."
         class="table-search"
         :class="{ '!py-1.5 !text-sm': staffUi.compactMode }"
       />
@@ -34,14 +36,14 @@
 
     <div class="table-shell">
       <div class="panel-head" :class="{ '!py-2': staffUi.compactMode }">
-        <span class="panel-title" :class="{ '!text-sm': staffUi.compactMode }">قائمة العمليات التي تمت من قبل المزود</span>
+        <span class="panel-title" :class="{ '!text-sm': staffUi.compactMode }">قائمة ما نفّذه المزوّد (للمراجعة)</span>
         <span v-if="!store.loading" class="panel-muted" :class="{ '!text-xs': staffUi.compactMode }">{{ filteredOrders.length }} عنصر</span>
       </div>
       <div v-if="store.loading" class="state-loading">جارٍ التحميل...</div>
       <table v-else class="data-table" :class="{ 'text-sm': staffUi.compactMode }">
         <thead>
           <tr>
-            <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">رقم الأمر</th>
+            <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">رقم العملية</th>
             <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">العميل</th>
             <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">المركبة</th>
             <th :class="{ '!py-2 !text-xs': staffUi.compactMode }">الفني</th>
@@ -68,8 +70,8 @@
           </tr>
           <tr v-if="!filteredOrders.length">
             <td :colspan="staffUi.compactMode ? 6 : 7" class="table-empty">
-              <p class="table-empty-title">لا توجد عمليات مسجّلة</p>
-              <p class="table-empty-sub">غيّر المرشحات أو انتظر طلبات العملاء</p>
+              <p class="table-empty-title">لا يوجد في السجل عمليات منفّذة بعد</p>
+              <p class="table-empty-sub">غيّر المرشحات أو انتظر طلبات عمل جديدة للتنفيذ</p>
             </td>
           </tr>
         </tbody>

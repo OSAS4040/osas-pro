@@ -9,7 +9,7 @@
         </button>
         <label class="px-3 py-2 text-sm border border-primary-500 text-primary-600 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors flex items-center gap-1.5 cursor-pointer">
           <span>⬆</span> استيراد Excel
-          <input type="file" accept=".csv,.xlsx,.xls" class="hidden" @change="importExcel" />
+          <input type="file" accept=".xlsx" class="hidden" @change="importExcel" />
         </label>
         <RouterLink to="/products/new" class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
           + إضافة
@@ -112,6 +112,7 @@ import { RouterLink } from 'vue-router'
 import apiClient from '@/lib/apiClient'
 import { appConfirm } from '@/services/appConfirmDialog'
 import { useToast } from '@/composables/useToast'
+import { downloadExcelFromRows } from '@/utils/exportExcel'
 
 const toast = useToast()
 const products    = ref<any[]>([])
@@ -122,16 +123,21 @@ const filters     = ref({ search: '', product_type: '', is_active: '' })
 const importResult = ref<any>(null)
 
 async function downloadTemplate() {
-  const res = await apiClient.get('/products/template', { responseType: 'blob' })
-  const url = URL.createObjectURL(res.data)
-  const a   = document.createElement('a')
-  a.href = url; a.download = 'products_template.csv'; a.click()
-  URL.revokeObjectURL(url)
+  await downloadExcelFromRows(
+    [{ name: '', name_ar: '', sku: '', barcode: '', product_type: 'physical', sale_price: 0, tax_rate: 15, is_active: 1 }],
+    'Products Template',
+    'products_template.xlsx',
+  )
 }
 
 async function importExcel(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  if (!file.name.toLowerCase().endsWith('.xlsx')) {
+    importResult.value = { error: true, message: 'صيغة غير مدعومة. الرجاء رفع ملف .xlsx فقط.' }
+    ;(e.target as HTMLInputElement).value = ''
+    return
+  }
   const fd = new FormData(); fd.append('file', file)
   try {
     const { data } = await apiClient.post('/products/import', fd, { headers: { 'Content-Type': 'multipart/form-data' } })

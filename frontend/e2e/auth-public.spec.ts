@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('صفحات الضيف (بدون خادم API)', () => {
-  test('صفحة الدخول الموحّدة تعرض الحقول الأساسية', async ({ page }) => {
+  test('صفحة دخول مزوّد الخدمة (/login) تعرض الحقول الأساسية', async ({ page }) => {
     await page.goto('/login')
     await expect(page.locator('input[type="email"], input[autocomplete="username"]')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toBeVisible()

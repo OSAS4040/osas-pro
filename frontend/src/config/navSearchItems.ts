@@ -26,13 +26,26 @@ export type NavSearchItem = {
 
 export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
   { to: '/', label: 'الرئيسية', section: 'تشغيلي', keywords: ['لوحة', 'dashboard', 'home'] },
-  { to: '/pos', label: 'نقطة البيع', section: 'تشغيلي', keywords: ['كاشير', 'بيع', 'pos'] },
-  { to: '/work-orders', label: 'العمليات التي تمت من قبل المزود', section: 'تشغيلي', keywords: ['مركز خدمة', 'منفذ بيع', 'صيانة', 'wo', 'عمليات', 'مزود'] },
+  { to: '/work-orders', label: 'العمليات التي نفّذها المزوّد', section: 'تشغيلي', keywords: ['مركز خدمة', 'منفذ بيع', 'صيانة', 'wo', 'عمليات', 'مزود', 'تنفيذ', 'سجل'] },
   {
     to: '/execution-hub',
     label: 'مركز التنفيذ والبحث',
     section: 'تشغيلي',
     keywords: ['لوحة', 'أمر عمل', 'plate', 'work order', 'intake', 'بحث'],
+  },
+  {
+    to: '/provider/platform-purchases',
+    label: 'مشتريات المنصّة',
+    section: 'المحفظة والمشتريات',
+    requiresPermission: 'purchases.platform_settlement.view',
+    keywords: ['منصة', 'تسوية', 'مزود', 'شراء', 'platform'],
+  },
+  {
+    to: '/provider/purchase-claims',
+    label: 'مطالبات المشتريات',
+    section: 'المحفظة والمشتريات',
+    requiresPermission: 'purchases.claims.view',
+    keywords: ['مطالبة', 'إدارة', 'claim', 'شراء'],
   },
   { to: '/bays', label: 'مناطق العمل', section: 'تشغيلي', keywords: ['رافعة', 'خليج', 'bay'] },
   { to: '/bookings', label: 'الحجوزات', section: 'تشغيلي', keywords: ['موعد', 'حجز'] },
@@ -93,7 +106,7 @@ export const NAV_SEARCH_ITEMS: NavSearchItem[] = [
     requiresTenantFeature: 'fixed_assets',
     keywords: ['أصول', 'إهلاك', 'asset', 'fixed'],
   },
-  { to: '/products', label: 'المنتجات', section: 'المخزون' },
+  { to: '/services-products', label: 'الخدمات والمنتجات', section: 'المخزون' },
   { to: '/inventory', label: 'المخزون', section: 'المخزون' },
   { to: '/suppliers', label: 'الموردون', section: 'المخزون' },
   {

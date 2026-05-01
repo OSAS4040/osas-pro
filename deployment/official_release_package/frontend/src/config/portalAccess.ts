@@ -2,9 +2,11 @@
  * تفعيل البوابات الاختيارية (build-time عبر Vite).
  * بوابة فريق العمل (staff) دائمة — لا تُعرَّف هنا.
  *
- * - غير مضبوط أو فارغ: تُفعَّل كل البوابات الاختيارية (سلوك آمن للنشر الحالي).
- * - مضبوط: قائمة مفصولة بفواصل من المعرفات: fleet, customer, admin
- *   مثال: VITE_ENABLED_PORTALS=fleet,customer — يعطّل لوحة منصة /admin فقط في الواجهة.
+ * - غير مضبوط أو فارغ: تُفعَّل فقط بوابتا العميل والمنصة (والأسطول معطّل افتراضيًا).
+ * - مضبوط: قائمة مفصولة بفواصل من المعرفات: customer, admin
+ *   مثال: VITE_ENABLED_PORTALS=customer,admin — إبقاء البوابات المعتمدة فقط.
+ *
+ * ملاحظة: بوابة الأسطول (fleet) معطّلة قسريًا بقرار منتج، ولا يمكن تفعيلها من المتغير.
  */
 
 export type OptionalPortal = 'fleet' | 'customer' | 'admin'
@@ -12,7 +14,7 @@ export type OptionalPortal = 'fleet' | 'customer' | 'admin'
 export type EnabledPortals = Record<OptionalPortal, boolean>
 
 const DEFAULT_ALL: EnabledPortals = {
-  fleet: true,
+  fleet: false,
   customer: true,
   admin: true,
 }
@@ -34,7 +36,8 @@ export function parseEnabledPortals(raw: string | undefined | null): EnabledPort
     return { ...DEFAULT_ALL }
   }
   return {
-    fleet: set.has('fleet'),
+    // Disabled for all users by product decision.
+    fleet: false,
     customer: set.has('customer'),
     admin: set.has('admin'),
   }

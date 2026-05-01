@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\Invoice;
+use App\Models\User;
 use App\Models\WorkOrder;
 use App\Services\BillingModelPolicyService;
 use App\Services\InvoicePdfService;
@@ -12,6 +14,9 @@ use App\Services\InvoiceService;
 use App\Services\PaymentService;
 use App\Services\WalletService;
 use App\Support\Media\TenantUploadDisk;
+use App\Support\TenantBusinessFeatures;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -49,17 +54,186 @@ class InvoiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $invoices = Invoice::with(['customer', 'branch', 'createdBy'])
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->customer_id, fn($q) => $q->where('customer_id', $request->customer_id))
-            ->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))
-            ->when($request->from, fn($q) => $q->whereDate('issued_at', '>=', $request->from))
-            ->when($request->to, fn($q) => $q->whereDate('issued_at', '<=', $request->to))
-            ->when($request->search, fn($q) => $q->where('invoice_number', 'ilike', "%{$request->search}%"))
-            ->orderByDesc('id')
-            ->paginate($request->per_page ?? 25);
+        $base = $this->invoicesIndexBaseQuery($request);
 
-        return response()->json(['data' => $invoices, 'trace_id' => app('trace_id')]);
+        $portalCounts = null;
+        if ($request->boolean('include_portal_counts')) {
+            $portalCounts = [
+                'all' => (clone $base)->count(),
+                'paid' => (clone $base)->where('status', InvoiceStatus::Paid)->count(),
+                'pending' => $this->portalBucketCount(clone $base, 'pending'),
+                'overdue' => $this->portalBucketCount(clone $base, 'overdue'),
+            ];
+        }
+
+        $perPage = max(1, min((int) ($request->per_page ?? 25), 100));
+
+        $invoices = (clone $base)
+            ->with(['customer', 'branch', 'createdBy'])
+            ->when($request->filled('status') && ! $request->filled('portal_quick_status'), fn ($q) => $q->where('status', $request->status))
+            ->when($request->filled('portal_quick_status'), fn ($q) => $this->applyPortalQuickFilter($q, (string) $request->portal_quick_status))
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
+        $payload = ['data' => $invoices, 'trace_id' => app('trace_id')];
+        if ($portalCounts !== null) {
+            $payload['portal_counts'] = $portalCounts;
+        }
+
+        return response()->json($payload);
+    }
+
+    /** Filters used for portal list + aggregate counts (excludes portal_quick_status). */
+    private function invoicesIndexBaseQuery(Request $request): Builder
+    {
+        $q = Invoice::query()
+            ->when($request->company_id, fn ($q) => $q->where('company_id', (int) $request->company_id))
+            ->when($request->customer_id, fn ($q) => $q->where('customer_id', $request->customer_id))
+            ->when($request->filled('billing_flow_type'), fn ($q) => $q->where('billing_flow_type', (string) $request->billing_flow_type))
+            ->when($request->branch_id, fn ($q) => $q->where('branch_id', $request->branch_id))
+            ->when($request->from, fn ($q) => $q->whereDate('issued_at', '>=', $request->from))
+            ->when($request->to, fn ($q) => $q->whereDate('issued_at', '<=', $request->to))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $s = trim((string) $request->search);
+                $q->where(function ($q) use ($s) {
+                    $q->where('invoice_number', 'ilike', "%{$s}%")
+                        ->orWhere('notes', 'ilike', "%{$s}%")
+                        ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'ilike', "%{$s}%"));
+                });
+            });
+
+        $q = $this->applyCustomerFleetInvoiceQueryConstraints($q, $request->user());
+
+        return $this->applyWorkshopExecutionPartnerInvoiceListing($q, $request->user());
+    }
+
+    /**
+     * Customer / fleet actors must not list internal (e.g. provider→platform) invoices even with invoices.view.
+     */
+    private function applyCustomerFleetInvoiceQueryConstraints(Builder $q, ?User $user): Builder
+    {
+        if (! $user) {
+            return $q;
+        }
+        if ($user->role->isWorkshopSide() || ($user->is_platform_user ?? false)) {
+            return $q;
+        }
+        if (! $user->role->isCustomer() && ! $user->role->isFleetSide()) {
+            return $q;
+        }
+        $q->customerPortalVisible();
+        if ($user->customer_id) {
+            $q->where('customer_id', $user->customer_id);
+        } else {
+            $q->whereRaw('1 = 0');
+        }
+
+        return $q;
+    }
+
+    private function assertCustomerFleetMayAccessInvoice(?User $user, Invoice $invoice): void
+    {
+        if (! $user) {
+            return;
+        }
+        if ($user->role->isWorkshopSide() || ($user->is_platform_user ?? false)) {
+            return;
+        }
+        if (! $user->role->isCustomer() && ! $user->role->isFleetSide()) {
+            return;
+        }
+        if (! $user->customer_id) {
+            throw (new ModelNotFoundException)->setModel(Invoice::class, [$invoice->id]);
+        }
+        if (! $invoice->isCustomerPortalVisible() || (int) $invoice->customer_id !== (int) $user->customer_id) {
+            throw (new ModelNotFoundException)->setModel(Invoice::class, [$invoice->id]);
+        }
+    }
+
+    private function applyWorkshopExecutionPartnerInvoiceListing(Builder $q, ?User $user): Builder
+    {
+        if (! $user || ! $user->role->isWorkshopSide()) {
+            return $q;
+        }
+        if ($user->is_platform_user ?? false) {
+            return $q;
+        }
+        $company = $user->company ?? ($user->company_id ? Company::find($user->company_id) : null);
+        if (! $company || ! TenantBusinessFeatures::platformExecutionPartner($company)) {
+            return $q;
+        }
+
+        return $q->omitPlatformToCustomerForWorkshopPartner();
+    }
+
+    /**
+     * ورشة «شريك التنفيذ» لا تصل لفاتورة المنصّة للعميل (لا قائمة ولا تفاصيل ولا PDF).
+     */
+    private function assertWorkshopExecutionPartnerMayAccessInvoice(?User $user, Invoice $invoice): void
+    {
+        if (! $user || ! $user->role->isWorkshopSide()) {
+            return;
+        }
+        if ($user->is_platform_user ?? false) {
+            return;
+        }
+        $company = $user->company ?? ($user->company_id ? Company::find($user->company_id) : null);
+        if (! $company || ! TenantBusinessFeatures::platformExecutionPartner($company)) {
+            return;
+        }
+        if ((string) ($invoice->billing_flow_type ?? '') === 'platform_to_customer') {
+            throw (new ModelNotFoundException)->setModel(Invoice::class, [$invoice->id]);
+        }
+    }
+
+    private function workshopExecutionPartnerBlocksWorkshopIssuance(?User $user): bool
+    {
+        if (! $user || ! $user->role->isWorkshopSide()) {
+            return false;
+        }
+        if ($user->is_platform_user ?? false) {
+            return false;
+        }
+        $company = $user->company ?? ($user->company_id ? Company::find($user->company_id) : null);
+
+        return $company !== null && TenantBusinessFeatures::platformExecutionPartner($company);
+    }
+
+    private function applyPortalQuickFilter(Builder $q, string $portal): void
+    {
+        $portal = strtolower(trim($portal));
+        $today = now()->startOfDay();
+
+        if ($portal === 'paid') {
+            $q->where('status', InvoiceStatus::Paid);
+
+            return;
+        }
+
+        $q->whereNotIn('status', [InvoiceStatus::Cancelled, InvoiceStatus::Refunded]);
+
+        if ($portal === 'overdue') {
+            $q->where('status', '!=', InvoiceStatus::Paid)
+                ->whereNotNull('due_at')
+                ->where('due_at', '<', $today);
+
+            return;
+        }
+
+        if ($portal === 'pending') {
+            $q->where('status', '!=', InvoiceStatus::Paid)
+                ->where(function ($q2) use ($today) {
+                    $q2->whereNull('due_at')->orWhere('due_at', '>=', $today);
+                });
+        }
+    }
+
+    private function portalBucketCount(Builder $base, string $bucket): int
+    {
+        $q = clone $base;
+        $this->applyPortalQuickFilter($q, $bucket);
+
+        return $q->count();
     }
 
     /**
@@ -94,6 +268,13 @@ class InvoiceController extends Controller
                 'message'  => 'Idempotency-Key header is required.',
                 'trace_id' => app('trace_id'),
             ], 422);
+        }
+
+        if ($this->workshopExecutionPartnerBlocksWorkshopIssuance($request->user())) {
+            return response()->json([
+                'message' => 'إصدار الفواتير يدوياً غير متاح لوضع شريك تنفيذ المنصة؛ تُدار الفواتير آلياً حسب التعاقد.',
+                'trace_id' => app('trace_id'),
+            ], 403);
         }
 
         try {
@@ -158,6 +339,8 @@ class InvoiceController extends Controller
         $user = $request->user();
 
         $invoiceProbe = Invoice::where('id', $id)->firstOrFail();
+        $this->assertCustomerFleetMayAccessInvoice($user, $invoiceProbe);
+        $this->assertWorkshopExecutionPartnerMayAccessInvoice($user, $invoiceProbe);
         try {
             $this->billingModelPolicy->assertTenantMayOperate((int) $invoiceProbe->company_id);
             if ($data['method'] === 'wallet') {
@@ -259,13 +442,15 @@ class InvoiceController extends Controller
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $invoice = Invoice::with([
             'items.product', 'items.service',
             'payments', 'customer', 'vehicle',
             'branch', 'createdBy',
         ])->findOrFail($id);
+        $this->assertCustomerFleetMayAccessInvoice($request->user(), $invoice);
+        $this->assertWorkshopExecutionPartnerMayAccessInvoice($request->user(), $invoice);
 
         return response()->json(['data' => $invoice, 'trace_id' => app('trace_id')]);
     }
@@ -273,8 +458,10 @@ class InvoiceController extends Controller
     /**
      * Download invoice as PDF (server-rendered DomPDF; reliable vs client html2canvas).
      */
-    public function pdf(Invoice $invoice): Response
+    public function pdf(Request $request, Invoice $invoice): Response
     {
+        $this->assertCustomerFleetMayAccessInvoice($request->user(), $invoice);
+        $this->assertWorkshopExecutionPartnerMayAccessInvoice($request->user(), $invoice);
         $binary = $this->invoicePdfService->render($invoice);
 
         $safeBase = $invoice->invoice_number !== null && $invoice->invoice_number !== ''
@@ -301,6 +488,7 @@ class InvoiceController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $invoice = Invoice::findOrFail($id);
+        $this->assertWorkshopExecutionPartnerMayAccessInvoice($request->user(), $invoice);
 
         if (in_array($invoice->status->value, ['paid', 'cancelled', 'refunded'])) {
             return response()->json(['message' => 'Cannot update a finalized invoice.'], 422);
@@ -345,9 +533,10 @@ class InvoiceController extends Controller
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
         $invoice = Invoice::findOrFail($id);
+        $this->assertWorkshopExecutionPartnerMayAccessInvoice($request->user(), $invoice);
 
         if ($invoice->status->value !== 'draft') {
             return response()->json(['message' => 'Only draft invoices can be deleted.'], 422);
@@ -383,16 +572,22 @@ class InvoiceController extends Controller
     public function uploadMedia(Request $request, int $id): JsonResponse
     {
         $invoice = Invoice::findOrFail($id);
+        $this->assertWorkshopExecutionPartnerMayAccessInvoice($request->user(), $invoice);
 
         $request->validate([
             'before.*'   => 'image|max:5120',
             'after.*'    => 'image|max:5120',
             'video'      => 'file|mimes:mp4,webm,ogg|max:51200',
             'video_link' => 'nullable|url',
+            'provider_invoice_files.*' => 'file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'provider_invoice_links' => 'nullable|array',
+            'provider_invoice_links.*' => 'url',
+            'provider_invoice_note' => 'nullable|string|max:1000',
         ]);
 
         $media = $invoice->media ?? [];
         $disk = TenantUploadDisk::name();
+        $user = $request->user();
 
         if ($request->hasFile('before')) {
             $urls = [];
@@ -421,6 +616,50 @@ class InvoiceController extends Controller
             $media['video_link'] = $request->video_link;
         }
 
+        if ($request->hasFile('provider_invoice_files') || $request->filled('provider_invoice_links')) {
+            $isPlatformUser = (bool) ($user->is_platform_user ?? false);
+            if (! $user->role->isWorkshopSide() && ! $isPlatformUser) {
+                return response()->json([
+                    'message' => 'إرفاق فواتير مزود الخدمة متاح لمزود الخدمة أو إدارة المنصة فقط.',
+                    'trace_id' => app('trace_id'),
+                ], 403);
+            }
+            if ((string) ($invoice->billing_flow_type ?? '') !== 'provider_to_platform') {
+                return response()->json([
+                    'message' => 'مرفقات فواتير مزود الخدمة تُحفظ فقط على فواتير مزود الخدمة إلى المنصة.',
+                    'trace_id' => app('trace_id'),
+                ], 422);
+            }
+
+            $attachments = $media['provider_invoice_attachments'] ?? [];
+            if ($request->hasFile('provider_invoice_files')) {
+                foreach ($request->file('provider_invoice_files') as $file) {
+                    $path = $file->store("invoices/{$id}/provider-invoices", $disk);
+                    $attachments[] = [
+                        'kind' => 'file',
+                        'name' => $file->getClientOriginalName(),
+                        'mime' => $file->getClientMimeType(),
+                        'size' => $file->getSize(),
+                        'path' => $path,
+                        'url' => Storage::disk($disk)->url($path),
+                        'uploaded_by_user_id' => (int) $user->id,
+                        'uploaded_at' => now()->toIso8601String(),
+                        'note' => $request->input('provider_invoice_note'),
+                    ];
+                }
+            }
+            foreach ((array) $request->input('provider_invoice_links', []) as $link) {
+                $attachments[] = [
+                    'kind' => 'link',
+                    'url' => (string) $link,
+                    'uploaded_by_user_id' => (int) $user->id,
+                    'uploaded_at' => now()->toIso8601String(),
+                    'note' => $request->input('provider_invoice_note'),
+                ];
+            }
+            $media['provider_invoice_attachments'] = $attachments;
+        }
+
         $invoice->update(['media' => $media]);
 
         return response()->json(['data' => $media, 'trace_id' => app('trace_id')]);
@@ -446,6 +685,25 @@ class InvoiceController extends Controller
             return response()->json(['message' => 'Idempotency-Key header is required.', 'trace_id' => app('trace_id')], 422);
         }
 
+        if ($this->workshopExecutionPartnerBlocksWorkshopIssuance($request->user())) {
+            return response()->json([
+                'message' => 'إصدار فاتورة من أمر العمل عبر الواجهة غير متاح لوضع شريك تنفيذ المنصة؛ يُدار الإصدار آلياً.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
+        $providerPurchase = $request->validate([
+            'provider_purchase' => 'nullable|array',
+            'provider_purchase.supplier_id' => 'required_with:provider_purchase|integer|exists:suppliers,id',
+            'provider_purchase.items' => 'required_with:provider_purchase|array|min:1',
+            'provider_purchase.items.*.name' => 'required_with:provider_purchase|string',
+            'provider_purchase.items.*.quantity' => 'required_with:provider_purchase|numeric|min:0.001',
+            'provider_purchase.items.*.unit_cost' => 'required_with:provider_purchase|numeric|min:0',
+            'provider_purchase.items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
+            'provider_purchase.items.*.product_id' => 'nullable|integer|exists:products,id',
+            'provider_purchase.items.*.sku' => 'nullable|string',
+        ]);
+
         $order = WorkOrder::findOrFail($workOrderId);
 
         try {
@@ -459,6 +717,7 @@ class InvoiceController extends Controller
                 order:          $order,
                 userId:         $request->user()->id,
                 idempotencyKey: $idempotencyKey,
+                providerPurchasePayload: $providerPurchase['provider_purchase'] ?? null,
             );
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);

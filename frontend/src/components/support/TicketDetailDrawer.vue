@@ -125,11 +125,12 @@
                         class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white resize-none outline-none focus:ring-2 focus:ring-blue-500"
               ></textarea>
               <div class="flex items-center justify-between mt-3">
-                <label class="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
+                <label v-if="!auth.isCustomer" class="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
                   <input v-model="replyInternal" type="checkbox" class="rounded" />
                   ملاحظة داخلية (غير مرئية للعميل)
                 </label>
-                <button :disabled="!replyBody || sendingReply" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2"
+                <span v-else class="text-[10px] text-gray-400">الردود العامة تظهر لفريق الدعم والعميل.</span>
+                <button :disabled="!replyBody || sendingReply" class="ms-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all flex items-center gap-2"
                         @click="sendReply"
                 >
                   <ArrowPathIcon v-if="sendingReply" class="w-4 h-4 animate-spin" />
@@ -172,9 +173,12 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { XMarkIcon, ArrowPathIcon, StarIcon } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '@/stores/auth'
 import PriorityBadge from './PriorityBadge.vue'
 import StatusBadge from './StatusBadge.vue'
 import SlaIndicator from './SlaIndicator.vue'
+
+const auth = useAuthStore()
 
 const props = withDefaults(
   defineProps<{
@@ -210,13 +214,21 @@ const tabs = computed(() => {
   return base
 })
 
-const statusOptions = [
+const statusOptionsStaff = [
   { value: 'open',             label: 'مفتوحة',          color: '#3B82F6' },
   { value: 'in_progress',      label: 'قيد المعالجة',    color: '#6366F1' },
   { value: 'pending_customer', label: 'انتظار العميل',   color: '#F59E0B' },
   { value: 'resolved',         label: 'محلولة',          color: '#10B981' },
   { value: 'closed',           label: 'مغلقة',           color: '#6B7280' },
 ]
+
+/** يطابق قيود الخادم لحسابات بوابة العميل */
+const statusOptionsCustomer = [
+  { value: 'pending_customer', label: 'تعليق — بانتظار الورشة', color: '#F59E0B' },
+  { value: 'closed',           label: 'إغلاق بعد الحل',         color: '#6B7280' },
+]
+
+const statusOptions = computed(() => (auth.isCustomer ? statusOptionsCustomer : statusOptionsStaff))
 
 async function load() {
   const res = await axios.get(`${ticketsApiRoot.value}/${props.ticket.id}`)

@@ -2,28 +2,26 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import apiClient from '@/lib/apiClient'
 import { useAuthStore } from '@/stores/auth'
+import {
+  featureMatrixForBusinessType,
+  normalizeBusinessType,
+  type BusinessType,
+  type FeatureMatrix,
+} from '@/config/businessFeatureProfileDefaults'
 
-export type BusinessType = 'service_center' | 'retail' | 'fleet_operator'
-export type FeatureMatrix = Record<string, boolean>
+export type { BusinessType, FeatureMatrix } from '@/config/businessFeatureProfileDefaults'
 
-const FALLBACK: FeatureMatrix = {
-  operations: true,
-  hr: true,
-  finance: true,
-  accounting: true,
-  inventory: true,
-  reports: true,
-  intelligence: true,
-  crm: true,
-  fleet: true,
-  org_structure: true,
-  supplier_contract_mgmt: true,
+const INITIAL_EFFECTIVE = featureMatrixForBusinessType('service_center')
+
+function mergeEffectiveMatrix(businessType: unknown, patch: FeatureMatrix | undefined | null): FeatureMatrix {
+  const t = normalizeBusinessType(businessType)
+  return { ...featureMatrixForBusinessType(t), ...(patch ?? {}) }
 }
 
 export const useBusinessProfileStore = defineStore('business-profile', () => {
   const businessType = ref<BusinessType>('service_center')
   const featureMatrix = ref<FeatureMatrix>({})
-  const effectiveFeatureMatrix = ref<FeatureMatrix>({ ...FALLBACK })
+  const effectiveFeatureMatrix = ref<FeatureMatrix>({ ...INITIAL_EFFECTIVE })
   const loaded = ref(false)
 
   function isEnabled(key: string): boolean {
@@ -37,12 +35,12 @@ export const useBusinessProfileStore = defineStore('business-profile', () => {
     try {
       const { data } = await apiClient.get(`/companies/${auth.user.company_id}/feature-profile`)
       const payload = data.data ?? {}
-      businessType.value = payload.business_type ?? 'service_center'
-      featureMatrix.value = payload.feature_matrix ?? {}
-      effectiveFeatureMatrix.value = { ...FALLBACK, ...(payload.effective_feature_matrix ?? {}) }
+      businessType.value = normalizeBusinessType(payload.business_type)
+      featureMatrix.value = (payload.feature_matrix ?? {}) as FeatureMatrix
+      effectiveFeatureMatrix.value = mergeEffectiveMatrix(payload.business_type, payload.effective_feature_matrix as FeatureMatrix | undefined)
       loaded.value = true
     } catch {
-      effectiveFeatureMatrix.value = { ...FALLBACK }
+      effectiveFeatureMatrix.value = { ...featureMatrixForBusinessType(businessType.value) }
     }
   }
 
@@ -54,16 +52,19 @@ export const useBusinessProfileStore = defineStore('business-profile', () => {
       feature_matrix: matrix,
     })
     const payload = data.data ?? {}
-    businessType.value = payload.business_type ?? type
-    featureMatrix.value = payload.feature_matrix ?? matrix
-    effectiveFeatureMatrix.value = { ...FALLBACK, ...(payload.effective_feature_matrix ?? matrix) }
+    businessType.value = normalizeBusinessType(payload.business_type ?? type)
+    featureMatrix.value = (payload.feature_matrix ?? matrix) as FeatureMatrix
+    effectiveFeatureMatrix.value = mergeEffectiveMatrix(
+      payload.business_type ?? type,
+      (payload.effective_feature_matrix ?? matrix) as FeatureMatrix,
+    )
     loaded.value = true
   }
 
   function reset(): void {
     businessType.value = 'service_center'
     featureMatrix.value = {}
-    effectiveFeatureMatrix.value = { ...FALLBACK }
+    effectiveFeatureMatrix.value = { ...INITIAL_EFFECTIVE }
     loaded.value = false
   }
 

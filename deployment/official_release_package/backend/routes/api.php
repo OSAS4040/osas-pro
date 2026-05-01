@@ -348,6 +348,15 @@ Route::prefix('v1')->group(function () {
         Route::delete('/suppliers/{supplierId}/contracts/{contractId}', [\App\Http\Controllers\Api\V1\SupplierContractController::class, 'destroy'])
             ->middleware(['permission:suppliers.update', 'business.feature:supplier_contract_mgmt']);
 
+        Route::prefix('purchase-claims')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\PurchaseClaimController::class, 'index'])
+                ->middleware('permission:purchases.claims.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\PurchaseClaimController::class, 'store'])
+                ->middleware('permission:purchases.claims.create');
+            Route::patch('/{id}/review', [\App\Http\Controllers\Api\V1\PurchaseClaimController::class, 'review'])
+                ->middleware('permission:purchases.claims.review');
+        });
+
         Route::prefix('purchases')->group(function () {
             Route::get('/',                    [\App\Http\Controllers\Api\V1\PurchaseController::class, 'index']);
             Route::post('/',                   [\App\Http\Controllers\Api\V1\PurchaseController::class, 'store'])
@@ -722,6 +731,7 @@ Route::prefix('v1')->group(function () {
 
         // Excel Import
         Route::post('/products/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importProducts']);
+        Route::post('/services/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importServices']);
         Route::post('/vehicles/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importVehicles']);
         Route::get('/products/template', [\App\Http\Controllers\Api\V1\ImportController::class, 'productsTemplate']);
         Route::get('/vehicles/template', [\App\Http\Controllers\Api\V1\ImportController::class, 'vehiclesTemplate']);
@@ -833,6 +843,21 @@ Route::prefix('v1')->group(function () {
     // ── Customer Portal ────────────────────────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->prefix('customer-portal')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\CustomerPortalController::class, 'dashboard']);
+        Route::get('/team-users', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'index']);
+        Route::post('/team-users', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'store']);
+        Route::put('/team-users/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'update']);
+        Route::delete('/team-users/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'destroy']);
+        Route::get('/org-units/tree', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'tree']);
+        Route::post('/org-units', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'store']);
+        Route::put('/org-units/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'update']);
+        Route::delete('/org-units/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'destroy']);
+        Route::get('/reports/filter-options', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'filterOptions']);
+        Route::get('/reports/summary', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'summary']);
+        Route::get('/reports/invoices', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'invoices']);
+        Route::get('/reports/org-unit-breakdown', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'orgUnitBreakdown']);
+        Route::get('/reports/work-order-items-by-service', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'itemsByService']);
+        Route::get('/reports/work-order-items-by-product', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'itemsByProduct']);
+        Route::get('/reports/work-orders-completed', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'workOrdersCompleted']);
     });
 
     Route::middleware(['auth.apikey', 'api.log', 'financial.protection', 'subscription'])->group(function () {

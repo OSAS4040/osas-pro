@@ -38,14 +38,26 @@
               <span class="text-xs text-gray-400 me-1">{{ typeLabel(row.type) }}</span>
               {{ row.name }}
             </span>
-            <button type="button" class="text-xs text-red-600 hover:underline shrink-0" @click="confirmRemove(row)">{{ locale.t('orgUnits.delete') }}</button>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" class="text-xs text-emerald-700 hover:underline" @click="startCreateUnder(row)">
+                + {{ locale.t('common.add') }}
+              </button>
+              <button type="button" class="text-xs text-indigo-700 hover:underline" @click="startEdit(row)">
+                {{ locale.t('common.edit') }}
+              </button>
+              <button type="button" class="text-xs text-red-600 hover:underline" @click="confirmRemove(row)">
+                {{ locale.t('orgUnits.delete') }}
+              </button>
+            </div>
           </li>
         </ul>
         <p v-if="!loading && !flatRows.length && !loadError" class="text-gray-400 text-sm">{{ locale.t('orgUnits.noneYet') }}</p>
       </div>
 
       <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 space-y-3">
-        <h2 class="text-sm font-semibold text-gray-800 dark:text-slate-200">{{ locale.t('orgUnits.addTitle') }}</h2>
+        <h2 class="text-sm font-semibold text-gray-800 dark:text-slate-200">
+          {{ editId ? locale.t('common.edit') : locale.t('orgUnits.addTitle') }}
+        </h2>
         <div class="space-y-2">
           <label class="block text-xs text-gray-500">{{ locale.t('orgUnits.parentLabel') }}</label>
           <select v-model="form.parent_id" class="w-full border rounded-lg px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-600">
@@ -70,9 +82,18 @@
           type="button"
           class="w-full py-2 rounded-lg bg-primary-600 text-white text-sm hover:bg-primary-700 disabled:opacity-50"
           :disabled="saving || !form.name.trim()"
-          @click="submitCreate"
+          @click="submitSave"
         >
           {{ saving ? locale.t('orgUnits.saving') : locale.t('orgUnits.save') }}
+        </button>
+        <button
+          v-if="editId"
+          type="button"
+          class="w-full py-2 rounded-lg border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+          :disabled="saving"
+          @click="resetForm"
+        >
+          {{ locale.t('common.cancel') }}
         </button>
       </div>
     </div>
@@ -90,6 +111,7 @@ import { appConfirm } from '@/services/appConfirmDialog'
 
 interface OrgNode {
   id: number
+  parent_id?: number | null
   name: string
   type: string
   children?: OrgNode[]
@@ -117,6 +139,7 @@ const form = reactive({
   type: 'sector',
   name: '',
 })
+const editId = ref<number | null>(null)
 
 function flattenNodes(nodes: OrgNode[], depth: number): FlatRow[] {
   const out: FlatRow[] = []
@@ -138,10 +161,26 @@ function typeLabel(t: string): string {
 
 const flatOptions = computed(() => {
   void locale.lang.value
+  const blocked = new Set<number>()
+  if (editId.value !== null) {
+    blocked.add(editId.value)
+    const src = tree.value
+    const visit = (nodes: OrgNode[]): boolean => {
+      for (const n of nodes) {
+        if (n.id === editId.value) {
+          collectChildren(n, blocked)
+          return true
+        }
+        if (n.children?.length && visit(n.children)) return true
+      }
+      return false
+    }
+    visit(src)
+  }
   return flatRows.value.map((r) => ({
     id: r.id,
     label: `${' '.repeat(r.depth)}${r.name} (${typeLabel(r.type)})`,
-  }))
+  })).filter((x) => !blocked.has(x.id))
 })
 
 function tInterpolate(key: string, vars: Record<string, string>): string {
@@ -192,6 +231,69 @@ async function submitCreate() {
   } finally {
     saving.value = false
   }
+}
+
+function collectChildren(node: OrgNode, bucket: Set<number>) {
+  if (!node.children?.length) return
+  for (const child of node.children) {
+    bucket.add(child.id)
+    collectChildren(child, bucket)
+  }
+}
+
+function startCreateUnder(row: FlatRow) {
+  resetForm()
+  form.parent_id = String(row.id)
+  form.type = row.type === 'sector' ? 'department' : 'division'
+}
+
+function startEdit(row: FlatRow) {
+  editId.value = row.id
+  form.name = row.name
+  form.type = row.type === 'department' || row.type === 'division' ? row.type : 'sector'
+  const source = findNodeById(tree.value, row.id)
+  form.parent_id = source?.parent_id != null ? String(source.parent_id) : ''
+}
+
+function findNodeById(nodes: OrgNode[], id: number): OrgNode | null {
+  for (const node of nodes) {
+    if (node.id === id) return node
+    if (node.children?.length) {
+      const found = findNodeById(node.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function resetForm() {
+  editId.value = null
+  form.parent_id = ''
+  form.type = 'sector'
+  form.name = ''
+}
+
+async function submitSave() {
+  if (editId.value) {
+    saveError.value = ''
+    saving.value = true
+    try {
+      const body: Record<string, unknown> = {
+        type: form.type,
+        name: form.name.trim(),
+        parent_id: form.parent_id === '' ? null : Number(form.parent_id),
+      }
+      await apiClient.put(`/org-units/${editId.value}`, body)
+      resetForm()
+      await loadTree()
+    } catch (e: any) {
+      saveError.value = e?.response?.data?.message ?? locale.t('orgUnits.saveError')
+    } finally {
+      saving.value = false
+    }
+    return
+  }
+  await submitCreate()
 }
 
 async function confirmRemove(row: FlatRow) {

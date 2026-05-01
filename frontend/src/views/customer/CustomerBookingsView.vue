@@ -8,7 +8,7 @@
     <div class="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1.5">المركبة</label>
-        <select v-model="form.vehicle_id" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none">
+        <select v-model="form.vehicle_id" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-violet-400 focus:outline-none">
           <option value="">اختر المركبة</option>
           <option v-for="v in vehicles" :key="v.id" :value="v.id">{{ v.plate_number }} — {{ v.make }} {{ v.model }}</option>
         </select>
@@ -16,7 +16,7 @@
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1.5">الخدمة المطلوبة</label>
-        <input v-model="form.description" type="text" placeholder="مثال: تغيير زيت، فحص شامل..." class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none" />
+        <input v-model="form.description" type="text" placeholder="مثال: تغيير زيت، فحص شامل..." class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-violet-400 focus:outline-none" />
       </div>
 
       <div>
@@ -26,13 +26,13 @@
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1.5">ملاحظات إضافية</label>
-        <textarea v-model="form.notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none" placeholder="أي ملاحظات إضافية..."></textarea>
+        <textarea v-model="form.notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-violet-400 focus:outline-none" placeholder="أي ملاحظات إضافية..."></textarea>
       </div>
 
       <p v-if="error" class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ error }}</p>
       <p v-if="success" class="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">{{ success }}</p>
 
-      <button :disabled="loading" class="w-full bg-orange-500 text-white py-3 rounded-xl text-sm font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50"
+      <button :disabled="loading" class="w-full bg-violet-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-violet-700 transition-colors disabled:opacity-50"
               @click="submit"
       >
         {{ loading ? 'جارٍ الإرسال...' : 'تأكيد الحجز' }}

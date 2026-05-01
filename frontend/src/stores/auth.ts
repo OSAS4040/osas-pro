@@ -84,9 +84,18 @@ export const useAuthStore = defineStore('auth', () => {
   const isOwner         = computed(() => ownerRoles.includes(roleKey.value))
   const isManager       = computed(() => managerRoles.includes(roleKey.value))
 
-  const isFleet    = computed(() => ['fleet_contact', 'fleet_manager'].includes(roleKey.value))
-  const isCustomer = computed(() => roleKey.value === 'customer')
-  const isStaff    = computed(() => staffRoles.includes(roleKey.value))
+  const isFleet = computed(() => {
+    if (accountContext.value?.guard_hint === 'fleet') return true
+    return ['fleet_contact', 'fleet_manager'].includes(roleKey.value)
+  })
+  const isCustomer = computed(() => {
+    if (accountContext.value?.guard_hint === 'customer') return true
+    return roleKey.value === 'customer'
+  })
+  const isStaff = computed(() => {
+    if (isFleet.value || isCustomer.value) return false
+    return staffRoles.includes(roleKey.value)
+  })
   const isPhoneOnboarding = computed(() => roleKey.value === 'phone_onboarding')
 
   const registrationFlow = ref<RegistrationFlowState | null>(null)
@@ -136,7 +145,52 @@ export const useAuthStore = defineStore('auth', () => {
             ? '/customer'
             : '/',
   )
-  const portalLogin = computed(() => isFleet.value ? 'fleet-login' : isCustomer.value ? 'customer-login' : 'login')
+  /** أسطول ومزوّد الخدمة يستخدمون `/login` — العميل `/customer/login` */
+  const portalLogin = computed(() => (isCustomer.value ? 'customer-login' : 'login'))
+
+  function authNetworkFallbackBases(): string[] {
+    if (typeof window === 'undefined') return []
+    const host = String(window.location.hostname || '').trim() || '127.0.0.1'
+    const candidates = [
+      `http://${host}`,
+      'http://127.0.0.1',
+      'http://localhost',
+    ]
+    return Array.from(new Set(candidates))
+  }
+
+  async function postAuthLoginWithFallback(body: Record<string, string>): Promise<any> {
+    try {
+      const { data } = await apiClient.post('/auth/login', body, { skipGlobalErrorToast: true })
+      return data
+    } catch (error: any) {
+      // Only retry when the request did not reach API at all.
+      if (error?.response) throw error
+      let lastError: any = error
+      for (const base of authNetworkFallbackBases()) {
+        try {
+          const res = await fetch(`${base}/api/v1/auth/login`, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+          })
+          const payload = await res.json().catch(() => ({}))
+          if (!res.ok) {
+            const httpError: any = new Error(`Auth login failed with status ${res.status}`)
+            httpError.response = { status: res.status, data: payload }
+            throw httpError
+          }
+          return payload
+        } catch (fallbackError: any) {
+          lastError = fallbackError
+        }
+      }
+      throw lastError
+    }
+  }
 
   async function login(
     loginId: string,
@@ -156,7 +210,7 @@ export const useAuthStore = defineStore('auth', () => {
       body.otp_challenge = otpPayload.challengeId
       body.otp = otpPayload.otp
     }
-    const { data } = await apiClient.post('/auth/login', body, { skipGlobalErrorToast: true })
+    const data = await postAuthLoginWithFallback(body)
     if (data.otp_required === true) {
       return {
         kind: 'otp_required',

@@ -8,12 +8,18 @@
       <div class="page-toolbar flex-wrap">
         <ExcelImport
           endpoint="/api/v1/vehicles/import"
-          template-url="/templates/vehicles_template.csv"
+          template-url="/templates/vehicles_template.xlsx"
+          template-file-name="vehicles_template.xlsx"
+          :template-columns="['plate_number', 'make', 'model', 'year', 'color', 'vin']"
           label="استيراد Excel"
           title="استيراد مركبات من Excel"
           @imported="load"
         />
-        <button class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors" @click="openCreate">
+        <button
+          v-if="canCreateVehicle"
+          class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+          @click="openCreate"
+        >
           <PlusIcon class="w-4 h-4" />
           إضافة مركبة
         </button>
@@ -66,8 +72,8 @@
             <td colspan="7" class="table-empty">
               <TruckIcon class="w-10 h-10 text-gray-200 dark:text-slate-600 mx-auto mb-2" />
               <p class="empty-state-title">لا توجد مركبات</p>
-              <p class="empty-state-description">ابدأ بإضافة مركبة أو عدّل معايير البحث</p>
-              <button type="button" class="mt-2 text-primary-600 dark:text-primary-400 text-xs font-medium hover:underline" @click="openCreate">أضف أول مركبة</button>
+              <p class="empty-state-description">لا توجد مركبات مطابقة لمعايير البحث الحالية</p>
+              <button v-if="canCreateVehicle" type="button" class="mt-2 text-primary-600 dark:text-primary-400 text-xs font-medium hover:underline" @click="openCreate">أضف أول مركبة</button>
             </td>
           </tr>
         </tbody>
@@ -160,12 +166,14 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { PlusIcon, XMarkIcon, TruckIcon } from '@heroicons/vue/24/outline'
 import ExcelImport from '@/components/ExcelImport.vue'
 import { useVehicleStore } from '@/stores/vehicle'
+import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/lib/apiClient'
 import { useToast } from '@/composables/useToast'
 import PlateInput from '@/components/PlateInput.vue'
 import CameraPlateScanner from '@/components/CameraPlateScanner.vue'
 
 const store    = useVehicleStore()
+const auth     = useAuthStore()
 const $router  = useRouter()
 const route    = useRoute()
 const toast    = useToast()
@@ -175,6 +183,7 @@ const modalKey   = ref(0)
 const saving   = ref(false)
 const formError = ref('')
 const customers = ref<any[]>([])
+const canCreateVehicle = ref(false)
 
 const form = reactive({
   plate_number: '', make: '', model: '', year: '',
@@ -182,6 +191,7 @@ const form = reactive({
 })
 
 function openCreate() {
+  if (!canCreateVehicle.value) return
   modalKey.value += 1
   Object.assign(form, { plate_number: '', make: '', model: '', year: '', fuel_type: '', color: '', vin: '', customer_id: '', notes: '' })
   formError.value = ''
@@ -189,6 +199,7 @@ function openCreate() {
 }
 
 async function openCreateIfQuery() {
+  if (!canCreateVehicle.value) return
   const q = route.query.add
   if (q !== '1' && q !== 'true') return
   openCreate()
@@ -202,7 +213,16 @@ async function openCreateIfQuery() {
 }
 
 async function load(): Promise<void> {
-  await store.fetchVehicles({ search: search.value })
+  const cid = route.query.customer_id
+  const companyId = route.query.company_id
+  const params: Record<string, unknown> = { search: search.value }
+  if (cid !== undefined && cid !== null && String(cid).match(/^\d+$/)) {
+    params.customer_id = Number(cid)
+  }
+  if (companyId !== undefined && companyId !== null && String(companyId).match(/^\d+$/)) {
+    params.company_id = Number(companyId)
+  }
+  await store.fetchVehicles(params)
 }
 
 async function loadCustomers() {
@@ -245,6 +265,7 @@ async function submitCreate() {
 }
 
 onMounted(async () => {
+  canCreateVehicle.value = !!auth.isPlatform
   await load()
   await loadCustomers()
   openCreateIfQuery()
@@ -253,6 +274,20 @@ onMounted(async () => {
 watch(
   () => route.query.add,
   () => openCreateIfQuery(),
+)
+
+watch(
+  () => route.query.customer_id,
+  () => {
+    void load()
+  },
+)
+
+watch(
+  () => route.query.company_id,
+  () => {
+    void load()
+  },
 )
 </script>
 

@@ -25,7 +25,7 @@
         />
       </div>
 
-      <div class="relative z-10 mx-auto w-full max-w-[560px] login-page-unified-v2">
+      <div class="relative z-10 mx-auto w-full max-w-[560px] login-page-portal-v2">
         <div
           v-if="isDevBuild"
           class="mb-4 rounded-xl border border-amber-300/90 bg-amber-50 px-3 py-2.5 text-center text-[10px] leading-relaxed text-amber-950 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-50"
@@ -38,8 +38,8 @@
         <div class="mb-5 text-center">
           <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">{{ portalHeroTitle }}</h1>
           <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ portalHeroTagline }}</p>
-          <p v-if="isUnifiedLoginRoute" class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
-            {{ lt('unifiedIntro') }}
+          <p v-if="isStaffServiceLoginRoute" class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+            {{ lt('staffLoginIntro') }}
             <RouterLink
               to="/register"
               class="ms-1 font-semibold text-primary-700 underline underline-offset-2 dark:text-primary-400"
@@ -57,42 +57,27 @@
           <p v-else class="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
             {{ portalHeaderHint }}
           </p>
-          <div class="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px]">
-            <RouterLink
-              to="/landing"
-              class="text-primary-700 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 underline underline-offset-2"
-            >
-              {{ lt('linkLanding') }}
-            </RouterLink>
-            <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">·</span>
-            <RouterLink
-              :to="isUnifiedLoginRoute ? '/platform/login' : '/login'"
-              class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 underline underline-offset-2"
-            >
-              {{ isUnifiedLoginRoute ? lt('linkPlatformAdmin') : 'الدخول الموحد' }}
-            </RouterLink>
-          </div>
-          <div
-            v-if="isUnifiedLoginRoute"
-            class="mt-3 grid w-full grid-cols-1 gap-2 sm:grid-cols-3"
-          >
+          <div class="mt-3 grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
             <RouterLink
               to="/platform/login"
-              class="rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-center text-[11px] font-semibold text-slate-700 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+              class="rounded-xl border bg-white/85 px-3 py-2 text-center text-[11px] font-semibold transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+              :class="portalPickerClass('platform')"
             >
-              إدارة المنصة
+              {{ lt('portalPickPlatform') }}
             </RouterLink>
             <RouterLink
               to="/customer/login"
-              class="rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-center text-[11px] font-semibold text-slate-700 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+              class="rounded-xl border bg-white/85 px-3 py-2 text-center text-[11px] font-semibold transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+              :class="portalPickerClass('customer')"
             >
-              عميل
+              {{ lt('portalPickCustomer') }}
             </RouterLink>
             <RouterLink
-              to="/staff/login"
-              class="rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-center text-[11px] font-semibold text-slate-700 transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+              to="/login"
+              class="rounded-xl border bg-white/85 px-3 py-2 text-center text-[11px] font-semibold transition-colors hover:border-primary-300 hover:bg-primary-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30"
+              :class="portalPickerClass('staff')"
             >
-              مزود خدمة
+              {{ lt('portalPickServiceProvider') }}
             </RouterLink>
           </div>
           <div class="mt-4 flex flex-col items-center gap-2">
@@ -113,21 +98,6 @@
                 {{ lang.flag }} {{ lang.label }}
               </button>
             </div>
-          </div>
-        </div>
-
-        <div class="mb-4 grid grid-cols-3 gap-2">
-          <div class="rounded-xl border border-slate-200 bg-white/85 px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-900/60">
-            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">دخول آمن</p>
-            <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">تحقق ثنائي</p>
-          </div>
-          <div class="rounded-xl border border-slate-200 bg-white/85 px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-900/60">
-            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">سريع</p>
-            <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">خطوتين فقط</p>
-          </div>
-          <div class="rounded-xl border border-slate-200 bg-white/85 px-2 py-2 text-center dark:border-slate-700 dark:bg-slate-900/60">
-            <p class="text-[10px] font-bold text-slate-700 dark:text-slate-200">{{ portalFeatureTitle }}</p>
-            <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">{{ portalFeatureHint }}</p>
           </div>
         </div>
 
@@ -177,7 +147,7 @@
               role="note"
             >
               <p class="font-semibold text-slate-700 dark:text-slate-200">
-                {{ otpStep ? lt('cardTitleOtp') : lt('cardTitleUnified') }}
+                {{ otpStep ? lt('cardTitleOtp') : portalCredentialBoxTitle }}
               </p>
               <p class="mt-0.5">
                 {{ otpStep ? lt('otpStepHint') : lt('loginStepHint') }}
@@ -198,13 +168,22 @@
                 </span>
               </summary>
               <div class="space-y-2 border-t border-primary-100/80 px-4 pb-3 pt-2 dark:border-primary-900/40">
-                <p class="text-[10px] leading-relaxed text-primary-800/90 dark:text-primary-300/90">
+                <p
+                  v-if="loginPortalVariant === 'staff'"
+                  class="text-[10px] leading-relaxed text-primary-800/90 dark:text-primary-300/90"
+                >
                   {{ lt('demoHintBefore') }}
                   <RouterLink to="/platform/login" class="font-medium underline">{{ lt('linkPlatformAdmin') }}</RouterLink>{{ lt('demoHintAfter') }}
                 </p>
-                <div class="flex flex-wrap gap-1.5">
+                <p
+                  v-else-if="loginPortalVariant === 'customer'"
+                  class="text-[10px] leading-relaxed text-primary-800/90 dark:text-primary-300/90"
+                >
+                  {{ lt('demoHintCustomerPortal') }}
+                </p>
+                <div v-if="portalDemos.length > 0" class="flex flex-wrap gap-1.5">
                   <button
-                    v-for="d in allDemos"
+                    v-for="d in portalDemos"
                     :key="d.email + d.label"
                     type="button"
                     class="rounded-lg border border-primary-200/80 bg-white px-2 py-1 text-[10px] font-mono text-primary-800 transition-colors hover:bg-primary-50 dark:border-primary-800 dark:bg-slate-900 dark:text-primary-200 dark:hover:bg-primary-950/50"
@@ -213,6 +192,12 @@
                     {{ d.label }}
                   </button>
                 </div>
+                <p
+                  v-else
+                  class="text-[10px] text-primary-700/90 dark:text-primary-400/90"
+                >
+                  {{ lt('demoNoAccountsForPortal') }}
+                </p>
               </div>
             </details>
 
@@ -435,99 +420,103 @@ const displayAppName = computed(() => import.meta.env.VITE_APP_NAME?.trim() || l
 const isDevBuild = import.meta.env.DEV
 const props = withDefaults(
   defineProps<{
-    portalVariant?: 'staff' | 'fleet' | 'customer'
+    portalVariant?: 'staff' | 'customer'
   }>(),
   {
     portalVariant: 'staff',
   },
 )
 
-const loginPortalVariant = computed<'staff' | 'fleet' | 'customer'>(() => {
-  if (props.portalVariant !== 'staff') return props.portalVariant
-  if (route.name === 'fleet-login') return 'fleet'
+/** إدارة منصّة / عميل / مزوّد خدمة فقط — أسطول يستخدم نفس صفحة مزوّد الخدمة (`/login`) */
+const loginPortalVariant = computed<'staff' | 'customer'>(() => {
+  if (props.portalVariant === 'customer') return 'customer'
   if (route.name === 'customer-login') return 'customer'
   return 'staff'
 })
-const isUnifiedLoginRoute = computed(() => loginPortalVariant.value === 'staff')
+/** `/login` — دخول مزوّد الخدمة والورشة (يشمل حسابات الأسطول عند تفعيل البوابة) */
+const isStaffServiceLoginRoute = computed(() => loginPortalVariant.value === 'staff')
 const portalHeroTitle = computed(() => {
-  if (loginPortalVariant.value === 'fleet') return 'بوابة الأسطول'
   if (loginPortalVariant.value === 'customer') return 'بوابة العميل'
   return lt('brand')
 })
 const portalHeroTagline = computed(() => {
-  if (loginPortalVariant.value === 'fleet') return 'دخول مخصص لمشرفي وموظفي الأساطيل.'
   if (loginPortalVariant.value === 'customer') return 'دخول مخصص لعملاء المنصة.'
   return lt('tagline')
 })
 const portalHeaderHint = computed(() => {
-  if (loginPortalVariant.value === 'fleet') return 'تسجيل دخول مخصص لبوابة الأسطول.'
   if (loginPortalVariant.value === 'customer') return 'تسجيل دخول مخصص لبوابة العميل.'
   return ''
 })
-const portalFeatureTitle = computed(() => {
-  if (loginPortalVariant.value === 'fleet') return 'أسطول'
-  if (loginPortalVariant.value === 'customer') return 'عملاء'
-  return 'موحّد'
-})
-const portalFeatureHint = computed(() => {
-  if (loginPortalVariant.value === 'fleet') return 'بوابة تشغيل الأسطول'
-  if (loginPortalVariant.value === 'customer') return 'بوابة خدمات العميل'
-  return 'لكل البوابات'
-})
 const portalCardTitle = computed(() => {
-  if (loginPortalVariant.value === 'fleet') return 'دخول بوابة الأسطول'
   if (loginPortalVariant.value === 'customer') return 'دخول بوابة العميل'
-  return lt('cardTitleUnified')
+  return lt('cardTitleStaffService')
 })
 const portalCardSubtitle = computed(() => {
-  if (loginPortalVariant.value === 'fleet') return 'استخدم حساب الأسطول لتفعيل جلسة مخصصة.'
   if (loginPortalVariant.value === 'customer') return 'استخدم حساب العميل للوصول إلى خدماتك.'
-  return lt('cardSubtitleUnified')
+  return lt('cardSubtitleStaffService')
+})
+const portalCredentialBoxTitle = computed(() => {
+  if (loginPortalVariant.value === 'customer') return lt('cardCredentialCustomer')
+  return lt('cardCredentialStaff')
 })
 const portalCardHeaderClass = computed(() => {
-  if (loginPortalVariant.value === 'fleet') return 'bg-gradient-to-l from-teal-800 via-teal-700 to-cyan-600'
-  if (loginPortalVariant.value === 'customer') return 'bg-gradient-to-l from-amber-700 via-orange-600 to-amber-500'
+  if (loginPortalVariant.value === 'customer') return 'bg-gradient-to-l from-violet-800 via-purple-700 to-violet-600'
   return 'bg-gradient-to-l from-primary-800 via-primary-700 to-primary-600'
 })
 
-const showLoginDemo = computed(
-  () => isUnifiedLoginRoute.value && (import.meta.env.DEV || import.meta.env.VITE_SHOW_LOGIN_DEMO_HINT === 'true'),
-)
+function portalPickerClass(kind: 'platform' | 'customer' | 'staff'): string {
+  const base =
+    'border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-200'
+  const active =
+    'border-primary-400 ring-2 ring-primary-500/80 dark:border-primary-600 dark:ring-primary-500/50'
+  if (kind === 'staff' && loginPortalVariant.value === 'staff') return `${base} ${active}`
+  if (kind === 'customer' && loginPortalVariant.value === 'customer') return `${base} ${active}`
+  return base
+}
 
-const PORTAL_DEFS = [
-  {
-    id: 'staff',
-    demos: [
-      { label: 'admin (أسس برو)', email: 'admin@osas.sa', password: '12345678' },
-      { label: 'owner', email: 'owner@demo.sa', password: 'password' },
-      { label: 'manager', email: 'manager@demo.sa', password: 'password' },
-      { label: 'cashier', email: 'cashier@demo.sa', password: 'password' },
-      { label: 'tech', email: 'tech@demo.sa', password: 'password' },
-      { label: 'simulation', email: 'simulation.owner@demo.local', password: 'SimulationDemo123!' },
-    ],
-  },
-  {
-    id: 'fleet',
-    demos: [
-      { label: 'fleet.contact', email: 'fleet.contact@demo.sa', password: 'password' },
-      { label: 'fleet.manager', email: 'fleet.manager@demo.sa', password: 'password' },
-    ],
-  },
-  {
-    id: 'customer',
-    demos: [{ label: 'customer', email: 'customer@demo.sa', password: 'password' }],
-  },
+const STAFF_DEMO_ACCOUNTS = [
+  { label: 'admin (أسس برو)', email: 'admin@osas.sa', password: '12345678' },
+  { label: 'owner', email: 'owner@demo.sa', password: 'Password123!' },
+  { label: 'manager', email: 'manager@demo.sa', password: 'Password123!' },
+  { label: 'cashier', email: 'cashier@demo.sa', password: 'Password123!' },
+  { label: 'tech', email: 'tech@demo.sa', password: 'Password123!' },
+  { label: 'simulation', email: 'simulation.owner@demo.local', password: 'SimulationDemo123!' },
 ] as const
 
-const allDemos = computed(() => {
-  const out: { label: string; email: string; password: string }[] = []
-  for (const p of PORTAL_DEFS) {
-    if (p.id === 'fleet' && !enabledPortals.fleet) continue
-    if (p.id === 'customer' && !enabledPortals.customer) continue
-    for (const d of p.demos) out.push(d)
+const FLEET_DEMO_ACCOUNTS = [
+  { label: 'fleet.contact', email: 'fleet.contact@demo.sa', password: 'Password123!' },
+  { label: 'fleet.manager', email: 'fleet.manager@demo.sa', password: 'Password123!' },
+] as const
+
+const CUSTOMER_DEMO_ACCOUNTS = [{ label: 'customer', email: 'customer@demo.sa', password: 'password' }] as const
+
+const DEMO_LOGIN_IDS = new Set([
+  'owner@demo.sa',
+  'manager@demo.sa',
+  'cashier@demo.sa',
+  'tech@demo.sa',
+  'fleet.contact@demo.sa',
+  'fleet.manager@demo.sa',
+  'customer@demo.sa',
+  'simulation.owner@demo.local',
+])
+const LEGACY_DEMO_PASSWORD = 'password'
+const HARDENED_DEMO_PASSWORD = 'Password123!'
+
+/** بيانات تجريبية حسب البوابة — عميل منفصل؛ مزوّد الخدمة يشمل تجريب الأسطول عند تفعيل البوابة */
+const portalDemos = computed((): { label: string; email: string; password: string }[] => {
+  if (loginPortalVariant.value === 'customer') {
+    if (!enabledPortals.customer) return []
+    return CUSTOMER_DEMO_ACCOUNTS.map((d) => ({ label: d.label, email: d.email, password: d.password }))
   }
-  return out
+  const rows = [...STAFF_DEMO_ACCOUNTS]
+  if (enabledPortals.fleet) rows.push(...FLEET_DEMO_ACCOUNTS)
+  return rows.map((d) => ({ label: d.label, email: d.email, password: d.password }))
 })
+
+const showLoginDemo = computed(
+  () => (import.meta.env.DEV || import.meta.env.VITE_SHOW_LOGIN_DEMO_HINT === 'true'),
+)
 
 const portalDisabledNotice = computed(() => {
   void i18n.currentLang
@@ -596,6 +585,19 @@ function clearOtpStep() {
   void nextTick(() => emailInputRef.value?.focus())
 }
 
+function isHttp401(err: unknown): boolean {
+  const status = (err as { response?: { status?: number } })?.response?.status
+  return status === 401
+}
+
+function resolveAlternateDemoPassword(loginId: string, password: string): string | null {
+  const normalized = loginId.trim().toLowerCase()
+  if (!DEMO_LOGIN_IDS.has(normalized)) return null
+  if (password === LEGACY_DEMO_PASSWORD) return HARDENED_DEMO_PASSWORD
+  if (password === HARDENED_DEMO_PASSWORD) return LEGACY_DEMO_PASSWORD
+  return null
+}
+
 function flattenApiValidationErrors(errs: unknown): string[] {
   if (!errs || typeof errs !== 'object') return []
   const out: string[] = []
@@ -621,17 +623,48 @@ function stripZeroWidth(s: string): string {
   return s.replace(/[\u200B-\u200D\uFEFF]/g, '')
 }
 
-function normalizeLoginId(raw: string): string {
-  const s = stripZeroWidth(raw).trim()
-  if (s.includes('@')) {
-    return s.toLowerCase()
+function normalizeCommonLoginTypos(loginId: string): string {
+  const s = loginId.trim()
+  if (s === '' || s.includes('@')) return s
+
+  // Frequent typo in demo accounts: "customerdemo.sa" instead of "customer@demo.sa".
+  const demoDomainMatch = s.match(/^([a-z0-9._-]+)(demo\.(?:sa|local))$/i)
+  if (demoDomainMatch) {
+    return `${demoDomainMatch[1]}@${demoDomainMatch[2]}`
+  }
+
+  // Generic fallback for common local domains when @ is missing.
+  const simpleDomainMatch = s.match(/^([a-z0-9._-]+)\.(sa|com|net|org|local)$/i)
+  if (simpleDomainMatch) {
+    return `${simpleDomainMatch[1]}@${simpleDomainMatch[2]}`
   }
 
   return s
 }
 
+function normalizeLoginIdForDisplay(raw: string): string {
+  return normalizeCommonLoginTypos(stripZeroWidth(raw).trim())
+}
+
+function normalizeLoginId(raw: string): string {
+  const s = normalizeLoginIdForDisplay(raw)
+  if (s.includes('@')) {
+    return s.toLowerCase()
+  }
+  return s
+}
+
 function normalizeLoginPassword(raw: string): string {
   return stripZeroWidth(raw)
+}
+
+function looksLikeMalformedEmailIdentifier(loginId: string): boolean {
+  if (loginId.includes('@')) return false
+  // Common typo: "customerdemo.sa" (missing @) gets sent as phone identifier and always fails.
+  if (!/[a-z]/i.test(loginId)) return false
+  if (!loginId.includes('.')) return false
+  if (/\s/.test(loginId)) return true
+  return /^[a-z0-9._-]+\.[a-z]{2,}$/i.test(loginId)
 }
 
 /** يطابق DemoPlatformAdminSeeder — عند إدخاله من /login نُظهر توجيهاً خاصاً بدل التشخيص العام */
@@ -640,11 +673,35 @@ const PLATFORM_DEMO_EMAIL = 'platform-demo@osas.sa'
 async function handleLogin() {
   loading.value = true
   error.value = ''
-  const loginId = normalizeLoginId(form.value.loginId)
+  const displayLoginId = normalizeLoginIdForDisplay(form.value.loginId)
+  if (displayLoginId !== form.value.loginId) {
+    form.value.loginId = displayLoginId
+  }
+  const loginId = normalizeLoginId(displayLoginId)
   const password = normalizeLoginPassword(form.value.password)
   try {
+    if (looksLikeMalformedEmailIdentifier(loginId)) {
+      error.value = i18n.t('login.errLoginIdFormat')
+      return
+    }
+
+    const attemptLogin = async (otpPayload?: { challengeId: string; otp: string }) => {
+      try {
+        return await auth.login(loginId, password, otpPayload)
+      } catch (err) {
+        if (otpPayload || !isHttp401(err)) throw err
+        const altPassword = resolveAlternateDemoPassword(loginId, password)
+        if (!altPassword) throw err
+
+        // Dev convenience: support both old/new seeded demo passwords.
+        const retry = await auth.login(loginId, altPassword, otpPayload)
+        form.value.password = altPassword
+        return retry
+      }
+    }
+
     if (otpStep.value) {
-      const out = await auth.login(loginId, password, {
+      const out = await attemptLogin({
         challengeId: otpChallengeId.value,
         otp: otpCode.value.replace(/\D/g, ''),
       })
@@ -655,7 +712,7 @@ async function handleLogin() {
         return
       }
     } else {
-      const out = await auth.login(loginId, password)
+      const out = await attemptLogin()
       if (out.kind === 'otp_required') {
         otpStep.value = true
         otpChallengeId.value = out.challengeId
@@ -678,14 +735,9 @@ async function handleLogin() {
       redirectQuery: route.query.redirect,
     })
 
-    if (loginPortalVariant.value === 'fleet' && !auth.isFleet) {
-      await auth.logout()
-      error.value = 'هذه صفحة بوابة الأسطول فقط. استخدم صفحة الدخول الموحد.'
-      return
-    }
     if (loginPortalVariant.value === 'customer' && !auth.isCustomer) {
       await auth.logout()
-      error.value = 'هذه صفحة بوابة العميل فقط. استخدم صفحة الدخول الموحد.'
+      error.value = i18n.t('login.errWrongPortalCustomer')
       return
     }
 
@@ -740,8 +792,7 @@ async function handleLogin() {
         msg +=
           '\n\n' +
           'هذا البريد لمشغّل المنصة التجريبي: سجّل الدخول من صفحة /platform/login (وليس /login). أنشئ المستخدم على نفس خادم الـ API: php artisan db:seed --class=Database\\Seeders\\DemoPlatformAdminSeeder'
-      } else if (import.meta.env.DEV) {
-        msg += i18n.t('login.errBadCredentialsDevHint')
+      } else if (import.meta.env.DEV && loginPortalVariant.value === 'staff') {
         const dh = res.data?.dev_hint as
           | {
               users_in_db?: number | null
@@ -749,6 +800,9 @@ async function handleLogin() {
               platform_demo_next_step?: string
             }
           | undefined
+        if (!dh) {
+          msg += i18n.t('login.errBadCredentialsDevHint')
+        }
         if (dh?.database_error) {
           msg += ' ' + i18n.t('login.errDevDbUnreachable')
         } else if (typeof dh?.platform_demo_next_step === 'string' && dh.platform_demo_next_step.trim() !== '') {

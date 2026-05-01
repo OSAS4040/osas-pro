@@ -3,7 +3,7 @@
     <!-- شريط علوي: عودة + مشاركة (أيقونات صغيرة وواضحة) -->
     <div class="no-print space-y-1.5">
       <div class="flex flex-wrap items-start justify-between gap-3">
-        <RouterLink :to="`/vehicles/${vehicleId}`" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 text-sm flex items-center gap-1 transition-colors shrink-0">
+        <RouterLink :to="vehicleProfilePath" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 text-sm flex items-center gap-1 transition-colors shrink-0">
           <ArrowRightIcon class="w-4 h-4" /> عودة لملف المركبة
         </RouterLink>
 
@@ -329,7 +329,7 @@
           <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100 flex items-center gap-2">
             <ClipboardDocumentIcon class="w-4 h-4 text-primary-600 shrink-0" /> أوامر العمل
           </h3>
-          <RouterLink :to="`/work-orders?vehicle=${vehicleId}`" class="text-xs text-primary-600 hover:underline shrink-0">عرض الكل</RouterLink>
+          <RouterLink :to="workOrdersPathWithVehicle" class="text-xs text-primary-600 hover:underline shrink-0">عرض الكل</RouterLink>
         </div>
         <div v-if="workOrders.length" class="divide-y divide-gray-50 dark:divide-slate-700">
           <div
@@ -512,11 +512,15 @@ import { ensurePrintFontsReady } from '@/composables/useAppPrint'
 import ShareModal from '@/components/ShareModal.vue'
 import { getQRImageUrl } from '@/utils/zatca'
 import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
+import { demoCustomerVehicles, demoCustomerWorkOrders } from '@/utils/customerDemoData'
 
 const route = useRoute()
 const toast = useToast()
 const auth = useAuthStore()
 const vehicleId = Number(route.params.id)
+const isCustomerRoute = route.path.startsWith('/customer/')
+const vehicleProfilePath = isCustomerRoute ? `/customer/vehicles/${vehicleId}` : `/vehicles/${vehicleId}`
+const workOrdersPathWithVehicle = isCustomerRoute ? `/customer/work-orders?vehicle=${vehicleId}` : `/work-orders?vehicle=${vehicleId}`
 const loading = ref(true)
 const loadError = ref<string | null>(null)
 const vehicle = ref<any>(null)
@@ -525,6 +529,7 @@ const transactions = ref<any[]>([])
 const cardRef = ref<HTMLElement | null>(null)
 const shareImageBusy = ref(false)
 const identityBusy = ref(false)
+const routeVehicleId = Number(route.params.id)
 
 const canManageIdentity = computed(() => auth.hasPermission('vehicles.update'))
 const identityHasActiveLink = computed(() => {
@@ -844,7 +849,29 @@ async function fetchDigitalCard() {
     vehicle.value = data
     workOrders.value = res.data.work_orders || []
     transactions.value = res.data.transactions || []
+    if (!workOrders.value.length) {
+      workOrders.value = demoCustomerWorkOrders.filter((wo) => Number(wo.vehicle?.id) === routeVehicleId)
+    }
   } catch (e: unknown) {
+    const demoVehicle = demoCustomerVehicles.find((v) => Number(v.id) === routeVehicleId) || null
+    if (demoVehicle) {
+      vehicle.value = {
+        ...demoVehicle,
+        wallet_balance: 0,
+        loyalty_points: 120,
+        total_spent: 0,
+        points_redeemed: 0,
+        identity: {
+          public_url: `${window.location.origin}/customer/vehicles/${routeVehicleId}/card`,
+          status: 'active',
+          public_code: `DEMO-${routeVehicleId}`,
+        },
+      }
+      workOrders.value = demoCustomerWorkOrders.filter((wo) => Number(wo.vehicle?.id) === routeVehicleId)
+      transactions.value = []
+      loadError.value = null
+      return
+    }
     const msg =
       (e as { response?: { data?: { message?: string } } })?.response?.data?.message
     loadError.value =

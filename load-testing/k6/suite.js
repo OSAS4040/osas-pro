@@ -1,11 +1,11 @@
 /**
  * WorkshopOS / OSAS Pro — k6 profile via `K6_PROFILE`.
- * Values: smoke | normal | peak | stress | spike | soak | capacity_pos |
+ * Values: smoke | normal | peak | stress | spike | soak | capacity_pos | wo_vehicle_gradual |
  *   enterprise_smoke | enterprise_normal | enterprise_peak (strict gate, short duration)
  */
 import { getProfileOptions } from './config/profiles.js';
 import { login } from './lib/auth.js';
-import { discoverPosContext } from './lib/discover.js';
+import { discoverPosContext, discoverWoVehicleContext } from './lib/discover.js';
 import { setupLoginFailures } from './lib/metrics.js';
 import { buildHandleSummary } from './lib/report.js';
 import {
@@ -21,6 +21,7 @@ import {
   scenarioSoakPosSeg1,
   scenarioSoakPosSeg2,
   scenarioSoakPosSeg3,
+  scenarioWorkOrdersVehicles,
 } from './lib/api-scenarios.js';
 
 const profile = (__ENV.K6_PROFILE || 'smoke').toLowerCase();
@@ -39,6 +40,7 @@ export {
   scenarioSoakPosSeg1,
   scenarioSoakPosSeg2,
   scenarioSoakPosSeg3,
+  scenarioWorkOrdersVehicles,
 };
 
 export function setup() {
@@ -66,6 +68,7 @@ export function setup() {
 
   const ctx = discoverPosContext(base, tenantA.token);
   const posReady = Boolean(ctx.customerId && ctx.product);
+  const woVeh = discoverWoVehicleContext(base, tenantA.token);
 
   const posActors = [{ key: 'A', token: tenantA.token, companyId: tenantA.companyId, customerId: ctx.customerId, product: ctx.product }];
   const ctxB = discoverPosContext(base, tenantB.token);
@@ -92,6 +95,8 @@ export function setup() {
     product: ctx.product,
     posActors,
     posReady,
+    workOrderId: woVeh.workOrderId,
+    vehicleId: woVeh.vehicleId,
     k6Profile: profile,
   };
 }

@@ -1,7 +1,7 @@
 <template>
-  <div class="rounded-xl border border-purple-200 dark:border-purple-800/50 bg-purple-50/50 dark:bg-purple-950/20 p-4 space-y-3" dir="rtl">
+  <div class="rounded-xl border border-primary-200 dark:border-primary-800/50 bg-primary-50/50 dark:bg-primary-950/20 p-4 space-y-3" dir="rtl">
     <h3 class="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
-      <span class="w-2 h-2 rounded-full bg-purple-500" />
+      <span class="w-2 h-2 rounded-full bg-primary-500" />
       قراءة ذكية + أرشفة مستند
     </h3>
     <p class="text-xs text-gray-500 dark:text-slate-400">

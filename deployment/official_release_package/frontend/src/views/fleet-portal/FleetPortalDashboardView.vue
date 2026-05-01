@@ -69,17 +69,17 @@
         </div>
       </div>
       <RouterLink to="/fleet-portal/top-up"
-                  class="block bg-white rounded-xl border border-gray-100 p-5 hover:border-purple-200 hover:shadow-md transition-all cursor-pointer group"
+                  class="block bg-white rounded-xl border border-gray-100 p-5 hover:border-primary-200 hover:shadow-md transition-all cursor-pointer group"
                   title="شحن رصيد المحفظة"
       >
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-2xl font-bold text-purple-700 group-hover:text-purple-800">{{ fmtMoney(kpi.walletBalance) }}</p>
+            <p class="text-2xl font-bold text-primary-700 group-hover:text-primary-800">{{ fmtMoney(kpi.walletBalance) }}</p>
             <p class="text-sm text-gray-600 mt-1">رصيد المحفظة</p>
             <p class="text-xs text-gray-400">ريال سعودي — اضغط للشحن</p>
           </div>
-          <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100">
-            <CreditCardIcon class="w-5 h-5 text-purple-600" />
+          <div class="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center group-hover:bg-primary-100">
+            <CreditCardIcon class="w-5 h-5 text-primary-600" />
           </div>
         </div>
       </RouterLink>

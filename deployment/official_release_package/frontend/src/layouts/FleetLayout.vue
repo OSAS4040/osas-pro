@@ -99,7 +99,7 @@ const router = useRouter()
 
 async function handleLogout() {
   await auth.logout()
-  router.push('/fleet/login')
+  router.push('/login')
 }
 
 const pageTitles: Record<string, string> = {

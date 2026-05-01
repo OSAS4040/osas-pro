@@ -1,5 +1,5 @@
 # ترتيب التنفيذ الرسمي (مرقم): docs/Execution_Order_Asas_Pro.md
-.PHONY: up down build fresh logs logs-all shell migrate seed seed-simulate key tinker queue-restart swagger dompdf-arabic-check test test-filter test-coverage test-frontend-full test-project-gate staging-gate policy-env-example github-branch-protection-status verify release-gate monitoring-gate integrity-verify load-test load-test-preflight load-test-matrix load-test-release-gate load-test-rc-secure-gate ps install ngrok-up ngrok-down ngrok-url up-ngrok dev-bootstrap
+.PHONY: up down build fresh logs logs-all shell migrate seed seed-simulate key tinker queue-restart swagger dompdf-arabic-check test test-filter test-coverage test-frontend-full test-project-gate staging-gate staging-deploy staging-deploy-ps policy-env-example github-branch-protection-status verify release-gate monitoring-gate integrity-verify load-test load-test-preflight load-test-matrix load-test-release-gate load-test-rc-secure-gate ps install ngrok-up ngrok-down ngrok-url up-ngrok dev-bootstrap
 
 up:
 	docker compose up -d
@@ -95,6 +95,30 @@ test-project-gate: test-frontend-full
 staging-gate:
 	docker compose exec -T frontend sh -lc "cd /app && npm ci && npm test"
 	docker compose exec -T app sh -lc "cd /var/www && ./vendor/bin/phpunit tests/Unit/Support/SaasPlatformAccessTest.php tests/Feature/Saas/"
+
+# نشر سريع إلى بيئة staging من الحاوية الحالية (بدون سكربتات خارجية داخل حزمة النشر)
+# متغيرات اختيارية:
+#   STAGING_REBUILD=1  STAGING_RUN_GATE=1  STAGING_SEED_DEMO=0  STAGING_HEALTH_WAIT_SECS=180
+staging-deploy:
+	HEALTH_WAIT_SECS=$${STAGING_HEALTH_WAIT_SECS:-180}; \
+	STAGING_RUN_GATE=$${STAGING_RUN_GATE:-1}; \
+	STAGING_SEED_DEMO=$${STAGING_SEED_DEMO:-0}; \
+	if [ "$${STAGING_REBUILD:-0}" = "1" ]; then docker compose build; fi; \
+	docker compose up -d; \
+	deadline=$$(( $$(date +%s) + $$HEALTH_WAIT_SECS )); \
+	until curl -sfS -o /dev/null --max-time 10 "http://127.0.0.1/up"; do [ "$$(date +%s)" -lt "$$deadline" ] || (echo "Timeout /up" && exit 1); sleep 3; done; \
+	docker compose exec -T app php artisan migrate --force; \
+	docker compose exec -T app php artisan optimize:clear; \
+	docker compose restart app nginx; \
+	docker compose restart queue_high queue_default queue_pos queue_low scheduler; \
+	if [ "$$STAGING_SEED_DEMO" = "1" ]; then docker compose exec -T app php artisan dev:demo-seed; fi; \
+	deadline=$$(( $$(date +%s) + $$HEALTH_WAIT_SECS )); \
+	until curl -sfS -o /dev/null --max-time 10 "http://127.0.0.1/api/v1/health"; do [ "$$(date +%s)" -lt "$$deadline" ] || (echo "Timeout /api/v1/health" && exit 1); sleep 3; done; \
+	if [ "$$STAGING_RUN_GATE" = "1" ]; then $(MAKE) staging-gate; fi
+
+# Windows PowerShell shorthand for staging deploy
+staging-deploy-ps:
+	powershell -NoProfile -ExecutionPolicy Bypass -Command "$$ErrorActionPreference='Stop'; docker compose up -d; docker compose exec -T app php artisan migrate --force; docker compose exec -T app php artisan optimize:clear; docker compose restart app nginx; docker compose restart queue_high queue_default queue_pos queue_low scheduler; docker compose exec -T frontend sh -lc 'cd /app && npm ci && npm test'; docker compose exec -T app sh -lc 'cd /var/www && ./vendor/bin/phpunit tests/Unit/Support/SaasPlatformAccessTest.php tests/Feature/Saas/'"
 
 # تحقق سياسة أمثلة الإعداد — لا يحتاج Docker (Node فقط)
 policy-env-example:

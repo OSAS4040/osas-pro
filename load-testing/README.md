@@ -20,6 +20,15 @@ make load-test K6_PROFILE=peak
 make load-test K6_PROFILE=stress
 make load-test K6_PROFILE=spike
 make load-test K6_PROFILE=soak
+
+# أوامر عمل + مركبات فقط — تصعيد تدريجي (بدون POS)
+make load-test K6_PROFILE=wo_vehicle_gradual
+# أو: make load-test-wo-vehicle-gradual
+# ضبط السقف والمدة: make load-test-wo-vehicle-gradual K6_WO_VU_MAX=35 K6_WO_STAGE_MIN=1
+
+# إنشاء 200 أمر عمل دفعة واحدة (bulk) + تشخيص عنق الزجاجة
+# يتطلب K6_BULK_VEHICLE_IDS من WorkOrderBulkLoadTestSeeder (200 ID)
+make load-test-wo-bulk-200 K6_BULK_VEHICLE_IDS="1,2,3,...,200"
 ```
 
 تشغيل مرحلي مقترح:
@@ -56,6 +65,7 @@ make load-test-preflight
 | **stress** | **15 → 130** VU على **6 مراحل × 3 دقائق** | **~18 دقيقة** | تصعيد متدرج **بدون تداخل مراحل**؛ التقرير يحلل **أول تدهور** و**أول انهيار** تقريبي |
 | **spike** | قفزة **10 → 95** VU قراءة + ذروة POS قصيرة | **~9 دقائق** | قفزة مفاجئة ثم هبوط |
 | **soak** | **22** VU قراءة (ضمن **15–30**) | **90 دقيقة** (ضمن **45–120**) | استقرار زمني + POS نادر + صحة دورية |
+| **wo_vehicle_gradual** | **0 → K6_WO_VU_MAX** (افتراضي **50**) عبر مراحل `ramping-vus` | يعتمد على `K6_WO_STAGE_MIN` (افتراضي **2 دقيقة**/شريحة) + هبوط **1 دقيقة** | **GET** فقط: `/v1/work-orders`، `/v1/work-orders/{id}`، `/v1/vehicles`، `/v1/vehicles/{id}` — بدون POS/صحة/عزل |
 
 التفاصيل البرمجية: `k6/config/profiles.js`  
 عتبات القبول: `k6/config/acceptance.js`

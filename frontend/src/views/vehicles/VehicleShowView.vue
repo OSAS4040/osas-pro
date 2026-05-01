@@ -3,7 +3,7 @@
     <NavigationSourceHint />
     <!-- Back + Title -->
     <div class="flex items-center gap-3 flex-wrap">
-      <RouterLink to="/vehicles" class="text-gray-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 text-sm flex items-center gap-1 transition-colors">
+      <RouterLink :to="vehiclesListPath" class="text-gray-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 text-sm flex items-center gap-1 transition-colors">
         ← المركبات
       </RouterLink>
       <span class="text-gray-300 dark:text-slate-600">/</span>
@@ -21,13 +21,13 @@
       <!-- Action buttons -->
       <div class="flex flex-wrap gap-2 items-center justify-between">
         <div class="flex gap-2 flex-wrap">
-          <RouterLink :to="`/vehicles/${vehicle.id}/card`"
+          <RouterLink :to="vehiclePath('card')"
                       class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-xl hover:bg-primary-700 transition-colors"
           >
             <CreditCardIcon class="w-4 h-4" />
             البطاقة الرقمية
           </RouterLink>
-          <RouterLink :to="`/vehicles/${vehicle.id}/passport`"
+          <RouterLink :to="vehiclePath('passport')"
                       class="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-800 text-sm font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
           >
             <DocumentTextIcon class="w-4 h-4" />
@@ -143,7 +143,7 @@
             <ClipboardDocumentIcon class="w-5 h-5 text-blue-500" />
             أوامر العمل
           </h2>
-          <RouterLink to="/work-orders/new" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">+ أمر عمل جديد</RouterLink>
+          <RouterLink :to="workOrdersPath" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">عرض أوامر العمل</RouterLink>
         </div>
         <div v-if="loadingWO" class="flex justify-center py-10">
           <div class="w-6 h-6 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
@@ -183,7 +183,7 @@
         </h2>
         <IntelligentVehicleDocumentPanel v-if="vehicle" :vehicle-id="vehicle.id" class="mb-6" />
         <div class="grid sm:grid-cols-2 gap-4">
-          <RouterLink :to="`/vehicles/${vehicle.id}/card`"
+          <RouterLink :to="vehiclePath('card')"
                       class="flex items-center gap-3 p-4 border border-primary-200 dark:border-primary-800/40 bg-primary-50 dark:bg-primary-900/20 rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
           >
             <CreditCardIcon class="w-6 h-6 text-primary-600 dark:text-primary-400 flex-shrink-0" />
@@ -192,7 +192,7 @@
               <p class="text-xs text-gray-500 dark:text-slate-400">عرض وطباعة بطاقة المركبة</p>
             </div>
           </RouterLink>
-          <RouterLink :to="`/vehicles/${vehicle.id}/passport`"
+          <RouterLink :to="vehiclePath('passport')"
                       class="flex items-center gap-3 p-4 border border-primary-200 dark:border-primary-800/40 bg-primary-50 dark:bg-primary-900/20 rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
           >
             <DocumentTextIcon class="w-6 h-6 text-primary-600 dark:text-primary-400 flex-shrink-0" />
@@ -248,7 +248,7 @@
             <strong class="font-mono text-gray-900 dark:text-white" dir="ltr">{{ vehicle.plate_number }}</strong>
           </p>
           <RouterLink
-            :to="`/vehicles/${vehicle.id}/card`"
+            :to="vehiclePath('card')"
             class="px-5 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-xl hover:bg-teal-700 transition-colors min-h-[44px] inline-flex items-center"
           >
             فتح البطاقة الرقمية ورمز QR
@@ -283,6 +283,7 @@ import apiClient from '@/lib/apiClient'
 import { workOrderStatusLabel, workOrderStatusBadgeClass } from '@/utils/workOrderStatusLabels'
 import NavigationSourceHint from '@/components/NavigationSourceHint.vue'
 import IntelligentVehicleDocumentPanel from '@/components/intelligence/IntelligentVehicleDocumentPanel.vue'
+import { demoCustomerVehicles, demoCustomerWorkOrders } from '@/utils/customerDemoData'
 
 interface Vehicle {
   id: number
@@ -300,12 +301,28 @@ interface Vehicle {
 }
 
 const route = useRoute()
+const isCustomerRoute = route.path.startsWith('/customer/')
+const vehiclesListPath = isCustomerRoute ? '/customer/vehicles' : '/vehicles'
+const workOrdersPath = isCustomerRoute ? '/customer/work-orders' : '/work-orders'
+
+function vehiclePath(section?: 'card' | 'passport'): string {
+  const base = `${vehiclesListPath}/${route.params.id}`
+  if (!section) return base
+  return `${base}/${section}`
+}
+
 const vehicle = ref<Vehicle | null>(null)
 const workOrders = ref<any[]>([])
 const loading = ref(false)
 const loadingWO = ref(false)
 const activeTab = ref('info')
 const vehicleLoadError = ref('تعذّر تحميل بيانات المركبة.')
+const routeVehicleId = Number(route.params.id)
+
+function getDemoVehicleById(): Vehicle | null {
+  const demo = demoCustomerVehicles.find((v) => Number(v.id) === routeVehicleId)
+  return demo ? ({ ...demo } as Vehicle) : null
+}
 
 const tabs = [
   { id: 'info',         label: 'معلومات' },
@@ -359,17 +376,26 @@ async function fetchVehicle() {
   vehicle.value = null
   try {
     const { data } = await apiClient.get(`/vehicles/${route.params.id}`)
-    vehicle.value = data.data
-    if (data.data) {
+    vehicle.value = data.data ?? data ?? null
+    if (vehicle.value) {
       vehicleLoadError.value = 'تعذّر تحميل بيانات المركبة.'
     } else {
-      vehicleLoadError.value = 'لا توجد مركبة بهذا المعرّف.'
+      const demoVehicle = getDemoVehicleById()
+      if (demoVehicle) {
+        vehicle.value = demoVehicle
+        vehicleLoadError.value = 'تعذّر تحميل بيانات المركبة.'
+      } else {
+        vehicleLoadError.value = 'لا توجد مركبة بهذا المعرّف.'
+      }
     }
   } catch (err: unknown) {
-    vehicle.value = null
+    const demoVehicle = getDemoVehicleById()
+    vehicle.value = demoVehicle
     const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-    vehicleLoadError.value =
-      typeof msg === 'string' && msg.trim() !== '' ? msg : 'تعذّر تحميل بيانات المركبة. تحقق من الاتصال أو الصلاحيات.'
+    if (!demoVehicle) {
+      vehicleLoadError.value =
+        typeof msg === 'string' && msg.trim() !== '' ? msg : 'تعذّر تحميل بيانات المركبة. تحقق من الاتصال أو الصلاحيات.'
+    }
   } finally {
     loading.value = false
   }
@@ -380,8 +406,13 @@ async function fetchWorkOrders() {
   try {
     const { data } = await apiClient.get('/work-orders', { params: { vehicle_id: route.params.id } })
     workOrders.value = data.data?.data ?? data.data ?? []
+    if (!workOrders.value.length && getDemoVehicleById()) {
+      workOrders.value = demoCustomerWorkOrders.filter((wo) => Number(wo.vehicle?.id) === routeVehicleId)
+    }
   } catch {
-    workOrders.value = []
+    workOrders.value = getDemoVehicleById()
+      ? demoCustomerWorkOrders.filter((wo) => Number(wo.vehicle?.id) === routeVehicleId)
+      : []
   } finally {
     loadingWO.value = false
   }

@@ -37,10 +37,10 @@ class ReportController extends Controller
                     ['key' => 'overdue_tasks', 'label' => 'المهام المتأخرة', 'formula' => 'COUNT(open_tasks where due_at < now)'],
                 ],
                 'financial' => [
-                    ['key' => 'total_sales', 'label' => 'إجمالي المبيعات', 'formula' => 'SUM(invoices.total)'],
-                    ['key' => 'total_vat', 'label' => 'إجمالي الضريبة', 'formula' => 'SUM(invoices.tax_amount)'],
-                    ['key' => 'collection_rate', 'label' => 'معدل التحصيل', 'formula' => 'SUM(payments.completed)/SUM(invoices.total) * 100'],
-                    ['key' => 'total_due', 'label' => 'إجمالي المستحقات', 'formula' => 'SUM(invoices.due_amount where status is pending/partial)'],
+                    ['key' => 'total_sales', 'label' => 'إجمالي المبيعات', 'formula' => 'SUM(invoices.total) excluding internal provider_to_platform settlement legs'],
+                    ['key' => 'total_vat', 'label' => 'إجمالي الضريبة', 'formula' => 'SUM(invoices.tax_amount) on the same revenue scope'],
+                    ['key' => 'collection_rate', 'label' => 'معدل التحصيل', 'formula' => 'SUM(payments.completed)/SUM(invoices.total on revenue scope) * 100'],
+                    ['key' => 'total_due', 'label' => 'إجمالي المستحقات', 'formula' => 'SUM(invoices.due_amount where status is pending/partial, revenue scope)'],
                 ],
                 'intelligence' => [
                     ['key' => 'sales_delta_pct', 'label' => 'نسبة تغير المبيعات', 'formula' => '(sales_current - sales_previous) / sales_previous * 100'],
@@ -65,6 +65,7 @@ class ReportController extends Controller
         $companyId = app('tenant_company_id');
 
         $summaryRow = Invoice::where('company_id', $companyId)
+            ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
             ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
@@ -80,6 +81,7 @@ class ReportController extends Controller
         ] : null;
 
         $byBranch = Invoice::where('company_id', $companyId)
+            ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
             ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
@@ -104,6 +106,7 @@ class ReportController extends Controller
         $companyId = app('tenant_company_id');
 
         $data = Invoice::where('company_id', $companyId)
+            ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
             ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
@@ -132,6 +135,10 @@ class ReportController extends Controller
             ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
             ->join('products', 'products.id', '=', 'invoice_items.product_id')
             ->where('invoices.company_id', $companyId)
+            ->where(function ($q): void {
+                $q->whereNull('invoices.billing_flow_type')
+                    ->orWhere('invoices.billing_flow_type', '!=', 'provider_to_platform');
+            })
             ->whereBetween('invoices.issued_at', [$fromEnd, $toEnd])
             ->when($request->filled('branch_id'), fn($q) => $q->where('invoices.branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('invoices.status', ['cancelled', 'draft'])
@@ -156,6 +163,7 @@ class ReportController extends Controller
         $companyId = app('tenant_company_id');
 
         $data = Invoice::where('company_id', $companyId)
+            ->excludingProviderPlatformSettlement()
             ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereIn('status', ['pending', 'partial_paid'])
             ->where('due_at', '<', now())
@@ -244,6 +252,7 @@ class ReportController extends Controller
     private function buildKpiPayload(int $companyId, string $fromEnd, string $toEnd, Request $request): array
     {
         $invoiceScope = Invoice::where('company_id', $companyId)
+            ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
             ->whereNotIn('status', ['cancelled', 'draft']);
 
@@ -272,10 +281,12 @@ class ReportController extends Controller
         $avgInvoiceValue = $invoiceCount > 0 ? round($totalRevenue / $invoiceCount, 2) : 0.0;
 
         $outstandingDue = Invoice::where('company_id', $companyId)
+            ->excludingProviderPlatformSettlement()
             ->whereIn('status', ['pending', 'partial_paid'])
             ->sum('due_amount');
 
         $dailyRevenue = Invoice::where('company_id', $companyId)
+            ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->selectRaw('DATE(issued_at) as day, COALESCE(SUM(total), 0) as total')
@@ -319,6 +330,7 @@ class ReportController extends Controller
         $companyId = app('tenant_company_id');
 
         $row = Invoice::where('company_id', $companyId)
+            ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
             ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
@@ -346,6 +358,10 @@ class ReportController extends Controller
         $byRate = DB::table('invoice_items')
             ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
             ->where('invoices.company_id', $companyId)
+            ->where(function ($q): void {
+                $q->whereNull('invoices.billing_flow_type')
+                    ->orWhere('invoices.billing_flow_type', '!=', 'provider_to_platform');
+            })
             ->whereBetween('invoices.issued_at', [$fromEnd, $toEnd])
             ->when($request->filled('branch_id'), fn($q) => $q->where('invoices.branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('invoices.status', ['cancelled', 'draft'])
@@ -540,6 +556,7 @@ class ReportController extends Controller
         $companyId = app('tenant_company_id');
 
         $rows = Invoice::where('company_id', $companyId)
+            ->excludingProviderPlatformSettlement()
             ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereIn('status', ['pending', 'partial_paid'])
             ->whereNotNull('due_at')
@@ -604,6 +621,10 @@ class ReportController extends Controller
         $data     = Cache::remember($cacheKey, 600, function () use ($companyId, $fromEnd, $toEnd, $request) {
             $invoiceRows = DB::table('invoices')
                 ->where('company_id', $companyId)
+                ->where(function ($q): void {
+                    $q->whereNull('billing_flow_type')
+                        ->orWhere('billing_flow_type', '!=', 'provider_to_platform');
+                })
                 ->whereBetween('issued_at', [$fromEnd, $toEnd])
                 ->whereNotIn('status', ['cancelled', 'draft'])
                 ->selectRaw('status, COUNT(*) as count, COALESCE(SUM(total), 0) as total_amount')
@@ -618,6 +639,10 @@ class ReportController extends Controller
 
             $agg = DB::table('invoices')
                 ->where('company_id', $companyId)
+                ->where(function ($q): void {
+                    $q->whereNull('billing_flow_type')
+                        ->orWhere('billing_flow_type', '!=', 'provider_to_platform');
+                })
                 ->whereBetween('issued_at', [$fromEnd, $toEnd])
                 ->whereNotIn('status', ['cancelled', 'draft'])
                 ->selectRaw('
@@ -649,6 +674,10 @@ class ReportController extends Controller
 
             $overdue = DB::table('invoices')
                 ->where('company_id', $companyId)
+                ->where(function ($q): void {
+                    $q->whereNull('billing_flow_type')
+                        ->orWhere('billing_flow_type', '!=', 'provider_to_platform');
+                })
                 ->whereIn('status', ['pending', 'partial_paid'])
                 ->whereNotNull('due_at')
                 ->where('due_at', '<', now())
@@ -923,6 +952,7 @@ class ReportController extends Controller
 
         $sumFor = function (Carbon $fromDate, Carbon $toDate) use ($companyId): array {
             $sales = (float) Invoice::where('company_id', $companyId)
+                ->excludingProviderPlatformSettlement()
                 ->whereBetween('issued_at', [$fromDate, $toDate])
                 ->whereNotIn('status', ['cancelled', 'draft'])
                 ->sum('total');

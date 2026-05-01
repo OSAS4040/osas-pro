@@ -6,6 +6,8 @@ use App\Enums\WorkOrderStatus;
 use App\Intelligence\Events\WorkOrderCreated;
 use App\Intelligence\Events\WorkOrderStatusChanged;
 use App\Jobs\NotifyCustomerWorkOrderWhatsAppJob;
+use App\Models\OrgUnit;
+use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderItem;
 use App\Services\WorkOrderPricing\ResolvedWorkOrderLinePrice;
@@ -49,8 +51,16 @@ class WorkOrderService
         $order = DB::transaction(function () use ($data, $companyId, $branchId, $userId) {
             $this->billingModelPolicy->assertTenantMayOperate($companyId);
 
-            $nextSuffix  = $this->allocateNextOrderNumberSuffix((int) $companyId);
-            $orderNumber = sprintf('WO-%d-%06d', $companyId, $nextSuffix);
+            $customerId = (int) $data['customer_id'];
+            $orgUnitId = isset($data['org_unit_id']) ? (int) $data['org_unit_id'] : $this->resolveCreatorOrgUnitId($userId, $companyId);
+            if ($customerId > 0 && $orgUnitId > 0) {
+                $sectorPrefix = $this->resolveSectorPrefix($companyId, $orgUnitId);
+                $nextSuffix = $this->allocateNextScopedOrderNumberSuffix((int) $companyId, $customerId, $orgUnitId, $sectorPrefix);
+                $orderNumber = sprintf('WO-%d-%s-C%d-%06d', $companyId, $sectorPrefix, $customerId, $nextSuffix);
+            } else {
+                $nextSuffix  = $this->allocateNextOrderNumberSuffix((int) $companyId);
+                $orderNumber = sprintf('WO-%d-%06d', $companyId, $nextSuffix);
+            }
 
             $fleetOrigin = ($data['created_by_side'] ?? '') === 'fleet';
             [$itemsData, $estimatedTotal] = $this->compileWorkOrderLineItems(
@@ -163,6 +173,78 @@ class WorkOrderService
         return (int) $row->last_allocated;
     }
 
+    private function allocateNextScopedOrderNumberSuffix(int $companyId, int $customerId, int $orgUnitId, string $sectorPrefix): int
+    {
+        if (DB::getDriverName() !== 'pgsql') {
+            throw new \RuntimeException('work_order_scope_sequences requires PostgreSQL.');
+        }
+
+        $now = now();
+        $pattern = '^WO-'.$companyId.'-'.$sectorPrefix.'-C'.$customerId.'-[0-9]{6}$';
+        $row = DB::selectOne(
+            'insert into work_order_scope_sequences (company_id, customer_id, org_unit_id, last_allocated, created_at, updated_at)
+             select ?::bigint, ?::bigint, ?::bigint,
+                    coalesce((
+                        select max(cast(right(order_number, 6) as integer))
+                        from work_orders
+                        where company_id = ?
+                          and customer_id = ?
+                          and order_number ~ ?
+                    ), 0) + 1,
+                    ?, ?
+             on conflict (company_id, customer_id, org_unit_id) do update
+             set last_allocated = work_order_scope_sequences.last_allocated + 1,
+                 updated_at = excluded.updated_at
+             returning last_allocated',
+            [$companyId, $customerId, $orgUnitId, $companyId, $customerId, $pattern, $now, $now],
+        );
+
+        if ($row === null || ! isset($row->last_allocated)) {
+            throw new \RuntimeException('Failed to allocate scoped work order sequence.');
+        }
+
+        return (int) $row->last_allocated;
+    }
+
+    private function resolveCreatorOrgUnitId(int $userId, int $companyId): int
+    {
+        return (int) (User::query()
+            ->where('company_id', $companyId)
+            ->whereKey($userId)
+            ->value('org_unit_id') ?? 0);
+    }
+
+    private function resolveSectorPrefix(int $companyId, int $orgUnitId): string
+    {
+        $current = OrgUnit::query()->where('company_id', $companyId)->whereKey($orgUnitId)->first();
+        $candidate = $current;
+        $guard = 0;
+        while ($current !== null && $guard < 16) {
+            if ($current->type === OrgUnit::TYPE_SECTOR) {
+                $candidate = $current;
+                break;
+            }
+            $parentId = (int) ($current->parent_id ?? 0);
+            if ($parentId <= 0) {
+                break;
+            }
+            $current = OrgUnit::query()->where('company_id', $companyId)->whereKey($parentId)->first();
+            if ($current !== null) {
+                $candidate = $current;
+            }
+            $guard++;
+        }
+
+        if ($candidate === null) {
+            return 'ORG'.$orgUnitId;
+        }
+
+        $raw = (string) ($candidate->code ?: $candidate->name ?: 'ORG'.$candidate->id);
+        $normalized = strtoupper((string) preg_replace('/[^A-Z0-9]/', '', Str::ascii($raw)));
+
+        return $normalized !== '' ? substr($normalized, 0, 8) : ('ORG'.$candidate->id);
+    }
+
     /**
      * Transition work order status with optimistic locking.
      *
@@ -217,6 +299,24 @@ class WorkOrderService
             }
 
             if ($newStatus === WorkOrderStatus::Completed) {
+                $nextTechnicianNotes = array_key_exists('technician_notes', $meta)
+                    ? trim((string) $meta['technician_notes'])
+                    : trim((string) ($fresh->technician_notes ?? ''));
+                $nextMileageOut = array_key_exists('mileage_out', $meta)
+                    ? (int) $meta['mileage_out']
+                    : ($fresh->mileage_out !== null ? (int) $fresh->mileage_out : null);
+                $afterImages = is_array($fresh->after_service_images) ? $fresh->after_service_images : [];
+
+                if ($nextTechnicianNotes === '') {
+                    throw new \DomainException('لا يمكن إكمال أمر العمل بدون تقرير فني (technician_notes).');
+                }
+                if ($nextMileageOut === null || $nextMileageOut < 0) {
+                    throw new \DomainException('لا يمكن إكمال أمر العمل بدون العداد النهائي (mileage_out).');
+                }
+                if (count($afterImages) < 1) {
+                    throw new \DomainException('لا يمكن إكمال أمر العمل بدون صورة واحدة على الأقل بعد الخدمة.');
+                }
+
                 $update['completed_at'] = now();
                 if (isset($meta['technician_notes'])) {
                     $update['technician_notes'] = $meta['technician_notes'];
@@ -301,6 +401,7 @@ class WorkOrderService
     {
         return DB::transaction(function () use ($order, $data) {
             $fresh = WorkOrder::where('id', $order->id)->lockForUpdate()->firstOrFail();
+            $fleetOrigin = (($data['created_by_side'] ?? '') === 'fleet');
 
             if ($fresh->version !== $order->version) {
                 throw new \RuntimeException(
@@ -323,7 +424,7 @@ class WorkOrderService
             $fresh->update($payload);
 
             if (isset($data['items'])) {
-                $this->replaceItems($fresh, $data['items']);
+                $this->replaceItems($fresh, $data['items'], $fleetOrigin);
             }
 
             return $fresh->refresh();
@@ -367,7 +468,7 @@ class WorkOrderService
         ], true);
     }
 
-    private function replaceItems(WorkOrder $order, array $items): void
+    private function replaceItems(WorkOrder $order, array $items, bool $fleetOrigin = false): void
     {
         if ($items === []) {
             throw new \DomainException('لا يمكن حذف جميع البنود — يجب الإبقاء على بند خدمة أو منتج واحد على الأقل.');
@@ -380,7 +481,7 @@ class WorkOrderService
             (int) $order->company_id,
             (int) $order->customer_id,
             $order->branch_id !== null ? (int) $order->branch_id : null,
-            false,
+            $fleetOrigin,
             $order->vehicle_id !== null ? (int) $order->vehicle_id : null,
         );
 

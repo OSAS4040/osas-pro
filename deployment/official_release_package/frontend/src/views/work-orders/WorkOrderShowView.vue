@@ -42,7 +42,7 @@
         <div class="flex flex-wrap gap-2" :class="staffUi.compactMode ? 'gap-1.5' : ''">
           <button
             type="button"
-            class="rounded-lg border border-violet-200 bg-violet-50 text-violet-900 hover:bg-violet-100 disabled:opacity-50 font-medium"
+            class="rounded-lg border border-primary-200 bg-primary-50 text-primary-900 hover:bg-primary-100 disabled:opacity-50 font-medium"
             :class="staffUi.compactMode ? 'px-2 py-1.5 text-[11px]' : 'px-3 py-2 text-sm'"
             :disabled="shareActionBusy"
             title="نسخ رابط الصفحة العامة للتحقق من الأمر"
@@ -52,7 +52,7 @@
           </button>
           <button
             type="button"
-            class="rounded-lg border border-violet-200 text-violet-800 hover:bg-violet-50 disabled:opacity-50"
+            class="rounded-lg border border-primary-200 text-primary-800 hover:bg-primary-50 disabled:opacity-50"
             :class="staffUi.compactMode ? 'px-2 py-1.5 text-[11px]' : 'px-3 py-2 text-sm'"
             :disabled="shareActionBusy"
             @click="copyShareMessageText"

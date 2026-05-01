@@ -231,7 +231,7 @@ const statCards = computed(() => {
     { label: 'إجمالي التكلفة', value: fmt(t.total_cost ?? 0), sub: 'هذا الشهر', bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-600', icon: { render: () => null } },
     { label: 'إجمالي اللترات', value: `${(t.total_liters ?? 0).toFixed(1)} ل`, sub: 'مجموع التعبئات', bg: 'bg-blue-100 dark:bg-blue-900/30', color: 'text-blue-600', icon: { render: () => null } },
     { label: 'متوسط الكفاءة', value: `${(t.avg_efficiency ?? 0).toFixed(2)} ك/ل`, sub: 'كم لكل لتر', bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600', icon: { render: () => null } },
-    { label: 'عدد التعبئات', value: t.total_logs ?? 0, sub: 'عملية تعبئة', bg: 'bg-purple-100 dark:bg-purple-900/30', color: 'text-purple-600', icon: { render: () => null } },
+    { label: 'عدد التعبئات', value: t.total_logs ?? 0, sub: 'عملية تعبئة', bg: 'bg-primary-100 dark:bg-primary-900/30', color: 'text-primary-600', icon: { render: () => null } },
   ]
 })
 

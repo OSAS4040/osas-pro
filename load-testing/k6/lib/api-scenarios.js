@@ -35,6 +35,8 @@ import {
   soakReadSeg1HttpMs,
   soakReadSeg2HttpMs,
   soakReadSeg3HttpMs,
+  scenWoVehicleHttpMs,
+  woVehicleOperationalOk,
 } from './metrics.js';
 
 /** تسجيل موحّد: أخطاء الشبكة، 5xx، 4xx — بالإضافة للمقاييس التاريخية */
@@ -80,6 +82,55 @@ function trace503Sample(res, context = {}) {
     context,
   };
   console.error(JSON.stringify(sample));
+}
+
+/**
+ * ضغط على أوامر العمل والمركبات فقط: فهرس + تفاصيل (عند توفر معرف من setup).
+ */
+export function scenarioWorkOrdersVehicles(data) {
+  const h = { headers: bearerHeaders(data.tokenA) };
+  const calls = [];
+
+  calls.push(() =>
+    http.get(`${data.baseUrl}/v1/work-orders?per_page=10`, {
+      ...h,
+      tags: scenTags({ name: 'WorkOrdersIndex' }),
+    }),
+  );
+  if (data.workOrderId) {
+    calls.push(() =>
+      http.get(`${data.baseUrl}/v1/work-orders/${data.workOrderId}`, {
+        ...h,
+        tags: scenTags({ name: 'WorkOrderShow' }),
+      }),
+    );
+  }
+
+  calls.push(() =>
+    http.get(`${data.baseUrl}/v1/vehicles?per_page=10`, {
+      ...h,
+      tags: scenTags({ name: 'VehiclesIndex' }),
+    }),
+  );
+  if (data.vehicleId) {
+    calls.push(() =>
+      http.get(`${data.baseUrl}/v1/vehicles/${data.vehicleId}`, {
+        ...h,
+        tags: scenTags({ name: 'VehicleShow' }),
+      }),
+    );
+  }
+
+  const res = calls[Math.floor(Math.random() * calls.length)]();
+  recordHttpOutcome(res);
+  scenWoVehicleHttpMs.add(res.timings.duration);
+  const ok = res.status >= 200 && res.status < 400 && res.status !== 0;
+  woVehicleOperationalOk.add(ok ? 1 : 0);
+  operationalHttpSuccess.add(ok ? 1 : 0);
+  check(res, {
+    'wo_vehicle لا 5xx': (r) => r.status < 500 || r.status === 0,
+  });
+  sleep(0.12 + Math.random() * 0.55);
 }
 
 /** خلط قراءة تشغيلي — السيناريو الأساس للحمل */

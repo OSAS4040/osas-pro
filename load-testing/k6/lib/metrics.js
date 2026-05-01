@@ -50,3 +50,7 @@ export const scenIsolationHttpMs = new Trend('scen_isolation_http_ms');
 export const soakReadSeg1HttpMs = new Trend('soak_read_seg1_http_ms');
 export const soakReadSeg2HttpMs = new Trend('soak_read_seg2_http_ms');
 export const soakReadSeg3HttpMs = new Trend('soak_read_seg3_http_ms');
+
+/** أوامر عمل + مركبات (ملف wo_vehicle_gradual) */
+export const scenWoVehicleHttpMs = new Trend('scen_wo_vehicle_http_ms');
+export const woVehicleOperationalOk = new Rate('wo_vehicle_operational_ok');

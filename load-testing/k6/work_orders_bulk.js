@@ -29,6 +29,7 @@ const bulkIterations = parseInt(
   __ENV.K6_BULK_ITERATIONS || String(Math.max(1, bulkVus)),
   10,
 );
+const expectedCount = parseInt(__ENV.K6_BULK_EXPECTED_COUNT || '200', 10);
 
 const bulkPostMs = new Trend('wo_bulk_post_ms');
 const bulkPollMs = new Trend('wo_bulk_poll_ms');
@@ -49,6 +50,67 @@ export const options = {
     checks: ['rate>0.99'],
   },
 };
+
+function metricValue(summary, metricName, key) {
+  const m = summary && summary.metrics ? summary.metrics[metricName] : null;
+  if (!m || !m.values) {
+    return null;
+  }
+  const v = m.values[key];
+  return Number.isFinite(v) ? v : null;
+}
+
+function identifyBottleneck(summary) {
+  const postP95 = metricValue(summary, 'wo_bulk_post_ms', 'p(95)');
+  const pollP95 = metricValue(summary, 'wo_bulk_poll_ms', 'p(95)');
+  const reqP95 = metricValue(summary, 'http_req_duration', 'p(95)');
+  const reqFailed = metricValue(summary, 'http_req_failed', 'rate');
+  const checksRate = metricValue(summary, 'checks', 'rate');
+  const failRate = reqFailed == null ? 0 : reqFailed;
+
+  if (failRate > 0.05) {
+    return 'فشل HTTP مرتفع (5xx/شبكة) — عنق زجاجة غالباً في الخادم أو الاتصال';
+  }
+  if (postP95 != null && postP95 > 3000) {
+    return 'عنق الزجاجة في POST /v1/work-orders/bulk (إنشاء الدفعة نفسه)';
+  }
+  if (pollP95 != null && pollP95 > 2000) {
+    return 'عنق الزجاجة في المعالجة الخلفية/الـ queue أثناء poll_url';
+  }
+  if (reqP95 != null && reqP95 > 1500) {
+    return 'زمن استجابة HTTP عام مرتفع (DB أو موارد التطبيق تحت ضغط)';
+  }
+  if (checksRate != null && checksRate < 0.99) {
+    return 'عنق الزجاجة وظيفي (فشل checks: completion/counts)';
+  }
+  return 'لا يظهر عنق زجاجة حاد؛ المسار ضمن الحدود الحالية';
+}
+
+export function handleSummary(data) {
+  const postAvg = metricValue(data, 'wo_bulk_post_ms', 'avg');
+  const postP95 = metricValue(data, 'wo_bulk_post_ms', 'p(95)');
+  const pollAvg = metricValue(data, 'wo_bulk_poll_ms', 'avg');
+  const pollP95 = metricValue(data, 'wo_bulk_poll_ms', 'p(95)');
+  const reqFailed = metricValue(data, 'http_req_failed', 'rate');
+  const checksRate = metricValue(data, 'checks', 'rate');
+
+  const lines = [
+    '# Work Orders Bulk 200 — Bottleneck',
+    '',
+    `- expected_count: ${expectedCount}`,
+    `- vus: ${bulkVus}, iterations: ${bulkIterations}`,
+    `- wo_bulk_post_ms avg/p95: ${postAvg ?? 'n/a'} / ${postP95 ?? 'n/a'}`,
+    `- wo_bulk_poll_ms avg/p95: ${pollAvg ?? 'n/a'} / ${pollP95 ?? 'n/a'}`,
+    `- http_req_failed rate: ${reqFailed ?? 'n/a'}`,
+    `- checks rate: ${checksRate ?? 'n/a'}`,
+    `- bottleneck: ${identifyBottleneck(data)}`,
+    '',
+  ];
+
+  return {
+    stdout: `${lines.join('\n')}\n`,
+  };
+}
 
 function parseVehicleIds() {
   const raw = (__ENV.K6_BULK_VEHICLE_IDS || '').trim();
@@ -91,6 +153,12 @@ export default function () {
   const vehicleIds = parseVehicleIds();
   if (vehicleIds.length === 0) {
     check(null, { 'K6_BULK_VEHICLE_IDS set': () => false });
+    return;
+  }
+  if (vehicleIds.length !== expectedCount) {
+    check(vehicleIds, {
+      'vehicle_ids count matches expected (200)': (ids) => ids.length === expectedCount,
+    });
     return;
   }
 

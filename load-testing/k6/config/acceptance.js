@@ -117,6 +117,18 @@ export const THRESHOLDS_SOAK = /** @type {K6Thresholds} */ ({
   raw_read_after_write_ok: ['rate>0.80'],
 });
 
+/**
+ * ضغط تدريجي — أوامر عمل + مركبات فقط (بدون POS/صحة).
+ * يعتمد على wo_vehicle_operational_ok و scen_wo_vehicle_http_ms.
+ */
+export const THRESHOLDS_WO_VEHICLE_GRADUAL = /** @type {K6Thresholds} */ ({
+  operational_http_success: ['rate>0.97'],
+  server_errors_5xx: ['rate<0.02'],
+  client_timeout_or_network: ['rate<0.03'],
+  http_req_duration: ['p(50)<1000', 'p(95)<4500', 'p(99)<12000'],
+  wo_vehicle_operational_ok: ['rate>0.93'],
+});
+
 export const PROFILE_LABELS = {
   smoke: 'Smoke — 8 VU, 4 دقائق (ضمن 5–10 / 3–5)',
   normal: 'Normal Load — 30 VU, 15 دقيقة (20–40 / 10–20)',
@@ -127,4 +139,6 @@ export const PROFILE_LABELS = {
   stress: 'Stress — تصعيد 15→130 VU على مراحل',
   spike: 'Spike — قفزة 10→95 VU ثم هبوط',
   soak: 'Soak — 22 VU قراءة × 3 شرائح 30 دقيقة + POS/صحة/عزل موازية (إجمالي ~90 دقيقة)',
+  wo_vehicle_gradual:
+    'Work orders + Vehicles — تصعيد تدريجي 5→50 VU (قوائم + تفاصيل عند توفر معرفات)، بدون POS',
 };

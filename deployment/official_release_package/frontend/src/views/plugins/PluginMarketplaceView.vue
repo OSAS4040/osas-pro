@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900" dir="rtl">
+  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-primary-900/40 to-slate-900" dir="rtl">
     <div class="max-w-screen-2xl mx-auto px-4 py-8 space-y-8">
       <!-- Header -->
       <div class="text-center space-y-3">
-        <div class="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 rounded-full px-4 py-1.5 text-purple-200 text-sm font-medium">
+        <div class="inline-flex items-center gap-2 rounded-full border border-primary-500/30 bg-primary-500/20 px-4 py-1.5 text-sm font-medium text-primary-200">
           <SparklesIcon class="w-4 h-4" />
           منصة الإضافات الذكية
         </div>
         <h1 class="text-3xl sm:text-4xl font-black text-white tracking-tight">
           سوق الإضافات الذكية
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400"> AI Plugins</span>
+          <span class="bg-gradient-to-r from-primary-300 to-cyan-300 bg-clip-text text-transparent"> AI Plugins</span>
         </h1>
         <p class="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
           نقترح ترتيب الإضافات حسب أهميتها لورش وشركات التشغيل السعودية — قوى، التأمينات، التعاقد، التنبيهات، وذكاء تشغيلي.
-          للاشتراكات المدفوعة يُضاف <strong class="text-purple-300">٢٠٪</strong> رسوم منصة على مبلغ أداء/اشتراك المزود، ويُعرض الإجمالي بوضوح.
+          للاشتراكات المدفوعة يُضاف <strong class="text-primary-300">٢٠٪</strong> رسوم منصة على مبلغ أداء/اشتراك المزود، ويُعرض الإجمالي بوضوح.
         </p>
       </div>
 
@@ -31,12 +31,12 @@
 
       <!-- Pricing notice -->
       <div
-        class="rounded-2xl border border-purple-500/25 bg-purple-500/10 px-4 py-3 text-sm text-purple-100/95 flex flex-wrap items-start gap-3"
+        class="flex flex-wrap items-start gap-3 rounded-2xl border border-primary-500/25 bg-primary-500/10 px-4 py-3 text-sm text-primary-100/95"
       >
         <LightBulbIcon class="w-5 h-5 shrink-0 text-amber-300 mt-0.5" />
         <div class="min-w-0">
           <p class="font-semibold text-white">سياسة التسعير الشفافة</p>
-          <p class="text-xs text-purple-200/85 mt-1 leading-relaxed">
+          <p class="mt-1 text-xs leading-relaxed text-primary-200/85">
             «سعر المزود» هو ما يطلبه شريك التشغيل مقابل الاشتراك أو الأداء.
             تضيف المنصة <strong>{{ Math.round(PLATFORM_FEE_RATE * 100) }}٪</strong> لصالحها فيما عدا الإضافات المجانية — لا تُفرض رسوم على
             <span class="whitespace-nowrap">٠ ر.س</span>.
@@ -52,12 +52,12 @@
             <input
               v-model="search"
               placeholder="ابحث بالاسم أو الوصف أو الوسم..."
-              class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pr-10 pl-4 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm"
+              class="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-4 pr-10 text-sm text-white placeholder-slate-500 focus:border-primary-500 focus:outline-none"
             />
           </div>
           <select
             v-model="filterTag"
-            class="bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:border-purple-500"
+            class="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-slate-200 focus:border-primary-500 focus:outline-none"
           >
             <option value="">كل الوسوم</option>
             <option value="recommended">موصى بها فقط</option>
@@ -83,8 +83,8 @@
             type="button"
             :class="
               activeCategory === cat.key
-                ? 'bg-purple-600 text-white border-purple-500'
-                : 'bg-white/5 text-slate-300 border-white/10 hover:border-purple-500/50'
+                ? 'border-primary-500 bg-primary-600 text-white'
+                : 'border-white/10 bg-white/5 text-slate-300 hover:border-primary-500/50'
             "
             class="px-4 py-2 rounded-xl border text-sm font-medium transition-all"
             @click="activeCategory = cat.key"
@@ -225,7 +225,7 @@
                   <span
                     v-for="s in selectedPlugin.module_scope"
                     :key="s"
-                    class="px-2.5 py-0.5 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 text-xs"
+                    class="rounded-full border border-primary-500/30 bg-primary-500/20 px-2.5 py-0.5 text-xs text-primary-300"
                   >{{ s }}</span>
                 </div>
               </div>
@@ -245,7 +245,7 @@
                 v-if="!selectedPlugin.is_installed"
                 type="button"
                 :disabled="installing === selectedPlugin.plugin_key"
-                class="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2"
+                class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
                 @click="installPlugin(selectedPlugin); selectedPlugin = null"
               >
                 <ArrowDownTrayIcon class="w-4 h-4" />
@@ -286,12 +286,12 @@
               </div>
               <div class="bg-white/5 border border-white/10 rounded-xl p-4">
                 <label class="text-xs text-slate-400 block mb-2">حد الثقة الأدنى (%)</label>
-                <input v-model.number="configForm.min_confidence" type="range" min="50" max="95" class="w-full accent-purple-500" />
+                <input v-model.number="configForm.min_confidence" type="range" min="50" max="95" class="w-full accent-primary-500" />
                 <div class="text-white text-sm text-center mt-1">{{ configForm.min_confidence }}%</div>
               </div>
             </div>
             <div class="p-4 border-t border-white/10 flex gap-2">
-              <button type="button" class="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 rounded-xl text-white font-semibold text-sm" @click="saveConfig">
+              <button type="button" class="flex-1 rounded-xl bg-primary-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700" @click="saveConfig">
                 حفظ
               </button>
               <button type="button" class="px-4 py-2.5 bg-white/5 rounded-xl text-slate-300 text-sm" @click="configPlugin = null">إلغاء</button>
@@ -452,7 +452,7 @@ function pluginIcon(icon: string) {
 
 function categoryColor(cat: string) {
   const colors: Record<string, string> = {
-    ai: 'bg-gradient-to-br from-purple-600 to-purple-800',
+    ai: 'bg-gradient-to-br from-primary-600 to-primary-800',
     integration: 'bg-gradient-to-br from-blue-600 to-blue-800',
     analytics: 'bg-gradient-to-br from-green-600 to-green-800',
     ui: 'bg-gradient-to-br from-pink-600 to-pink-800',

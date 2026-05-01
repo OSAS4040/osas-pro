@@ -37,3 +37,40 @@ export function discoverPosContext(baseUrl, token) {
 
   return { customerId, product };
 }
+
+/**
+ * أول أمر عمل وأول مركبة لمسارات التفاصيل تحت الضغط (قراءة فقط).
+ */
+export function discoverWoVehicleContext(baseUrl, token) {
+  const h = { headers: bearerHeaders(token) };
+  let workOrderId = null;
+  let vehicleId = null;
+
+  const woRes = http.get(`${baseUrl}/v1/work-orders?per_page=5`, h);
+  if (woRes.status === 200) {
+    try {
+      const payload = woRes.json();
+      const rows = payload.data && payload.data.data ? payload.data.data : [];
+      if (rows.length && rows[0].id != null) {
+        workOrderId = rows[0].id;
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  const vRes = http.get(`${baseUrl}/v1/vehicles?per_page=5`, h);
+  if (vRes.status === 200) {
+    try {
+      const payload = vRes.json();
+      const rows = payload.data && payload.data.data ? payload.data.data : [];
+      if (rows.length && rows[0].id != null) {
+        vehicleId = rows[0].id;
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  return { workOrderId, vehicleId };
+}

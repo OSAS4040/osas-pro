@@ -824,28 +824,42 @@ const supplierId = ref('')
 const branches = ref<any[]>([])
 const suppliers = ref<any[]>([])
 
+/** مفاتيح ملف النشاط (`feature_matrix`) المرتبطة بكل تبويب — تُخفى التبويبات المعطّلة للمستأجر (يُستثنى المالك). */
 const tabs = computed(() => [
-  { key: 'kpi', label: l('المؤشرات الرئيسية', 'Key metrics') },
-  { key: 'sales', label: l('المبيعات', 'Sales') },
-  { key: 'operations', label: l('تشغيلي', 'Operations'), permission: 'reports.operations.view' },
-  { key: 'modern_ops', label: l('اتصالات + مهام ذكية', 'Communications + Smart Tasks'), permission: 'reports.operations.view' },
-  { key: 'employees', label: l('الموظفين', 'Employees'), permission: 'reports.employees.view' },
-  { key: 'intelligence', label: l('ذكاء الأعمال', 'Business intelligence'), permission: 'reports.intelligence.view' },
-  { key: 'by_customer', label: l('حسب العميل', 'By customer') },
-  { key: 'by_product', label: l('حسب المنتج', 'By product') },
-  { key: 'cashflow', label: l('التدفق النقدي', 'Cashflow'), permission: 'reports.financial.view' },
-  { key: 'purchases', label: l('المشتريات', 'Purchases'), permission: 'reports.financial.view' },
-  { key: 'aging', label: l('أعمار الذمم', 'Receivables aging'), permission: 'reports.financial.view' },
-  { key: 'vat', label: l('الضريبة', 'VAT') },
-  { key: 'overdue', label: l('المتأخرات', 'Overdue') },
-  { key: 'inventory', label: l('المخزون', 'Inventory') },
+  { key: 'kpi', label: l('المؤشرات الرئيسية', 'Key metrics'), tenantFeature: 'reports' },
+  { key: 'sales', label: l('المبيعات', 'Sales'), tenantFeature: 'reports' },
+  { key: 'operations', label: l('تشغيلي', 'Operations'), permission: 'reports.operations.view', tenantFeature: 'operations' },
+  {
+    key: 'modern_ops',
+    label: l('اتصالات + مهام ذكية', 'Communications + Smart Tasks'),
+    permission: 'reports.operations.view',
+    tenantFeature: 'operations',
+  },
+  { key: 'employees', label: l('الموظفين', 'Employees'), permission: 'reports.employees.view', tenantFeature: 'hr' },
+  {
+    key: 'intelligence',
+    label: l('ذكاء الأعمال', 'Business intelligence'),
+    permission: 'reports.intelligence.view',
+    tenantFeature: 'intelligence',
+  },
+  { key: 'by_customer', label: l('حسب العميل', 'By customer'), tenantFeature: 'crm' },
+  { key: 'by_product', label: l('حسب المنتج', 'By product'), tenantFeature: 'reports' },
+  { key: 'cashflow', label: l('التدفق النقدي', 'Cashflow'), permission: 'reports.financial.view', tenantFeature: 'finance' },
+  { key: 'purchases', label: l('المشتريات', 'Purchases'), permission: 'reports.financial.view', tenantFeature: 'finance' },
+  { key: 'aging', label: l('أعمار الذمم', 'Receivables aging'), permission: 'reports.financial.view', tenantFeature: 'finance' },
+  { key: 'vat', label: l('الضريبة', 'VAT'), tenantFeature: 'accounting' },
+  { key: 'overdue', label: l('المتأخرات', 'Overdue'), tenantFeature: 'finance' },
+  { key: 'inventory', label: l('المخزون', 'Inventory'), tenantFeature: 'inventory' },
 ])
-const visibleTabs = computed(() =>
-  tabs.value.filter((t: any) => {
-    if (!t.permission) return true
-    return auth.hasPermission(t.permission)
-  }),
-)
+const visibleTabs = computed(() => {
+  void biz.loaded
+  void biz.effectiveFeatureMatrix
+  return tabs.value.filter((t: any) => {
+    if (t.permission && !auth.hasPermission(t.permission)) return false
+    if (t.tenantFeature && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), t.tenantFeature)) return false
+    return true
+  })
+})
 
 const loading = ref(false)
 const kpiLoading = ref(false)

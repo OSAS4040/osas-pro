@@ -496,6 +496,65 @@ class StateTransitionGuardsTest extends TestCase
         $this->assertSame('in_progress', $order->status->value);
     }
 
+    public function test_work_order_status_transition_is_forbidden_for_fleet_and_customer_roles(): void
+    {
+        $tenant = $this->createTenant();
+
+        $customer = Customer::create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2b',
+            'name' => 'Role Guard Customer',
+            'email' => 'role-guard-'.Str::random(6).'@test.sa',
+            'is_active' => true,
+        ]);
+
+        $vehicle = Vehicle::create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'customer_id' => $customer->id,
+            'created_by_user_id' => $tenant['user']->id,
+            'plate_number' => 'RG-'.Str::upper(Str::random(5)),
+            'make' => 'G',
+            'model' => '1',
+            'year' => 2025,
+            'is_active' => true,
+        ]);
+
+        $order = app(WorkOrderService::class)->create(
+            [
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'items' => [['item_type' => 'service', 'name' => 'Line', 'quantity' => 1, 'unit_price' => 10, 'tax_rate' => 15]],
+            ],
+            $tenant['company']->id,
+            $tenant['branch']->id,
+            $tenant['user']->id,
+        );
+
+        $fleetUser = $this->createUser($tenant['company'], $tenant['branch'], 'fleet_manager');
+        $portalCustomerUser = $this->createUser($tenant['company'], $tenant['branch'], 'customer', [
+            'customer_id' => $customer->id,
+            'email' => $customer->email,
+        ]);
+
+        $this->actingAsUser($fleetUser)
+            ->patchJson("/api/v1/work-orders/{$order->id}/status", [
+                'status' => 'in_progress',
+                'version' => $order->version,
+            ])
+            ->assertForbidden();
+
+        $this->actingAsUser($portalCustomerUser)
+            ->patchJson("/api/v1/work-orders/{$order->id}/status", [
+                'status' => 'completed',
+                'version' => $order->version,
+            ])
+            ->assertForbidden();
+    }
+
     public function test_bay_status_allows_and_rejects_transitions(): void
     {
         $tenant = $this->createTenant();

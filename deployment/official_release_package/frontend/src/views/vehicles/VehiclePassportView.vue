@@ -102,7 +102,7 @@
       <!-- Invoice History -->
       <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-5">
         <h3 class="font-bold text-sm text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-          <DocumentTextIcon class="w-4 h-4 text-purple-500" /> سجل الفواتير
+          <DocumentTextIcon class="w-4 h-4 text-primary-500" /> سجل الفواتير
         </h3>
         <div v-if="!invoices.length" class="text-center py-4 text-gray-400 text-xs">لا توجد فواتير</div>
         <div v-else class="space-y-2">
@@ -257,6 +257,7 @@ import { useToast } from '@/composables/useToast'
 import { PDF_EXPORT_FAIL_AR } from '@/constants/pdfExportMessages'
 import { ensurePrintFontsReady } from '@/composables/useAppPrint'
 import { workOrderStatusLabel, workOrderStatusBadgeClass, workOrderStatusTimelineDotClass } from '@/utils/workOrderStatusLabels'
+import { demoCustomerVehicles, demoCustomerWorkOrders, demoCustomerInvoices } from '@/utils/customerDemoData'
 
 const toast = useToast()
 
@@ -267,6 +268,7 @@ const workOrders = ref<any[]>([])
 const invoices   = ref<any[]>([])
 const editingSettings = ref(false)
 const passportPdfExporting = ref(false)
+const routeVehicleId = Number(route.params.id)
 
 const settings = reactive<Record<string, string>>({
   oil_type: '', oil_capacity: '', battery_capacity: '', tire_size_front: '',
@@ -448,6 +450,10 @@ function applyVehicleSettingsPayload(vs: Record<string, unknown>): void {
   settings.coolant_type = String(cs.coolant_type ?? '')
 }
 
+function getDemoVehicle() {
+  return demoCustomerVehicles.find((v) => Number(v.id) === routeVehicleId) || null
+}
+
 async function load() {
   loading.value = true
   const vid = route.params.id
@@ -464,15 +470,30 @@ async function load() {
     try {
       const wo = await apiClient.get(`/work-orders?vehicle_id=${vid}&per_page=20`)
       workOrders.value = wo.data?.data?.data ?? wo.data?.data ?? []
+      if (!workOrders.value.length && getDemoVehicle()) {
+        workOrders.value = demoCustomerWorkOrders.filter((row) => Number(row.vehicle?.id) === routeVehicleId)
+      }
     } catch {
-      workOrders.value = []
+      workOrders.value = getDemoVehicle()
+        ? demoCustomerWorkOrders.filter((row) => Number(row.vehicle?.id) === routeVehicleId)
+        : []
     }
     try {
       const inv = await apiClient.get(`/invoices?vehicle_id=${vid}&per_page=20`)
       invoices.value = inv.data?.data?.data ?? inv.data?.data ?? []
+      if (!invoices.value.length && getDemoVehicle()) {
+        invoices.value = demoCustomerInvoices
+      }
     } catch {
-      invoices.value = []
+      invoices.value = getDemoVehicle() ? demoCustomerInvoices : []
     }
+  } catch {
+    const demoVehicle = getDemoVehicle()
+    vehicle.value = demoVehicle
+    workOrders.value = demoVehicle
+      ? demoCustomerWorkOrders.filter((row) => Number(row.vehicle?.id) === routeVehicleId)
+      : []
+    invoices.value = demoVehicle ? demoCustomerInvoices : []
   } finally {
     loading.value = false
   }

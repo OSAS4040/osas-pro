@@ -13,7 +13,9 @@
       <div class="flex items-center gap-2 flex-wrap shrink-0">
         <ExcelImport
           endpoint="/api/v1/governance/employees/import"
-          template-url="/templates/employees_template.csv"
+          template-url="/templates/employees_template.xlsx"
+          template-file-name="employees_template.xlsx"
+          :template-columns="['name', 'national_id', 'position', 'phone', 'email', 'department', 'base_salary', 'hire_date']"
           label="استيراد Excel"
           title="استيراد موظفين من Excel"
           @imported="refreshAll"

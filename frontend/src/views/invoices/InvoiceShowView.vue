@@ -3,7 +3,7 @@
     <NavigationSourceHint class="no-print" />
     <div class="no-print flex items-center justify-between">
       <div>
-        <RouterLink to="/invoices" class="text-sm text-primary-600 hover:underline">← الفواتير</RouterLink>
+        <RouterLink to="/customer/invoices" class="text-sm text-primary-600 hover:underline">← الفواتير</RouterLink>
         <h2 class="text-xl font-bold text-gray-900 dark:text-slate-100 mt-1 font-mono">{{ invoice?.invoice_number ?? '…' }}</h2>
       </div>
       <div class="flex flex-col items-end gap-1">
@@ -557,12 +557,10 @@
                 <div class="formal-doc-type">Tax Invoice</div>
                 <p class="formal-co-name">{{ printCompanyNameEn }}</p>
                 <div class="formal-issuer-lines">
-                  <p v-if="company?.address">{{ company.address }}</p>
-                  <p v-if="company?.tax_number || company?.vat_number">
-                    VAT: {{ company?.tax_number || company?.vat_number }}
-                  </p>
-                  <p v-if="company?.cr_number">CR: {{ company.cr_number }}</p>
-                  <p v-if="company?.phone">{{ company.phone }}</p>
+                  <p>{{ company?.address || 'Saudi Arabia' }}</p>
+                  <p>VAT: {{ company?.tax_number || company?.vat_number || '—' }}</p>
+                  <p>CR: {{ company?.cr_number || '—' }}</p>
+                  <p>{{ company?.phone || '—' }}</p>
                 </div>
               </div>
               <div class="formal-issuer-logo-mid">
@@ -577,12 +575,10 @@
                 <div class="formal-doc-type">فاتورة ضريبية</div>
                 <p class="formal-co-name">{{ printCompanyNameAr }}</p>
                 <div class="formal-issuer-lines">
-                  <p v-if="company?.address">{{ company.address }}</p>
-                  <p v-if="company?.tax_number || company?.vat_number">
-                    الرقم الضريبي: {{ company?.tax_number || company?.vat_number }}
-                  </p>
-                  <p v-if="company?.cr_number">السجل التجاري: {{ company.cr_number }}</p>
-                  <p v-if="company?.phone">{{ company.phone }}</p>
+                  <p>{{ company?.address || 'المملكة العربية السعودية' }}</p>
+                  <p>الرقم الضريبي: {{ company?.tax_number || company?.vat_number || '—' }}</p>
+                  <p>السجل التجاري: {{ company?.cr_number || '—' }}</p>
+                  <p>{{ company?.phone || '—' }}</p>
                 </div>
               </div>
             </div>
@@ -768,6 +764,7 @@ import {
   invoicePrintCompanyDisplayName,
   invoicePrintLogoMonogram,
 } from '@/utils/invoicePrintDisplay'
+import { demoCustomerInvoices } from '@/utils/customerDemoData'
 
 const route   = useRoute()
 const id      = Number(route.params.id)
@@ -947,6 +944,57 @@ const invoiceSettings = reactive({
   footer_note: '',
 })
 
+function makeDemoInvoiceById(invoiceId: number): any | null {
+  const src = demoCustomerInvoices.find((x: any) => Number(x.id) === invoiceId)
+  if (!src) return null
+  const total = Number(src.total ?? 0)
+  const status = String(src.status ?? 'unpaid')
+  const paid = status === 'paid' ? total : 0
+  const due = Math.max(0, total - paid)
+  return {
+    id: src.id,
+    uuid: `demo-invoice-${src.id}`,
+    invoice_number: src.invoice_number || `INV-DEMO-${src.id}`,
+    invoice_counter: src.id,
+    issued_at: src.issue_date ? new Date(src.issue_date).toISOString() : new Date().toISOString(),
+    due_at: src.issue_date ? new Date(src.issue_date).toISOString() : null,
+    status,
+    customer_type: 'corporate',
+    source_type: 'DemoWorkOrder',
+    source_id: src.id,
+    subtotal: total,
+    discount_amount: 0,
+    tax_amount: 0,
+    total,
+    paid_amount: paid,
+    due_amount: due,
+    invoice_hash: `DEMO-HASH-${src.id}`,
+    previous_invoice_hash: `DEMO-HASH-${Math.max(0, Number(src.id) - 1)}`,
+    customer_id: 1,
+    customer: {
+      name: src.customer_name || 'العميل التجريبي',
+      phone: '0500000000',
+      address: 'الرياض',
+      cr_number: '1010123456',
+    },
+    branch: { name: 'الفرع التجريبي' },
+    created_by: { name: 'منصة العميل' },
+    items: [
+      {
+        id: `demo-item-${src.id}-1`,
+        name: 'خدمة صيانة تجريبية',
+        description: 'تم توليد هذه الفاتورة كبيانات تجريبية للتحقق من الواجهة.',
+        quantity: 1,
+        unit_price: total,
+        tax_amount: 0,
+        line_total: total,
+        service_id: 1,
+      },
+    ],
+    payments: [],
+  }
+}
+
 async function load() {
   if (invoice.value) refreshing.value = true
   else loading.value = true
@@ -977,6 +1025,22 @@ async function load() {
       talkingInvoice.afterPhotos  = (invoice.value.media.after  || []).map((url: string) => ({ url }))
       talkingInvoice.videoUrl     = invoice.value.media.video_url || ''
       talkingInvoice.videoLink    = invoice.value.media.video_link || ''
+    }
+  } catch (e: any) {
+    const fallback = makeDemoInvoiceById(id)
+    if (fallback) {
+      invoice.value = fallback
+      company.value = company.value || {
+        name_ar: 'منصة Verdent',
+        name: 'Verdent Platform',
+        address: 'المملكة العربية السعودية',
+        tax_number: '300000000000003',
+        cr_number: '1010123456',
+      }
+      toast.warning('تم عرض فاتورة تجريبية', 'تعذر جلب الفاتورة الفعلية من الخادم.')
+    } else {
+      invoice.value = null
+      toast.error('تعذر تحميل الفاتورة', e?.response?.data?.message || 'تحقق من صحة رقم الفاتورة.')
     }
   } finally {
     loading.value = false
@@ -1081,7 +1145,11 @@ async function printInvoice() {
     toast.error('تعذّر الطباعة', 'لم يُعثر على قالب الفاتورة.')
     return
   }
-  await printDocument({ root })
+  await printDocument({
+    root,
+    title: `فاتورة ${invoice.value?.invoice_number || id}`,
+    includeFormalFrame: false,
+  })
 }
 
 async function exportPDF() {
@@ -1132,7 +1200,15 @@ async function exportPDF() {
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  if (String(route.query.autoprint || '') === '1') {
+    await nextTick()
+    setTimeout(() => {
+      void printInvoice()
+    }, 250)
+  }
+})
 </script>
 
 <style scoped>

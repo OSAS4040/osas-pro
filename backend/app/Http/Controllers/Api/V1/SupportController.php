@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
 use App\Models\TicketReply;
@@ -9,6 +10,7 @@ use App\Models\KnowledgeBase;
 use App\Models\KbCategory;
 use App\Models\SlaPolicy;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +19,78 @@ use Illuminate\Support\Str;
 
 class SupportController extends Controller
 {
+    protected function customerPortalUser(\App\Models\User $user): bool
+    {
+        return $user->role === UserRole::Customer;
+    }
+
+    /** بوابة العميل: التذاكر المرتبطة بالمستخدم أو سجل العميل (CRM) فقط. */
+    protected function scopeTicketsForCustomerPortal(Builder $q, \App\Models\User $user): void
+    {
+        $q->where(function ($w) use ($user) {
+            $w->where('created_by', $user->id);
+            if ($user->customer_id) {
+                $w->orWhere('customer_id', $user->customer_id);
+            }
+        });
+    }
+
+    protected function customerOwnsTicket(SupportTicket $ticket, \App\Models\User $user): bool
+    {
+        if ((int) $ticket->created_by === (int) $user->id) {
+            return true;
+        }
+        if ($user->customer_id && (int) $ticket->customer_id === (int) $user->customer_id) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function assertTicketAccessibleByCustomer(\App\Models\User $user, SupportTicket $ticket): void
+    {
+        if (! $this->customerPortalUser($user)) {
+            return;
+        }
+        if (! $this->customerOwnsTicket($ticket, $user)) {
+            abort(403, 'غير مصرّح بعرض هذه التذكرة.');
+        }
+    }
+
+    /**
+     * انتقالات مسموحة لمستخدمي بوابة العميل فقط (بدون صلاحيات فريق الدعم الكاملة).
+     */
+    protected function assertCustomerStatusTransitionAllowed(\App\Models\User $user, SupportTicket $ticket, string $newStatus): void
+    {
+        if (! $this->customerPortalUser($user)) {
+            return;
+        }
+        $old = $ticket->status;
+        $allowed = match ($newStatus) {
+            'pending_customer' => in_array($old, ['open', 'in_progress'], true),
+            'closed' => $old === 'resolved',
+            default => false,
+        };
+        if (! $allowed) {
+            abort(403, 'لا يُسمح بتغيير الحالة بهذه الطريقة من حساب العميل.');
+        }
+    }
+
+    protected function forgetSupportStatsCaches(SupportTicket $ticket): void
+    {
+        Cache::forget("support_stats_{$ticket->company_id}");
+        Cache::forget("support_stats_company_{$ticket->company_id}_customer_user_{$ticket->created_by}");
+        if ($ticket->customer_id) {
+            $uids = User::query()
+                ->where('company_id', $ticket->company_id)
+                ->where('customer_id', $ticket->customer_id)
+                ->pluck('id');
+            foreach ($uids as $uid) {
+                Cache::forget("support_stats_company_{$ticket->company_id}_customer_user_{$uid}");
+            }
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════════════════
     //  TICKETS
     // ═══════════════════════════════════════════════════════════════════════════
@@ -28,6 +102,10 @@ class SupportController extends Controller
 
         $q = SupportTicket::with(['customer:id,name,phone', 'assignedTo:id,name', 'createdBy:id,name'])
             ->where('company_id', $companyId);
+
+        if ($this->customerPortalUser($user)) {
+            $this->scopeTicketsForCustomerPortal($q, $user);
+        }
 
         // Filters
         if ($s = $request->status)   $q->where('status', $s);
@@ -81,6 +159,14 @@ class SupportController extends Controller
 
         $user = $request->user();
 
+        if ($this->customerPortalUser($user)) {
+            $data['assigned_to']  = null;
+            $data['is_private']   = $data['is_private'] ?? false;
+            if (empty($data['customer_id']) && $user->customer_id) {
+                $data['customer_id'] = $user->customer_id;
+            }
+        }
+
         // AI Analysis
         $ai = SupportTicket::analyzeTicket($data['subject'] . ' ' . $data['description']);
         if (empty($data['category'])) $data['category'] = $ai['category'];
@@ -115,7 +201,7 @@ class SupportController extends Controller
             'sla_due_at'  => $ticket->sla_due_at,
         ]);
 
-        Cache::forget("support_stats_{$user->company_id}");
+        $this->forgetSupportStatsCaches($ticket);
 
         return response()->json([
             'data'     => $ticket->load(['customer', 'assignedTo', 'slaPolicy']),
@@ -125,14 +211,22 @@ class SupportController extends Controller
 
     public function showTicket(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
         $ticket = SupportTicket::with([
-            'replies.user:id,name,role',
+            'replies' => function ($q) use ($user) {
+                if ($this->customerPortalUser($user)) {
+                    $q->where('is_internal', false);
+                }
+                $q->with('user:id,name,role');
+            },
             'customer:id,name,phone,email',
             'assignedTo:id,name,role',
             'createdBy:id,name',
             'slaPolicy',
             'watchers:id,name',
         ])->findOrFail($id);
+
+        $this->assertTicketAccessibleByCustomer($user, $ticket);
 
         $ticket->append(['is_overdue', 'sla_remaining_minutes', 'sla_percentage']);
 
@@ -155,16 +249,25 @@ class SupportController extends Controller
         $ticket = SupportTicket::findOrFail($id);
         $user   = $request->user();
 
-        $data = $request->validate([
-            'subject'       => 'nullable|string|max:255',
-            'description'   => 'nullable|string',
-            'category'      => 'nullable|string',
-            'priority'      => 'nullable|in:critical,high,medium,low',
-            'assigned_to'   => 'nullable|integer|exists:users,id',
-            'tags'          => 'nullable|array',
-            'internal_notes'=> 'nullable|string',
-            'is_private'    => 'nullable|boolean',
-        ]);
+        $this->assertTicketAccessibleByCustomer($user, $ticket);
+
+        if ($this->customerPortalUser($user)) {
+            $data = $request->validate([
+                'subject'     => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+            ]);
+        } else {
+            $data = $request->validate([
+                'subject'       => 'nullable|string|max:255',
+                'description'   => 'nullable|string',
+                'category'      => 'nullable|string',
+                'priority'      => 'nullable|in:critical,high,medium,low',
+                'assigned_to'   => 'nullable|integer|exists:users,id',
+                'tags'          => 'nullable|array',
+                'internal_notes'=> 'nullable|string',
+                'is_private'    => 'nullable|boolean',
+            ]);
+        }
 
         $oldPriority    = $ticket->priority;
         $oldAssignedTo  = $ticket->assigned_to;
@@ -195,7 +298,7 @@ class SupportController extends Controller
             ]);
         }
 
-        Cache::forget("support_stats_{$ticket->company_id}");
+        $this->forgetSupportStatsCaches($ticket);
 
         return response()->json(['data' => $ticket->fresh()->load(['assignedTo','slaPolicy']), 'trace_id' => app('trace_id')]);
     }
@@ -205,10 +308,14 @@ class SupportController extends Controller
         $ticket = SupportTicket::findOrFail($id);
         $user   = $request->user();
 
+        $this->assertTicketAccessibleByCustomer($user, $ticket);
+
         $data = $request->validate([
             'status'  => 'required|in:open,in_progress,pending_customer,resolved,closed,escalated',
             'comment' => 'nullable|string',
         ]);
+
+        $this->assertCustomerStatusTransitionAllowed($user, $ticket, $data['status']);
 
         $oldStatus   = $ticket->status;
         $newStatus   = $data['status'];
@@ -264,7 +371,7 @@ class SupportController extends Controller
             ]);
         }
 
-        Cache::forget("support_stats_{$ticket->company_id}");
+        $this->forgetSupportStatsCaches($ticket);
 
         return response()->json(['data' => $ticket->fresh(), 'trace_id' => app('trace_id')]);
     }
@@ -278,11 +385,17 @@ class SupportController extends Controller
         $ticket = SupportTicket::findOrFail($ticketId);
         $user   = $request->user();
 
+        $this->assertTicketAccessibleByCustomer($user, $ticket);
+
         $data = $request->validate([
             'body'        => 'required|string',
             'is_internal' => 'nullable|boolean',
             'attachments' => 'nullable|array',
         ]);
+
+        if ($this->customerPortalUser($user)) {
+            $data['is_internal'] = false;
+        }
 
         // Mark first response time
         if (!$ticket->first_response_at && $user->id !== $ticket->created_by) {
@@ -304,13 +417,16 @@ class SupportController extends Controller
             'uuid'        => Str::uuid(),
             'ticket_id'   => $ticket->id,
             'user_id'     => $user->id,
-            'author_type' => 'staff',
+            'author_type' => $this->customerPortalUser($user) ? 'customer' : 'staff',
             'author_name' => $user->name,
             'body'        => $data['body'],
             'is_internal' => $data['is_internal'] ?? false,
             'attachments' => $data['attachments'] ?? null,
             'event_type'  => 'reply',
         ]);
+
+        $ticket->refresh();
+        $this->forgetSupportStatsCaches($ticket);
 
         return response()->json(['data' => $reply->load('user:id,name,role'), 'trace_id' => app('trace_id')], 201);
     }
@@ -322,6 +438,7 @@ class SupportController extends Controller
     public function rateSatisfaction(Request $request, int $id): JsonResponse
     {
         $ticket = SupportTicket::findOrFail($id);
+        $this->assertTicketAccessibleByCustomer($request->user(), $ticket);
 
         $data = $request->validate([
             'score'   => 'required|integer|min:1|max:5',
@@ -336,6 +453,9 @@ class SupportController extends Controller
 
         $this->logEvent($ticket, $request->user(), 'satisfaction', 'system', $data);
 
+        $ticket->refresh();
+        $this->forgetSupportStatsCaches($ticket);
+
         return response()->json(['data' => $ticket->fresh(), 'trace_id' => app('trace_id')]);
     }
 
@@ -345,12 +465,18 @@ class SupportController extends Controller
 
     public function stats(Request $request): JsonResponse
     {
-        $user      = $request->user();
-        $companyId = $user->company_id;
-        $cacheKey  = "support_stats_{$companyId}";
+        $user       = $request->user();
+        $companyId  = $user->company_id;
+        $isCustomer = $this->customerPortalUser($user);
+        $cacheKey   = $isCustomer
+            ? "support_stats_company_{$companyId}_customer_user_{$user->id}"
+            : "support_stats_{$companyId}";
 
-        $data = Cache::remember($cacheKey, 120, function () use ($companyId) {
+        $data = Cache::remember($cacheKey, 120, function () use ($companyId, $user, $isCustomer) {
             $base = SupportTicket::where('company_id', $companyId);
+            if ($isCustomer) {
+                $this->scopeTicketsForCustomerPortal($base, $user);
+            }
 
             $byStatus = (clone $base)->select('status', DB::raw('COUNT(*) as count'))
                 ->groupBy('status')->pluck('count', 'status');
@@ -362,7 +488,7 @@ class SupportController extends Controller
                 ->groupBy('category')->orderByDesc('count')->pluck('count', 'category');
 
             $overdue = (clone $base)->where('sla_due_at', '<', now())
-                ->whereNotIn('status', ['resolved','closed'])->count();
+                ->whereNotIn('status', ['resolved', 'closed'])->count();
 
             $avgResolutionHours = (clone $base)
                 ->whereNotNull('resolved_at')
@@ -376,20 +502,21 @@ class SupportController extends Controller
             $slaBreachRate = (clone $base)->where('sla_breached', true)->count()
                            / max(1, (clone $base)->count()) * 100;
 
-            // Last 30 days trend
             $trend = (clone $base)
                 ->where('created_at', '>=', now()->subDays(30))
                 ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
                 ->groupBy('date')->orderBy('date')->get();
 
-            // Top agents by resolved tickets
-            $topAgents = (clone $base)->where('status', 'resolved')
-                ->whereNotNull('assigned_to')
-                ->select('assigned_to', DB::raw('COUNT(*) as resolved_count'))
-                ->groupBy('assigned_to')->orderByDesc('resolved_count')->limit(5)
-                ->with(['assignedTo:id,name'])->get();
+            $topAgents = collect();
+            if (! $isCustomer) {
+                $topAgents = (clone $base)->where('status', 'resolved')
+                    ->whereNotNull('assigned_to')
+                    ->select('assigned_to', DB::raw('COUNT(*) as resolved_count'))
+                    ->groupBy('assigned_to')->orderByDesc('resolved_count')->limit(5)
+                    ->with(['assignedTo:id,name'])->get();
+            }
 
-            return [
+            $payload = [
                 'total'                => (clone $base)->count(),
                 'open'                 => $byStatus['open'] ?? 0,
                 'in_progress'          => $byStatus['in_progress'] ?? 0,
@@ -405,6 +532,13 @@ class SupportController extends Controller
                 'trend_30d'            => $trend,
                 'top_agents'           => $topAgents,
             ];
+
+            if ($isCustomer) {
+                $payload['pending_customer'] = $byStatus['pending_customer'] ?? 0;
+                $payload['unread_count']     = ($byStatus['open'] ?? 0) + ($byStatus['in_progress'] ?? 0);
+            }
+
+            return $payload;
         });
 
         return response()->json(['data' => $data, 'trace_id' => app('trace_id')]);

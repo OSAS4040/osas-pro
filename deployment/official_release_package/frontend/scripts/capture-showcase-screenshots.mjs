@@ -1,6 +1,6 @@
 /**
  * يلتقط لقطات شاشة PNG من الواجهة الفعلية لمجلد public/landing/showcase/
- * (نفس أسماء الجذوع: pos, workorder, inventory, reports, billing, intelligence).
+ * (نفس أسماء الجذوع: workorder, inventory, reports, billing, intelligence).
  *
  * المتطلبات: تشغيل الواجهة + واجهة API مع بيانات تجريبية (مثلاً DemoCompanySeeder).
  * تشغيل: من مجلد frontend بعد npm install:
@@ -22,7 +22,6 @@ const email = process.env.SHOWCASE_EMAIL || 'owner@demo.sa'
 const password = process.env.SHOWCASE_PASSWORD || 'password'
 
 const shots = [
-  { path: '/pos', stem: 'pos' },
   { path: '/work-orders', stem: 'workorder' },
   { path: '/inventory', stem: 'inventory' },
   { path: '/reports', stem: 'reports' },

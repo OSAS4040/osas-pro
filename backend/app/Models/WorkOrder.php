@@ -17,6 +17,7 @@ class WorkOrder extends Model
         'order_number', 'work_order_number', 'status', 'priority',
         'source_type', 'source_id',
         'customer_complaint', 'diagnosis', 'technician_notes',
+        'before_service_images', 'after_service_images', 'internal_service_images',
         'mileage_in', 'mileage_out', 'odometer_reading',
         'driver_name', 'driver_phone', 'notes',
         'estimated_total', 'actual_total',
@@ -36,6 +37,9 @@ class WorkOrder extends Model
         'approved_at'         => 'datetime',
         'fleet_approved_at'   => 'datetime',
         'credit_authorized'   => 'boolean',
+        'before_service_images' => 'array',
+        'after_service_images' => 'array',
+        'internal_service_images' => 'array',
     ];
 
     public function customer()

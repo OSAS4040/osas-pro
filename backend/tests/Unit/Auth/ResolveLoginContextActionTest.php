@@ -31,7 +31,8 @@ class ResolveLoginContextActionTest extends TestCase
     public function test_platform_phone_without_company_maps_to_platform_employee(): void
     {
         Config::set('saas.platform_admin_emails', []);
-        Config::set('saas.platform_admin_phones', ['05041112233']);
+        // يجب أن يطابق صيغة أرقام المستخدم بعد PhoneNormalizer (966504112233 ↔ 0504112233).
+        Config::set('saas.platform_admin_phones', ['966504112233']);
 
         $user = User::withoutGlobalScopes()->create([
             'uuid'               => \Illuminate\Support\Str::uuid(),

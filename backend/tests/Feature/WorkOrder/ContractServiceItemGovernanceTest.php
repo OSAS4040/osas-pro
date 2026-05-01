@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature\WorkOrder;
 
 use App\Enums\ServicePricingPolicyType;
+use App\Enums\PlatformPricingRequestStatus;
 use App\Enums\WorkOrderPricingSource;
 use App\Models\Contract;
 use App\Models\ContractServiceItem;
 use App\Models\Customer;
+use App\Models\PlatformCustomerPriceVersion;
+use App\Models\PlatformPricingRequest;
 use App\Models\Service;
 use App\Models\ServicePricingPolicy;
 use App\Models\Vehicle;
@@ -271,15 +274,63 @@ final class ContractServiceItemGovernanceTest extends TestCase
             'priority' => 0,
         ]);
 
-        $this->actingAs($fx['user'], 'sanctum')
+        $approvedReq = PlatformPricingRequest::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $fx['company']->id,
+            'customer_id' => $fx['customer']->id,
+            'status' => PlatformPricingRequestStatus::Approved,
+            'title' => 'Approved gate for pricing preview',
+            'created_by_user_id' => $fx['user']->id,
+            'approved_by_user_id' => $fx['user']->id,
+            'approved_at' => now()->subMinute(),
+            'version_no' => 1,
+        ]);
+        PlatformCustomerPriceVersion::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $fx['company']->id,
+            'customer_id' => $fx['customer']->id,
+            'platform_pricing_request_id' => $approvedReq->id,
+            'version_no' => 1,
+            'is_reference' => true,
+            'sell_snapshot' => [['service_code' => 'OIL', 'unit_price' => 88]],
+            'activated_at' => now()->subMinute(),
+        ]);
+
+        $res = $this->actingAs($fx['user'], 'sanctum')
             ->postJson('/api/v1/work-orders/line-pricing-preview', [
                 'customer_id' => $fx['customer']->id,
                 'vehicle_id' => $fx['vehicle']->id,
                 'service_id' => $fx['service']->id,
                 'quantity' => 1,
-            ])
-            ->assertOk()
-            ->assertJsonPath('data.unit_price', 88.0)
+            ]);
+        $res->assertOk()
             ->assertJsonPath('data.pricing_source', WorkOrderPricingSource::Contract->value);
+        $this->assertEqualsWithDelta(88.0, (float) $res->json('data.unit_price'), 0.00001);
+    }
+
+    public function test_staff_line_pricing_preview_is_blocked_without_platform_approved_price_version(): void
+    {
+        $fx = $this->baseFx();
+        ContractServiceItem::create([
+            'company_id' => $fx['company']->id,
+            'contract_id' => $fx['contract']->id,
+            'service_id' => $fx['service']->id,
+            'unit_price' => 88,
+            'tax_rate' => 15,
+            'applies_to_all_vehicles' => true,
+            'status' => 'active',
+            'priority' => 0,
+        ]);
+
+        $res = $this->actingAs($fx['user'], 'sanctum')
+            ->postJson('/api/v1/work-orders/line-pricing-preview', [
+                'customer_id' => $fx['customer']->id,
+                'vehicle_id' => $fx['vehicle']->id,
+                'service_id' => $fx['service']->id,
+                'quantity' => 1,
+            ]);
+
+        $res->assertStatus(422);
+        $this->assertStringContainsString('اعتماد نسخة أسعار نشطة', (string) $res->json('message'));
     }
 }

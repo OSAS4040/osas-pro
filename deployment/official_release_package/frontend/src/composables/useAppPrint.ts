@@ -16,6 +16,8 @@ export async function ensurePrintFontsReady(): Promise<void> {
 export interface AppPrintOptions {
   rootSelector?: string
   root?: HTMLElement | null
+  title?: string
+  includeFormalFrame?: boolean
 }
 
 export async function printDocument(opts: AppPrintOptions = {}): Promise<void> {
@@ -39,11 +41,46 @@ export async function printDocument(opts: AppPrintOptions = {}): Promise<void> {
     return
   }
 
-  root.classList.add('print-container--active')
+  const printRoot = root as HTMLElement
+  const includeFormalFrame = opts.includeFormalFrame !== false
+  const printTitle = String(opts.title || document.title || 'تقرير النظام').trim()
+  const printedAt = new Date().toLocaleString('ar-SA-u-ca-gregory')
+
+  const formalHeader = document.createElement('div')
+  formalHeader.className = 'app-print-header app-print-only'
+  formalHeader.setAttribute('data-print-role', 'header')
+  formalHeader.innerHTML = `
+    <div class="app-print-header__left">
+      <div class="app-print-brand">Verdent</div>
+      <div class="app-print-subtitle">نظام إدارة عمليات العميل</div>
+    </div>
+    <div class="app-print-header__right">
+      <div class="app-print-doc-title">${printTitle}</div>
+      <div class="app-print-doc-stamp">نسخة طباعة رسمية</div>
+    </div>
+  `
+
+  const formalFooter = document.createElement('div')
+  formalFooter.className = 'app-print-footer app-print-only'
+  formalFooter.setAttribute('data-print-role', 'footer')
+  formalFooter.innerHTML = `
+    <div class="app-print-footer__left app-print-page-counter"></div>
+    <div class="app-print-footer__right">ختم الوقت: ${printedAt}</div>
+  `
+
+  if (includeFormalFrame) {
+    printRoot.prepend(formalHeader)
+    printRoot.append(formalFooter)
+    printRoot.classList.add('print-container--active', 'print-formal-template')
+  }
   document.body.classList.add('print-content-isolated')
   const done = () => {
     document.body.classList.remove('print-content-isolated')
-    root?.classList.remove('print-container--active')
+    if (includeFormalFrame) {
+      formalHeader.remove()
+      formalFooter.remove()
+      printRoot.classList.remove('print-container--active', 'print-formal-template')
+    }
     window.removeEventListener('afterprint', done)
   }
   window.addEventListener('afterprint', done, { once: true })

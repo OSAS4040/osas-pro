@@ -87,6 +87,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/platform/companies/{id}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'showCompany']);
             Route::get('/platform/companies/{id}/entity-snapshot', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companyEntitySnapshot']);
             Route::get('/platform/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
+            Route::get('/platform/provider-invoice-attachments', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'providerInvoiceAttachments']);
             Route::get('/platform/search', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'globalSearch']);
             Route::get('/platform/plans', [\App\Http\Controllers\Api\V1\SaasController::class, 'listPlans']);
             Route::get('/platform/customers', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'platformCustomers'])
@@ -592,6 +593,12 @@ Route::prefix('v1')->group(function () {
             ->middleware('permission:pricing_policies.manage');
 
         Route::prefix('work-orders')->group(function () {
+            Route::get('/intake-lookup', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'intakeLookup'])
+                ->middleware('permission:work_orders.view');
+            Route::post('/intake-lookup-camera', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'intakeLookupCamera'])
+                ->middleware('permission:work_orders.view');
+            Route::post('/intake-odometer-ocr', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'intakeOdometerOcr'])
+                ->middleware('permission:work_orders.view');
             Route::post('/line-pricing-preview', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'linePricingPreview'])
                 ->middleware('permission:work_orders.view');
             Route::get('/',              [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'index']);
@@ -612,7 +619,12 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:work_orders.view');
             Route::post('/{id}/share-whatsapp-driver', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'shareWhatsAppDriver'])
                 ->middleware('permission:work_orders.view');
-            Route::get('/{id}',          [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'show']);
+            Route::post('/{id}/service-media', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'uploadServiceMedia'])
+                ->middleware('permission:work_orders.update');
+            Route::patch('/{id}/execution-report', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'updateExecutionReport'])
+                ->middleware('permission:work_orders.update');
+            Route::get('/{id}',          [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'show'])
+                ->middleware('permission:work_orders.view');
             Route::put('/{id}',          [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'update'])
                 ->middleware('permission:work_orders.update');
             Route::patch('/{id}/status', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'updateStatus'])
@@ -764,6 +776,15 @@ Route::prefix('v1')->group(function () {
             ->middleware(['permission:suppliers.update', 'business.feature:supplier_contract_mgmt']);
         Route::delete('/suppliers/{supplierId}/contracts/{contractId}', [\App\Http\Controllers\Api\V1\SupplierContractController::class, 'destroy'])
             ->middleware(['permission:suppliers.update', 'business.feature:supplier_contract_mgmt']);
+
+        Route::prefix('purchase-claims')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\PurchaseClaimController::class, 'index'])
+                ->middleware('permission:purchases.claims.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\PurchaseClaimController::class, 'store'])
+                ->middleware('permission:purchases.claims.create');
+            Route::patch('/{id}/review', [\App\Http\Controllers\Api\V1\PurchaseClaimController::class, 'review'])
+                ->middleware('permission:purchases.claims.review');
+        });
 
         Route::prefix('purchases')->group(function () {
             Route::get('/',                    [\App\Http\Controllers\Api\V1\PurchaseController::class, 'index']);
@@ -1160,6 +1181,7 @@ Route::prefix('v1')->group(function () {
 
         // Excel Import
         Route::post('/products/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importProducts']);
+        Route::post('/services/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importServices']);
         Route::post('/vehicles/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importVehicles']);
         Route::get('/products/template', [\App\Http\Controllers\Api\V1\ImportController::class, 'productsTemplate']);
         Route::get('/vehicles/template', [\App\Http\Controllers\Api\V1\ImportController::class, 'vehiclesTemplate']);
@@ -1272,6 +1294,22 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->prefix('customer-portal')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\CustomerPortalController::class, 'dashboard']);
         Route::get('/pricing', [\App\Http\Controllers\Api\V1\CustomerPortalController::class, 'pricing']);
+        Route::get('/work-orders/{id}/media', [\App\Http\Controllers\Api\V1\CustomerPortalController::class, 'workOrderMedia']);
+        Route::get('/team-users', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'index']);
+        Route::post('/team-users', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'store']);
+        Route::put('/team-users/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'update']);
+        Route::delete('/team-users/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'destroy']);
+        Route::get('/org-units/tree', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'tree']);
+        Route::post('/org-units', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'store']);
+        Route::put('/org-units/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'update']);
+        Route::delete('/org-units/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'destroy']);
+        Route::get('/reports/filter-options', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'filterOptions']);
+        Route::get('/reports/summary', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'summary']);
+        Route::get('/reports/invoices', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'invoices']);
+        Route::get('/reports/org-unit-breakdown', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'orgUnitBreakdown']);
+        Route::get('/reports/work-order-items-by-service', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'itemsByService']);
+        Route::get('/reports/work-order-items-by-product', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'itemsByProduct']);
+        Route::get('/reports/work-orders-completed', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'workOrdersCompleted']);
     });
 
     Route::middleware(['auth.apikey', 'api.log', 'financial.protection', 'subscription'])->group(function () {

@@ -77,7 +77,7 @@
               <LockClosedIcon v-if="!canUseGeo" class="w-3.5 h-3.5 text-gray-400" />
             </p>
             <p class="text-xs text-gray-500 mt-0.5">يُتحقق من موقع الموظف تلقائياً عند التسجيل</p>
-            <span class="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full" :class="canUseGeo ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-400'">
+            <span class="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full" :class="canUseGeo ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-400'">
               {{ canUseGeo ? 'مفعّل' : 'يتطلب Professional أو أعلى' }}
             </span>
           </div>

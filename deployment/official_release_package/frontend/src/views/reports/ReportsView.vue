@@ -23,6 +23,13 @@
             {{ l('الخريطة الحرارية', 'Heatmap') }}
           </RouterLink>
           <RouterLink
+            v-if="showGlobalOperationsFeedLink"
+            to="/operations/global-feed"
+            class="inline-flex items-center gap-1 rounded-lg border border-slate-200/80 dark:border-slate-600 bg-slate-50/90 dark:bg-slate-800/60 px-2.5 py-1 text-[11px] font-medium text-slate-800 dark:text-slate-100 hover:bg-slate-100/90 dark:hover:bg-slate-700/50"
+          >
+            {{ l('مركز العمليات', 'Operations command center') }}
+          </RouterLink>
+          <RouterLink
             to="/"
             class="inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50/80 dark:bg-slate-800/60 px-2.5 py-1 text-[11px] font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700/50"
           >
@@ -34,7 +41,7 @@
         <button
           type="button"
           :title="l('مشاركة الرابط مع نفس نطاق التواريخ', 'Share link with same date range')"
-          class="px-3 py-2 text-sm rounded-lg border border-violet-300 text-violet-700 dark:border-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/40"
+          class="px-3 py-2 text-sm rounded-lg border border-primary-300 text-primary-700 dark:border-primary-700 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-950/40"
           @click="shareReport"
         >
           {{ l('مشاركة', 'Share') }}
@@ -731,7 +738,7 @@
               <tr v-for="r in vat.by_rate" :key="String(r.tax_rate)" class="border-b dark:border-slate-700/50">
                 <td class="py-2">{{ r.tax_rate }}%</td>
                 <td class="py-2">{{ fmt(r.taxable_amount) }}</td>
-                <td class="py-2 font-medium text-purple-600">{{ fmt(r.tax_amount) }}</td>
+                <td class="py-2 font-medium text-primary-600">{{ fmt(r.tax_amount) }}</td>
               </tr>
             </tbody>
           </table>
@@ -782,6 +789,7 @@ const locale = useLocale()
 
 const showBiToolbarLink = computed(() => {
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   return canAccessStaffBusinessIntelligence({
     buildFlagOn: featureFlags.intelligenceCommandCenter,
@@ -791,9 +799,13 @@ const showBiToolbarLink = computed(() => {
 })
 const showHeatmapToolbarLink = computed(() => {
   void biz.loaded
+  void biz.businessType
   void biz.effectiveFeatureMatrix
   return tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
 })
+const showGlobalOperationsFeedLink = computed(
+  () => auth.hasPermission('reports.view') && auth.hasPermission('reports.operations.view'),
+)
 const l = (ar: string, en: string) => (locale.lang.value === 'ar' ? ar : en)
 const REPORTS_FILTERS_KEY = 'reports_filters_v1'
 let filterDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -812,28 +824,42 @@ const supplierId = ref('')
 const branches = ref<any[]>([])
 const suppliers = ref<any[]>([])
 
+/** مفاتيح ملف النشاط (`feature_matrix`) المرتبطة بكل تبويب — تُخفى التبويبات المعطّلة للمستأجر (يُستثنى المالك). */
 const tabs = computed(() => [
-  { key: 'kpi', label: l('المؤشرات الرئيسية', 'Key metrics') },
-  { key: 'sales', label: l('المبيعات', 'Sales') },
-  { key: 'operations', label: l('تشغيلي', 'Operations'), permission: 'reports.operations.view' },
-  { key: 'modern_ops', label: l('اتصالات + مهام ذكية', 'Communications + Smart Tasks'), permission: 'reports.operations.view' },
-  { key: 'employees', label: l('الموظفين', 'Employees'), permission: 'reports.employees.view' },
-  { key: 'intelligence', label: l('ذكاء الأعمال', 'Business intelligence'), permission: 'reports.intelligence.view' },
-  { key: 'by_customer', label: l('حسب العميل', 'By customer') },
-  { key: 'by_product', label: l('حسب المنتج', 'By product') },
-  { key: 'cashflow', label: l('التدفق النقدي', 'Cashflow'), permission: 'reports.financial.view' },
-  { key: 'purchases', label: l('المشتريات', 'Purchases'), permission: 'reports.financial.view' },
-  { key: 'aging', label: l('أعمار الذمم', 'Receivables aging'), permission: 'reports.financial.view' },
-  { key: 'vat', label: l('الضريبة', 'VAT') },
-  { key: 'overdue', label: l('المتأخرات', 'Overdue') },
-  { key: 'inventory', label: l('المخزون', 'Inventory') },
+  { key: 'kpi', label: l('المؤشرات الرئيسية', 'Key metrics'), tenantFeature: 'reports' },
+  { key: 'sales', label: l('المبيعات', 'Sales'), tenantFeature: 'reports' },
+  { key: 'operations', label: l('تشغيلي', 'Operations'), permission: 'reports.operations.view', tenantFeature: 'operations' },
+  {
+    key: 'modern_ops',
+    label: l('اتصالات + مهام ذكية', 'Communications + Smart Tasks'),
+    permission: 'reports.operations.view',
+    tenantFeature: 'operations',
+  },
+  { key: 'employees', label: l('الموظفين', 'Employees'), permission: 'reports.employees.view', tenantFeature: 'hr' },
+  {
+    key: 'intelligence',
+    label: l('ذكاء الأعمال', 'Business intelligence'),
+    permission: 'reports.intelligence.view',
+    tenantFeature: 'intelligence',
+  },
+  { key: 'by_customer', label: l('حسب العميل', 'By customer'), tenantFeature: 'crm' },
+  { key: 'by_product', label: l('حسب المنتج', 'By product'), tenantFeature: 'reports' },
+  { key: 'cashflow', label: l('التدفق النقدي', 'Cashflow'), permission: 'reports.financial.view', tenantFeature: 'finance' },
+  { key: 'purchases', label: l('المشتريات', 'Purchases'), permission: 'reports.financial.view', tenantFeature: 'finance' },
+  { key: 'aging', label: l('أعمار الذمم', 'Receivables aging'), permission: 'reports.financial.view', tenantFeature: 'finance' },
+  { key: 'vat', label: l('الضريبة', 'VAT'), tenantFeature: 'accounting' },
+  { key: 'overdue', label: l('المتأخرات', 'Overdue'), tenantFeature: 'finance' },
+  { key: 'inventory', label: l('المخزون', 'Inventory'), tenantFeature: 'inventory' },
 ])
-const visibleTabs = computed(() =>
-  tabs.value.filter((t: any) => {
-    if (!t.permission) return true
-    return auth.hasPermission(t.permission)
-  }),
-)
+const visibleTabs = computed(() => {
+  void biz.loaded
+  void biz.effectiveFeatureMatrix
+  return tabs.value.filter((t: any) => {
+    if (t.permission && !auth.hasPermission(t.permission)) return false
+    if (t.tenantFeature && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), t.tenantFeature)) return false
+    return true
+  })
+})
 
 const loading = ref(false)
 const kpiLoading = ref(false)

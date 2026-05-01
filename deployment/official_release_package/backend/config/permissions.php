@@ -46,6 +46,10 @@ return [
             'org_units.delete',
             'purchases.view',
             'purchases.create',
+            'purchases.platform_settlement.view',
+            'purchases.claims.view',
+            'purchases.claims.create',
+            'purchases.claims.review',
             'reports.view',
             'reports.operations.view',
             'reports.employees.view',
@@ -89,6 +93,9 @@ return [
             'reports.operations.view',
             'wallet.top_up_requests.create',
             'wallet.top_up_requests.view',
+            'purchases.platform_settlement.view',
+            'purchases.claims.view',
+            'purchases.claims.create',
         ],
 
         'cashier' => [
@@ -114,6 +121,9 @@ return [
             'reports.financial.view',
             'reports.accounting.view',
             'purchases.view',
+            'purchases.platform_settlement.view',
+            'purchases.claims.view',
+            'purchases.claims.review',
             'suppliers.view',
             'wallet.top_up_requests.review',
             'wallet.top_up_requests.view',
@@ -125,6 +135,9 @@ return [
             'work_orders.update',
             'inventory.view',
             'products.view',
+            'purchases.platform_settlement.view',
+            'purchases.claims.view',
+            'purchases.claims.create',
         ],
 
         'viewer' => [
@@ -159,9 +172,15 @@ return [
             'fleet.reports.view',
             'reports.operations.view',
         ],
+
+        /** تسجيل عبر الجوال — إكمال الملف فقط (بدون مستأجر) */
+        'phone_onboarding' => [
+            'phone_registration.flow',
+        ],
     ],
 
     'all_permissions' => [
+        'phone_registration.flow',
         'companies.view',
         'companies.update',
         'branches.view',
@@ -210,6 +229,10 @@ return [
         'org_units.delete',
         'purchases.view',
         'purchases.create',
+        'purchases.platform_settlement.view',
+        'purchases.claims.view',
+        'purchases.claims.create',
+        'purchases.claims.review',
         'reports.view',
         'reports.operations.view',
         'reports.employees.view',

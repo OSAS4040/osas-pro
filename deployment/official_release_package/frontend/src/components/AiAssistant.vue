@@ -153,7 +153,6 @@ import {
   CheckCircleIcon,
   DocumentPlusIcon,
   UserPlusIcon,
-  ShoppingCartIcon,
   WrenchScrewdriverIcon,
   DocumentTextIcon,
   ChartBarIcon,
@@ -199,15 +198,6 @@ const quickActions: QuickAction[] = [
     iconBg: 'bg-green-100 dark:bg-green-900/30',
     iconColor: 'text-green-600 dark:text-green-400',
     keywords: ['عميل', 'اضافة', 'إضافة', 'جديد'],
-  },
-  {
-    label: 'نقطة البيع',
-    description: 'افتح واجهة نقطة البيع المباشرة',
-    route: '/pos',
-    icon: ShoppingCartIcon,
-    iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-    iconColor: 'text-purple-600 dark:text-purple-400',
-    keywords: ['pos', 'نقطة', 'البيع', 'بيع', 'كاشير'],
   },
   {
     label: 'أمر عمل جديد',

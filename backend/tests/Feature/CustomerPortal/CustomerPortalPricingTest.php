@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature\CustomerPortal;
 
+use App\Enums\PlatformPricingRequestStatus;
 use App\Models\Customer;
 use App\Models\PlatformCustomerPriceVersion;
+use App\Models\PlatformPricingRequest;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -30,6 +32,7 @@ final class CustomerPortalPricingTest extends TestCase
         $customerUser = $this->createUser($company, $branch, 'customer', [
             'email' => $customer->email,
             'customer_id' => $customer->id,
+            'is_platform_user' => true,
         ]);
 
         PlatformCustomerPriceVersion::query()->create([
@@ -74,5 +77,115 @@ final class CustomerPortalPricingTest extends TestCase
         $res = $this->actingAsUser($orphan)->getJson('/api/v1/customer-portal/pricing');
         $res->assertOk();
         $res->assertJsonPath('data.versions', []);
+    }
+
+    public function test_non_internal_customer_gets_empty_versions_until_platform_approval_model_is_finalized(): void
+    {
+        $tenant = $this->createTenant('owner');
+        $company = $tenant['company'];
+        $branch = $tenant['branch'];
+
+        $customer = Customer::withoutGlobalScopes()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $branch->id,
+            'type' => 'b2b',
+            'name' => 'External Portal Customer',
+            'email' => 'external-cust-'.Str::random(6).'@test.sa',
+            'is_active' => true,
+        ]);
+
+        $customerUser = $this->createUser($company, $branch, 'customer', [
+            'email' => $customer->email,
+            'customer_id' => $customer->id,
+            'is_platform_user' => false,
+        ]);
+
+        PlatformCustomerPriceVersion::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'customer_id' => $customer->id,
+            'contract_id' => null,
+            'root_contract_id' => null,
+            'platform_pricing_request_id' => null,
+            'version_no' => 1,
+            'is_reference' => true,
+            'sell_snapshot' => [['service_code' => 'wash', 'unit_price' => 40, 'currency' => 'SAR']],
+            'activated_at' => now(),
+        ]);
+
+        $res = $this->actingAsUser($customerUser)->getJson('/api/v1/customer-portal/pricing');
+        $res->assertOk();
+        $res->assertJsonPath('data.versions', []);
+    }
+
+    public function test_internal_customer_only_sees_versions_linked_to_platform_approved_requests(): void
+    {
+        $tenant = $this->createTenant('owner');
+        $company = $tenant['company'];
+        $branch = $tenant['branch'];
+
+        $customer = Customer::withoutGlobalScopes()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $branch->id,
+            'type' => 'b2b',
+            'name' => 'Approval-gated Customer',
+            'email' => 'approval-gated-'.Str::random(6).'@test.sa',
+            'is_active' => true,
+        ]);
+        $customerUser = $this->createUser($company, $branch, 'customer', [
+            'email' => $customer->email,
+            'customer_id' => $customer->id,
+            'is_platform_user' => true,
+        ]);
+
+        $approvedReq = PlatformPricingRequest::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'customer_id' => $customer->id,
+            'status' => PlatformPricingRequestStatus::Approved,
+            'title' => 'Approved pricing',
+            'created_by_user_id' => $tenant['user']->id,
+            'approved_by_user_id' => $tenant['user']->id,
+            'approved_at' => now()->subHour(),
+            'version_no' => 1,
+        ]);
+        $pendingReq = PlatformPricingRequest::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'customer_id' => $customer->id,
+            'status' => PlatformPricingRequestStatus::PendingPlatformApproval,
+            'title' => 'Pending pricing',
+            'created_by_user_id' => $tenant['user']->id,
+            'version_no' => 1,
+        ]);
+
+        PlatformCustomerPriceVersion::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'customer_id' => $customer->id,
+            'platform_pricing_request_id' => $approvedReq->id,
+            'version_no' => 1,
+            'is_reference' => true,
+            'sell_snapshot' => [['service_code' => 'approved_service', 'unit_price' => 50, 'currency' => 'SAR']],
+            'activated_at' => now()->subHour(),
+        ]);
+        PlatformCustomerPriceVersion::query()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'customer_id' => $customer->id,
+            'platform_pricing_request_id' => $pendingReq->id,
+            'version_no' => 2,
+            'is_reference' => true,
+            'sell_snapshot' => [['service_code' => 'pending_service', 'unit_price' => 80, 'currency' => 'SAR']],
+            'activated_at' => now(),
+        ]);
+
+        $res = $this->actingAsUser($customerUser)->getJson('/api/v1/customer-portal/pricing');
+        $res->assertOk();
+        $versions = $res->json('data.versions') ?? [];
+        $this->assertCount(1, $versions);
+        $this->assertSame('approved_service', $versions[0]['sell_snapshot'][0]['service_code'] ?? null);
     }
 }

@@ -11,6 +11,8 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
 use App\Models\Product;
+use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\WorkOrder;
 use App\Support\Accounting\FinancialGlMapping;
 use App\Support\Accounting\LedgerPostingDiagnostics;
@@ -55,6 +57,10 @@ class InvoiceService
                 'type'                  => $data['type'] ?? 'sale',
                 'source_type'           => $data['source_type'] ?? null,
                 'source_id'             => $data['source_id'] ?? null,
+                'billing_flow_type'     => $data['billing_flow_type'] ?? null,
+                'customer_visible'       => (bool) ($data['customer_visible'] ?? true),
+                'work_order_number_snapshot' => $data['work_order_number_snapshot'] ?? null,
+                'vehicle_plate_snapshot' => $data['vehicle_plate_snapshot'] ?? null,
                 'status'                => InvoiceStatus::Pending,
                 'customer_type'         => $data['customer_type'] ?? 'b2c',
                 'subtotal'              => $subtotal,
@@ -83,15 +89,18 @@ class InvoiceService
             }
 
             $trackedProductIds = $this->trackedProductIdsForInvoice($data['items'], $companyId);
-            $this->deductInventoryForItems(
-                $data['items'],
-                $trackedProductIds,
-                $companyId,
-                $branchId,
-                $userId,
-                $invoice,
-                $traceId,
-            );
+            // Internal provider→platform leg mirrors the same work-order lines; stock must move once (customer-facing invoice).
+            if ((string) ($data['billing_flow_type'] ?? '') !== 'provider_to_platform') {
+                $this->deductInventoryForItems(
+                    $data['items'],
+                    $trackedProductIds,
+                    $companyId,
+                    $branchId,
+                    $userId,
+                    $invoice,
+                    $traceId,
+                );
+            }
 
             $this->postInvoiceLedger($invoice, $traceId);
 
@@ -172,7 +181,12 @@ class InvoiceService
      * Issue an invoice from a completed work order (B2B flow).
      * Work order items become invoice lines.
      */
-    public function issueFromWorkOrder(WorkOrder $order, int $userId, ?string $idempotencyKey = null): Invoice
+    public function issueFromWorkOrder(
+        WorkOrder $order,
+        int $userId,
+        ?string $idempotencyKey = null,
+        ?array $providerPurchasePayload = null,
+    ): Invoice
     {
         $companyId = $order->company_id;
 
@@ -182,6 +196,7 @@ class InvoiceService
 
         $existingInvoice = Invoice::where('source_type', WorkOrder::class)
             ->where('source_id', $order->id)
+            ->where('billing_flow_type', 'provider_to_platform')
             ->first();
 
         if ($existingInvoice) {
@@ -189,6 +204,9 @@ class InvoiceService
         }
 
         $order->loadMissing('items');
+        $order->loadMissing('vehicle:id,plate_number');
+
+        $this->assertWorkOrderPricingMatchesPlatformSource($order);
 
         $items = $order->items->map(fn($item) => [
             'name'            => $item->name,
@@ -203,29 +221,57 @@ class InvoiceService
             'tax_rate'        => (float) $item->tax_rate,
         ])->toArray();
 
-        $data = [
+        $providerToPlatformData = [
+            'customer_id'   => null,
+            'vehicle_id'    => $order->vehicle_id,
+            'type'          => 'sale',
+            'source_type'   => WorkOrder::class,
+            'source_id'     => $order->id,
+            'billing_flow_type' => 'provider_to_platform',
+            'customer_visible' => false,
+            'work_order_number_snapshot' => (string) ($order->order_number ?? ''),
+            'vehicle_plate_snapshot' => (string) ($order->vehicle?->plate_number ?? ''),
+            'customer_type' => 'b2b',
+            'items'         => $items,
+            'notes'         => $order->notes,
+        ];
+        $customerFacingData = [
             'customer_id'   => $order->customer_id,
             'vehicle_id'    => $order->vehicle_id,
             'type'          => 'sale',
             'source_type'   => WorkOrder::class,
             'source_id'     => $order->id,
+            'billing_flow_type' => 'platform_to_customer',
+            'customer_visible' => true,
+            'work_order_number_snapshot' => (string) ($order->order_number ?? ''),
+            'vehicle_plate_snapshot' => (string) ($order->vehicle?->plate_number ?? ''),
             'customer_type' => 'b2b',
             'items'         => $items,
             'notes'         => $order->notes,
         ];
 
         if ($idempotencyKey !== null && trim($idempotencyKey) !== '') {
-            $data['idempotency_key'] = trim($idempotencyKey);
+            $providerToPlatformData['idempotency_key'] = trim($idempotencyKey);
+            $customerFacingData['idempotency_key'] = trim($idempotencyKey).'-customer';
         }
 
-        $invoice = $this->createInvoice($data, $companyId, $order->branch_id, $userId);
+        $invoice = $this->createInvoice($providerToPlatformData, $companyId, $order->branch_id, $userId);
+        $customerInvoice = Invoice::query()
+            ->where('source_type', WorkOrder::class)
+            ->where('source_id', $order->id)
+            ->where('billing_flow_type', 'platform_to_customer')
+            ->first();
+        if (! $customerInvoice) {
+            $customerInvoice = $this->createInvoice($customerFacingData, $companyId, $order->branch_id, $userId);
+        }
 
         $order->update([
-            'invoice_id'             => $invoice->id,
+            'invoice_id'             => $customerInvoice->id,
             'work_order_sync_status' => 'invoiced',
         ]);
+        $this->createProviderPurchaseFromPayload($order, $userId, $providerPurchasePayload);
 
-        return $invoice;
+        return $customerInvoice;
     }
 
     /**
@@ -246,6 +292,8 @@ class InvoiceService
         }
 
         $order->loadMissing('items');
+        $order->loadMissing('vehicle:id,plate_number');
+        $this->assertWorkOrderPricingMatchesPlatformSource($order);
 
         $items = $order->items->map(fn ($item) => [
             'name' => $item->name,
@@ -266,6 +314,8 @@ class InvoiceService
             'type' => 'sale',
             'source_type' => WorkOrder::class,
             'source_id' => $order->id,
+            'work_order_number_snapshot' => (string) ($order->order_number ?? ''),
+            'vehicle_plate_snapshot' => (string) ($order->vehicle?->plate_number ?? ''),
             'customer_type' => 'b2b',
             'items' => $items,
             'notes' => $order->notes,
@@ -283,6 +333,89 @@ class InvoiceService
         ]);
 
         return $invoice;
+    }
+
+    private function assertWorkOrderPricingMatchesPlatformSource(WorkOrder $order): void
+    {
+        foreach ($order->items as $item) {
+            $isServiceLine = ($item->service_id !== null) || ((string) $item->item_type?->value === 'service');
+            if (! $isServiceLine) {
+                continue;
+            }
+            if (! (bool) $item->pricing_resolved_by_system || empty((string) ($item->pricing_source ?? ''))) {
+                throw new \DomainException(
+                    "Work order #{$order->id} contains service lines without platform-governed pricing snapshot."
+                );
+            }
+        }
+    }
+
+    private function createProviderPurchaseFromPayload(WorkOrder $order, int $userId, ?array $payload): ?Purchase
+    {
+        if ($payload === null) {
+            return null;
+        }
+        $supplierId = isset($payload['supplier_id']) ? (int) $payload['supplier_id'] : 0;
+        $items = is_array($payload['items'] ?? null) ? $payload['items'] : [];
+        if ($supplierId <= 0 || $items === []) {
+            throw new \DomainException('Provider purchase payload is invalid: supplier_id and items are required.');
+        }
+        return DB::transaction(function () use ($order, $userId, $supplierId, $items): Purchase {
+            $subtotal = 0.0;
+            $taxTotal = 0.0;
+            $mapped = [];
+            foreach ($items as $item) {
+                $qty = (float) ($item['quantity'] ?? 0);
+                $unitCost = (float) ($item['unit_cost'] ?? 0);
+                if ($qty <= 0) {
+                    continue;
+                }
+                $taxRate = (float) ($item['tax_rate'] ?? 0);
+                $lineSub = round($qty * $unitCost, 4);
+                $lineTax = round($lineSub * ($taxRate / 100), 4);
+                $subtotal += $lineSub;
+                $taxTotal += $lineTax;
+                $mapped[] = [
+                    'company_id' => (int) $order->company_id,
+                    'product_id' => $item['product_id'] ?? null,
+                    'name' => (string) ($item['name'] ?? 'Service Cost'),
+                    'sku' => $item['sku'] ?? null,
+                    'quantity' => $qty,
+                    'received_quantity' => 0,
+                    'unit_cost' => $unitCost,
+                    'tax_rate' => $taxRate,
+                    'tax_amount' => $lineTax,
+                    'total' => $lineSub + $lineTax,
+                ];
+            }
+            if ($mapped === []) {
+                throw new \DomainException('Provider purchase payload items are empty after validation.');
+            }
+            $counter = Purchase::where('company_id', (int) $order->company_id)->withTrashed()->count() + 1;
+            $purchase = Purchase::create([
+                'uuid' => Str::uuid(),
+                'company_id' => (int) $order->company_id,
+                'branch_id' => (int) $order->branch_id,
+                'supplier_id' => $supplierId,
+                'source_type' => WorkOrder::class,
+                'source_id' => $order->id,
+                'billing_flow_type' => 'platform_to_provider_purchase',
+                'created_by_user_id' => $userId,
+                'reference_number' => sprintf('PO-WO-%d-%05d', (int) $order->company_id, $counter),
+                'status' => 'pending',
+                'subtotal' => $subtotal,
+                'tax_amount' => $taxTotal,
+                'total' => $subtotal + $taxTotal,
+                'currency' => 'SAR',
+                'notes' => 'Auto-generated from work order contract cost flow.',
+                'trace_id' => trim((string) (app('trace_id') ?? '')) ?: Str::uuid()->toString(),
+            ]);
+            foreach ($mapped as $line) {
+                PurchaseItem::create($line + ['purchase_id' => $purchase->id]);
+            }
+
+            return $purchase;
+        });
     }
 
     private function generateSequence(int $companyId, array $data): array

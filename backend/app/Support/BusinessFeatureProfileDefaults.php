@@ -27,6 +27,8 @@ final class BusinessFeatureProfileDefaults
                 'org_structure' => true,
                 /** عقود الموردين وتنبيهات الانتهاء — تشغيل/أسطول أكثر؛ تجزئة اختياري */
                 'supplier_contract_mgmt' => true,
+                /** شريك تنفيذ للمنصة: واجهة بدون سجل عملاء/مركبات مستقل وفواتير يدوية */
+                'platform_execution_partner' => false,
             ],
             'retail' => [
                 'operations' => true,
@@ -41,6 +43,7 @@ final class BusinessFeatureProfileDefaults
                 'fleet' => false,
                 'org_structure' => false,
                 'supplier_contract_mgmt' => false,
+                'platform_execution_partner' => false,
             ],
             'fleet_operator' => [
                 'operations' => true,
@@ -55,6 +58,7 @@ final class BusinessFeatureProfileDefaults
                 'fleet' => true,
                 'org_structure' => true,
                 'supplier_contract_mgmt' => true,
+                'platform_execution_partner' => false,
             ],
             default => self::featureMatrixForType('service_center'),
         };

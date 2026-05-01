@@ -15,7 +15,7 @@ export const invoiceStatusClasses: Record<string, string> = {
   paid: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
   partial_paid: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200',
   cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200',
-  refunded: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200',
+  refunded: 'bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-200',
 }
 
 export function invoiceStatusLabel(status: string | undefined): string {

@@ -80,12 +80,22 @@ export default {
   login: {
     brand: 'Osas Pro',
     tagline: 'One platform for operations, finance, people, inventory, and customers',
-    unifiedIntro:
-      'Single sign-in with mobile number or email and password — we route you to the right portal. No account yet?',
+    staffLoginIntro:
+      'Service provider and staff sign-in with mobile or email and password — we route you after authentication. No account yet?',
     linkRegister: 'Create account',
     linkPhoneOtp: 'Sign in with phone code',
     linkLanding: 'Marketing page',
     linkPlatformAdmin: 'Platform operator login',
+    portalPickPlatform: 'Platform admin',
+    portalPickCustomer: 'Customer portal',
+    portalPickServiceProvider: 'Service provider',
+    cardTitleStaffService: 'Service provider login',
+    cardSubtitleStaffService: 'Mobile (preferred) or email and password — tenant account.',
+    cardCredentialStaff: 'Credentials — service provider',
+    cardCredentialCustomer: 'Credentials — customer portal',
+    cardCredentialFleet: 'Credentials — fleet portal',
+    featureStaffShort: 'Staff',
+    featureStaffHint: 'Operations & workshop',
     cardTitleUnified: 'Sign in',
     cardSubtitleUnified: 'Mobile (preferred) or email and password',
     cardTitleOtp: 'Two-step verification',
@@ -97,6 +107,9 @@ export default {
     demoHide: 'Hide',
     demoHintBefore: 'After seeding: platform owner account via ',
     demoHintAfter: '.',
+    demoHintCustomerPortal: 'After seeding, use the demo customer account below.',
+    demoHintFleetPortal: 'After seeding, use the fleet demo accounts below.',
+    demoNoAccountsForPortal: 'No demo accounts for this portal in this build.',
     loginIdLabel: 'Mobile or email',
     loginIdHint: '(sign-in identifier)',
     loginIdPlaceholder: '05xxxxxxxx or you@company.com',
@@ -108,7 +121,7 @@ export default {
     rememberLoginIdTail: ' save your password.',
     devModeTitle: 'Development mode:',
     devBuild:
-      'This is the <strong>unified login</strong> (no customer/fleet/staff tabs; card title is “Sign in”). If you still see tabs or a teal “staff portal” header, you have a stale cache: stop the dev server, run <code class="rounded bg-white/90 px-1 font-mono dark:bg-black/40" dir="ltr">npm run dev</code>, then hard refresh (<kbd class="rounded border border-amber-500/50 px-1 font-sans">Ctrl+Shift+R</kbd>).',
+      'This is <strong>service provider login</strong> at <span dir="ltr">/login</span>. If you see stale UI: stop the dev server, run <code class="rounded bg-white/90 px-1 font-mono dark:bg-black/40" dir="ltr">npm run dev</code>, then hard refresh (<kbd class="rounded border border-amber-500/50 px-1 font-sans">Ctrl+Shift+R</kbd>).',
     forgotPassword: 'Forgot password?',
     forgotUsername: 'Forgot username?',
     otpCode: 'Verification code',
@@ -129,14 +142,19 @@ export default {
     portalFleetDisabled: 'Fleet portal is disabled in this frontend build (VITE_ENABLED_PORTALS).',
     portalCustomerDisabled: 'Customer portal is disabled in this frontend build (VITE_ENABLED_PORTALS).',
     portalGeneric: 'This portal is disabled in this frontend build.',
+    errWrongPortalFleet:
+      'This page is for fleet accounts only. If your account is staff or another role, use Service provider (/login) or pick the right portal above.',
+    errWrongPortalCustomer:
+      'This page is for customer accounts only. If your account is staff or admin, use Service provider (/login) or Platform admin as appropriate.',
     errOtpRefresh: 'Enter the new code sent to your phone or email.',
     errFleetPortal: 'Fleet portal is not enabled in this deployment.',
     errCustomerPortal: 'Customer portal is not enabled in this deployment.',
     errNetwork:
       'Cannot reach the server. Docker + nginx on port 80: set VITE_DEV_PROXY_TARGET=http://127.0.0.1 in frontend/.env. php artisan serve only: http://127.0.0.1:8000',
     errBadCredentials: 'Incorrect mobile, email, or password.',
+    errLoginIdFormat: 'Invalid sign-in identifier format. If this is an email, make sure it includes @ (example: name@example.com).',
     errBadCredentialsDevHint:
-      ' — (dev) Staff: owner@demo.sa / password or admin@osas.sa / 12345678 — platform admin: platform-demo@osas.sa / 12345678 at /platform/login.',
+      ' — (dev) Staff: owner@demo.sa / Password123! or admin@osas.sa / 12345678 — platform admin: platform-demo@osas.sa / 12345678 at /platform/login.',
     errDevNoUsers:
       'Diagnostics: this API database has zero users. Run make dev-bootstrap or: docker compose exec app php artisan workshop:seed-demo',
     errDevUsersButRejected:
@@ -308,8 +326,8 @@ export default {
     rootOption: '— Root (top-level sector) —',
     typeLabel: 'Type',
     typeSector: 'Sector',
-    typeDept: 'Department',
-    typeDiv: 'Division',
+    typeDept: 'Management',
+    typeDiv: 'Unit / Section',
     nameLabel: 'Name *',
     save: 'Save',
     saving: 'Saving…',

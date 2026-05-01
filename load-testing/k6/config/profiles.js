@@ -7,6 +7,7 @@ import {
   THRESHOLDS_SOAK,
   THRESHOLDS_VERIFICATION,
   THRESHOLDS_CAPACITY_POS,
+  THRESHOLDS_WO_VEHICLE_GRADUAL,
   PROFILE_LABELS,
 } from './acceptance.js';
 import { getEnterpriseGateOptions } from './enterprise-gate.js';
@@ -16,7 +17,7 @@ export { PROFILE_LABELS };
 const GRACEFUL = '30s';
 
 /**
- * @param {string} profile smoke|normal|peak|stress|spike|soak|capacity_pos|verification|…
+ * @param {string} profile smoke|normal|peak|stress|spike|soak|capacity_pos|wo_vehicle_gradual|verification|…
  */
 export function getProfileOptions(profile) {
   const p = (profile || 'smoke').toLowerCase();
@@ -46,6 +47,8 @@ export function getProfileOptions(profile) {
       return buildSpike();
     case 'soak':
       return buildSoak();
+    case 'wo_vehicle_gradual':
+      return buildWoVehicleGradual();
     default:
       return buildSmoke();
   }
@@ -125,6 +128,41 @@ function buildPeakPosRawShort() {
       },
     },
     thresholds: THRESHOLDS_PEAK,
+    summaryTrendStats: ['avg', 'med', 'p(50)', 'p(95)', 'p(99)', 'max'],
+  };
+}
+
+/**
+ * أوامر عمل + مركبات فقط — تصعيد تدريجي للـ VU (بدون POS/صحة/عزل).
+ * يُضبط عبر K6_WO_VU_MAX (افتراضي 50) و K6_WO_STAGE_MIN (دقيقة لكل شريحة، افتراضي 2).
+ */
+function buildWoVehicleGradual() {
+  const maxVu = envPositiveInt('K6_WO_VU_MAX', 50);
+  const stageMin = envPositiveInt('K6_WO_STAGE_MIN', 2);
+  const ramp1 = Math.max(3, Math.floor(maxVu * 0.1));
+  const ramp2 = Math.max(5, Math.floor(maxVu * 0.25));
+  const ramp3 = Math.max(8, Math.floor(maxVu * 0.45));
+  const ramp4 = Math.max(10, Math.floor(maxVu * 0.7));
+  const d = `${stageMin}m`;
+
+  return {
+    scenarios: {
+      wo_vehicle_ramp: {
+        executor: 'ramping-vus',
+        startVUs: 0,
+        stages: [
+          { duration: '45s', target: ramp1 },
+          { duration: d, target: ramp2 },
+          { duration: d, target: ramp3 },
+          { duration: d, target: ramp4 },
+          { duration: d, target: maxVu },
+          { duration: '1m', target: 0 },
+        ],
+        gracefulRampDown: GRACEFUL,
+        exec: 'scenarioWorkOrdersVehicles',
+      },
+    },
+    thresholds: THRESHOLDS_WO_VEHICLE_GRADUAL,
     summaryTrendStats: ['avg', 'med', 'p(50)', 'p(95)', 'p(99)', 'max'],
   };
 }

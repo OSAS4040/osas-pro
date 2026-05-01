@@ -3,8 +3,8 @@
     <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50/80 p-3 dark:border-slate-600 dark:bg-slate-800/40">
       <div class="flex flex-wrap items-center gap-2">
         <RouterLink
-          to="/admin"
-          class="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-800 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+          to="/platform/overview"
+          class="inline-flex items-center gap-1 rounded-lg border border-primary-200 bg-primary-50/90 px-3 py-1.5 text-xs font-semibold text-primary-900 hover:bg-primary-100/90 dark:border-primary-800/60 dark:bg-primary-950/35 dark:text-primary-100 dark:hover:bg-primary-900/40"
         >
           <ArrowRightIcon class="h-3.5 w-3.5 opacity-70" />
           رجوع للوحة المنصة

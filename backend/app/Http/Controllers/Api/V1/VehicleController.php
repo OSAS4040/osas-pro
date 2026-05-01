@@ -49,7 +49,7 @@ class VehicleController extends Controller
             }))
             ->when(isset($request->is_active), fn($q) => $q->where('is_active', $request->boolean('is_active')))
             ->orderByDesc('id')
-            ->paginate($request->per_page ?? 25);
+            ->paginate(max(1, min((int) ($request->per_page ?? 25), 200)));
 
         return response()->json(['data' => $vehicles, 'trace_id' => app('trace_id')]);
     }

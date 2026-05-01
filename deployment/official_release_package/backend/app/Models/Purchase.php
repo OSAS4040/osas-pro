@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PurchaseStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,6 +14,7 @@ class Purchase extends Model
 
     protected $fillable = [
         'uuid', 'company_id', 'branch_id', 'supplier_id', 'created_by_user_id',
+        'source_type', 'source_id', 'billing_flow_type',
         'reference_number', 'status', 'subtotal', 'discount_amount', 'tax_amount',
         'total', 'paid_amount', 'currency', 'notes', 'trace_id',
         'expected_at', 'received_at', 'version', 'document_attachments',
@@ -43,5 +45,16 @@ class Purchase extends Model
     public function items()
     {
         return $this->hasMany(PurchaseItem::class);
+    }
+
+    /**
+     * مشتريات التسوية من المنصّة للمزوّد — لا تُعرض لجهة العميل/الأسطول في البوابات.
+     */
+    public function scopeOmitPlatformProviderSettlement(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q): void {
+            $q->whereNull('billing_flow_type')
+                ->orWhere('billing_flow_type', '<>', 'platform_to_provider_purchase');
+        });
     }
 }

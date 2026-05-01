@@ -4,17 +4,25 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\CustomerWallet;
+use App\Models\Invoice;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
+use App\Services\IntelligentReading\KsaPlateNormalizer;
 use App\Services\Config\VerticalBehaviorResolverService;
+use App\Services\Ocr\TesseractOcrRunner;
 use App\Services\Messaging\WhatsAppOutboundService;
+use App\Services\PlatformPricingApprovalGateService;
 use App\Services\SensitivePreviewTokenService;
 use App\Services\WorkOrderPdfService;
 use App\Services\WorkOrderPricingResolverService;
 use App\Services\WorkOrderService;
+use App\Support\Media\TenantUploadDisk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -45,17 +53,368 @@ class WorkOrderController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $orders = WorkOrder::with(['customer', 'vehicle', 'assignedTechnician', 'branch'])
-            ->when($request->company_id, fn($q) => $q->where('company_id', (int) $request->company_id))
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->customer_id, fn($q) => $q->where('customer_id', $request->customer_id))
-            ->when($request->vehicle_id, fn($q) => $q->where('vehicle_id', $request->vehicle_id))
-            ->when($request->technician_id, fn($q) => $q->where('assigned_technician_id', $request->technician_id))
-            ->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))
-            ->orderByDesc('id')
-            ->paginate($request->per_page ?? 25);
+        /** @var User $viewer */
+        $viewer = $request->user();
+        $base = $this->workOrdersBaseQuery($request);
 
-        return response()->json(['data' => $orders, 'trace_id' => app('trace_id')]);
+        $statusCounts = null;
+        if ($request->boolean('include_status_counts')) {
+            $rows = (clone $base)
+                ->selectRaw('status, count(*) as aggregate')
+                ->groupBy('status')
+                ->get();
+            $statusCounts = [];
+            foreach ($rows as $row) {
+                $statusCounts[(string) $row->status] = (int) $row->aggregate;
+            }
+            $statusCounts['all'] = array_sum($statusCounts);
+        }
+
+        $perPage = max(1, min((int) ($request->per_page ?? 25), 100));
+
+        $orders = (clone $base)
+            ->with(['customer', 'vehicle', 'assignedTechnician', 'branch'])
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+            ->orderByDesc('id')
+            ->paginate($perPage);
+        $orders->getCollection()->transform(fn (WorkOrder $order): WorkOrder => $this->sanitizeMediaForViewer($order, $viewer));
+
+        $payload = ['data' => $orders, 'trace_id' => app('trace_id')];
+        if ($statusCounts !== null) {
+            $payload['status_counts'] = $statusCounts;
+        }
+
+        return response()->json($payload);
+    }
+
+    /**
+     * Filters shared by list + status aggregates (excludes status filter so counts reflect search scope).
+     */
+    private function workOrdersBaseQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    {
+        return WorkOrder::query()
+            ->when($request->company_id, fn ($q) => $q->where('company_id', (int) $request->company_id))
+            ->when($request->customer_id, fn ($q) => $q->where('customer_id', $request->customer_id))
+            ->when($request->vehicle_id, fn ($q) => $q->where('vehicle_id', $request->vehicle_id))
+            ->when($request->technician_id, fn ($q) => $q->where('assigned_technician_id', $request->technician_id))
+            ->when($request->branch_id, fn ($q) => $q->where('branch_id', $request->branch_id))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $s = trim((string) $request->search);
+                $q->where(function ($q) use ($s) {
+                    $q->where('order_number', 'ilike', "%{$s}%")
+                        ->orWhere('description', 'ilike', "%{$s}%")
+                        ->orWhere('notes', 'ilike', "%{$s}%")
+                        ->orWhereHas('vehicle', fn ($vq) => $vq->where('plate_number', 'ilike', "%{$s}%"));
+                });
+            });
+    }
+
+    public function intakeLookup(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'order_number' => ['nullable', 'string', 'max:80'],
+            'plate_number' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $orderNumber = trim((string) ($data['order_number'] ?? ''));
+        $plateNumber = trim((string) ($data['plate_number'] ?? ''));
+        if ($orderNumber === '' && $plateNumber === '') {
+            return response()->json([
+                'message' => 'يجب إدخال رقم أمر العمل أو رقم اللوحة.',
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
+
+        return response()->json(
+            $this->buildIntakeLookupPayload($user, $orderNumber !== '' ? $orderNumber : null, $plateNumber !== '' ? $plateNumber : null)
+        );
+    }
+
+    public function intakeLookupCamera(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'image' => ['nullable', 'string'],
+            'plate_number' => ['nullable', 'string', 'max:40'],
+            'order_number' => ['nullable', 'string', 'max:80'],
+        ]);
+        $orderNumber = trim((string) ($data['order_number'] ?? ''));
+        $plateFallback = trim((string) ($data['plate_number'] ?? ''));
+        $imageBase64 = trim((string) ($data['image'] ?? ''));
+
+        if ($orderNumber === '' && $plateFallback === '' && $imageBase64 === '') {
+            return response()->json([
+                'message' => 'يجب إرسال صورة كاميرا أو رقم لوحة أو رقم أمر عمل.',
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
+
+        $resolvedPlate = null;
+        $ocrMeta = [
+            'used' => false,
+            'success' => false,
+            'source' => null,
+            'error' => null,
+            'raw_text' => null,
+            'confidence' => 0.0,
+            'attempts' => [],
+            'candidates' => [],
+        ];
+
+        if ($imageBase64 !== '') {
+            $ocrMeta['used'] = true;
+            $imgData = base64_decode($imageBase64, true);
+            if (! $imgData || strlen($imgData) < 100) {
+                $ocrMeta['error'] = 'invalid_image';
+            } else {
+                /** @var TesseractOcrRunner $ocr */
+                $ocr = app(TesseractOcrRunner::class);
+                $bestConfidence = 0.0;
+                $bestCandidate = null;
+                $bestRawText = null;
+                foreach ([7, 6, 11, 13] as $psm) {
+                    $res = $ocr->runRaw($imgData, (string) config('ocr.default_lang_plate', 'eng+ara'), $psm);
+                    $rawText = $res['code'] === TesseractOcrRunner::CODE_OK ? (string) ($res['text'] ?? '') : '';
+                    $candidate = $rawText !== '' ? KsaPlateNormalizer::normalize($rawText) : null;
+                    $confidence = 0.0;
+                    if ($candidate !== null) {
+                        $confidence = 0.65;
+                        if (preg_match('/[A-Z]{3}\s\d{4}/', (string) $candidate['display']) === 1) {
+                            $confidence += 0.25;
+                        }
+                        if (mb_strlen((string) $rawText) <= 20) {
+                            $confidence += 0.10;
+                        }
+                    }
+                    $ocrMeta['attempts'][] = [
+                        'psm' => $psm,
+                        'code' => (string) ($res['code'] ?? 'unknown'),
+                        'confidence' => round($confidence, 4),
+                    ];
+                    if ($candidate !== null) {
+                        $ocrMeta['candidates'][] = [
+                            'plate' => (string) $candidate['display'],
+                            'confidence' => round($confidence, 4),
+                        ];
+                    }
+                    if ($confidence > $bestConfidence && $candidate !== null) {
+                        $bestConfidence = $confidence;
+                        $bestCandidate = $candidate;
+                        $bestRawText = $rawText;
+                    }
+                }
+                if ($bestCandidate !== null) {
+                    $resolvedPlate = (string) $bestCandidate['display'];
+                    $ocrMeta['success'] = true;
+                    $ocrMeta['source'] = 'camera_ocr';
+                    $ocrMeta['confidence'] = round($bestConfidence, 4);
+                    $ocrMeta['raw_text'] = $bestRawText !== null ? mb_substr($bestRawText, 0, 200) : null;
+                } else {
+                    $ocrMeta['error'] = 'plate_not_detected';
+                }
+            }
+        }
+
+        if ($resolvedPlate === null && $plateFallback !== '') {
+            $resolvedPlate = $plateFallback;
+            $ocrMeta['source'] = 'manual_plate';
+        }
+
+        $payload = $this->buildIntakeLookupPayload(
+            $user,
+            $orderNumber !== '' ? $orderNumber : null,
+            $resolvedPlate
+        );
+        $payload['data']['camera_lookup'] = $ocrMeta;
+        $payload['data']['arrival'] = [
+            'lookup_key' => $orderNumber !== '' ? 'order_number' : 'plate_number',
+            'lookup_value' => $orderNumber !== '' ? $orderNumber : $resolvedPlate,
+            'has_active_work_order' => (bool) (($payload['data']['work_order']['is_active'] ?? false) === true),
+            'provider_can_execute_service' => (bool) ($payload['data']['execution']['provider_can_execute_service'] ?? false),
+            'can_execute_now' => (bool) ($payload['data']['execution']['can_execute_now'] ?? false),
+            'prepaid_balance_ok' => (bool) ($payload['data']['prepaid']['has_positive_balance'] ?? false),
+        ];
+
+        return response()->json($payload);
+    }
+
+    /**
+     * تقدير قراءة عدّاد (أرقام فقط) من صورة — مساعدة يدوية؛ يُراجع المستخدم قبل الحفظ.
+     */
+    public function intakeOdometerOcr(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'image' => ['required', 'string'],
+        ]);
+        $rawInput = (string) $data['image'];
+        if (str_starts_with($rawInput, 'data:')) {
+            $parts = explode(',', $rawInput, 2);
+            $rawInput = $parts[1] ?? '';
+        }
+        $imgData = base64_decode($rawInput, true);
+        if ($imgData === false || strlen($imgData) < 80) {
+            return response()->json([
+                'message' => 'صورة غير صالحة.',
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
+
+        /** @var TesseractOcrRunner $ocr */
+        $ocr = app(TesseractOcrRunner::class);
+        $meta = ['attempts' => [], 'raw_text' => null, 'success' => false, 'error' => null];
+        $bestDigits = null;
+        $bestLen = 0;
+        $bestConfidence = 0.0;
+
+        foreach ([7, 6, 13, 11] as $psm) {
+            $res = $ocr->runRaw($imgData, 'eng', $psm);
+            $meta['attempts'][] = ['psm' => $psm, 'code' => $res['code'] ?? 'unknown'];
+            if (($res['code'] ?? '') !== TesseractOcrRunner::CODE_OK || ($res['text'] ?? '') === '') {
+                continue;
+            }
+            $text = (string) $res['text'];
+            if ($meta['raw_text'] === null) {
+                $meta['raw_text'] = mb_substr($text, 0, 200);
+            }
+            if (preg_match_all('/\d{4,7}/', $text, $matches)) {
+                foreach ($matches[0] as $block) {
+                    $len = strlen($block);
+                    $confidence = min(0.99, 0.5 + $len * 0.06);
+                    if ($len > $bestLen || ($len === $bestLen && $confidence > $bestConfidence)) {
+                        $bestLen = $len;
+                        $bestDigits = (int) $block;
+                        $bestConfidence = $confidence;
+                    }
+                }
+            }
+        }
+
+        if ($bestDigits !== null) {
+            $meta['success'] = true;
+        } else {
+            $meta['error'] = 'digits_not_detected';
+        }
+
+        return response()->json([
+            'data' => [
+                'suggested_reading' => $bestDigits,
+                'confidence' => round($bestConfidence, 4),
+                'ocr' => $meta,
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildIntakeLookupPayload($user, ?string $orderNumber, ?string $plateNumber): array
+    {
+        $companyId = (int) $user->company_id;
+        $query = WorkOrder::query()
+            ->where('company_id', $companyId)
+            ->whereNull('deleted_at')
+            ->with(['vehicle:id,customer_id,plate_number,make,model', 'customer:id,name,type'])
+            ->orderByDesc('id');
+
+        if (($orderNumber ?? '') !== '') {
+            $query->where(static function ($q) use ($orderNumber): void {
+                $q->where('order_number', $orderNumber)->orWhere('work_order_number', $orderNumber);
+            });
+        }
+        if (($plateNumber ?? '') !== '') {
+            $query->whereHas('vehicle', static fn ($q) => $q->where('plate_number', 'ilike', $plateNumber));
+        }
+
+        $order = $query->first();
+
+        $vehicle = $order?->vehicle;
+        if ($vehicle === null && ($plateNumber ?? '') !== '') {
+            $vehicle = Vehicle::query()
+                ->where('company_id', $companyId)
+                ->where('plate_number', 'ilike', $plateNumber)
+                ->first();
+        }
+
+        $activeStatuses = [
+            WorkOrderStatus::Draft,
+            WorkOrderStatus::PendingManagerApproval,
+            WorkOrderStatus::Approved,
+            WorkOrderStatus::InProgress,
+            WorkOrderStatus::OnHold,
+            WorkOrderStatus::CancellationRequested,
+        ];
+        $isActiveOrder = $order !== null && in_array($order->status, $activeStatuses, true);
+
+        $wallets = [];
+        $fleetMainBalance = 0.0;
+        $vehicleWalletBalance = 0.0;
+        $customerMainBalance = 0.0;
+        if ($vehicle?->customer_id !== null) {
+            $wallets = CustomerWallet::query()
+                ->where('company_id', $companyId)
+                ->where('customer_id', (int) $vehicle->customer_id)
+                ->get();
+            foreach ($wallets as $w) {
+                $type = $w->wallet_type instanceof \BackedEnum ? $w->wallet_type->value : (string) $w->wallet_type;
+                $bal = (float) $w->balance;
+                if ($type === 'fleet_main') {
+                    $fleetMainBalance += $bal;
+                } elseif ($type === 'customer_main') {
+                    $customerMainBalance += $bal;
+                } elseif ($type === 'vehicle_wallet' && (int) ($w->vehicle_id ?? 0) === (int) ($vehicle->id ?? 0)) {
+                    $vehicleWalletBalance += $bal;
+                }
+            }
+        }
+
+        $financialModel = $user->company->financial_model ?? null;
+        $financialModelValue = $financialModel instanceof \BackedEnum ? $financialModel->value : (string) $financialModel;
+        $isPrepaid = $financialModelValue === 'prepaid';
+        $hasPositivePrepaidBalance = ($fleetMainBalance + $vehicleWalletBalance) > 0.0001;
+
+        return [
+            'data' => [
+                'lookup' => [
+                    'order_number' => ($orderNumber ?? '') !== '' ? $orderNumber : null,
+                    'plate_number' => ($plateNumber ?? '') !== '' ? $plateNumber : null,
+                ],
+                'work_order' => $order ? [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'work_order_number' => $order->work_order_number,
+                    'status' => $order->status instanceof WorkOrderStatus ? $order->status->value : (string) $order->status,
+                    'is_active' => $isActiveOrder,
+                ] : null,
+                'vehicle' => $vehicle ? [
+                    'id' => $vehicle->id,
+                    'plate_number' => $vehicle->plate_number,
+                    'make' => $vehicle->make,
+                    'model' => $vehicle->model,
+                ] : null,
+                'prepaid' => [
+                    'is_prepaid_company' => $isPrepaid,
+                    'fleet_main_balance' => $fleetMainBalance,
+                    'vehicle_wallet_balance' => $vehicleWalletBalance,
+                    'customer_main_balance' => $customerMainBalance,
+                    'has_positive_balance' => $hasPositivePrepaidBalance,
+                ],
+                'execution' => [
+                    'provider_can_execute_service' => $user->role->isWorkshopSide(),
+                    'can_execute_now' => $user->role->isWorkshopSide() && ($isActiveOrder || $hasPositivePrepaidBalance),
+                ],
+                'arrival' => [
+                    'lookup_key' => ($orderNumber ?? '') !== '' ? 'order_number' : 'plate_number',
+                    'lookup_value' => ($orderNumber ?? '') !== '' ? $orderNumber : (($plateNumber ?? '') !== '' ? $plateNumber : null),
+                    'has_active_work_order' => $isActiveOrder,
+                    'provider_can_execute_service' => $user->role->isWorkshopSide(),
+                    'can_execute_now' => $user->role->isWorkshopSide() && ($isActiveOrder || $hasPositivePrepaidBalance),
+                    'prepaid_balance_ok' => $hasPositivePrepaidBalance,
+                ],
+            ],
+            'trace_id' => app('trace_id'),
+        ];
     }
 
     /**
@@ -86,6 +445,7 @@ class WorkOrderController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
+        $catalogOnlyPricingActor = $user->role->isFleetSide() || $user->role->isCustomer();
         $behavior = $this->behaviorResolver->resolve((int) $user->company_id, $user->branch_id ? (int) $user->branch_id : null);
 
         if (($behavior['flags']['require_vehicle_plate'] ?? false) && ! $request->filled('vehicle_plate')) {
@@ -148,6 +508,19 @@ class WorkOrderController extends Controller
                 ], 422);
             }
         }
+        if ($catalogOnlyPricingActor) {
+            $data['created_by_side'] = 'fleet';
+            if (config('portal_rollout.strict_platform_pricing_gate', true)) {
+                /** @var PlatformPricingApprovalGateService $approvalGate */
+                $approvalGate = app(PlatformPricingApprovalGateService::class);
+                if (! $approvalGate->hasApprovedActiveReference($companyId, (int) $data['customer_id'])) {
+                    return response()->json([
+                        'message' => 'لا يمكن إنشاء أمر العمل قبل اعتماد نسخة أسعار نشطة من إدارة المنصة.',
+                        'trace_id' => app('trace_id'),
+                    ], 422);
+                }
+            }
+        }
 
         try {
             $order = $this->workOrderService->create($data, $user->company_id, $user->branch_id, $user->id);
@@ -174,12 +547,16 @@ class WorkOrderController extends Controller
      */
     public function show(int $id): JsonResponse
     {
+        /** @var User $viewer */
+        $viewer = request()->user();
         $order = WorkOrder::with([
             'customer', 'vehicle', 'branch',
             'assignedTechnician', 'createdBy',
             'items.product', 'technicians.user',
             'invoice',
         ])->findOrFail($id);
+        $order = $this->sanitizeMediaForViewer($order, $viewer);
+        $order = $this->sanitizeInvoiceForViewer($order, $viewer);
 
         return response()->json(['data' => $order, 'trace_id' => app('trace_id')]);
     }
@@ -305,6 +682,136 @@ class WorkOrderController extends Controller
         ]);
     }
 
+    public function uploadServiceMedia(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user->role->isWorkshopSide()) {
+            return response()->json([
+                'message' => 'رفع صور التنفيذ متاح فقط لمزود الخدمة.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
+        $order = WorkOrder::query()
+            ->where('company_id', (int) $user->company_id)
+            ->whereNull('deleted_at')
+            ->findOrFail($id);
+
+        $request->validate([
+            'before.*' => 'image|max:5120',
+            'after.*' => 'image|max:5120',
+            'internal.*' => 'image|max:5120',
+        ]);
+
+        $before = $order->before_service_images ?? [];
+        $after = $order->after_service_images ?? [];
+        $internal = $order->internal_service_images ?? [];
+        $disk = TenantUploadDisk::name();
+
+        if ($request->hasFile('before')) {
+            foreach ($request->file('before') as $file) {
+                $path = $file->store("work-orders/{$order->id}/before", $disk);
+                $before[] = Storage::disk($disk)->url($path);
+            }
+        }
+        if ($request->hasFile('after')) {
+            foreach ($request->file('after') as $file) {
+                $path = $file->store("work-orders/{$order->id}/after", $disk);
+                $after[] = Storage::disk($disk)->url($path);
+            }
+        }
+        if ($request->hasFile('internal')) {
+            foreach ($request->file('internal') as $file) {
+                $path = $file->store("work-orders/{$order->id}/internal", $disk);
+                $internal[] = Storage::disk($disk)->url($path);
+            }
+        }
+
+        $order->update([
+            'before_service_images' => array_values($before),
+            'after_service_images' => array_values($after),
+            'internal_service_images' => array_values($internal),
+        ]);
+
+        return response()->json([
+            'data' => [
+                'before_service_images' => $order->before_service_images ?? [],
+                'after_service_images' => $order->after_service_images ?? [],
+                'internal_service_images' => $order->internal_service_images ?? [],
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    private function sanitizeMediaForViewer(WorkOrder $order, User $viewer): WorkOrder
+    {
+        $canSeeInternal = $viewer->role->isWorkshopSide() || (bool) ($viewer->is_platform_user ?? false);
+        if (! $canSeeInternal) {
+            $order->setAttribute('internal_service_images', []);
+        }
+
+        return $order;
+    }
+
+    private function sanitizeInvoiceForViewer(WorkOrder $order, User $viewer): WorkOrder
+    {
+        if ($viewer->role->isWorkshopSide() || (bool) ($viewer->is_platform_user ?? false)) {
+            return $order;
+        }
+        $invoice = $order->invoice;
+        if (! $invoice instanceof Invoice) {
+            return $order;
+        }
+        if (! $invoice->isCustomerPortalVisible()) {
+            $order->setRelation('invoice', null);
+            $order->makeHidden(['invoice_id']);
+
+            return $order;
+        }
+        if ($viewer->customer_id && (int) $invoice->customer_id !== (int) $viewer->customer_id) {
+            $order->setRelation('invoice', null);
+            $order->makeHidden(['invoice_id']);
+        }
+
+        return $order;
+    }
+
+    public function updateExecutionReport(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user->role->isWorkshopSide()) {
+            return response()->json([
+                'message' => 'تحديث عداد المركبة وتقرير الفني متاح فقط لمزود الخدمة.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
+        $order = WorkOrder::query()
+            ->where('company_id', (int) $user->company_id)
+            ->whereNull('deleted_at')
+            ->findOrFail($id);
+
+        $data = $request->validate([
+            'odometer_reading' => 'nullable|integer|min:0',
+            'mileage_out' => 'nullable|integer|min:0',
+            'technician_notes' => 'nullable|string|max:10000',
+            'diagnosis' => 'nullable|string|max:10000',
+        ]);
+
+        $order->update($data);
+
+        return response()->json([
+            'data' => [
+                'id' => $order->id,
+                'odometer_reading' => $order->odometer_reading,
+                'mileage_out' => $order->mileage_out,
+                'technician_notes' => $order->technician_notes,
+                'diagnosis' => $order->diagnosis,
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
     /**
      * @OA\Put(
      *     path="/api/v1/work-orders/{id}",
@@ -326,6 +833,7 @@ class WorkOrderController extends Controller
     {
         $user = $request->user();
         $companyId = (int) $user->company_id;
+        $catalogOnlyPricingActor = $user->role->isFleetSide() || $user->role->isCustomer();
 
         $data = $request->validate([
             'version'                => 'required|integer',
@@ -371,9 +879,23 @@ class WorkOrderController extends Controller
                     ], 422);
                 }
             }
+            if ($catalogOnlyPricingActor) {
+                $data['created_by_side'] = 'fleet';
+            }
         }
 
         $order = WorkOrder::findOrFail($id);
+
+        if ($catalogOnlyPricingActor && isset($data['items']) && config('portal_rollout.strict_platform_pricing_gate', true)) {
+            /** @var PlatformPricingApprovalGateService $approvalGate */
+            $approvalGate = app(PlatformPricingApprovalGateService::class);
+            if (! $approvalGate->hasApprovedActiveReference($companyId, (int) $order->customer_id)) {
+                return response()->json([
+                    'message' => 'لا يمكن تعديل بنود أمر العمل قبل اعتماد نسخة أسعار نشطة من إدارة المنصة.',
+                    'trace_id' => app('trace_id'),
+                ], 422);
+            }
+        }
 
         try {
             $updated = $this->workOrderService->update($order, $data);
@@ -412,6 +934,7 @@ class WorkOrderController extends Controller
      */
     public function updateStatus(Request $request, int $id): JsonResponse
     {
+        $user = $request->user();
         $data = $request->validate([
             'status' => 'required|string',
             'version' => 'required|integer',
@@ -428,6 +951,14 @@ class WorkOrderController extends Controller
             return response()->json(['message' => "Unknown status: {$data['status']}."], 422);
         }
 
+        if (($user->role->isFleetSide() || $user->role->isCustomer())
+            && in_array($newStatus, [WorkOrderStatus::InProgress, WorkOrderStatus::Completed, WorkOrderStatus::Delivered], true)) {
+            return response()->json([
+                'message' => 'تنفيذ الخدمات متاح فقط لمزود الخدمة (أدوار الورشة).',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+
         if ($newStatus === WorkOrderStatus::Approved) {
             $token = $data['sensitive_preview_token'] ?? null;
             if ($token === null || trim((string) $token) === '') {
@@ -439,8 +970,8 @@ class WorkOrderController extends Controller
             try {
                 $this->previewTokens->assertValid(
                     $token,
-                    (int) $request->user()->company_id,
-                    (int) $request->user()->id,
+                    (int) $user->company_id,
+                    (int) $user->id,
                     SensitivePreviewTokenService::OP_STATUS_TO_APPROVED,
                     [(int) $order->id],
                     null,
@@ -540,6 +1071,18 @@ class WorkOrderController extends Controller
                 'message' => 'المركبة المحددة لا تنتمي إلى العميل المحدد.',
                 'trace_id' => app('trace_id'),
             ], 422);
+        }
+        $customerId = (int) $data['customer_id'];
+
+        if (config('portal_rollout.strict_platform_pricing_gate', true)) {
+            /** @var PlatformPricingApprovalGateService $approvalGate */
+            $approvalGate = app(PlatformPricingApprovalGateService::class);
+            if (! $approvalGate->hasApprovedActiveReference($companyId, $customerId)) {
+                return response()->json([
+                    'message' => 'لا يمكن عرض التسعير قبل اعتماد نسخة أسعار نشطة من إدارة المنصة.',
+                    'trace_id' => app('trace_id'),
+                ], 422);
+            }
         }
 
         $branchId = $user->branch_id ? (int) $user->branch_id : null;

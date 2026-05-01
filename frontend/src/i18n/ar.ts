@@ -80,13 +80,23 @@ export default {
   login: {
     brand: 'أسس برو',
     tagline: 'منصة موحّدة للتشغيل والمالية والموارد والمخزون وعلاقات العملاء',
-    unifiedIntro:
-      'دخول موحّد برقم الجوال أو البريد وكلمة المرور — نحدّد بوابتك (فريق عمل، أسطول، أو عميل). ليس لديك حساب؟',
+    staffLoginIntro:
+      'دخول مزوّدي الخدمة وفريق العمل برقم الجوال أو البريد وكلمة المرور — نحدّد بوابتك بعد المصادقة. ليس لديك حساب؟',
     linkRegister: 'إنشاء حساب',
     linkPhoneOtp: 'دخول برمز الجوال',
     linkLanding: 'الصفحة التعريفية',
     linkPlatformAdmin: 'دخول مشغّل المنصة',
-    cardTitleUnified: 'تسجيل الدخول الموحّد',
+    portalPickPlatform: 'إدارة المنصة',
+    portalPickCustomer: 'بوابة العميل',
+    portalPickServiceProvider: 'مزوّد الخدمة',
+    cardTitleStaffService: 'دخول مزوّد الخدمة',
+    cardSubtitleStaffService: 'رقم الجوال (مفضّل) أو البريد وكلمة المرور — حساب منشأة.',
+    cardCredentialStaff: 'بيانات الدخول — مزوّد الخدمة',
+    cardCredentialCustomer: 'بيانات الدخول — بوابة العميل',
+    cardCredentialFleet: 'بيانات الدخول — بوابة الأسطول',
+    featureStaffShort: 'فريق العمل',
+    featureStaffHint: 'لوحة التشغيل والورشة',
+    cardTitleUnified: 'تسجيل الدخول',
     cardSubtitleUnified: 'رقم الجوال (مفضّل) أو البريد وكلمة المرور',
     cardTitleOtp: 'التحقق بخطوتين',
     cardSubtitleOtp: 'أدخل الرمز المرسل إلى جوالك أو بريدك',
@@ -97,6 +107,9 @@ export default {
     demoHide: 'إخفاء',
     demoHintBefore: 'بعد تشغيل الـ seed. حساب المالك على مستوى المنصة من ',
     demoHintAfter: '.',
+    demoHintCustomerPortal: 'بعد تشغيل الـ seed، استخدم حساب العميل التجريبي أدناه.',
+    demoHintFleetPortal: 'بعد تشغيل الـ seed، استخدم حسابات الأسطول التجريبية أدناه.',
+    demoNoAccountsForPortal: 'لا توجد حسابات تجريبية لهذه البوابة في هذا الإصدار.',
     loginIdLabel: 'رقم الجوال أو البريد',
     loginIdHint: '(عنوان الدخول)',
     loginIdPlaceholder: '05xxxxxxxx أو you@company.com',
@@ -108,7 +121,7 @@ export default {
     rememberLoginIdTail: ' نحفظ كلمة المرور.',
     devModeTitle: 'وضع تطوير:',
     devBuild:
-      'هذه <strong>واجهة الدخول الموحّدة</strong> (بدون تبويبات العملاء/الأسطول/فريق العمل، وعنوان البطاقة «تسجيل الدخول الموحّد»). إن ظهرت عندك تبويبات أو ترويسة فيروز «بوابة فريق العمل» فأنت تشاهد نسخة قديمة من الكاش: أوقف الخادم ثم <code class="rounded bg-white/90 px-1 font-mono dark:bg-black/40" dir="ltr">npm run dev</code> واضغط <kbd class="rounded border border-amber-500/50 px-1 font-sans">Ctrl+Shift+R</kbd> (تحديث قوي).',
+      'هذه <strong>دخول مزوّد الخدمة</strong> على ‎/login‎. إن ظهرت نسخة قديمة من الكاش: أوقف الخادم ثم <code class="rounded bg-white/90 px-1 font-mono dark:bg-black/40" dir="ltr">npm run dev</code> واضغط <kbd class="rounded border border-amber-500/50 px-1 font-sans">Ctrl+Shift+R</kbd> (تحديث قوي).',
     forgotPassword: 'نسيت كلمة المرور؟',
     forgotUsername: 'نسيت اسم المستخدم؟',
     otpCode: 'رمز التحقق',
@@ -129,14 +142,19 @@ export default {
     portalFleetDisabled: 'بوابة الأسطول غير مفعّلة في نشر الواجهة الحالي (VITE_ENABLED_PORTALS).',
     portalCustomerDisabled: 'بوابة العملاء غير مفعّلة في نشر الواجهة الحالي (VITE_ENABLED_PORTALS).',
     portalGeneric: 'هذه البوابة غير مفعّلة في نشر الواجهة الحالي.',
+    errWrongPortalFleet:
+      'هذه الصفحة مخصّصة لحسابات الأسطول. إن كان حسابك لفريق العمل أو غير الأسطول، استخدم صفحة «مزوّد الخدمة» (/login) أو البوابة المناسبة من الأعلى.',
+    errWrongPortalCustomer:
+      'هذه الصفحة مخصّصة لحسابات العملاء فقط. إن كان حسابك لفريق العمل أو الإدارة، استخدم صفحة «مزوّد الخدمة» (/login) أو «إدارة المنصة» حسب دورك.',
     errOtpRefresh: 'يرجى إدخال الرمز الجديد المرسل إلى جوالك أو بريدك.',
     errFleetPortal: 'بوابة الأسطول غير مفعّلة في هذا النشر.',
     errCustomerPortal: 'بوابة العملاء غير مفعّلة في هذا النشر.',
     errNetwork:
       'تعذّر الاتصال بالخادم. مع Docker + nginx على المنفذ 80: في frontend/.env ضع VITE_DEV_PROXY_TARGET=http://127.0.0.1 — مع php artisan serve فقط: http://127.0.0.1:8000',
     errBadCredentials: 'رقم الجوال أو البريد أو كلمة المرور غير صحيحة.',
+    errLoginIdFormat: 'صيغة عنوان الدخول غير صحيحة. إذا كان بريدًا إلكترونيًا تأكد من وجود @ (مثال: name@example.com).',
     errBadCredentialsDevHint:
-      ' — (تطوير) فريق العمل: owner@demo.sa / password أو admin@osas.sa / 12345678 — أدمن المنصة: platform-demo@osas.sa / 12345678 من /platform/login.',
+      ' — (تطوير) فريق العمل: owner@demo.sa / Password123! أو admin@osas.sa / 12345678 — أدمن المنصة: platform-demo@osas.sa / 12345678 من /platform/login.',
     errDevNoUsers:
       'التشخيص: لا يوجد مستخدمون في القاعدة المتصلة بهذا الـ API. شغّل: make dev-bootstrap أو docker compose exec app php artisan workshop:seed-demo',
     errDevUsersButRejected:
@@ -310,8 +328,8 @@ export default {
     rootOption: '— جذر (قطاع رئيسي) —',
     typeLabel: 'النوع',
     typeSector: 'قطاع',
-    typeDept: 'قسم',
-    typeDiv: 'شعبة',
+    typeDept: 'إدارة',
+    typeDiv: 'وحدة / شعبة',
     nameLabel: 'الاسم *',
     save: 'حفظ',
     saving: 'جارٍ الحفظ…',

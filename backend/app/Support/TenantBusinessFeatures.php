@@ -32,4 +32,10 @@ final class TenantBusinessFeatures
 
         return ($matrix[$key] ?? false) === true;
     }
+
+    /** شريك تنفيذ للمنصة — فصل فواتير العميل عن واجهة الورشة. */
+    public static function platformExecutionPartner(Company $company): bool
+    {
+        return (self::effectiveMatrix($company)['platform_execution_partner'] ?? false) === true;
+    }
 }

@@ -1,10 +1,29 @@
 <template>
   <div class="space-y-6" :dir="locale.langInfo.value.dir">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ l('الخدمات', 'Services') }}</h2>
-      <button class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700" @click="openCreate">
-        + {{ l('إضافة خدمة', 'Add Service') }}
-      </button>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="px-3 py-2 text-sm border border-gray-300 dark:border-slate-600 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5"
+          @click="downloadTemplate"
+        >
+          <span>⬇</span> {{ l('قالب Excel', 'Excel template') }}
+        </button>
+        <label
+          class="px-3 py-2 text-sm border border-primary-500 text-primary-600 dark:text-primary-400 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-950/30 transition-colors flex items-center gap-1.5 cursor-pointer"
+        >
+          <span>⬆</span> {{ l('استيراد Excel', 'Import Excel') }}
+          <input type="file" accept=".xlsx" class="hidden" @change="importExcel" />
+        </label>
+        <button class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700" @click="openCreate">
+          + {{ l('إضافة خدمة', 'Add Service') }}
+        </button>
+      </div>
+    </div>
+    <div v-if="importResult" class="rounded-lg p-3 text-sm" :class="importResult.error ? 'bg-red-50 text-red-700 dark:bg-red-950/30' : 'bg-green-50 text-green-700 dark:bg-green-950/25'">
+      {{ importResult.message }}
+      <button type="button" class="mr-2 text-xs underline" @click="importResult = null">{{ l('إغلاق', 'Dismiss') }}</button>
     </div>
 
     <div class="flex flex-wrap gap-3">
@@ -115,6 +134,7 @@ import apiClient from '@/lib/apiClient'
 import { useToast } from '@/composables/useToast'
 import { useLocale } from '@/composables/useLocale'
 import { appConfirm } from '@/services/appConfirmDialog'
+import { downloadExcelFromRows } from '@/utils/exportExcel'
 
 const toast = useToast()
 const locale = useLocale()
@@ -141,6 +161,7 @@ const error    = ref('')
 const editing  = ref<ServiceItem | null>(null)
 const search   = ref('')
 const activeOnly = ref(false)
+const importResult = ref<{ error?: boolean; message: string } | null>(null)
 
 const form = ref({
   name: '', code: '', base_price: 0, tax_rate: 15,
@@ -223,6 +244,47 @@ async function deleteService(svc: ServiceItem) {
 
 function formatPrice(price: string): string {
   return Number(price).toFixed(2)
+}
+
+async function downloadTemplate() {
+  await downloadExcelFromRows(
+    [
+      {
+        name: l('مثال: تغيير زيت', 'e.g. Oil change'),
+        name_ar: '',
+        code: 'SVC-001',
+        base_price: 120,
+        tax_rate: 15,
+        estimated_minutes: 30,
+        is_active: 1,
+        description: '',
+      },
+    ],
+    'Services Template',
+    'services_template.xlsx',
+  )
+}
+
+async function importExcel(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  if (!file.name.toLowerCase().endsWith('.xlsx')) {
+    importResult.value = { error: true, message: l('صيغة غير مدعومة. الرجاء رفع ملف .xlsx فقط.', 'Only .xlsx files are supported.') }
+    ;(e.target as HTMLInputElement).value = ''
+    return
+  }
+  const fd = new FormData()
+  fd.append('file', file)
+  try {
+    const { data } = await apiClient.post('/services/import', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+    const extra = Array.isArray(data.errors) && data.errors.length ? ` — ${data.errors.slice(0, 3).join(' | ')}` : ''
+    importResult.value = { message: (data.message ?? l('تم الاستيراد', 'Import completed')) + extra }
+    await load()
+  } catch (err: any) {
+    importResult.value = { error: true, message: err.response?.data?.message ?? l('فشل الاستيراد', 'Import failed') }
+  }
+  const input = e.target as HTMLInputElement
+  input.value = ''
 }
 
 onMounted(load)

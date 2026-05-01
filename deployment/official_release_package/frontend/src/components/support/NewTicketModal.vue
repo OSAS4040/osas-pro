@@ -83,9 +83,22 @@
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">العميل (اختياري)</label>
-              <input v-model="form.customer_search" placeholder="اسم العميل..."
-                     class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:text-white"
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">اسم العميل</label>
+              <input
+                :value="customerDisplayName"
+                readonly
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700/60 dark:text-white"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">اسم المستخدم</label>
+              <input
+                :value="userDisplayName"
+                readonly
+                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700/60 dark:text-white"
               />
             </div>
           </div>
@@ -110,15 +123,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import axios from 'axios'
 import { PlusCircleIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '@/stores/auth'
 
 const emit = defineEmits(['close', 'created'])
+const auth = useAuthStore()
 
 const form = ref({
   subject: '', description: '', category: 'general', priority: 'medium',
-  channel: 'portal', customer_search: '',
+  channel: 'portal',
 })
 
 const submitting       = ref(false)
@@ -171,4 +186,16 @@ const priMap: Record<string, string> = { critical: 'حرجة', high: 'عالية
 const categoryLabel = (c: string) => catMap[c] ?? c
 const priorityLabel = (p: string) => priMap[p] ?? p
 const sentimentLabel = (s: number) => s > 0.3 ? '😊 إيجابي' : s < -0.3 ? '😤 سلبي' : '😐 محايد'
+
+const userDisplayName = computed(() => String(auth.user?.name || 'المستخدم الحالي'))
+const customerDisplayName = computed(() => {
+  const userAny = (auth.user ?? {}) as any
+  return String(
+    userAny.customer_name
+    || userAny.company_name
+    || userAny.company?.name
+    || userAny.name
+    || 'العميل الحالي',
+  )
+})
 </script>

@@ -167,8 +167,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { DocumentTextIcon } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 import { invoiceStatusClass, invoiceStatusLabel } from '@/utils/financialLabels'
@@ -181,7 +181,10 @@ import { PRINT_HTML_FONT_LINKS, PRINT_HTML_FONT_FAMILY } from '@/design/printHtm
 const FILTERS_KEY = 'invoice_list_filters_v1'
 const toast = useToast()
 const locale = useLocale()
+const route = useRoute()
 const l = (ar: string, en: string) => (locale.lang.value === 'ar' ? ar : en)
+const filterCustomerId = ref('')
+const filterCompanyId = ref('')
 
 const invoices   = ref<any[]>([])
 const selectedIds = ref<number[]>([])
@@ -385,6 +388,12 @@ async function load(resetSelection = true) {
     if (filters.value.status) params.status = filters.value.status
     if (filters.value.from)   params.from   = filters.value.from
     if (filters.value.to)     params.to     = filters.value.to
+    if (filterCustomerId.value && /^\d+$/.test(filterCustomerId.value)) {
+      params.customer_id = Number(filterCustomerId.value)
+    }
+    if (filterCompanyId.value && /^\d+$/.test(filterCompanyId.value)) {
+      params.company_id = Number(filterCompanyId.value)
+    }
     const { data } = await apiClient.get('/invoices', { params })
     const res = data.data
     invoices.value = res.data ?? res
@@ -418,6 +427,32 @@ async function exportExcel() {
 
 onMounted(() => {
   restoreFilters()
+  const q = route.query.customer_id
+  if (q !== undefined && q !== null && /^\d+$/.test(String(q))) {
+    filterCustomerId.value = String(q)
+  }
+  const c = route.query.company_id
+  if (c !== undefined && c !== null && /^\d+$/.test(String(c))) {
+    filterCompanyId.value = String(c)
+  }
   load(true)
 })
+
+watch(
+  () => route.query.customer_id,
+  (q) => {
+    filterCustomerId.value = q !== undefined && q !== null && /^\d+$/.test(String(q)) ? String(q) : ''
+    page.value = 1
+    load(true)
+  },
+)
+
+watch(
+  () => route.query.company_id,
+  (q) => {
+    filterCompanyId.value = q !== undefined && q !== null && /^\d+$/.test(String(q)) ? String(q) : ''
+    page.value = 1
+    load(true)
+  },
+)
 </script>

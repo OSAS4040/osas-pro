@@ -3,13 +3,19 @@ import { pathToStaffNavKey } from '@/lib/staffNavKey'
 import { normalizeBusinessType, type BusinessType } from '@/config/businessFeatureProfileDefaults'
 
 /**
- * مسارات تُخفى في «تركيز مزوّد الخدمة» — واجهة أخف لمراكز الصيانة (بدون سجل عملاء/مركبات مستقل لدى المزود، وبدون POS/CRM/HR/ذكاء تشغيلي إضافي…).
+ * مسارات تُخفى في «تركيز مزوّد الخدمة» — واجهة أخف لمراكز الصيانة (بدون عملاء/مركبات/فواتير/موردين/شحن رصيد/مطابقة/محاسبة تفصيلية…؛ المشتريات عبر «مشتريات المنصّة» و«مطالبات المشتريات»).
  * يُفعَّل افتراضياً عند `business_type = service_center` بعد تحميل ملف النشاط، أو قسراً بـ VITE_STAFF_NAV_PROVIDER_FOCUS=true.
  */
 const STAFF_PROVIDER_FOCUS_HIDDEN_PATHS: readonly string[] = [
   '/customers',
   '/vehicles',
-  '/pos',
+  '/invoices',
+  '/suppliers',
+  '/wallet/top-up-requests',
+  '/financial-reconciliation',
+  '/ledger',
+  '/chart-of-accounts',
+  '/zatca',
   '/bays',
   '/bookings',
   '/meetings',

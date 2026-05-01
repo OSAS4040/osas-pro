@@ -30,8 +30,7 @@ class NotifyCustomerWorkOrderWhatsAppJob implements ShouldQueue
         public readonly int $companyId,
         public readonly string $kind,
     ) {
-        // Allow queue push while an outer transaction is still open (e.g. PHPUnit RefreshDatabase).
-        // Work order status is already committed inside WorkOrderService's inner transaction.
+        // Queueable::beforeCommit() = لا ننتظر انتهاء المعاملات؛ الإرسال فوري بعد Bus::dispatch.
         $this->beforeCommit();
     }
 

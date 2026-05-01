@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-04-08T03:54:54+00:00",
+    "generated_at": "2026-05-01T09:29:08+00:00",
     "checks": {
         "invoice_without_ledger": {
             "detected": 0,
@@ -22,13 +22,13 @@
                 "payments": [
                     {
                         "id": 102,
-                        "uuid": "f63a89b7-ea24-44e6-90f7-c05afbc8b619",
-                        "company_id": 48,
-                        "invoice_id": 104,
+                        "uuid": "61308115-e4f9-497b-8dd8-9e1ca78bec76",
+                        "company_id": 128,
+                        "invoice_id": 108,
                         "status": "refunded",
                         "original_payment_id": null,
                         "reversal_payment_id": null,
-                        "trace_id": "4c3214e2-70de-471a-959b-c79b818bcf83"
+                        "trace_id": "76cc74f5-bbfd-43fb-93a1-b9c7ea15f628"
                     }
                 ]
             }
@@ -44,13 +44,13 @@
         "anomalous_reversal_settlement": [
             {
                 "finding_type": "anomalous_reversal_settlement",
-                "company_id": 48,
-                "invoice_id": 104,
+                "company_id": 128,
+                "invoice_id": 108,
                 "journal_entry_id": null,
                 "payment_id": 102,
                 "reference_type": "payment",
                 "reference_id": 102,
-                "trace_reference": "4c3214e2-70de-471a-959b-c79b818bcf83",
+                "trace_reference": "76cc74f5-bbfd-43fb-93a1-b9c7ea15f628",
                 "details": {
                     "payment_status": "refunded",
                     "original_payment_id": null,

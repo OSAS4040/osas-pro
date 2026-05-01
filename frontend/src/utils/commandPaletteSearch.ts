@@ -38,13 +38,13 @@ export function routeContextBoost(currentPath: string, itemTo: string, group: st
   if (p.startsWith('/customers') || p.startsWith('/crm')) {
     if (to.includes('customer') || to === '/vehicles' || group === 'العملاء') b += 5
   }
-  if (p.startsWith('/invoices') || p.startsWith('/pos')) {
-    if (to.includes('invoice') || to === '/pos' || group === 'الرئيسي') b += 4
+  if (p.startsWith('/invoices')) {
+    if (to.includes('invoice') || group === 'الرئيسي') b += 4
   }
   if (p.startsWith('/work-orders') || p.startsWith('/bays')) {
     if (to.includes('work-orders') || to.startsWith('/bays') || to === '/bookings') b += 6
   }
-  if (p.startsWith('/inventory') || p.startsWith('/products') || p.startsWith('/purchases')) {
+  if (p.startsWith('/inventory') || p.startsWith('/services-products') || p.startsWith('/products') || p.startsWith('/purchases')) {
     if (group === 'المخزون') b += 6
   }
   if (p.startsWith('/reports') || p.startsWith('/business-intelligence')) {

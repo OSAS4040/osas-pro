@@ -132,7 +132,6 @@
           <label class="block text-xs text-gray-500 mb-1">الوضع الافتراضي بعد الدخول</label>
           <select v-model="prefs.defaultLanding" class="field">
             <option value="/">الرئيسية</option>
-            <option value="/pos">نقطة البيع</option>
             <option value="/reports">التقارير</option>
             <option value="/workshop/tasks">المهام</option>
           </select>
@@ -254,6 +253,14 @@ onMounted(async () => {
   try {
     const raw = localStorage.getItem('user_prefs_v1')
     if (raw) Object.assign(prefs, JSON.parse(raw))
+    if (prefs.defaultLanding === '/pos') {
+      prefs.defaultLanding = '/'
+      try {
+        localStorage.setItem('user_prefs_v1', JSON.stringify(prefs))
+      } catch {
+        /* ignore */
+      }
+    }
   } catch {
     // ignore
   }

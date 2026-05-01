@@ -216,4 +216,49 @@ final class WorkOrderPdfAndShareTest extends TestCase
             ->assertOk();
     }
 
+    public function test_other_tenant_cannot_open_show_or_share_links_for_foreign_work_order(): void
+    {
+        $tenantA = $this->createTenant('owner');
+        $tenantB = $this->createTenant('owner');
+
+        $customer = Customer::create([
+            'uuid' => Str::uuid(),
+            'company_id' => $tenantA['company']->id,
+            'branch_id' => $tenantA['branch']->id,
+            'type' => 'individual',
+            'name' => 'Iso Cust',
+            'is_active' => true,
+        ]);
+        $vehicle = Vehicle::create([
+            'uuid' => Str::uuid(),
+            'company_id' => $tenantA['company']->id,
+            'branch_id' => $tenantA['branch']->id,
+            'customer_id' => $customer->id,
+            'created_by_user_id' => $tenantA['user']->id,
+            'plate_number' => 'ISO-'.Str::upper(Str::random(4)),
+            'make' => 'X',
+            'model' => 'Y',
+            'year' => 2024,
+        ]);
+
+        $order = app(WorkOrderService::class)->create(
+            [
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'items' => [['item_type' => 'service', 'name' => 'Line', 'quantity' => 1, 'unit_price' => 10, 'tax_rate' => 15]],
+            ],
+            $tenantA['company']->id,
+            $tenantA['branch']->id,
+            $tenantA['user']->id,
+        );
+
+        $this->actingAs($tenantB['user'], 'sanctum')
+            ->getJson('/api/v1/work-orders/'.$order->id)
+            ->assertNotFound();
+
+        $this->actingAs($tenantB['user'], 'sanctum')
+            ->getJson('/api/v1/work-orders/'.$order->id.'/share-links')
+            ->assertNotFound();
+    }
+
 }

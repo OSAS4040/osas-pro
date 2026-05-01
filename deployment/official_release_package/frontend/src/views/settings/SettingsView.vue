@@ -19,6 +19,13 @@
         <div class="page-title-wrap">
           <h2 class="page-title-xl">{{ l('إعدادات الشركة', 'Company settings') }}</h2>
           <p class="page-subtitle">{{ l('المعلومات والهوية البصرية — تظهر في الفواتير والوثائق الرسمية', 'Business profile and visual identity — shown on invoices and official documents') }}</p>
+          <RouterLink
+            v-if="auth.user?.company_id"
+            :to="{ name: 'companies.profile', params: { companyId: String(auth.user.company_id) } }"
+            class="inline-flex mt-2 text-xs font-semibold text-primary-600 hover:underline"
+          >
+            {{ l('مركز تشغيل الشركة', 'Company operational hub') }} →
+          </RouterLink>
           <p class="text-[11px] text-primary-700 dark:text-primary-300 mt-2 font-medium">
             {{ l('تبويب «إعدادات الفاتورة» يتضمّن نسبة VAT الافتراضية وطرق الدفع المقبولة (تُحفظ مع خيارات الفاتورة).', 'The invoice tab includes default VAT and accepted payment methods (saved with invoice options).') }}
           </p>
@@ -40,6 +47,29 @@
       <template v-if="activeTab === 'profile'">
         <div class="form-shell space-y-5">
           <h3 class="text-sm font-semibold text-gray-700 dark:text-slate-200">ملف نشاط المنشأة والخصائص</h3>
+          <div
+            v-if="businessProfileDirty"
+            class="rounded-xl border border-amber-300 bg-amber-50/95 p-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+            role="status"
+          >
+            <p class="font-semibold">{{ l('تغييرات غير محفوظة', 'Unsaved changes') }}</p>
+            <p class="mt-1 text-xs leading-relaxed opacity-95">
+              {{
+                l(
+                  'لن تنعكس على القائمة والبحث والصلاحيات حتى تضغط «حفظ ملف النشاط».',
+                  'They will not affect menus, search, or permissions until you click «Save business profile».',
+                )
+              }}
+              <template v-if="businessTypeDrift">
+                {{
+                  l(
+                    ' نوع النشاط في النموذج يختلف عن المحفوظ — إن أردت قيم الافتراضيات الموصى به للنوع الجديد فاستخدم زر المحاذاة ثم احفظ.',
+                    ' Activity type in the form differs from the saved one — use the align button for recommended defaults, then save.',
+                  )
+                }}
+              </template>
+            </p>
+          </div>
           <div>
             <label class="label">نوع نشاط المنشأة</label>
             <select v-model="businessType" class="field bg-white dark:bg-slate-700">
@@ -48,6 +78,18 @@
               <option value="fleet_operator">مشغل أسطول</option>
             </select>
             <p class="text-xs text-gray-400 mt-1">يحدد الإعداد الافتراضي لإظهار أقسام النظام المناسبة لنشاطك.</p>
+            <p class="mt-2 text-xs leading-relaxed text-gray-600 dark:text-slate-400">
+              النشاط المعروض في النموذج الآن:
+              <strong class="text-gray-800 dark:text-slate-200">{{ businessTypeLabelAr(businessType) }}</strong>
+              — الافتراضيات الموصى بها (أسطول، هيكل تنظيمي، ذكاء أعمال، عقود موردين…) تختلف بين التجزئة ومركز الخدمة ومشغّل الأسطول، ويُطبَّق القانون نفسه على الخادم عند الحفظ.
+            </p>
+            <button
+              type="button"
+              class="btn btn-outline mt-2 px-3 py-1.5 text-xs"
+              @click="applyActivityRecommendedDefaults"
+            >
+              محاذاة مفاتيح الخصائص مع افتراضيات نوع النشاط المحدد
+            </button>
           </div>
 
           <div>
@@ -77,7 +119,12 @@
           </div>
 
           <div class="form-actions">
-            <button :disabled="savingBusinessProfile" class="btn btn-primary disabled:opacity-50" @click="saveBusinessProfile">
+            <button
+              :disabled="savingBusinessProfile"
+              class="btn btn-primary disabled:opacity-50 transition-shadow"
+              :class="businessProfileDirty ? 'ring-2 ring-amber-400/90 ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''"
+              @click="saveBusinessProfile"
+            >
               {{ savingBusinessProfile ? l('جارٍ الحفظ...', 'Saving...') : l('حفظ ملف النشاط', 'Save business profile') }}
             </button>
           </div>
@@ -93,6 +140,41 @@
                 <RouterLink class="text-primary-600 hover:underline" to="/settings/org-units">{{ locale.t('settingsProfile.orgStructure') }}</RouterLink>
               </template>
             </p>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="activeTab === 'navigation'">
+        <div class="form-shell space-y-4">
+          <h3 class="text-sm font-semibold text-gray-700 dark:text-slate-200">سياسة إظهار الأقسام داخل الشركة</h3>
+          <p class="text-xs text-gray-500 dark:text-slate-400">
+            هذه السياسة تحدد ما يمكن إظهاره للمستخدمين داخل شركتك، وتبقى ضمن حدود سياسة المنصة.
+          </p>
+
+          <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-4 space-y-3">
+            <h4 class="text-xs font-semibold text-gray-600 dark:text-slate-300">الأقسام الرئيسية</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <label v-for="k in visibleCompanySectionKeys" :key="`company-sec-${k}`" class="flex items-center gap-2 text-sm">
+                <input v-model="companyNavPolicy.sections[k]" type="checkbox" class="rounded" />
+                <span>{{ navSectionLabels[k] }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-4 space-y-3">
+            <h4 class="text-xs font-semibold text-gray-600 dark:text-slate-300">الأقسام الفرعية</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <label v-for="k in visibleCompanyGroupKeys" :key="`company-grp-${k}`" class="flex items-center gap-2 text-sm">
+                <input v-model="companyNavPolicy.groups[k]" type="checkbox" class="rounded" />
+                <span>{{ navGroupLabels[k] }}</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button :disabled="savingCompanyNavPolicy" class="btn btn-primary disabled:opacity-50" @click="saveCompanyNavigationPolicy">
+              {{ savingCompanyNavPolicy ? l('جارٍ الحفظ...', 'Saving...') : l('حفظ سياسة الأقسام للشركة', 'Save company navigation policy') }}
+            </button>
           </div>
         </div>
       </template>
@@ -356,6 +438,49 @@
               </div>
             </div>
           </div>
+          <div class="rounded-xl border border-indigo-100 dark:border-indigo-900/50 p-4 space-y-3 bg-indigo-50/40 dark:bg-indigo-950/20">
+            <h4 class="text-xs font-semibold text-indigo-900 dark:text-indigo-100">حسابات استلام تحويلات شحن المحافظ</h4>
+            <p class="text-[11px] text-indigo-800/90 dark:text-indigo-200/90 leading-relaxed">
+              تُدرَج في مستند «تعليمات التحويل» PDF مع <strong>اسم العميل الطالب</strong> ورقم المرجع لكل طلب شحن. إن لم تُضف حسابات هنا، يُستخدم اسم البنك والآيبان من تبويب «معلومات الشركة» كحساب واحد.
+            </p>
+            <div v-for="(tr, ti) in walletTreasuryRows" :key="ti" class="rounded-lg border border-indigo-100 dark:border-indigo-900/40 bg-white/80 dark:bg-slate-800/60 p-3 space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-[11px] font-semibold text-gray-600 dark:text-slate-300">حساب {{ ti + 1 }}</span>
+                <button
+                  v-if="walletTreasuryRows.length > 1"
+                  type="button"
+                  class="text-[11px] text-red-600 hover:underline"
+                  @click="walletTreasuryRows.splice(ti, 1)"
+                >
+                  حذف
+                </button>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                  <label class="label">اسم البنك <span class="text-red-500">*</span></label>
+                  <input v-model="tr.bank_name" class="field" placeholder="مثال: البنك الأهلي السعودي">
+                </div>
+                <div>
+                  <label class="label">رقم الحساب</label>
+                  <input v-model="tr.account_number" class="field font-mono" placeholder="اختياري">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="label">الآيبان IBAN</label>
+                  <input v-model="tr.iban" class="field font-mono" placeholder="SA…">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="label">ملاحظة مستفيد (اختياري)</label>
+                  <input v-model="tr.beneficiary_label" class="field" placeholder="يظهر في عمود الملاحظة بالمستند إن وُجد">
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline text-xs" @click="addWalletTreasuryRow">+ إضافة حساب بنكي</button>
+            <div>
+              <button type="button" :disabled="savingWalletTreasury" class="btn btn-primary text-sm disabled:opacity-50" @click="saveWalletTreasuryAccounts">
+                {{ savingWalletTreasury ? 'جارٍ الحفظ…' : 'حفظ حسابات التحويل' }}
+              </button>
+            </div>
+          </div>
           <div class="space-y-3">
             <label v-for="opt in invoiceOptions" :key="opt.key"
                    class="flex items-center justify-between p-3.5 rounded-xl border border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors"
@@ -497,12 +622,19 @@ import apiClient from '@/lib/apiClient'
 import { useAuthStore } from '@/stores/auth'
 import { useI18nStore } from '@/stores/i18n'
 import { useBusinessProfileStore, type BusinessType } from '@/stores/businessProfile'
+import { businessTypeLabelAr, featureMatrixForBusinessType } from '@/config/businessFeatureProfileDefaults'
 import { useToast } from '@/composables/useToast'
 import { useTheme, THEME_PRESETS } from '@/composables/useTheme'
 import SmartUserGuidePanel from '@/components/settings/SmartUserGuidePanel.vue'
 import { resolvePublicAssetUrl } from '@/utils/publicUrl'
 import { useLocale } from '@/composables/useLocale'
 import { useSetupOnboarding } from '@/composables/useSetupOnboarding'
+import {
+  DEFAULT_NAV_VISIBILITY,
+  NAV_GROUP_LABELS,
+  NAV_SECTION_LABELS,
+  type NavVisibilityPolicy,
+} from '@/config/navigationVisibility'
 
 const { currentTheme, currentPreset, setTheme, setThemePreset, saveCompanyTheme, loadCompanyTheme } = useTheme()
 
@@ -534,7 +666,7 @@ function onRevealSetupChecklist() {
 }
 
 /** @see tabs ids below */
-const VALID_TABS = ['profile', 'identity', 'info', 'invoice', 'theme', 'guide'] as const
+const VALID_TABS = ['profile', 'navigation', 'identity', 'info', 'invoice', 'theme', 'guide'] as const
 
 const activeTab = ref('identity')
 
@@ -548,6 +680,7 @@ function applyTabQuery(): void {
 watch(() => route.query.tab, applyTabQuery)
 const tabs = computed(() => [
   { id: 'profile',  label: l('نشاط المنشأة', 'Business profile'), icon: Cog6ToothIcon },
+  { id: 'navigation', label: l('إظهار الأقسام', 'Navigation visibility'), icon: Cog6ToothIcon },
   { id: 'identity', label: l('الهوية البصرية', 'Visual identity'), icon: PhotoIcon },
   { id: 'info',     label: l('معلومات الشركة', 'Company info'), icon: BuildingOfficeIcon },
   { id: 'invoice',  label: l('إعدادات الفاتورة', 'Invoice settings'), icon: DocumentTextIcon },
@@ -556,27 +689,17 @@ const tabs = computed(() => [
 ])
 
 const businessType = ref<BusinessType>('service_center')
-const featureMatrix = reactive<Record<string, boolean>>({
-  operations: true,
-  hr: true,
-  finance: true,
-  accounting: true,
-  inventory: true,
-  reports: true,
-  intelligence: true,
-  crm: true,
-  fleet: true,
-  org_structure: true,
-  supplier_contract_mgmt: true,
-})
+const featureMatrix = reactive<Record<string, boolean>>({ ...featureMatrixForBusinessType('service_center') })
 const savingBusinessProfile = ref(false)
 const savingTheme = ref(false)
 const themeSaved = ref(false)
+const savingCompanyNavPolicy = ref(false)
 const featureMatrixItems = [
   { key: 'operations', label: 'التشغيل', desc: 'لوحات التشغيل وأوامر العمل والحجوزات' },
   { key: 'hr', label: 'الموارد البشرية', desc: 'الموظفون والمهام والحضور والرواتب' },
   { key: 'finance', label: 'المالي', desc: 'الفواتير والمحفظة والعقود والمشتريات' },
   { key: 'accounting', label: 'المحاسبي', desc: 'دفتر الأستاذ ودليل الحسابات والضريبة' },
+  { key: 'fixed_assets', label: 'الأصول الثابتة (واجهة/خلفية)', desc: 'تظهر في القائمة والمسار فقط عند التفعيل — المرحلة التالية ربط API وسجل الإهلاك' },
   { key: 'inventory', label: 'المخزون', desc: 'المنتجات والمخزون والموردين' },
   { key: 'reports', label: 'التقارير', desc: 'شاشات وتقارير الأداء والملخصات' },
   { key: 'intelligence', label: 'ذكاء الأعمال', desc: 'التنبؤات والشذوذ والتوصيات' },
@@ -585,6 +708,26 @@ const featureMatrixItems = [
   { key: 'org_structure', label: 'هيكل القطاعات والأقسام', desc: 'قطاع / قسم / شعبة — تنظيم ذكي يناسب التشغيل والأسطول (غالباً غير مطلوب بالتجزئة)' },
   { key: 'supplier_contract_mgmt', label: 'عقود الموردين والتنبيهات', desc: 'رفع PDF وتواريخ انتهاء وتنبيهات — يُعطّل افتراضياً لنشاط التجزئة' },
 ]
+const navSectionLabels = NAV_SECTION_LABELS
+const navGroupLabels = NAV_GROUP_LABELS
+const navSectionKeys = Object.keys(NAV_SECTION_LABELS)
+const navGroupKeys = Object.keys(NAV_GROUP_LABELS)
+const visibleCompanySectionKeys = ref<string[]>([...navSectionKeys])
+const visibleCompanyGroupKeys = ref<string[]>([...navGroupKeys])
+const companyNavPolicy = reactive<NavVisibilityPolicy>(JSON.parse(JSON.stringify(DEFAULT_NAV_VISIBILITY)))
+
+const businessTypeDrift = computed(() => biz.loaded && businessType.value !== biz.businessType)
+
+const businessProfileDirty = computed(() => {
+  if (!biz.loaded) return false
+  void biz.businessType
+  void biz.effectiveFeatureMatrix
+  if (businessType.value !== biz.businessType) return true
+  for (const { key } of featureMatrixItems) {
+    if (featureMatrix[key] !== biz.effectiveFeatureMatrix[key]) return true
+  }
+  return false
+})
 
 // ── Form ──────────────────────────────────────────────────────────────
 const form = reactive({
@@ -624,6 +767,40 @@ const paymentMethodToggles = reactive([
   { key: 'bank_transfer', label: 'تحويل بنكي', enabled: true },
   { key: 'stc_pay', label: 'STC Pay', enabled: false },
 ])
+
+type WalletTreasuryRow = { bank_name: string; iban: string; account_number: string; beneficiary_label: string }
+const walletTreasuryRows = ref<WalletTreasuryRow[]>([
+  { bank_name: '', iban: '', account_number: '', beneficiary_label: '' },
+])
+const savingWalletTreasury = ref(false)
+
+function addWalletTreasuryRow() {
+  walletTreasuryRows.value.push({ bank_name: '', iban: '', account_number: '', beneficiary_label: '' })
+}
+
+async function saveWalletTreasuryAccounts() {
+  if (!auth.user?.company_id) return
+  savingWalletTreasury.value = true
+  try {
+    const rows = walletTreasuryRows.value
+      .map(r => ({
+        bank_name: r.bank_name.trim(),
+        iban: r.iban.trim(),
+        account_number: r.account_number.trim(),
+        beneficiary_label: r.beneficiary_label.trim(),
+      }))
+      .filter(r => r.bank_name !== '')
+    await apiClient.patch(`/companies/${auth.user.company_id}/settings`, {
+      wallet_treasury_accounts: rows,
+    })
+    toast.success('تم حفظ حسابات التحويل لشحن المحافظ')
+  } catch {
+    /* من interceptor */
+  } finally {
+    savingWalletTreasury.value = false
+  }
+}
+
 const savingInvoice = ref(false)
 const invoiceOptions = reactive([
   { key: 'show_signature',    label: 'إظهار التوقيع في الفاتورة',    desc: 'توقيع المفوَّض في أسفل الفاتورة',      enabled: true  },
@@ -672,6 +849,16 @@ onMounted(async () => {
   try {
     const { data } = await apiClient.get(`/companies/${auth.user.company_id}/settings`)
     const s = data.data
+    if (Array.isArray(s?.wallet_treasury_accounts) && s.wallet_treasury_accounts.length > 0) {
+      walletTreasuryRows.value = s.wallet_treasury_accounts.map((x: Record<string, unknown>) => ({
+        bank_name: String(x.bank_name ?? ''),
+        iban: String(x.iban ?? ''),
+        account_number: String(x.account_number ?? ''),
+        beneficiary_label: String(x.beneficiary_label ?? ''),
+      }))
+    } else {
+      walletTreasuryRows.value = [{ bank_name: '', iban: '', account_number: '', beneficiary_label: '' }]
+    }
     if (s?.invoice_options) {
       invoiceOptions.forEach(opt => {
         if (s.invoice_options[opt.key] !== undefined) opt.enabled = s.invoice_options[opt.key]
@@ -700,10 +887,57 @@ onMounted(async () => {
   try {
     await loadCompanyTheme()
   } catch { /* */ }
+  await loadCompanyNavigationPolicy()
 })
+
+async function loadCompanyNavigationPolicy() {
+  if (!auth.user?.company_id) return
+  try {
+    const { data } = await apiClient.get(`/companies/${auth.user.company_id}/navigation-visibility`)
+    const platform = data?.data?.platform_policy
+    const policy = data?.data?.company_policy
+    visibleCompanySectionKeys.value = navSectionKeys.filter((key) => (platform?.sections?.[key] ?? true) !== false)
+    visibleCompanyGroupKeys.value = navGroupKeys.filter((key) => (platform?.groups?.[key] ?? true) !== false)
+    if (policy?.sections && policy?.groups) {
+      for (const key of navSectionKeys) companyNavPolicy.sections[key] = policy.sections[key] !== false
+      for (const key of navGroupKeys) companyNavPolicy.groups[key] = policy.groups[key] !== false
+    }
+  } catch {
+    // keep defaults
+    visibleCompanySectionKeys.value = [...navSectionKeys]
+    visibleCompanyGroupKeys.value = [...navGroupKeys]
+  }
+}
+
+async function saveCompanyNavigationPolicy() {
+  if (!auth.user?.company_id) return
+  savingCompanyNavPolicy.value = true
+  try {
+    const { data } = await apiClient.patch(`/companies/${auth.user.company_id}/navigation-visibility`, companyNavPolicy)
+    const policy = data?.data?.company_policy
+    if (policy?.sections && policy?.groups) {
+      for (const key of navSectionKeys) companyNavPolicy.sections[key] = policy.sections[key] !== false
+      for (const key of navGroupKeys) companyNavPolicy.groups[key] = policy.groups[key] !== false
+    }
+    await auth.fetchMe().catch(() => {})
+    toast.success(l('تم حفظ سياسة الأقسام للشركة', 'Company navigation policy saved'))
+  } finally {
+    savingCompanyNavPolicy.value = false
+  }
+}
 
 function toggleFeature(key: string) {
   featureMatrix[key] = !featureMatrix[key]
+}
+
+function applyActivityRecommendedDefaults() {
+  Object.assign(featureMatrix, featureMatrixForBusinessType(businessType.value))
+  toast.success(
+    l(
+      'تمت محاذاة المفاتيح مع الافتراضي الموصى به لهذا النشاط. اضغط «حفظ ملف النشاط» لتثبيتها على الخادم.',
+      'Toggles aligned with recommended defaults for this activity type. Click «Save business profile» to persist.',
+    ),
+  )
 }
 
 function applyInvoicePreset(presetId: string) {
@@ -728,6 +962,8 @@ async function saveBusinessProfile() {
   savingBusinessProfile.value = true
   try {
     await biz.save(businessType.value, { ...featureMatrix })
+    businessType.value = biz.businessType
+    Object.assign(featureMatrix, biz.effectiveFeatureMatrix)
     toast.success('تم حفظ ملف النشاط والخصائص')
   } catch {
     /* رسالة الخطأ من interceptor الـ API */

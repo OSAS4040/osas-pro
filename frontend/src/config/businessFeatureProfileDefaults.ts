@@ -4,7 +4,10 @@
  */
 export type BusinessType = 'service_center' | 'retail' | 'fleet_operator'
 
-export type FeatureMatrix = Record<string, boolean>
+/** قيم اختيارية؛ الغياب = الافتراضي من النوع. `platform_execution_partner` يُفعّل واجهة شريك التنفيذ للمنصة فقط عند true صريحاً. */
+export type FeatureMatrix = Record<string, boolean | undefined> & {
+  platform_execution_partner?: boolean
+}
 
 export function featureMatrixForBusinessType(businessType: BusinessType): FeatureMatrix {
   switch (businessType) {
@@ -22,6 +25,7 @@ export function featureMatrixForBusinessType(businessType: BusinessType): Featur
         fleet: true,
         org_structure: true,
         supplier_contract_mgmt: true,
+        platform_execution_partner: false,
       }
     case 'retail':
       return {
@@ -37,6 +41,7 @@ export function featureMatrixForBusinessType(businessType: BusinessType): Featur
         fleet: false,
         org_structure: false,
         supplier_contract_mgmt: false,
+        platform_execution_partner: false,
       }
     case 'fleet_operator':
       return {
@@ -52,6 +57,7 @@ export function featureMatrixForBusinessType(businessType: BusinessType): Featur
         fleet: true,
         org_structure: true,
         supplier_contract_mgmt: true,
+        platform_execution_partner: false,
       }
     default:
       return featureMatrixForBusinessType('service_center')

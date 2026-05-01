@@ -357,6 +357,18 @@ final class PlatformSubscriptionOperationsQueryService
     }
 
     /**
+     * GROUP BY status يعيد قيمة عمود قد تُحمَّل كـ Enum على نموذج Invoice.
+     */
+    private function invoiceStatusGroupKey(mixed $status): string
+    {
+        if ($status instanceof \BackedEnum) {
+            return (string) $status->value;
+        }
+
+        return (string) $status;
+    }
+
+    /**
      * كل فواتير نوع subscription للشركة (بما فيها المرتبطة بطلبات دفع وليس فقط source=Subscription).
      *
      * @param  list<int>  $companyIds
@@ -379,7 +391,7 @@ final class PlatformSubscriptionOperationsQueryService
         $out = [];
         foreach ($rows as $row) {
             $cid = (int) $row->company_id;
-            $st = (string) $row->status;
+            $st = $this->invoiceStatusGroupKey($row->status);
             if (! isset($out[$cid])) {
                 $out[$cid] = [];
             }
@@ -412,7 +424,7 @@ final class PlatformSubscriptionOperationsQueryService
         $out = [];
         foreach ($rows as $row) {
             $sid = (int) $row->subscription_id;
-            $st = (string) $row->status;
+            $st = $this->invoiceStatusGroupKey($row->status);
             if (! isset($out[$sid])) {
                 $out[$sid] = [];
             }

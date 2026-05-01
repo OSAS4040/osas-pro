@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use App\Services\WalletService;
+use App\Services\PlatformPricingApprovalGateService;
 use App\Services\WorkOrderPricingResolverService;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
@@ -173,6 +174,13 @@ class FleetPortalController extends Controller
         if (! $customerId) {
             return response()->json(['message' => 'حسابك غير مرتبط بجهة عميلة.'], 422);
         }
+        if (config('portal_rollout.strict_platform_pricing_gate', true)
+            && ! app(PlatformPricingApprovalGateService::class)->hasApprovedActiveReference($companyId, (int) $customerId)) {
+            return response()->json([
+                'message' => 'التسعير غير متاح حتى اعتماد نسخة أسعار نشطة من إدارة المنصة.',
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
 
         $data = $request->validate([
             'service_id' => [
@@ -255,6 +263,14 @@ class FleetPortalController extends Controller
             ->where('id', $data['vehicle_id'])
             ->where('customer_id', $customerId)
             ->firstOrFail();
+
+        if (config('portal_rollout.strict_platform_pricing_gate', true)
+            && ! app(PlatformPricingApprovalGateService::class)->hasApprovedActiveReference($companyId, (int) $customerId)) {
+            return response()->json([
+                'message' => 'لا يمكن إنشاء طلب الخدمة قبل اعتماد نسخة أسعار نشطة من إدارة المنصة.',
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
 
         $useCredit    = !empty($data['use_credit']);
         $approvalStatus = $useCredit ? 'pending' : 'not_required';

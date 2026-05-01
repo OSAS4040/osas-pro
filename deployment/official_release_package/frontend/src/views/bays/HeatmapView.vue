@@ -682,9 +682,9 @@ const insights = computed((): InsightCard[] => {
       title: `حوالي ${calmH}:00`,
       detail: `في هذه الساعة عدد المناطق المشغولة أقل (${calmScore} من ${heatmap.value.length}) — فرصة لحجوزات مرنة أو متابعة.`,
       icon: SparklesIcon,
-      cardClass: 'border-violet-200/80 dark:border-violet-900/40 bg-gradient-to-br from-violet-50/80 to-white dark:from-violet-950/25 dark:to-slate-900/50',
-      iconWrap: 'bg-violet-500/20 text-violet-700 dark:text-violet-300',
-      glowClass: 'bg-violet-400',
+      cardClass: 'border-primary-200/80 dark:border-primary-900/40 bg-gradient-to-br from-primary-50/80 to-white dark:from-primary-950/25 dark:to-slate-900/50',
+      iconWrap: 'bg-primary-500/20 text-primary-700 dark:text-primary-300',
+      glowClass: 'bg-primary-400',
     })
   }
 

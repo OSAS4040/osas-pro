@@ -173,6 +173,68 @@ class PlatformAdminController extends Controller
     }
 
     /**
+     * أرشيف مرفقات فواتير مزود الخدمة (مزود -> منصة) للرجوع من إدارة المنصة.
+     */
+    public function providerInvoiceAttachments(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'provider_company_id' => 'sometimes|integer|min:1',
+            'from' => 'sometimes|date',
+            'to' => 'sometimes|date',
+            'order_number' => 'sometimes|string|max:120',
+            'plate_number' => 'sometimes|string|max:32',
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
+
+        $perPage = min(100, max(1, (int) ($data['per_page'] ?? 25)));
+        $query = Invoice::withoutGlobalScopes()
+            ->where('billing_flow_type', 'provider_to_platform')
+            ->where('customer_visible', false)
+            ->whereNotNull('media')
+            ->when(isset($data['provider_company_id']), fn ($q) => $q->where('company_id', (int) $data['provider_company_id']))
+            ->when(! empty($data['from']), fn ($q) => $q->whereDate('issued_at', '>=', (string) $data['from']))
+            ->when(! empty($data['to']), fn ($q) => $q->whereDate('issued_at', '<=', (string) $data['to']))
+            ->when(! empty($data['order_number']), function ($q) use ($data): void {
+                $q->where('work_order_number_snapshot', 'ilike', '%'.trim((string) $data['order_number']).'%');
+            })
+            ->when(! empty($data['plate_number']), function ($q) use ($data): void {
+                $q->where('vehicle_plate_snapshot', 'ilike', '%'.trim((string) $data['plate_number']).'%');
+            })
+            ->orderByDesc('id');
+
+        $paginator = $query->paginate($perPage);
+        $rows = [];
+        foreach ($paginator->items() as $invoice) {
+            $media = is_array($invoice->media) ? $invoice->media : [];
+            $attachments = $media['provider_invoice_attachments'] ?? [];
+            if (! is_array($attachments) || $attachments === []) {
+                continue;
+            }
+            $rows[] = [
+                'invoice_id' => (int) $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'provider_company_id' => (int) $invoice->company_id,
+                'work_order_number' => $invoice->work_order_number_snapshot,
+                'vehicle_plate_number' => $invoice->vehicle_plate_snapshot,
+                'issued_at' => $invoice->issued_at?->toIso8601String(),
+                'attachments' => array_values($attachments),
+            ];
+        }
+
+        return response()->json([
+            'data' => $rows,
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    /**
      * قائمة عملاء المستأجرين عبر المنصة (قراءة فقط، بلا سياق شركة في الطلب).
      */
     public function platformCustomers(Request $request): JsonResponse

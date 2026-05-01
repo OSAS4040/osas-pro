@@ -68,7 +68,7 @@
             <p class="text-xs text-gray-400 mt-0.5">
               <span
                 class="px-2 py-0.5 rounded-full badge-text text-micro"
-                :class="c.type === 'b2b' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'"
+                :class="c.type === 'b2b' ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'"
               >
                 {{ c.type === 'b2b' ? 'شركة' : 'فرد' }}
               </span>
@@ -108,6 +108,12 @@
             >
               عرض المواعيد
             </button>
+            <RouterLink
+              :to="`/customers/${c.id}`"
+              class="flex-1 py-1.5 text-center border border-slate-200 dark:border-slate-600 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+            >
+              لوحة العميل
+            </RouterLink>
           </div>
         </div>
       </div>
@@ -126,13 +132,14 @@
               <th class="px-4 py-3 font-medium">البريد الإلكتروني</th>
               <th class="px-4 py-3 font-medium">الحالة</th>
               <th class="px-4 py-3 font-medium">تواصل</th>
+              <th class="px-4 py-3 font-medium">تقارير</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="c in filtered" :key="c.id">
               <td class="font-medium text-gray-800 dark:text-slate-100">{{ c.name }}</td>
               <td class="px-4 py-3">
-                <span :class="c.type === 'b2b' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'"
+                <span :class="c.type === 'b2b' ? 'bg-primary-100 text-primary-700' : 'bg-blue-100 text-blue-700'"
                       class="px-2 py-0.5 rounded-full text-xs font-medium"
                 >{{ c.type === 'b2b' ? 'شركة' : 'فرد' }}</span>
               </td>
@@ -159,9 +166,17 @@
                   </a>
                 </div>
               </td>
+              <td class="px-4 py-3">
+                <RouterLink
+                  :to="`/customers/${c.id}`"
+                  class="text-primary-600 hover:underline text-xs font-medium"
+                >
+                  لوحة العميل
+                </RouterLink>
+              </td>
             </tr>
             <tr v-if="!filtered.length">
-              <td colspan="6" class="table-empty">
+              <td colspan="7" class="table-empty">
                 <p class="table-empty-title">لا يوجد عملاء</p>
                 <p class="table-empty-sub">أضف عميلًا جديدًا للبدء</p>
               </td>
@@ -215,7 +230,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { PlusIcon, XMarkIcon, UsersIcon, MagnifyingGlassIcon, Squares2X2Icon, Bars3Icon, PhoneIcon } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 import NavigationSourceHint from '@/components/NavigationSourceHint.vue'
@@ -266,7 +281,12 @@ function viewBookings(c: any) {
 async function load() {
   loading.value = true
   try {
-    const { data } = await apiClient.get('/customers', { params: { per_page: 200 } })
+    const params: Record<string, unknown> = { per_page: 200 }
+    const companyId = route.query.company_id
+    if (companyId !== undefined && companyId !== null && /^\d+$/.test(String(companyId))) {
+      params.company_id = Number(companyId)
+    }
+    const { data } = await apiClient.get('/customers', { params })
     customers.value = data.data?.data ?? data.data ?? []
   } catch { /* silent */ } finally { loading.value = false }
 }
@@ -284,4 +304,9 @@ async function saveCustomer() {
 }
 
 onMounted(load)
+
+watch(
+  () => route.query.company_id,
+  () => { void load() },
+)
 </script>

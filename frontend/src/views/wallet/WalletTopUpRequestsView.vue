@@ -213,7 +213,7 @@
             </button>
           </div>
           <div class="form-shell px-6 py-4 space-y-3">
-            <div>
+            <div v-if="!forceCustomerAuto">
               <label class="block text-xs font-semibold mb-1">العميل <span class="text-red-500">*</span></label>
               <p class="text-[11px] text-gray-500 dark:text-slate-400 mb-1.5 leading-relaxed">
                 صاحب المحفظة التي تُزاد بعد الاعتماد: نفس العميل الذي دفع الشحن (محفظة فردية أو محفظة أسطول حسب «الهدف» أدناه).
@@ -222,6 +222,10 @@
                 <option value="">اختر عميلاً</option>
                 <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
+            </div>
+            <div v-else>
+              <label class="block text-xs font-semibold mb-1">العميل</label>
+              <div class="field bg-gray-50 dark:bg-slate-700/40 text-sm">{{ auth.user?.name || 'العميل الحالي' }}</div>
             </div>
             <div class="form-grid-2">
               <div>
@@ -413,7 +417,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import {
   QueueListIcon, PlusCircleIcon, XMarkIcon,
 } from '@heroicons/vue/24/outline'
@@ -425,6 +429,8 @@ import NavigationSourceHint from '@/components/NavigationSourceHint.vue'
 
 const auth = useAuthStore()
 const toast = useToast()
+const route = useRoute()
+const forceCustomerAuto = computed(() => route.path.startsWith('/customer/'))
 
 const canCreate = computed(() => auth.hasPermission('wallet.top_up_requests.create'))
 const canReview = computed(() => auth.hasPermission('wallet.top_up_requests.review'))
@@ -565,7 +571,7 @@ async function loadCustomers() {
 
 async function openCreate() {
   formError.value = ''
-  createForm.customer_id = ''
+  createForm.customer_id = forceCustomerAuto.value ? String(auth.user?.customer_id ?? '') : ''
   createForm.target = 'individual'
   createForm.amount = null
   createForm.payment_method = 'cash'
@@ -573,7 +579,7 @@ async function openCreate() {
   createForm.notes_from_customer = ''
   createReceipt.value = null
   showCreate.value = true
-  await loadCustomers()
+  if (!forceCustomerAuto.value) await loadCustomers()
 }
 
 function onCreateReceipt(e: Event) {
@@ -589,7 +595,8 @@ function onEditReceipt(e: Event) {
 async function submitCreate() {
   if (createSubmitting.value) return
   formError.value = ''
-  if (!createForm.customer_id || !createForm.amount || createForm.amount <= 0) {
+  const effectiveCustomerId = forceCustomerAuto.value ? String(auth.user?.customer_id ?? '') : String(createForm.customer_id || '')
+  if (!effectiveCustomerId || !createForm.amount || createForm.amount <= 0) {
     formError.value = 'اختر عميلاً وأدخل مبلغاً صحيحاً'
     return
   }
@@ -600,7 +607,7 @@ async function submitCreate() {
   createSubmitting.value = true
   try {
     const fd = new FormData()
-    fd.append('customer_id', String(createForm.customer_id))
+    fd.append('customer_id', effectiveCustomerId)
     fd.append('target', createForm.target)
     fd.append('amount', String(createForm.amount))
     fd.append('payment_method', createForm.payment_method)

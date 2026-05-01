@@ -14,6 +14,18 @@
       />
     </div>
     <PlatformPromoBanner class="relative z-[21] w-full border-b border-transparent" />
+    <div
+      v-if="auth.isPhoneOnboarding"
+      data-testid="landing-phone-onboarding-return"
+      class="relative z-[22] border-b border-emerald-200/90 bg-emerald-50/95 px-4 py-2 text-center text-xs font-semibold text-emerald-950 dark:border-emerald-800/80 dark:bg-emerald-950/50 dark:text-emerald-100"
+    >
+      <RouterLink
+        to="/phone/onboarding/done"
+        class="underline decoration-emerald-700/60 underline-offset-2 hover:text-emerald-800 dark:hover:text-emerald-200"
+      >
+        العودة لمسار التسجيل بالجوال وخطوات ما بعد الاسم
+      </RouterLink>
+    </div>
     <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-white/10 dark:bg-slate-950/85">
       <div class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2 md:h-16 md:flex-nowrap md:gap-4 md:py-0">
         <div class="flex flex-wrap items-center justify-end gap-2">
@@ -985,6 +997,9 @@ import { trackLandingCta } from '@/utils/landingAnalytics'
 import apiClient from '@/lib/apiClient'
 import AppInstallHint from '@/components/AppInstallHint.vue'
 import PlatformPromoBanner from '@/components/PlatformPromoBanner.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
 
 const LANDING_PAGE_TITLE = 'أسس برو | منصة تشغيل أعمال ذكية'
 /** يُفضّل مواءَمته مع حقن nginx لوسوم head في docker/nginx/conf.d/default.conf (مسارات الهبوط) */
@@ -1248,9 +1263,9 @@ const platformAtlasSections: Array<{
     caption: 'ذكاء أعمال، تقارير، حوكمة، ومركز عمليات ذكي عند تفعيله لحسابكم.',
     icon: ChartBarIcon,
     items: ['ذكاء الأعمال', 'التقارير', 'السياسات والموافقات', 'مركز العمليات الذكي'],
-    cardGradient: 'bg-gradient-to-br from-violet-500/12 via-white to-fuchsia-500/10 dark:from-violet-900/25 dark:via-slate-900/90 dark:to-fuchsia-950/30',
-    glowClass: 'bg-violet-500',
-    iconWrapClass: 'bg-gradient-to-br from-violet-600 to-fuchsia-600',
+    cardGradient: 'bg-gradient-to-br from-primary-500/12 via-white to-cyan-500/10 dark:from-primary-900/25 dark:via-slate-900/90 dark:to-cyan-950/30',
+    glowClass: 'bg-primary-500',
+    iconWrapClass: 'bg-gradient-to-br from-primary-600 to-cyan-600',
   },
   {
     id: 'settings',
@@ -1360,8 +1375,8 @@ const featureShowcases: Array<{
     label: 'تقارير ولوحات',
     hook: 'قرار من النشاط لا من الجداول',
     bullets: ['فروع', 'هامش', 'MRR تشغيلي'],
-    tabGradient: 'from-violet-600 to-fuchsia-600',
-    glowRgb: '167, 139, 250',
+    tabGradient: 'from-primary-600 to-teal-600',
+    glowRgb: '13, 148, 136',
     mockChromeLabel: 'التقارير',
     mockTitle: 'ملخص الإدارة — هذا الأسبوع',
     mockSubtitle: 'مؤشرات مبنية على نفس حركات الفريق اليومية.',
@@ -1398,7 +1413,7 @@ const featureShowcases: Array<{
     label: 'ذكاء تشغيلي ومركز القيادة',
     hook: 'من الأحداث إلى قرار أوضح',
     bullets: ['تنبيهات مرحلية', 'مؤشرات تشغيلية', 'حسب الاشتراك'],
-    tabGradient: 'from-indigo-600 to-violet-700',
+    tabGradient: 'from-indigo-600 to-primary-700',
     glowRgb: '99, 102, 241',
     mockChromeLabel: 'مركز القيادة',
     mockTitle: 'ملخص التنبيهات — اليوم',

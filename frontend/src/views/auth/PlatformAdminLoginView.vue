@@ -25,7 +25,7 @@
 
       <div class="relative z-10 my-10 lg:my-0 lg:flex-1 lg:flex lg:flex-col lg:justify-center space-y-5 max-w-md">
         <h2 class="text-2xl lg:text-3xl font-bold leading-tight tracking-tight text-white">
-          بوابة أسس برو الموحّدة لإدارة الاشتراكات والباقات على مستوى المنصة
+          بوابة أسس برو لإدارة الاشتراكات والباقات على مستوى المنصة
         </h2>
         <p class="text-sm text-slate-300/90 leading-relaxed">
           يُسمح بدخول لوحة المنصة لحسابات <strong class="text-white">بلا شركة</strong> مع
@@ -39,7 +39,7 @@
       </div>
 
       <footer class="relative z-10 text-[10px] text-slate-500 flex flex-wrap gap-x-4 gap-y-1">
-        <RouterLink to="/login" class="text-primary-300 hover:text-white transition-colors">← دخول فريق العمل والبوابات</RouterLink>
+        <RouterLink to="/login" class="text-primary-300 hover:text-white transition-colors">← دخول مزوّد الخدمة / فريق العمل</RouterLink>
         <RouterLink to="/landing" class="text-slate-500 hover:text-slate-300 transition-colors">الصفحة التعريفية</RouterLink>
       </footer>
     </div>

@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-04-08T03:54:55+00:00",
+    "generated_at": "2026-05-01T09:29:09+00:00",
     "checks": {
         "invoice_without_ledger": {
             "detected": 1,
@@ -7,9 +7,9 @@
             "healthy": 0,
             "sample": [
                 {
-                    "id": 106,
-                    "uuid": "d423a330-140f-4c5d-a8ca-34cbb5980b9a",
-                    "company_id": 51,
+                    "id": 110,
+                    "uuid": "09752517-9049-4940-b34a-a947d2be61c1",
+                    "company_id": 131,
                     "invoice_number": "INV-REC-REV-001",
                     "status": "pending"
                 }
@@ -30,13 +30,13 @@
                 "payments": [
                     {
                         "id": 103,
-                        "uuid": "6ce8e97b-94d9-4cd8-a758-a2db2d3cf7ad",
-                        "company_id": 51,
-                        "invoice_id": 106,
+                        "uuid": "45708c61-c4a1-43e3-867d-7e8a4fc719fd",
+                        "company_id": 131,
+                        "invoice_id": 110,
                         "status": "refunded",
                         "original_payment_id": null,
                         "reversal_payment_id": null,
-                        "trace_id": "eab2265b-164c-42a5-8452-128aff469dbd"
+                        "trace_id": "e71aa2dd-72a7-4941-b85b-fc1178b67cee"
                     }
                 ]
             }
@@ -50,15 +50,15 @@
         "invoice_without_ledger": [
             {
                 "finding_type": "invoice_without_ledger",
-                "company_id": 51,
-                "invoice_id": 106,
+                "company_id": 131,
+                "invoice_id": 110,
                 "journal_entry_id": null,
                 "payment_id": null,
                 "reference_type": "invoice",
-                "reference_id": 106,
+                "reference_id": 110,
                 "trace_reference": null,
                 "details": {
-                    "invoice_uuid": "d423a330-140f-4c5d-a8ca-34cbb5980b9a",
+                    "invoice_uuid": "09752517-9049-4940-b34a-a947d2be61c1",
                     "invoice_number": "INV-REC-REV-001",
                     "status": "pending"
                 }
@@ -68,13 +68,13 @@
         "anomalous_reversal_settlement": [
             {
                 "finding_type": "anomalous_reversal_settlement",
-                "company_id": 51,
-                "invoice_id": 106,
+                "company_id": 131,
+                "invoice_id": 110,
                 "journal_entry_id": null,
                 "payment_id": 103,
                 "reference_type": "payment",
                 "reference_id": 103,
-                "trace_reference": "eab2265b-164c-42a5-8452-128aff469dbd",
+                "trace_reference": "e71aa2dd-72a7-4941-b85b-fc1178b67cee",
                 "details": {
                     "payment_status": "refunded",
                     "original_payment_id": null,

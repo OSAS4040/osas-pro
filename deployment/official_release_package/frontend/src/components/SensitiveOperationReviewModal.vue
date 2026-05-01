@@ -31,70 +31,70 @@
 
           <template v-else-if="summary">
             <div role="region" aria-live="polite" class="space-y-4">
-            <dl class="grid grid-cols-1 gap-2">
-              <div class="flex justify-between gap-2">
-                <dt class="text-gray-500 dark:text-slate-400">نوع العملية</dt>
-                <dd class="font-medium text-gray-900 dark:text-slate-100">{{ operationLabel }}</dd>
-              </div>
-              <div class="flex justify-between gap-2">
-                <dt class="text-gray-500 dark:text-slate-400">الشركة</dt>
-                <dd class="font-medium text-gray-900 dark:text-slate-100">{{ summary.company?.name ?? '—' }}</dd>
-              </div>
-              <div class="flex justify-between gap-2">
-                <dt class="text-gray-500 dark:text-slate-400">المستخدم</dt>
-                <dd class="text-gray-900 dark:text-slate-100">{{ summary.user?.name ?? '—' }}</dd>
-              </div>
-              <div v-if="summary.branch_id != null" class="flex justify-between gap-2">
-                <dt class="text-gray-500 dark:text-slate-400">الفرع</dt>
-                <dd class="text-gray-900 dark:text-slate-100" :title="branchDisplay">{{ branchDisplay }}</dd>
-              </div>
-            </dl>
+              <dl class="grid grid-cols-1 gap-2">
+                <div class="flex justify-between gap-2">
+                  <dt class="text-gray-500 dark:text-slate-400">نوع العملية</dt>
+                  <dd class="font-medium text-gray-900 dark:text-slate-100">{{ operationLabel }}</dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                  <dt class="text-gray-500 dark:text-slate-400">الشركة</dt>
+                  <dd class="font-medium text-gray-900 dark:text-slate-100">{{ summary.company?.name ?? '—' }}</dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                  <dt class="text-gray-500 dark:text-slate-400">المستخدم</dt>
+                  <dd class="text-gray-900 dark:text-slate-100">{{ summary.user?.name ?? '—' }}</dd>
+                </div>
+                <div v-if="summary.branch_id != null" class="flex justify-between gap-2">
+                  <dt class="text-gray-500 dark:text-slate-400">الفرع</dt>
+                  <dd class="text-gray-900 dark:text-slate-100" :title="branchDisplay">{{ branchDisplay }}</dd>
+                </div>
+              </dl>
 
-            <div class="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3 space-y-2">
-              <h4 class="text-xs font-semibold text-gray-600 dark:text-slate-300 uppercase tracking-wide">النموذج المالي</h4>
-              <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-slate-400">الحالة</span>
-                <span class="text-xs font-medium text-gray-900 dark:text-slate-100" :title="summary.billing?.financial_model_status ?? ''">
-                  {{ companyFinancialModelStatusLabel(summary.billing?.financial_model_status) }}
-                </span>
+              <div class="rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3 space-y-2">
+                <h4 class="text-xs font-semibold text-gray-600 dark:text-slate-300 uppercase tracking-wide">النموذج المالي</h4>
+                <div class="flex justify-between">
+                  <span class="text-gray-500 dark:text-slate-400">الحالة</span>
+                  <span class="text-xs font-medium text-gray-900 dark:text-slate-100" :title="summary.billing?.financial_model_status ?? ''">
+                    {{ companyFinancialModelStatusLabel(summary.billing?.financial_model_status) }}
+                  </span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500 dark:text-slate-400">النوع</span>
+                  <span class="text-xs font-medium text-gray-900 dark:text-slate-100" :title="summary.billing?.financial_model ?? ''">
+                    {{ companyFinancialModelLabel(summary.billing?.financial_model) }}
+                  </span>
+                </div>
               </div>
-              <div class="flex justify-between">
-                <span class="text-gray-500 dark:text-slate-400">النوع</span>
-                <span class="text-xs font-medium text-gray-900 dark:text-slate-100" :title="summary.billing?.financial_model ?? ''">
-                  {{ companyFinancialModelLabel(summary.billing?.financial_model) }}
-                </span>
-              </div>
-            </div>
 
-            <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-3 space-y-2">
-              <h4 class="text-xs font-semibold text-gray-600 dark:text-slate-300 uppercase tracking-wide">الملخص المالي</h4>
-              <div v-if="summary.credit_net_receivable_exposure_before != null" class="flex justify-between text-xs">
-                <span class="text-gray-500 dark:text-slate-400">ذمم مفتوحة (قبل)</span>
-                <span class="font-mono text-gray-900 dark:text-slate-100">{{ formatMoney(summary.credit_net_receivable_exposure_before) }}</span>
+              <div class="rounded-xl border border-gray-100 dark:border-slate-700 p-3 space-y-2">
+                <h4 class="text-xs font-semibold text-gray-600 dark:text-slate-300 uppercase tracking-wide">الملخص المالي</h4>
+                <div v-if="summary.credit_net_receivable_exposure_before != null" class="flex justify-between text-xs">
+                  <span class="text-gray-500 dark:text-slate-400">ذمم مفتوحة (قبل)</span>
+                  <span class="font-mono text-gray-900 dark:text-slate-100">{{ formatMoney(summary.credit_net_receivable_exposure_before) }}</span>
+                </div>
+                <div v-if="summary.credit_net_receivable_exposure_after_estimate != null" class="flex justify-between text-xs">
+                  <span class="text-gray-500 dark:text-slate-400">ذمم (بعد — تقديري)</span>
+                  <span class="font-mono text-gray-900 dark:text-slate-100">{{ formatMoney(summary.credit_net_receivable_exposure_after_estimate) }}</span>
+                </div>
+                <div v-if="summary.credit_limit != null && summary.credit_limit !== ''" class="flex justify-between text-xs">
+                  <span class="text-gray-500 dark:text-slate-400">حد ائتمان الشركة</span>
+                  <span class="font-mono font-medium text-gray-900 dark:text-slate-100">{{ formatMoney(summary.credit_limit) }}</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                  <span class="text-gray-500 dark:text-slate-400">إجمالي تقديري للأمر / الدفعة</span>
+                  <span class="font-mono font-semibold text-gray-900 dark:text-slate-100">{{ formatMoney(summary.work_orders_estimated_total) }}</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                  <span class="text-gray-500 dark:text-slate-400">عدد المركبات المتأثرة (تقدير)</span>
+                  <span class="text-gray-900 dark:text-slate-100">{{ summary.affected_vehicles_estimate ?? 0 }}</span>
+                </div>
               </div>
-              <div v-if="summary.credit_net_receivable_exposure_after_estimate != null" class="flex justify-between text-xs">
-                <span class="text-gray-500 dark:text-slate-400">ذمم (بعد — تقديري)</span>
-                <span class="font-mono text-gray-900 dark:text-slate-100">{{ formatMoney(summary.credit_net_receivable_exposure_after_estimate) }}</span>
-              </div>
-              <div v-if="summary.credit_limit != null && summary.credit_limit !== ''" class="flex justify-between text-xs">
-                <span class="text-gray-500 dark:text-slate-400">حد ائتمان الشركة</span>
-                <span class="font-mono font-medium text-gray-900 dark:text-slate-100">{{ formatMoney(summary.credit_limit) }}</span>
-              </div>
-              <div class="flex justify-between text-xs">
-                <span class="text-gray-500 dark:text-slate-400">إجمالي تقديري للأمر / الدفعة</span>
-                <span class="font-mono font-semibold text-gray-900 dark:text-slate-100">{{ formatMoney(summary.work_orders_estimated_total) }}</span>
-              </div>
-              <div class="flex justify-between text-xs">
-                <span class="text-gray-500 dark:text-slate-400">عدد المركبات المتأثرة (تقدير)</span>
-                <span class="text-gray-900 dark:text-slate-100">{{ summary.affected_vehicles_estimate ?? 0 }}</span>
-              </div>
-            </div>
 
-            <ul v-if="summary.warnings?.length" class="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 px-3 py-2 text-xs text-amber-900 dark:text-amber-100 space-y-1">
-              <li v-for="(w, i) in summary.warnings" :key="i">• {{ w }}</li>
-            </ul>
+              <ul v-if="summary.warnings?.length" class="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 px-3 py-2 text-xs text-amber-900 dark:text-amber-100 space-y-1">
+                <li v-for="(w, i) in summary.warnings" :key="i">• {{ w }}</li>
+              </ul>
 
-            <slot name="footer-extra" />
+              <slot name="footer-extra" />
             </div>
           </template>
 

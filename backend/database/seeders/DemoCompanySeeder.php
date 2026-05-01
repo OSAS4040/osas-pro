@@ -101,10 +101,9 @@ class DemoCompanySeeder extends Seeder
          * (مثل admin أو ديمو)، فيُنشأ/يُحدَّث دائماً ضمن «Demo Auto Center» فقط.
          * كلمة المرور نصية؛ الـ cast «hashed» على User يخزن الـ hash مرة واحدة.
          */
-        $demoPassword = 'password';
-
         foreach (array_values($users) as $idx => $userData) {
             $phone = PhoneNormalizer::normalizeForStorage('9665012345'.sprintf('%02d', $idx));
+            $userPassword = $userData['role'] === 'customer' ? 'password' : 'Password123!';
             User::withoutGlobalScope('tenant')->updateOrCreate(
                 [
                     'company_id' => $company->id,
@@ -113,7 +112,7 @@ class DemoCompanySeeder extends Seeder
                 [
                     'branch_id'            => $branch->id,
                     'name'                 => $userData['name'],
-                    'password'             => $demoPassword,
+                    'password'             => $userPassword,
                     'phone'                => $phone,
                     'phone_verified_at'    => now(),
                     'registration_stage'   => 'phone_verified',
@@ -139,6 +138,6 @@ class DemoCompanySeeder extends Seeder
             ]
         );
 
-        $this->command->info('Demo company seeded: owner@demo.sa / password');
+        $this->command->info('Demo company seeded: customer@demo.sa / password');
     }
 }

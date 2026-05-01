@@ -360,7 +360,7 @@ function txnDisplay(t: any): { credit: boolean } {
 
 const walletTypes = [
   { key: 'cash', label: 'نقدية', bg: 'bg-green-100 dark:bg-green-900/30', iconColor: 'text-green-600', icon: CreditCardIcon, badge: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
-  { key: 'promotional', label: 'ترويجية', bg: 'bg-purple-100 dark:bg-purple-900/30', iconColor: 'text-purple-600', icon: CreditCardIcon, badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
+  { key: 'promotional', label: 'ترويجية', bg: 'bg-primary-100 dark:bg-primary-900/30', iconColor: 'text-primary-600', icon: CreditCardIcon, badge: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300' },
   { key: 'reserved', label: 'محجوزة', bg: 'bg-yellow-100 dark:bg-yellow-900/30', iconColor: 'text-yellow-600', icon: CreditCardIcon, badge: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' },
   { key: 'credit', label: 'ائتمان', bg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600', icon: CreditCardIcon, badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
 ]
@@ -374,7 +374,7 @@ function typeLabel(t: string) {
 function typeClass(t: string) {
   return {
     cash: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-    promotional: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+    promotional: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
     reserved: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
     credit: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   }[t] ?? 'bg-gray-100 text-gray-700'

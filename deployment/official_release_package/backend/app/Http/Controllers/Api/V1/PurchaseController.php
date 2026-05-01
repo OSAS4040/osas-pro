@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
+use App\Models\User;
 use App\Services\BillingModelPolicyService;
 use App\Services\InventoryService;
 use App\Services\PurchaseOrderService;
 use App\Support\Media\TenantUploadDisk;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,9 +29,31 @@ class PurchaseController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        $platformSettlement = (string) $request->get('billing_flow_type', '') === 'platform_to_provider_purchase'
+            || filter_var($request->get('platform_settlement'), FILTER_VALIDATE_BOOLEAN);
+
+        if ($platformSettlement) {
+            if (! $user || ! $user->hasPermission('purchases.platform_settlement.view')) {
+                return response()->json([
+                    'message' => 'Forbidden',
+                    'trace_id' => app('trace_id'),
+                ], 403);
+            }
+        }
+
         $purchases = Purchase::with(['supplier', 'branch'])
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->supplier_id, fn($q) => $q->where('supplier_id', $request->supplier_id))
+            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($request->supplier_id, fn ($q) => $q->where('supplier_id', $request->supplier_id))
+            ->when(
+                $platformSettlement,
+                fn ($q) => $q->where('billing_flow_type', 'platform_to_provider_purchase'),
+            )
+            ->when(
+                $user && ($user->role->isCustomer() || $user->role->isFleetSide()),
+                fn ($q) => $q->omitPlatformProviderSettlement(),
+            )
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 25));
 
@@ -88,11 +112,25 @@ class PurchaseController extends Controller
         ], 201);
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $purchase = Purchase::with(['items.product', 'supplier', 'branch'])->findOrFail($id);
+        $this->assertPurchaseVisibleToCustomerFleetActor($request->user(), $purchase);
 
         return response()->json(['data' => $purchase, 'trace_id' => app('trace_id')]);
+    }
+
+    private function assertPurchaseVisibleToCustomerFleetActor(?User $user, Purchase $purchase): void
+    {
+        if (! $user || $user->role->isWorkshopSide() || ($user->is_platform_user ?? false)) {
+            return;
+        }
+        if (! $user->role->isCustomer() && ! $user->role->isFleetSide()) {
+            return;
+        }
+        if ((string) ($purchase->billing_flow_type ?? '') === 'platform_to_provider_purchase') {
+            throw (new ModelNotFoundException)->setModel(Purchase::class, [$purchase->id]);
+        }
     }
 
     public function updateStatus(Request $request, int $id): JsonResponse

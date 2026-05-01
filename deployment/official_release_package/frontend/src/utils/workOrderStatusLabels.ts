@@ -39,7 +39,7 @@ const WORK_ORDER_STATUS_BADGE_CLASS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   new: 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300',
   assigned: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  invoiced: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  invoiced: 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300',
 }
 
 const CANCELLATION_REQUEST_STATUS_AR: Record<string, string> = {
@@ -62,7 +62,7 @@ const WORK_ORDER_STATUS_DOT_CLASS: Record<string, string> = {
   pending: 'bg-yellow-500',
   new: 'bg-slate-400',
   assigned: 'bg-blue-500',
-  invoiced: 'bg-purple-500',
+  invoiced: 'bg-primary-500',
 }
 
 export function workOrderStatusLabel(status: string | null | undefined): string {

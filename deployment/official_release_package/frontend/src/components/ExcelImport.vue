@@ -15,7 +15,7 @@
             <div class="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
               <div>
                 <h3 class="font-bold text-lg text-gray-900">{{ title }}</h3>
-                <p class="text-xs text-gray-400 mt-0.5">ارفع ملف Excel (.xlsx) أو CSV</p>
+                <p class="text-xs text-gray-400 mt-0.5">ارفع ملف Excel بصيغة .xlsx فقط</p>
               </div>
               <button @click="close"><XMarkIcon class="w-5 h-5 text-gray-400" /></button>
             </div>
@@ -48,14 +48,14 @@
                 <template v-if="!file">
                   <DocumentArrowUpIcon class="w-10 h-10 text-gray-300 mx-auto mb-2" />
                   <p class="text-sm text-gray-600">اسحب الملف هنا أو اضغط للاختيار</p>
-                  <p class="text-xs text-gray-400 mt-1">.xlsx, .xls, .csv</p>
+                  <p class="text-xs text-gray-400 mt-1">.xlsx</p>
                 </template>
                 <template v-else>
                   <CheckCircleIcon class="w-10 h-10 text-green-500 mx-auto mb-2" />
                   <p class="text-sm font-medium text-green-700">{{ file.name }}</p>
                   <p class="text-xs text-gray-400 mt-1">{{ (file.size / 1024).toFixed(1) }} KB</p>
                 </template>
-                <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" @change="onFile" />
+                <input ref="fileInput" type="file" accept=".xlsx" class="hidden" @change="onFile" />
               </div>
 
               <!-- Preview Table -->
@@ -112,6 +112,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import ExcelJS from 'exceljs'
 import {
   ArrowUpTrayIcon, XMarkIcon, ArrowDownTrayIcon,
   DocumentArrowUpIcon, CheckCircleIcon,
@@ -119,7 +120,9 @@ import {
 
 const props = defineProps<{
   endpoint: string          // e.g. /api/v1/vehicles/import
-  templateUrl: string       // e.g. /templates/vehicles.xlsx
+  templateUrl?: string      // optional static template URL
+  templateColumns?: string[]
+  templateFileName?: string
   label?: string
   title?: string
 }>()
@@ -149,37 +152,90 @@ function onDrop(e: DragEvent) {
 }
 
 async function setFile(f: File) {
+  if (!f.name.toLowerCase().endsWith('.xlsx')) {
+    file.value = null
+    errors.value = ['صيغة الملف غير مدعومة. الرجاء رفع ملف Excel بصيغة .xlsx فقط.']
+    preview.value = []
+    columns.value = []
+    totalRows.value = 0
+    return
+  }
+
   file.value = f
   preview.value = []
   errors.value  = []
   success.value = false
   serverError.value = ''
 
-  // Parse CSV for preview
-  if (f.name.endsWith('.csv')) {
-    const text  = await f.text()
-    const lines = text.trim().split('\n').filter(Boolean)
-    if (lines.length < 2) { errors.value = ['الملف فارغ أو لا يحتوي على بيانات']; return }
-    const cols = lines[0].split(',').map(c => c.replace(/^"|"$/g, '').trim())
-    columns.value   = cols
-    totalRows.value = lines.length - 1
-    preview.value   = lines.slice(1, 6).map(line => {
-      const vals = line.split(',').map(v => v.replace(/^"|"$/g, '').trim())
-      return Object.fromEntries(cols.map((c, i) => [c, vals[i] ?? '']))
-    })
-  } else {
-    // For XLSX: just show file info (parsing XLSX needs a library)
-    columns.value   = ['السجلات ستُستورد من الملف']
+  try {
+    const buffer = await f.arrayBuffer()
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(buffer)
+    const sheet = workbook.worksheets[0]
+    if (!sheet) {
+      errors.value = ['الملف لا يحتوي على أي ورقة عمل.']
+      return
+    }
+    const headerRow = sheet.getRow(1)
+    const rawHeaderValues = Array.isArray(headerRow.values) ? headerRow.values : []
+    const headers = rawHeaderValues
+      .slice(1)
+      .map((v: unknown) => String(v ?? '').trim())
+      .filter((v: string) => v.length > 0)
+    if (!headers.length) {
+      errors.value = ['الملف لا يحتوي على رأس جدول واضح في الصف الأول.']
+      return
+    }
+    columns.value = headers
+    const rows: Record<string, string>[] = []
+    for (let rowIndex = 2; rowIndex <= sheet.rowCount; rowIndex += 1) {
+      const row = sheet.getRow(rowIndex)
+      const rawValues = Array.isArray(row.values) ? row.values : []
+      const values = rawValues.slice(1)
+      const mapped = Object.fromEntries(headers.map((h: string, i: number) => [h, String(values[i] ?? '').trim()]))
+      const hasAny = Object.values(mapped).some((v) => String(v).length > 0)
+      if (!hasAny) continue
+      rows.push(mapped)
+    }
+    totalRows.value = rows.length
+    preview.value = rows.slice(0, 5)
+    if (!rows.length) {
+      errors.value = ['الملف لا يحتوي على بيانات صالحة بعد صف العناوين.']
+    }
+  } catch {
+    errors.value = ['تعذر قراءة ملف Excel. تأكد من أن الملف بصيغة .xlsx سليمة.']
+    preview.value = []
+    columns.value = []
     totalRows.value = 0
-    preview.value   = [{ 'السجلات ستُستورد من الملف': 'ارفع الملف للمعالجة' }]
   }
 }
 
-function downloadTemplate() {
-  const a = document.createElement('a')
-  a.href = props.templateUrl
-  a.download = props.templateUrl.split('/').pop() ?? 'template.xlsx'
-  a.click()
+async function downloadTemplate() {
+  if (props.templateUrl) {
+    const a = document.createElement('a')
+    a.href = props.templateUrl
+    a.download = props.templateUrl.split('/').pop() ?? 'template.xlsx'
+    a.click()
+    return
+  }
+  if (props.templateColumns?.length) {
+    const workbook = new ExcelJS.Workbook()
+    const sheet = workbook.addWorksheet('Template')
+    sheet.addRow(props.templateColumns)
+    sheet.getRow(1).font = { bold: true }
+    props.templateColumns.forEach((_, idx) => {
+      sheet.getColumn(idx + 1).width = 22
+    })
+    const buf = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = props.templateFileName || 'template.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+    return
+  }
 }
 
 async function upload() {

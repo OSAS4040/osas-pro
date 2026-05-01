@@ -707,6 +707,11 @@ const featureMatrixItems = [
   { key: 'fleet', label: 'الأسطول', desc: 'التحقق من اللوحة ومحافظ الأسطول' },
   { key: 'org_structure', label: 'هيكل القطاعات والأقسام', desc: 'قطاع / قسم / شعبة — تنظيم ذكي يناسب التشغيل والأسطول (غالباً غير مطلوب بالتجزئة)' },
   { key: 'supplier_contract_mgmt', label: 'عقود الموردين والتنبيهات', desc: 'رفع PDF وتواريخ انتهاء وتنبيهات — يُعطّل افتراضياً لنشاط التجزئة' },
+  {
+    key: 'platform_execution_partner',
+    label: 'شريك تنفيذ المنصة',
+    desc: 'إخفاء سجل العملاء/المركبات المستقل وإنشاء الفواتير اليدوي؛ التركيز على التنفيذ ومركز البحث (لوحة / أمر عمل)',
+  },
 ]
 const navSectionLabels = NAV_SECTION_LABELS
 const navGroupLabels = NAV_GROUP_LABELS

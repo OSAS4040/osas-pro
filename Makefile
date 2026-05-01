@@ -1,5 +1,5 @@
 # ترتيب التنفيذ الرسمي (مرقم): docs/Execution_Order_Asas_Pro.md
-.PHONY: up down build fresh logs logs-all shell migrate seed seed-simulate key tinker queue-restart swagger dompdf-arabic-check test test-filter test-coverage test-frontend-full fe-phases fe-phases-with-e2e test-project-gate staging-gate staging-gate-ps ocr-verify preflight-pilot-readonly production-readiness-gate policy-env-example github-branch-protection-status execution-order-local execution-order-local-ps install-git-hooks verify release-gate monitoring-gate integrity-verify load-test load-test-preflight load-test-matrix load-test-release-gate load-test-rc-secure-gate load-test-capacity-discovery load-test-capacity-one ps install ngrok-up ngrok-down ngrok-url up-ngrok dev-bootstrap
+.PHONY: up down build fresh logs logs-all shell migrate seed seed-simulate key tinker queue-restart swagger dompdf-arabic-check test test-filter test-coverage test-frontend-full fe-phases fe-phases-with-e2e test-project-gate staging-gate staging-gate-ps staging-deploy staging-deploy-ps ocr-verify preflight-pilot-readonly production-readiness-gate policy-env-example github-branch-protection-status execution-order-local execution-order-local-ps install-git-hooks verify release-gate monitoring-gate integrity-verify load-test load-test-preflight load-test-matrix load-test-release-gate load-test-rc-secure-gate load-test-capacity-discovery load-test-capacity-one load-test-wo-vehicle-gradual load-test-wo-bulk-200 ps install ngrok-up ngrok-down ngrok-url up-ngrok dev-bootstrap sync-official-release-frontend
 
 up:
 	docker compose up -d
@@ -109,6 +109,15 @@ staging-gate:
 staging-gate-ps:
 	pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/staging-gate.ps1
 
+# نشر staging من الحاوية (up/build اختياري + migrate + optimize:clear + queue restart + health + gate اختياري)
+# Linux/macOS: bash scripts/staging-deploy.sh
+staging-deploy:
+	bash scripts/staging-deploy.sh
+
+# Windows PowerShell: نفس منطق staging-deploy.sh
+staging-deploy-ps:
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/staging-deploy.ps1
+
 # تحقق سريع من Tesseract (eng+ara) داخل حاوية app — يتطلب docker compose up -d
 ocr-verify:
 	docker compose exec -T app sh -lc "cd /var/www && php artisan ocr:verify --fail"
@@ -174,8 +183,8 @@ release-gate: verify integrity-verify monitoring-gate
 monitoring-gate:
 	FAIL_ON_FAILED_JOBS=1 CHECK_BASE_URL=$${CHECK_BASE_URL:-http://127.0.0.1} bash ./check.sh
 
-# k6 — خط أساس ثابت عبر K6_PROFILE: smoke | normal | peak | verification | stress | spike | soak
-# مثال: make load-test K6_PROFILE=peak  أو  make load-test K6_PROFILE=verification
+# k6 — خط أساس ثابت عبر K6_PROFILE: smoke | normal | peak | verification | stress | spike | soak | wo_vehicle_gradual
+# مثال: make load-test K6_PROFILE=peak  أو  make load-test K6_PROFILE=verification  أو  make load-test-wo-vehicle-gradual
 K6_PROFILE ?= smoke
 load-test:
 	docker run --rm \
@@ -249,6 +258,44 @@ load-test-capacity-one:
 		-e K6_PASSWORD_B=password \
 		grafana/k6:latest run suite.js
 
+# أوامر عمل + مركبات فقط — تصعيد تدريجي (K6_WO_VU_MAX افتراضي 50، K6_WO_STAGE_MIN دقيقة لكل شريحة افتراضي 2)
+K6_WO_VU_MAX ?= 50
+K6_WO_STAGE_MIN ?= 2
+load-test-wo-vehicle-gradual:
+	docker run --rm \
+		-v "$(CURDIR)/load-testing:/work" \
+		-w /work/k6 \
+		--add-host=host.docker.internal:host-gateway \
+		-e K6_BASE_URL=http://host.docker.internal/api \
+		-e K6_PROFILE=wo_vehicle_gradual \
+		-e K6_WO_VU_MAX=$(K6_WO_VU_MAX) \
+		-e K6_WO_STAGE_MIN=$(K6_WO_STAGE_MIN) \
+		-e K6_EMAIL_A=simulation.owner@demo.local \
+		-e K6_PASSWORD_A=SimulationDemo123! \
+		-e K6_EMAIL_B=owner@demo.sa \
+		-e K6_PASSWORD_B=password \
+		grafana/k6:latest run suite.js
+
+# دفعة واحدة لـ 200 أمر عمل (bulk) + تشخيص عنق الزجاجة في نهاية التقرير.
+# يتطلب K6_BULK_VEHICLE_IDS من Seeder (200 معرف مفصول بفواصل).
+K6_BULK_VUS ?= 1
+K6_BULK_ITERATIONS ?= 1
+K6_BULK_EXPECTED_COUNT ?= 200
+load-test-wo-bulk-200:
+	docker run --rm \
+		-v "$(CURDIR)/load-testing:/work" \
+		-w /work/k6 \
+		--add-host=host.docker.internal:host-gateway \
+		-e K6_BASE_URL=http://host.docker.internal/api \
+		-e K6_EMAIL_A=simulation.owner@demo.local \
+		-e K6_PASSWORD_A=SimulationDemo123! \
+		-e K6_BULK_SERVICE_CODE=oil_change \
+		-e K6_BULK_VUS=$(K6_BULK_VUS) \
+		-e K6_BULK_ITERATIONS=$(K6_BULK_ITERATIONS) \
+		-e K6_BULK_EXPECTED_COUNT=$(K6_BULK_EXPECTED_COUNT) \
+		-e K6_BULK_VEHICLE_IDS="$(K6_BULK_VEHICLE_IDS)" \
+		grafana/k6:latest run work_orders_bulk.js
+
 test-filter:
 	docker compose exec app php artisan test --filter=$(filter)
 
@@ -261,3 +308,7 @@ ps:
 install:
 	docker compose exec app composer install
 	docker compose exec frontend npm install
+
+# مزامنة واجهة المستودع → حزمة النشر الرسمية (تجنّب robocopy /XO الذي يتخطى ملفات قديمة في الوجهة)
+sync-official-release-frontend:
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-official-release-frontend.ps1

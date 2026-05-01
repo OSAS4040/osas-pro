@@ -1,13 +1,22 @@
 <template>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 h-[280px] flex flex-col">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-slate-100 mb-1">إيراد الفواتير — آخر 7 أيام</h3>
-      <p class="text-xs text-gray-500 dark:text-slate-400 mb-2">مجموع إجمالي الفواتير الصادرة يومياً</p>
+  <div
+    class="grid gap-4"
+    :class="gridClass"
+  >
+    <div
+      v-if="showRevenueChart"
+      class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 h-[280px] flex flex-col"
+    >
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-slate-100 mb-1">{{ revenueTitle }}</h3>
+      <p class="text-xs text-gray-500 dark:text-slate-400 mb-2">{{ revenueSubtitle }}</p>
       <div class="flex-1 min-h-0">
         <Line v-if="revenueData" :key="'rev-' + (isDark ? '1' : '0')" :data="revenueData" :options="chartOptions" />
       </div>
     </div>
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 h-[280px] flex flex-col">
+    <div
+      v-if="showWorkOrderChart"
+      class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-4 h-[280px] flex flex-col"
+    >
       <h3 class="text-sm font-semibold text-gray-800 dark:text-slate-100 mb-1">أوامر عمل جديدة — آخر 7 أيام</h3>
       <p class="text-xs text-gray-500 dark:text-slate-400 mb-2">عدد الأوامر المُنشأة يومياً</p>
       <div class="flex-1 min-h-0">
@@ -36,10 +45,31 @@ import type { TooltipItem } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
-const props = defineProps<{
-  revenue: { date: string; revenue: number }[]
-  workOrders: { date: string; count: number }[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    revenue: { date: string; revenue: number }[]
+    workOrders: { date: string; count: number }[]
+    revenueTitle?: string
+    revenueSubtitle?: string
+    /** إظهار مخطط الإيراد (ملف النشاط: مالية/تقارير) */
+    showRevenueChart?: boolean
+    /** إظهار مخطط أوامر العمل (ملف النشاط: تشغيلي) */
+    showWorkOrderChart?: boolean
+  }>(),
+  {
+    showRevenueChart: true,
+    showWorkOrderChart: true,
+  },
+)
+
+const gridClass = computed(() => {
+  const n = (props.showRevenueChart ? 1 : 0) + (props.showWorkOrderChart ? 1 : 0)
+  if (n <= 1) return 'grid-cols-1'
+  return 'grid-cols-1 lg:grid-cols-2'
+})
+
+const revenueTitle = computed(() => props.revenueTitle || 'إيراد الفواتير — آخر 7 أيام')
+const revenueSubtitle = computed(() => props.revenueSubtitle || 'مجموع إجمالي الفواتير الصادرة يومياً')
 
 const labels = computed(() =>
   (props.revenue?.length ? props.revenue : props.workOrders).map((r) => r.date.slice(5).replace('-', '/')),
@@ -51,8 +81,8 @@ const revenueData = computed(() => ({
     {
       label: 'ر.س',
       data: props.revenue.map((r) => r.revenue),
-      borderColor: 'rgb(99, 102, 241)',
-      backgroundColor: 'rgba(99, 102, 241, 0.12)',
+      borderColor: 'rgb(139, 92, 246)',
+      backgroundColor: 'rgba(139, 92, 246, 0.12)',
       fill: true,
       tension: 0.35,
       pointRadius: 3,
@@ -67,8 +97,8 @@ const woData = computed(() => ({
     {
       label: 'عدد الأوامر',
       data: props.workOrders.map((r) => r.count),
-      borderColor: 'rgb(16, 185, 129)',
-      backgroundColor: 'rgba(16, 185, 129, 0.08)',
+      borderColor: 'rgb(167, 139, 250)',
+      backgroundColor: 'rgba(167, 139, 250, 0.12)',
       fill: true,
       tension: 0.35,
       pointRadius: 3,

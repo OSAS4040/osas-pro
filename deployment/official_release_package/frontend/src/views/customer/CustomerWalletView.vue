@@ -2,7 +2,39 @@
   <div class="space-y-4">
     <div>
       <h2 class="text-lg font-bold text-gray-900 dark:text-white">المحفظة</h2>
-      <p class="text-xs text-gray-500 mt-0.5">إدارة رصيدك وعمليات الشحن</p>
+      <p class="text-xs text-gray-500 mt-0.5">إدارة رصيد الشركة والتحويل بين محافظ المركبات وفق النموذج المالي للعميل</p>
+    </div>
+    <div class="grid gap-3 md:grid-cols-3">
+      <div class="rounded-xl border p-3" :class="isCreditCustomer ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'">
+        <p class="text-xs text-gray-600">النموذج المالي</p>
+        <p class="mt-1 text-sm font-bold" :class="isCreditCustomer ? 'text-amber-800' : 'text-emerald-800'">
+          {{ isCreditCustomer ? 'ائتماني' : 'مسبق الدفع' }}
+        </p>
+      </div>
+      <div class="rounded-xl border border-blue-200 bg-blue-50 p-3">
+        <p class="text-xs text-gray-600">رصيد محفظة الشركة</p>
+        <p class="mt-1 text-sm font-bold text-blue-900">{{ fmt(companyWalletBalance) }} ر.س</p>
+      </div>
+      <div class="rounded-xl border border-violet-200 bg-violet-50 p-3">
+        <p class="text-xs text-gray-600">{{ isCreditCustomer ? 'المتاح من الائتمان' : 'إجمالي محافظ المركبات' }}</p>
+        <p class="mt-1 text-sm font-bold text-violet-900">
+          {{ fmt(isCreditCustomer ? availableCredit : vehicleWalletsBalance) }} ر.س
+        </p>
+      </div>
+    </div>
+    <div class="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
+      الشحن يتم على <strong>محفظة الشركة</strong> فقط، وبعدها يتم التحويل بين محافظ المركبات عند الحاجة. لا يوجد شحن مباشر لمحفظة مركبة.
+    </div>
+    <div v-if="!isCreditCustomer" class="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 text-xs text-emerald-900">
+      هذا الحساب يعمل بنموذج <strong>مسبق الدفع</strong>: ارفع طلب شحن، وبعد الاعتماد تتم الإضافة إلى محفظة الشركة ثم التحويل لمركباتك.
+    </div>
+    <div class="flex justify-end">
+      <RouterLink v-if="!isCreditCustomer" to="/customer/wallet/top-up-requests" class="btn btn-primary text-sm">
+        رفع طلب شحن
+      </RouterLink>
+      <RouterLink v-else to="/customer/invoices" class="btn btn-outline text-sm">
+        عرض الملف الائتماني
+      </RouterLink>
     </div>
 
     <!-- Wallet Cards -->
@@ -63,22 +95,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import { CreditCardIcon } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
+const customerProfile = ref<any | null>(null)
 
 const loading      = ref(false)
 const txLoading    = ref(false)
 const wallets      = ref<any[]>([])
 const transactions = ref<any[]>([])
+const isCreditCustomer = computed(() => {
+  const profile = String(customerProfile.value?.customer_pricing_profile ?? '').toLowerCase()
+  if (profile === 'credit') return true
+  const limit = Number(customerProfile.value?.credit_limit ?? 0)
+  return Number.isFinite(limit) && limit > 0
+})
+const companyWalletBalance = computed(() =>
+  wallets.value
+    .filter((w) => walletKind(w) !== 'fleet_vehicle')
+    .reduce((sum, w) => sum + (Number(w?.balance) || 0), 0),
+)
+const vehicleWalletsBalance = computed(() =>
+  wallets.value
+    .filter((w) => walletKind(w) === 'fleet_vehicle')
+    .reduce((sum, w) => sum + (Number(w?.balance) || 0), 0),
+)
+const availableCredit = computed(() => {
+  const limit = Number(customerProfile.value?.credit_limit ?? 0)
+  const used = Number(customerProfile.value?.used_credit ?? customerProfile.value?.credit_used ?? 0)
+  return Math.max(0, limit - used)
+})
 
 function walletGradient(type: string) {
   const map: Record<string, string> = {
     cash:          'bg-gradient-to-br from-blue-500 to-blue-700',
-    promotional:   'bg-gradient-to-br from-purple-500 to-purple-700',
+    promotional:   'bg-gradient-to-br from-primary-500 to-primary-700',
     reserved:      'bg-gradient-to-br from-gray-500 to-gray-700',
     fleet:         'bg-gradient-to-br from-teal-500 to-teal-700',
     fleet_vehicle: 'bg-gradient-to-br from-orange-500 to-amber-600',
@@ -138,7 +193,22 @@ async function loadTransactions() {
   } catch { transactions.value = [] } finally { txLoading.value = false }
 }
 
+async function loadCustomerProfile() {
+  try {
+    const cid = auth.user?.customer_id
+    if (!cid) {
+      customerProfile.value = null
+      return
+    }
+    const { data } = await apiClient.get(`/customers/${cid}`)
+    customerProfile.value = data?.data ?? data ?? null
+  } catch {
+    customerProfile.value = null
+  }
+}
+
 onMounted(() => {
+  loadCustomerProfile()
   loadWallets()
   loadTransactions()
 })

@@ -124,14 +124,29 @@
 
             <!-- القائمة الجانبية: مرجع خريطة API ↔ الراوتر — docs/Tenant_Navigation_API_Map.md | npm run docs:nav-api-check -->
             <!-- ترتيب الأقسام: تشغيلي → مخزون → مالية → تحليلات → موارد بشرية → إداري → منصة (نفس أسلوب الطي/التوسيع) -->
-            <NavSection v-if="navSectionVisible('operations')" section-key="operations" :label="l('تشغيلي', 'Operations')">
+            <NavSection
+              v-if="navSectionVisible('operations')"
+              section-key="operations"
+              :label="providerFocusNavActive ? l('تنفيذ مزوّد الخدمة', 'Provider operations') : l('تشغيلي', 'Operations')"
+            >
               <NavItem to="/" :icon="HomeIcon" :label="locale.t('nav.dashboard')" :exact="true" />
-              <NavItem
-                to="/execution-hub"
-                :icon="MagnifyingGlassCircleIcon"
-                :label="l('بحث أمر / لوحة', 'WO / plate lookup')"
-              />
-              <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
+              <!-- بتركيز المزوّد: قائمة التنفيذ أولاً ثم مركز البحث/الكاميرا -->
+              <template v-if="providerFocusNavActive">
+                <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
+                <NavItem
+                  to="/execution-hub"
+                  :icon="MagnifyingGlassCircleIcon"
+                  :label="l('بحث لوحة وباركود', 'Plate & barcode lookup')"
+                />
+              </template>
+              <template v-else>
+                <NavItem
+                  to="/execution-hub"
+                  :icon="MagnifyingGlassCircleIcon"
+                  :label="l('بحث أمر / لوحة', 'WO / plate lookup')"
+                />
+                <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
+              </template>
               <NavItem to="/vehicles" :icon="TruckIcon" :label="locale.t('nav.vehicles')" />
               <NavItem
                 v-if="enabledPortals.fleet && sectionEnabled('fleet')"
@@ -148,7 +163,6 @@
               <NavItem to="/customers" :icon="UsersIcon" :label="locale.t('nav.customers')" />
               <NavItem v-if="sectionEnabled('crm')" to="/crm/quotes" :icon="DocumentTextIcon" label="عروض الأسعار" />
               <NavItem v-if="sectionEnabled('crm')" to="/crm/relations" :icon="HeartIcon" label="علاقات العملاء" />
-              <NavItem to="/pos" :icon="ShoppingCartIcon" :label="locale.t('nav.pos')" />
               <NavItem v-if="opsNavOpen" to="/bays" :icon="BuildingOfficeIcon" label="مناطق العمل" />
               <NavItem v-if="opsNavOpen" to="/bookings" :icon="CalendarDaysIcon" label="الحجوزات" />
               <NavItem
@@ -161,11 +175,11 @@
             </NavSection>
 
             <NavSection
-              v-if="sectionEnabled('inventory') && navSectionVisible('inventory')"
+              v-if="sectionEnabled('inventory') && navSectionVisible('inventory') && !providerFocusNavActive"
               section-key="inventory"
               :label="l('المخزون والكتالوج', 'Inventory & catalog')"
             >
-              <NavItem to="/products" :icon="CubeIcon" label="المنتجات" />
+              <NavItem to="/services-products" :icon="RectangleStackIcon" label="الخدمات والمنتجات" />
               <NavItem to="/inventory" :icon="ArchiveBoxIcon" :label="locale.t('nav.inventory')" />
               <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
             </NavSection>
@@ -173,17 +187,32 @@
             <NavSection
               v-if="(sectionEnabled('finance') || sectionEnabled('accounting')) && navSectionVisible('finance_accounting')"
               section-key="finance_accounting"
-              :label="l('المالية والمحاسبة', 'Finance & Accounting')"
+              :label="providerFocusNavActive ? l('المحفظة والمشتريات', 'Wallet & purchases') : l('المالية والمحاسبة', 'Finance & Accounting')"
             >
-              <template v-if="sectionEnabled('finance')">
+              <template v-if="sectionEnabled('finance') && providerFocusNavActive">
+                <NavItem to="/wallet" :icon="CreditCardIcon" label="المحفظة" />
+                <NavItem
+                  v-if="auth.hasPermission('purchases.platform_settlement.view')"
+                  to="/provider/platform-purchases"
+                  :icon="ShoppingBagIcon"
+                  :label="l('مشتريات المنصّة', 'Platform purchases')"
+                />
+                <NavItem
+                  v-if="auth.hasPermission('purchases.claims.view')"
+                  to="/provider/purchase-claims"
+                  :icon="ClipboardDocumentListIcon"
+                  :label="l('مطالبات المشتريات', 'Purchase claims')"
+                />
+              </template>
+              <template v-else-if="sectionEnabled('finance')">
                 <NavItem to="/invoices" :icon="DocumentTextIcon" :label="locale.t('nav.invoices')" />
                 <NavItem
-                  v-if="sectionEnabled('crm')"
+                  v-if="sectionEnabled('crm') && !providerFocusNavActive"
                   to="/crm/quotes"
                   :icon="ClipboardDocumentIcon"
                   label="عروض الأسعار"
                 />
-                <NavSubGroup v-if="navGroupVisible('purchases')" group-key="purchases" label="المشتريات">
+                <NavSubGroup v-if="navGroupVisible('purchases') && !providerFocusNavActive" group-key="purchases" label="المشتريات">
                   <NavItem to="/purchases" :icon="ShoppingBagIcon" label="قائمة المشتريات" />
                   <NavItem to="/purchases/new" :icon="ClipboardDocumentIcon" label="أوامر شراء" />
                   <NavItem to="/suppliers" :icon="TruckIcon" label="الموردون" />
@@ -206,7 +235,7 @@
                   label="المطابقة المالية"
                 />
               </template>
-              <template v-if="sectionEnabled('accounting')">
+              <template v-if="sectionEnabled('accounting') && !providerFocusNavActive">
                 <NavSubGroup v-if="navGroupVisible('accountant')" group-key="accountant" label="المحاسب">
                   <NavItem to="/ledger" :icon="BookOpenIcon" label="القيود اليومية" />
                   <NavItem to="/chart-of-accounts" :icon="TableCellsIcon" label="شجرة الحسابات" />
@@ -333,7 +362,6 @@
                 <NavItem to="/admin/qa" :icon="BeakerIcon" label="فحص الجودة (QA)" />
               </NavSubGroup>
             </NavSection>
-
           </template>
         </template>
       </nav>
@@ -615,24 +643,23 @@ import router from '@/router'
 import { NAV_SEARCH_ITEMS, itemMatchesNavQuery, normNavSearch, navSearchItemVisibleForPortals } from '@/config/navSearchItems'
 import { enabledPortals } from '@/config/portalAccess'
 import {
-  HomeIcon, DocumentTextIcon, CubeIcon, UsersIcon, ChartBarIcon, Cog6ToothIcon,
-  ArrowLeftOnRectangleIcon, TruckIcon, ShoppingCartIcon, ClipboardDocumentIcon,
+  HomeIcon, DocumentTextIcon, UsersIcon, ChartBarIcon, Cog6ToothIcon,
+  ArrowLeftOnRectangleIcon, TruckIcon, ClipboardDocumentIcon,
   BuildingOfficeIcon, CalendarDaysIcon, FireIcon, UserGroupIcon, ClockIcon,
   CurrencyDollarIcon, CreditCardIcon, BookOpenIcon, TableCellsIcon, BanknotesIcon,
-  ArchiveBoxIcon, ShoppingBagIcon, ShieldCheckIcon, StarIcon, RectangleStackIcon, LifebuoyIcon,
+  ArchiveBoxIcon, ShoppingBagIcon, ShieldCheckIcon, RectangleStackIcon, LifebuoyIcon,
   MagnifyingGlassIcon, MagnifyingGlassCircleIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, WrenchScrewdriverIcon, DocumentCheckIcon,
   LockClosedIcon, ChevronRightIcon, ChevronLeftIcon,
   SunIcon, MoonIcon, CheckIcon, ChevronDownIcon,
-  BuildingOffice2Icon, CpuChipIcon, GiftIcon, Bars3Icon, SparklesIcon,
+  BuildingOffice2Icon, CpuChipIcon, GiftIcon, Bars3Icon,
   SignalIcon, PresentationChartLineIcon, BeakerIcon,
   ChatBubbleLeftRightIcon, FolderOpenIcon,
   AdjustmentsHorizontalIcon, HeartIcon, InformationCircleIcon,
   BuildingLibraryIcon, MapPinIcon, BoltIcon, ArrowsRightLeftIcon, CalendarIcon,
-  QueueListIcon, DevicePhoneMobileIcon, PlusCircleIcon, TagIcon,
+  QueueListIcon, DevicePhoneMobileIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { useStaffUiStore } from '@/stores/staffUi'
-import { useSubscriptionStore } from '@/stores/subscription'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { featureFlags } from '@/config/featureFlags'
 import {
@@ -674,7 +701,6 @@ import { isStaffNavHidden, splitStaffNavHref } from '@/lib/staffNavKey'
 const auth = useAuthStore()
 const { staffShellReady } = useNavigationContext()
 const staffUi = useStaffUiStore()
-const sub  = useSubscriptionStore()
 const biz = useBusinessProfileStore()
 const route = useRoute()
 const locale = useLocale()
@@ -750,27 +776,6 @@ const showStaffCompactToggle = computed(
 )
 
 /** تنبيه فوترة خفيف: فترة سماح / انتهاء قريب — بدون تعقيد إضافي */
-const BILLING_STATE_AR: Record<string, string> = {
-  active: 'نشط',
-  grace: 'فترة سماح',
-  expired: 'منتهٍ',
-  suspended: 'موقوف',
-  none: 'غير مربوط',
-}
-
-const billingStateShort = computed(() => {
-  const st = auth.user?.subscription?.billing_state
-  if (!st || !auth.isStaff || auth.isFleet || auth.isCustomer) return ''
-  return BILLING_STATE_AR[st] ?? st
-})
-
-const billingBadgeTitle = computed(() => {
-  const s = auth.user?.subscription
-  if (!s) return 'الاشتراك والفوترة'
-  const parts = [s.plan ? `باقة: ${s.plan}` : '', s.ends_at ? `ينتهي: ${new Date(s.ends_at).toLocaleDateString('ar-SA')}` : '']
-  return parts.filter(Boolean).join(' · ') || 'الاشتراك والفوترة'
-})
-
 const billingNotice = computed((): { text: string; boxClass: string; showPlanLink: boolean } | null => {
   if (!auth.isStaff || auth.isFleet || auth.isCustomer) return null
   const s = auth.user?.subscription
@@ -866,7 +871,8 @@ watch(
     if (p.startsWith('/workshop') || p.startsWith('/hr')) {
       openNavSection.value = 'hr'
     } else if (
-      p.startsWith('/invoices')
+      p.startsWith('/provider')
+      || p.startsWith('/invoices')
       || p.startsWith('/wallet')
       || p.startsWith('/purchases')
       || p.startsWith('/goods-receipts')
@@ -883,7 +889,7 @@ watch(
       openNavSection.value = sectionEnabled('finance') ? 'finance_accounting' : 'operations'
     } else if (p.startsWith('/suppliers')) {
       openNavSection.value = sectionEnabled('finance') ? 'finance_accounting' : 'inventory'
-    } else if (p.startsWith('/products') || p.startsWith('/inventory')) {
+    } else if (p.startsWith('/services-products') || p.startsWith('/products') || p.startsWith('/inventory')) {
       openNavSection.value = 'inventory'
     } else if (
       p.startsWith('/reports')
@@ -1108,10 +1114,42 @@ const flatItems = computed(() => {
   void biz.effectiveFeatureMatrix
   const opsOpen = canAccessStaffOperationsArea(auth.isOwner, (k) => biz.isEnabled(k))
   const hrOpen = canAccessWorkshopArea(auth.isOwner, (k) => biz.isEnabled(k))
+  const pfa = providerFocusNavActive.value
+  const hiddenSet = mergedStaffHiddenNavSet.value
+
+  const applyHidden = (rows: { to: string; icon: object; label: string; locked: boolean }[]) => {
+    if (!hiddenSet.size) return rows
+    return rows.filter((item) => {
+      const { path: hp, hash: hh } = splitStaffNavHref(item.to)
+      return !isStaffNavHidden(hp, hh, hiddenSet)
+    })
+  }
+
+  if (pfa) {
+    const rows: { to: string; icon: object; label: string; locked: boolean }[] = [
+      { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
+      { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات التي نفّذها المزوّد', locked: false },
+      { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'بحث لوحة وباركود', locked: false },
+      { to: '/wallet', icon: CreditCardIcon, label: 'المحفظة', locked: false },
+    ]
+    if (auth.hasPermission('purchases.platform_settlement.view')) {
+      rows.push({ to: '/provider/platform-purchases', icon: ShoppingBagIcon, label: 'مشتريات المنصّة', locked: false })
+    }
+    if (auth.hasPermission('purchases.claims.view')) {
+      rows.push({ to: '/provider/purchase-claims', icon: ClipboardDocumentListIcon, label: 'مطالبات المشتريات', locked: false })
+    }
+    rows.push({ to: '/settings', icon: Cog6ToothIcon, label: 'الإعدادات', locked: false })
+    if (auth.isPlatform && enabledPortals.admin) {
+      rows.push({ to: '/platform/overview', icon: CpuChipIcon, label: 'مركز المنصة', locked: false })
+      rows.push({ to: '/admin/qa', icon: BeakerIcon, label: 'التحقق من النظام', locked: false })
+    }
+    return applyHidden(rows)
+  }
+
   const items: { to: string; icon: object; label: string; locked: boolean }[] = [
     { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
     { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'بحث أمر / لوحة', locked: false },
-    { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات التي تمت من قبل المزود', locked: false },
+    { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات التي نفّذها المزوّد', locked: false },
     { to: '/vehicles', icon: TruckIcon, label: 'المركبات', locked: false },
     { to: '/customers', icon: UsersIcon, label: 'العملاء', locked: false },
     { to: '/invoices', icon: DocumentTextIcon, label: 'الفواتير', locked: false },
@@ -1126,8 +1164,7 @@ const flatItems = computed(() => {
       : []),
     ...(auth.isManager ? [{ to: '/branches', icon: BuildingLibraryIcon, label: 'الفروع', locked: false }] : []),
     ...(auth.isStaff ? [{ to: '/branches/map', icon: MapPinIcon, label: 'خريطة الفروع', locked: false }] : []),
-    { to: '/products', icon: CubeIcon, label: 'المنتجات', locked: false },
-    { to: '/pos', icon: ShoppingCartIcon, label: 'نقطة البيع', locked: false },
+    { to: '/services-products', icon: RectangleStackIcon, label: 'الخدمات والمنتجات', locked: false },
     ...(opsOpen ? [{ to: '/bays', icon: BuildingOfficeIcon, label: 'مناطق العمل', locked: false }] : []),
     ...(opsOpen ? [{ to: '/bookings', icon: CalendarDaysIcon, label: 'الحجوزات', locked: false }] : []),
     ...(opsOpen && auth.hasPermission('meetings.update')
@@ -1156,12 +1193,7 @@ const flatItems = computed(() => {
     items.push({ to: '/platform/overview', icon: CpuChipIcon, label: 'مركز المنصة', locked: false })
     items.push({ to: '/admin/qa', icon: BeakerIcon, label: 'التحقق من النظام', locked: false })
   }
-  const hiddenSet = mergedStaffHiddenNavSet.value
-  if (!hiddenSet.size) return items
-  return items.filter((item) => {
-    const { path: hp, hash: hh } = splitStaffNavHref(item.to)
-    return !isStaffNavHidden(hp, hh, hiddenSet)
-  })
+  return applyHidden(items)
 })
 
 const NavIconItem = defineComponent({
@@ -1293,13 +1325,16 @@ const NavSubGroup = defineComponent({
 })
 
 const pageTitles: Record<string, string> = {
-  dashboard: 'الرئيسية', pos: 'نقطة البيع', customers: 'العملاء',
+  dashboard: 'الرئيسية', customers: 'العملاء',
   vehicles: 'المركبات', 'vehicles.show': 'تفاصيل المركبة',
-  'work-orders': 'العمليات التي تمت من قبل المزود', 'work-orders.show': 'تفاصيل العملية',
+  'work-orders': 'العمليات التي نفّذها المزوّد', 'work-orders.show': 'تفاصيل العملية المنفّذة',
   'work-orders.create': 'عملية جديدة', invoices: 'الفواتير',
   'financial-reconciliation': 'المطابقة المالية',
   meetings: 'الاجتماعات',
-  'invoices.show': 'تفاصيل الفاتورة', products: 'المنتجات',
+  'invoices.show': 'تفاصيل الفاتورة',
+  catalog: 'الخدمات والمنتجات',
+  'catalog.products': 'المنتجات',
+  'catalog.services': 'الخدمات',
   'products.create': 'منتج جديد', inventory: 'المخزون',
   'inventory.units': 'وحدات القياس', 'inventory.reservations': 'الحجوزات',
   suppliers: 'الموردون', purchases: 'المشتريات',
@@ -1344,15 +1379,16 @@ const pageTitle = computed(() => {
 const breadcrumbMap: Record<string, { label: string; parent?: string }> = {
   admin:                  { label: 'لوحة الأدمن', parent: 'dashboard' },
   dashboard:              { label: 'الرئيسية' },
-  pos:                    { label: 'نقطة البيع', parent: 'dashboard' },
   invoices:               { label: 'الفواتير', parent: 'dashboard' },
   'financial-reconciliation': { label: 'المطابقة المالية', parent: 'dashboard' },
   meetings:               { label: 'الاجتماعات', parent: 'dashboard' },
   'invoices.show':        { label: 'تفاصيل الفاتورة', parent: 'invoices' },
-  'work-orders':          { label: 'العمليات التي تمت من قبل المزود', parent: 'dashboard' },
-  'work-orders.show':     { label: 'تفاصيل العملية', parent: 'work-orders' },
-  products:               { label: 'المنتجات', parent: 'dashboard' },
-  'products.create':      { label: 'منتج جديد', parent: 'products' },
+  'work-orders':          { label: 'العمليات التي نفّذها المزوّد', parent: 'dashboard' },
+  'work-orders.show':     { label: 'تفاصيل العملية المنفّذة', parent: 'work-orders' },
+  catalog:                { label: 'الخدمات والمنتجات', parent: 'dashboard' },
+  'catalog.products':     { label: 'المنتجات', parent: 'catalog' },
+  'catalog.services':     { label: 'الخدمات', parent: 'catalog' },
+  'products.create':      { label: 'منتج جديد', parent: 'catalog.products' },
   customers:              { label: 'العملاء', parent: 'dashboard' },
   'vehicles.show':        { label: 'تفاصيل المركبة', parent: 'vehicles' },
   vehicles:               { label: 'المركبات', parent: 'customers' },
@@ -1378,11 +1414,15 @@ const breadcrumbMap: Record<string, { label: string; parent?: string }> = {
 }
 
 const routePaths: Record<string, string> = {
-  dashboard: '/', admin: '/platform/overview', AdminQA: '/admin/qa', pos: '/pos', invoices: '/invoices',
+  dashboard: '/', admin: '/platform/overview', AdminQA: '/admin/qa', invoices: '/invoices',
   'financial-reconciliation': '/financial-reconciliation',
   meetings: '/meetings',
   'work-orders': '/work-orders',
-  products: '/products', customers: '/customers', vehicles: '/vehicles',
+  catalog: '/services-products',
+  'catalog.products': '/services-products/products',
+  'catalog.services': '/services-products/services',
+  'products.create': '/products/new',
+  customers: '/customers', vehicles: '/vehicles',
   settings: '/settings', 'settings.team-users': '/settings/team-users', 'settings.org-units': '/settings/org-units', 'settings.integrations': '/settings/integrations',
   'settings.api-keys': '/settings/api-keys',
   bays: '/bays', 'bays.heatmap': '/bays/heatmap', bookings: '/bookings',

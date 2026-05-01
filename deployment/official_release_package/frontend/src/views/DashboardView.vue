@@ -68,44 +68,47 @@
       </div>
     </section>
 
-    <div v-if="loading" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div v-if="loading && showChartsSection" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div
-        v-for="i in 2"
+        v-for="i in chartSkeletonCount"
         :key="'ch-' + i"
         class="h-[280px] rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-100/80 dark:bg-slate-800/60 animate-pulse"
       />
     </div>
     <DashboardCharts
-      v-else
+      v-else-if="showChartsSection"
       :revenue="chartRevenue"
       :work-orders="chartWo"
+      :show-revenue-chart="tenantOpen('finance')"
+      :show-work-order-chart="tenantOpen('operations')"
     />
 
-    <!-- KPI — من GET /dashboard/summary -->
-    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+    <!-- KPI — من GET /dashboard/summary؛ الترتيب حسب نوع النشاط ثم الميزات المفعّلة -->
+    <div v-if="visibleKpiItems.length || loading" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
       <template v-if="loading">
-        <div v-for="i in 8" :key="i" class="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5">
+        <div v-for="i in kpiSkeletonCount" :key="i" class="bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 p-5">
           <SkeletonBox height="2.5rem" width="2.5rem" class="rounded-xl mb-3" />
           <SkeletonBox height="1.5rem" width="60%" class="mb-2" />
           <SkeletonBox height="0.75rem" width="80%" />
         </div>
       </template>
       <template v-else>
-        <KpiCard color="green" :icon="ChartBarIcon" :value="fmtMoney(kpi.totalRevenue)" label="حجم الفواتير (الفترة)" sub="مجموع إجمالي الفواتير بحسب الإصدار — ليس المتحصّل النقدي" />
-        <KpiCard color="gray" :icon="DocumentTextIcon" :value="String(kpi.openInvoiceCount)" label="فواتير مفتوحة / قيد التحصيل" sub="عدد" />
-        <KpiCard color="orange" :icon="ScaleIcon" :value="fmtMoney(kpi.totalOutstanding)" label="الذمم المدينة" sub="ر.س مستحقة" />
-        <KpiCard color="purple" :icon="CurrencyDollarIcon" :value="fmtMoney(kpi.walletBalanceTotal)" label="أرصدة المحافظ" sub="مجموع الأنواع" />
-        <KpiCard color="blue" :icon="BanknotesIcon" :value="fmtMoney(kpi.totalCollected)" label="المتحصّل (الفترة)" sub="مدفوعات مكتملة ضمن نطاق التقرير" />
-        <KpiCard color="indigo" :icon="ChartPieIcon" :value="`${kpi.collectionRate}%`" label="معدل التحصيل" sub="نسبة المتحصّل إلى حجم الفواتير في الفترة" />
-        <KpiCard color="purple" :icon="UserPlusIcon" :value="String(kpi.newCustomersInPeriod)" label="عملاء جدد" sub="خلال نفس فترة التقرير" />
-        <KpiCard color="gray" :icon="ReceiptPercentIcon" :value="fmtMoney(kpi.avgInvoiceValue)" label="متوسط قيمة الفاتورة" sub="للفواتير الصادرة (غير الملغاة/المسودة)" />
+        <KpiCard
+          v-for="row in visibleKpiItems"
+          :key="row.id"
+          :color="row.color"
+          :icon="row.icon"
+          :value="row.value"
+          :label="row.label"
+          :sub="row.sub"
+        />
       </template>
     </div>
 
     <!-- Middle Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div v-if="showRecentInvoicesPanel || showWorkOrdersPanel" :class="middleRowGridClass">
       <!-- Recent Invoices -->
-      <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+      <div v-if="showRecentInvoicesPanel" class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
         <div class="px-5 py-3.5 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
           <h2 class="text-sm font-semibold text-gray-800 dark:text-slate-100">أحدث الفواتير</h2>
           <RouterLink to="/invoices" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">عرض الكل ←</RouterLink>
@@ -119,7 +122,11 @@
           </div>
           <p class="text-sm font-medium text-gray-600 dark:text-slate-300">لا توجد فواتير في القائمة</p>
           <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">ابدأ بإصدار فاتورة أو استيراد من أمر عمل</p>
-          <RouterLink to="/invoices/create" class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400">
+          <RouterLink
+            v-if="!platformExecutionPartner"
+            to="/invoices/create"
+            class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400"
+          >
             + إنشاء فاتورة
           </RouterLink>
         </div>
@@ -147,11 +154,11 @@
       </div>
 
       <!-- Work Order Stats + Urgent -->
-      <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+      <div v-if="showWorkOrdersPanel" class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
         <div class="px-5 py-3.5 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
           <h2 class="text-sm font-semibold text-gray-800 dark:text-slate-100 flex items-center gap-2">
             <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            حالة العمليات التي تمت من قبل المزود
+            حالة العمليات التي نفّذها المزوّد
           </h2>
           <RouterLink to="/work-orders" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">عرض الكل ←</RouterLink>
         </div>
@@ -181,10 +188,10 @@
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-5 py-4">
       <p class="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-3">وصول سريع</p>
       <div class="flex flex-wrap gap-2">
-        <QuickBtn :icon="DocumentTextIcon" label="فاتورة جديدة" to="/invoices/create" color="blue" />
-        <QuickBtn :icon="ClipboardDocumentIcon" label="العمليات التي تمت من قبل المزود" to="/work-orders" color="purple" />
-        <QuickBtn :icon="ShoppingCartIcon" label="نقطة البيع" to="/pos" color="green" />
-        <QuickBtn :icon="UsersIcon" label="عميل جديد" to="/customers" color="green" />
+        <QuickBtn v-if="quickInvoiceCreate" :icon="DocumentTextIcon" label="فاتورة جديدة" to="/invoices/create" color="blue" />
+        <QuickBtn :icon="MagnifyingGlassCircleIcon" label="بحث أمر / لوحة" to="/execution-hub" color="blue" />
+        <QuickBtn v-if="quickWorkOrders" :icon="ClipboardDocumentIcon" label="العمليات التي نفّذها المزوّد" to="/work-orders" color="purple" />
+        <QuickBtn v-if="quickNewCustomer" :icon="UsersIcon" label="عميل جديد" to="/customers" color="green" />
         <RouterLink
           v-if="auth.isPlatform"
           :to="{ name: 'vehicles', query: { add: '1' } }"
@@ -207,8 +214,8 @@
           to="/bays/heatmap"
           color="orange"
         />
-        <QuickBtn :icon="ChartBarIcon" label="التقارير" to="/reports" color="gray" />
-        <QuickBtn :icon="ScaleIcon" label="ZATCA" to="/zatca" color="orange" />
+        <QuickBtn v-if="quickReports" :icon="ChartBarIcon" label="التقارير" to="/reports" color="gray" />
+        <QuickBtn v-if="quickZatca" :icon="ScaleIcon" label="ZATCA" to="/zatca" color="orange" />
         <QuickBtn v-if="auth.isStaff" :icon="MapPinIcon" label="خريطة الفروع" to="/branches/map" color="indigo" />
         <QuickBtn v-if="auth.isManager" :icon="BuildingLibraryIcon" label="الفروع" to="/branches" color="green" />
       </div>
@@ -223,10 +230,11 @@ import { RouterLink, useRouter } from 'vue-router'
 import {
   CheckCircleIcon, CurrencyDollarIcon, UsersIcon,
   DocumentTextIcon, ScaleIcon, ChartBarIcon,
-  ClipboardDocumentIcon, ShoppingCartIcon, ArrowPathIcon,
+  ClipboardDocumentIcon, ArrowPathIcon,
   ArrowTrendingUpIcon, ArrowTrendingDownIcon, PresentationChartLineIcon, TruckIcon,
   BuildingLibraryIcon, MapPinIcon, FireIcon, BanknotesIcon, UserPlusIcon, ChartPieIcon,
   ReceiptPercentIcon,
+  MagnifyingGlassCircleIcon,
 } from '@heroicons/vue/24/outline'
 import apiClient from '@/lib/apiClient'
 import { useAuthStore } from '@/stores/auth'
@@ -243,10 +251,12 @@ import { invoiceStatusClass, invoiceStatusLabel } from '@/utils/financialLabels'
 import { featureFlags } from '@/config/featureFlags'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { canAccessStaffBusinessIntelligence, tenantSectionOpen } from '@/config/staffFeatureGate'
+import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
 
 const $router = useRouter()
 const auth = useAuthStore()
 const biz = useBusinessProfileStore()
+const { active: platformExecutionPartner } = usePlatformExecutionPartner()
 
 const showBiShortcuts = computed(() => {
   void biz.loaded
@@ -265,6 +275,26 @@ const showHeatmapShortcut = computed(() => {
   return tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
 })
 const showAnalyticsStrip = computed(() => showBiShortcuts.value || showHeatmapShortcut.value)
+
+function tenantOpen(key: string): boolean {
+  void biz.loaded
+  void biz.effectiveFeatureMatrix
+  return tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), key)
+}
+
+/** ترتيب محاور لوحة التحكم حسب نوع النشاط */
+const pillarPriority = computed((): Array<'operations' | 'finance' | 'crm' | 'accounting'> => {
+  void biz.businessType
+  switch (biz.businessType) {
+    case 'retail':
+      return ['finance', 'operations', 'crm', 'accounting']
+    case 'fleet_operator':
+      return ['operations', 'finance', 'crm', 'accounting']
+    default:
+      return ['operations', 'finance', 'crm', 'accounting']
+  }
+})
+
 const {
   loading: setupLoading,
   loadError: setupLoadError,
@@ -308,6 +338,155 @@ const kpi = ref({
 const recentInvoices = ref<any[]>([])
 const chartRevenue = ref<{ date: string; revenue: number }[]>([])
 const chartWo = ref<{ date: string; count: number }[]>([])
+
+function fmtMoney(v: number) {
+  return v.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+type DashPillar = 'operations' | 'finance' | 'crm' | 'accounting'
+
+const visibleKpiItems = computed(() => {
+  void biz.loaded
+  void biz.effectiveFeatureMatrix
+  void biz.businessType
+  const defs: Array<{
+    id: string
+    pillar: DashPillar
+    feature: string
+    sortKey: number
+    color: string
+    icon: typeof ChartBarIcon
+    value: string
+    label: string
+    sub: string
+  }> = [
+    {
+      id: 'totalRevenue',
+      pillar: 'finance',
+      feature: 'finance',
+      sortKey: 10,
+      color: 'green',
+      icon: ChartBarIcon,
+      value: fmtMoney(kpi.value.totalRevenue),
+      label: 'حجم الفواتير (الفترة)',
+      sub: 'مجموع إجمالي الفواتير بحسب الإصدار — ليس المتحصّل النقدي',
+    },
+    {
+      id: 'openInvoiceCount',
+      pillar: 'finance',
+      feature: 'finance',
+      sortKey: 20,
+      color: 'gray',
+      icon: DocumentTextIcon,
+      value: String(kpi.value.openInvoiceCount),
+      label: 'فواتير مفتوحة / قيد التحصيل',
+      sub: 'عدد',
+    },
+    {
+      id: 'totalOutstanding',
+      pillar: 'finance',
+      feature: 'finance',
+      sortKey: 30,
+      color: 'orange',
+      icon: ScaleIcon,
+      value: fmtMoney(kpi.value.totalOutstanding),
+      label: 'الذمم المدينة',
+      sub: 'ر.س مستحقة',
+    },
+    {
+      id: 'walletBalanceTotal',
+      pillar: 'finance',
+      feature: 'finance',
+      sortKey: 40,
+      color: 'purple',
+      icon: CurrencyDollarIcon,
+      value: fmtMoney(kpi.value.walletBalanceTotal),
+      label: 'أرصدة المحافظ',
+      sub: 'مجموع الأنواع',
+    },
+    {
+      id: 'totalCollected',
+      pillar: 'finance',
+      feature: 'finance',
+      sortKey: 50,
+      color: 'blue',
+      icon: BanknotesIcon,
+      value: fmtMoney(kpi.value.totalCollected),
+      label: 'المتحصّل (الفترة)',
+      sub: 'مدفوعات مكتملة ضمن نطاق التقرير',
+    },
+    {
+      id: 'collectionRate',
+      pillar: 'finance',
+      feature: 'finance',
+      sortKey: 60,
+      color: 'indigo',
+      icon: ChartPieIcon,
+      value: `${kpi.value.collectionRate}%`,
+      label: 'معدل التحصيل',
+      sub: 'نسبة المتحصّل إلى حجم الفواتير في الفترة',
+    },
+    {
+      id: 'avgInvoiceValue',
+      pillar: 'finance',
+      feature: 'finance',
+      sortKey: 70,
+      color: 'gray',
+      icon: ReceiptPercentIcon,
+      value: fmtMoney(kpi.value.avgInvoiceValue),
+      label: 'متوسط قيمة الفاتورة',
+      sub: 'للفواتير الصادرة (غير الملغاة/المسودة)',
+    },
+    {
+      id: 'newCustomersInPeriod',
+      pillar: 'crm',
+      feature: 'crm',
+      sortKey: 15,
+      color: 'purple',
+      icon: UserPlusIcon,
+      value: String(kpi.value.newCustomersInPeriod),
+      label: 'عملاء جدد',
+      sub: 'خلال نفس فترة التقرير',
+    },
+  ]
+
+  const pri = pillarPriority.value
+  return defs
+    .filter((d) => tenantOpen(d.feature))
+    .sort((a, b) => {
+      const ia = pri.indexOf(a.pillar)
+      const ib = pri.indexOf(b.pillar)
+      if (ia !== ib) return ia - ib
+      return a.sortKey - b.sortKey
+    })
+})
+
+const showChartsSection = computed(() => tenantOpen('finance') || tenantOpen('operations'))
+
+const chartSkeletonCount = computed(() => {
+  let n = 0
+  if (tenantOpen('finance')) n++
+  if (tenantOpen('operations')) n++
+  return Math.max(n, 1)
+})
+
+const kpiSkeletonCount = computed(() => Math.min(8, Math.max(visibleKpiItems.value.length || 4, 4)))
+
+const showRecentInvoicesPanel = computed(() => tenantOpen('finance'))
+const showWorkOrdersPanel = computed(() => tenantOpen('operations'))
+
+const middleRowGridClass = computed(() => {
+  if (showRecentInvoicesPanel.value && showWorkOrdersPanel.value) {
+    return 'grid grid-cols-1 lg:grid-cols-2 gap-4'
+  }
+  return 'grid grid-cols-1 gap-4'
+})
+
+const quickInvoiceCreate = computed(() => tenantOpen('finance') && !platformExecutionPartner)
+const quickWorkOrders = computed(() => tenantOpen('operations'))
+const quickNewCustomer = computed(() => tenantOpen('crm') && !platformExecutionPartner)
+const quickReports = computed(() => tenantOpen('reports'))
+const quickZatca = computed(() => tenantOpen('accounting'))
 
 const woStats = computed(() => [
   {
@@ -392,10 +571,6 @@ async function loadData() {
       fetchStatus().catch(() => {})
     }
   }
-}
-
-function fmtMoney(v: number) {
-  return v.toLocaleString('ar-SA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 const colorMap: Record<string, Record<string, string>> = {

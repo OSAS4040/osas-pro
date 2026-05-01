@@ -85,9 +85,14 @@
                 </td>
                 <td class="px-4 py-3 text-xs text-gray-500">{{ fmtDate(r.created_at) }}</td>
                 <td class="px-4 py-3 text-left">
-                  <button type="button" class="text-xs font-semibold text-primary-600 hover:underline" @click="openDetail(r.id)">
-                    تفاصيل
-                  </button>
+                  <div class="flex flex-wrap gap-2 justify-end">
+                    <button type="button" class="text-xs font-semibold text-primary-600 hover:underline" @click="openDetail(r.id)">
+                      تفاصيل
+                    </button>
+                    <button type="button" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:underline" @click="downloadTransferInstructions(r.id)">
+                      تعليمات تحويل PDF
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -170,6 +175,13 @@
                     >
                       إيصال
                     </button>
+                    <button
+                      type="button"
+                      class="text-[11px] font-semibold text-slate-600 hover:underline"
+                      @click="downloadTransferInstructions(r.id)"
+                    >
+                      PDF تحويل
+                    </button>
                     <template v-if="r.status === 'pending'">
                       <button type="button" class="text-[11px] font-semibold text-green-600 hover:underline disabled:opacity-50" :disabled="actionBusyId === r.id" @click="confirmApprove(r)">
                         اعتماد
@@ -201,7 +213,7 @@
             </button>
           </div>
           <div class="form-shell px-6 py-4 space-y-3">
-            <div>
+            <div v-if="!forceCustomerAuto">
               <label class="block text-xs font-semibold mb-1">العميل <span class="text-red-500">*</span></label>
               <p class="text-[11px] text-gray-500 dark:text-slate-400 mb-1.5 leading-relaxed">
                 صاحب المحفظة التي تُزاد بعد الاعتماد: نفس العميل الذي دفع الشحن (محفظة فردية أو محفظة أسطول حسب «الهدف» أدناه).
@@ -210,6 +222,10 @@
                 <option value="">اختر عميلاً</option>
                 <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
+            </div>
+            <div v-else>
+              <label class="block text-xs font-semibold mb-1">العميل</label>
+              <div class="field bg-gray-50 dark:bg-slate-700/40 text-sm">{{ auth.user?.name || 'العميل الحالي' }}</div>
             </div>
             <div class="form-grid-2">
               <div>
@@ -235,6 +251,9 @@
             <div>
               <label class="block text-xs font-semibold mb-1">رقم المرجع / الحوالة</label>
               <input v-model="createForm.reference_number" type="text" class="field" maxlength="120">
+              <p v-if="createForm.payment_method === 'bank_transfer'" class="text-[11px] text-gray-500 dark:text-slate-400 mt-1 leading-relaxed">
+                عند التحويل البنكي: إن تُرك الحقل فارغاً يُولَّد مرجع تلقائياً (WTU-…) ويُذكر في مستند «تعليمات التحويل» مع اسم العميل.
+              </p>
             </div>
             <div>
               <label class="block text-xs font-semibold mb-1">ملاحظات</label>
@@ -281,6 +300,9 @@
               ({{ fmt(detail.approved_wallet_transaction.amount) }})
             </p>
             <div class="flex flex-wrap gap-2 pt-2">
+              <button type="button" class="btn btn-outline text-xs py-1.5" @click="downloadTransferInstructions(detail.id)">
+                تعليمات تحويل (PDF)
+              </button>
               <button v-if="detail.has_receipt" type="button" class="btn btn-outline text-xs py-1.5" @click="downloadReceipt(detail.id)">
                 تنزيل الإيصال
               </button>
@@ -395,7 +417,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import {
   QueueListIcon, PlusCircleIcon, XMarkIcon,
 } from '@heroicons/vue/24/outline'
@@ -407,6 +429,8 @@ import NavigationSourceHint from '@/components/NavigationSourceHint.vue'
 
 const auth = useAuthStore()
 const toast = useToast()
+const route = useRoute()
+const forceCustomerAuto = computed(() => route.path.startsWith('/customer/'))
 
 const canCreate = computed(() => auth.hasPermission('wallet.top_up_requests.create'))
 const canReview = computed(() => auth.hasPermission('wallet.top_up_requests.review'))
@@ -547,7 +571,7 @@ async function loadCustomers() {
 
 async function openCreate() {
   formError.value = ''
-  createForm.customer_id = ''
+  createForm.customer_id = forceCustomerAuto.value ? String(auth.user?.customer_id ?? '') : ''
   createForm.target = 'individual'
   createForm.amount = null
   createForm.payment_method = 'cash'
@@ -555,7 +579,7 @@ async function openCreate() {
   createForm.notes_from_customer = ''
   createReceipt.value = null
   showCreate.value = true
-  await loadCustomers()
+  if (!forceCustomerAuto.value) await loadCustomers()
 }
 
 function onCreateReceipt(e: Event) {
@@ -571,7 +595,8 @@ function onEditReceipt(e: Event) {
 async function submitCreate() {
   if (createSubmitting.value) return
   formError.value = ''
-  if (!createForm.customer_id || !createForm.amount || createForm.amount <= 0) {
+  const effectiveCustomerId = forceCustomerAuto.value ? String(auth.user?.customer_id ?? '') : String(createForm.customer_id || '')
+  if (!effectiveCustomerId || !createForm.amount || createForm.amount <= 0) {
     formError.value = 'اختر عميلاً وأدخل مبلغاً صحيحاً'
     return
   }
@@ -582,7 +607,7 @@ async function submitCreate() {
   createSubmitting.value = true
   try {
     const fd = new FormData()
-    fd.append('customer_id', String(createForm.customer_id))
+    fd.append('customer_id', effectiveCustomerId)
     fd.append('target', createForm.target)
     fd.append('amount', String(createForm.amount))
     fd.append('payment_method', createForm.payment_method)
@@ -670,6 +695,34 @@ async function downloadReceipt(id: number) {
     URL.revokeObjectURL(url)
   } catch {
     toast.error('تعذر تنزيل الإيصال')
+  }
+}
+
+async function downloadTransferInstructions(id: number) {
+  try {
+    const r = await apiClient.get(`/wallet-top-up-requests/${id}/transfer-instructions`, {
+      responseType: 'blob',
+      skipGlobalErrorToast: true,
+    })
+    const blob = r.data as Blob
+    if (blob.type && blob.type.includes('json')) {
+      const text = await blob.text()
+      try {
+        const j = JSON.parse(text) as { message?: string }
+        toast.error(j.message ?? 'تعذر إصدار المستند')
+      } catch {
+        toast.error('تعذر إصدار المستند')
+      }
+      return
+    }
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `wallet-transfer-${id}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (e: unknown) {
+    toast.error(summarizeAxiosError(e))
   }
 }
 

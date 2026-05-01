@@ -202,7 +202,7 @@ const rows = computed(() => {
       index: 5,
       title: o.s5,
       hint: o.s5h,
-      to: { name: 'products' },
+      to: { name: 'catalog.products' },
       done: !!s?.product_ok,
     },
     {

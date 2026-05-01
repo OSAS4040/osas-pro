@@ -167,7 +167,7 @@
                     <button
                       type="button"
                       title="إضافة منتج أو خدمة جديدة إلى الكتالوج وربطها بهذا البند"
-                      class="text-[11px] font-semibold px-2 py-1 rounded-lg border border-violet-200 bg-violet-50 text-violet-900 hover:bg-violet-100 whitespace-nowrap"
+                      class="whitespace-nowrap rounded-lg border border-primary-200 bg-primary-50 px-2 py-1 text-[11px] font-semibold text-primary-900 transition-colors hover:bg-primary-100 dark:border-primary-800/50 dark:bg-primary-950/30 dark:text-primary-100 dark:hover:bg-primary-900/35"
                       @click="openQuickProduct(i)"
                     >
                       + جديد في الكتالوج
@@ -408,7 +408,7 @@
             <button type="button" class="px-3 py-2 text-sm border rounded-lg border-gray-300" @click="quickProductOpen = false">إلغاء</button>
             <button
               type="button"
-              class="px-4 py-2 text-sm rounded-lg bg-violet-600 text-white disabled:opacity-50"
+              class="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
               :disabled="quickProductSaving || !quickProduct.name.trim()"
               @click="submitQuickProduct"
             >

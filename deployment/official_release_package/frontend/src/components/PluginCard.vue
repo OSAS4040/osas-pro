@@ -1,13 +1,13 @@
 <template>
   <div
-    class="bg-white/5 hover:bg-white/[0.08] border border-white/10 hover:border-purple-500/40 rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200 group cursor-pointer relative overflow-hidden"
+    class="bg-white/5 hover:bg-white/[0.08] border border-white/10 hover:border-primary-500/40 rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200 group cursor-pointer relative overflow-hidden"
     @click="$emit('details', plugin)"
   >
     <div v-if="isRecommended" class="absolute top-3 right-3 z-10 text-[10px] font-bold uppercase tracking-wide text-amber-200 bg-amber-500/25 border border-amber-400/40 px-2 py-0.5 rounded-full">
       موصى به
     </div>
 
-    <div v-if="plugin.is_premium" class="absolute top-3 left-3 z-10 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+    <div v-if="plugin.is_premium" class="absolute top-3 left-3 z-10 bg-gradient-to-r from-primary-500 to-primary-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
       Pro
     </div>
     <div
@@ -33,7 +33,7 @@
       <span
         v-for="t in (plugin.tags as string[]).slice(0, 4)"
         :key="t"
-        class="text-[9px] px-1.5 py-0.5 rounded-md bg-purple-500/15 text-purple-200/90 border border-purple-500/20"
+        class="text-[9px] px-1.5 py-0.5 rounded-md bg-primary-500/15 text-primary-200/90 border border-primary-500/20"
       >{{ tagLabel(t) }}</span>
     </div>
 
@@ -50,7 +50,7 @@
       <button
         v-if="!plugin.is_installed"
         type="button"
-        class="flex-1 py-2 bg-purple-600 hover:bg-purple-700 rounded-xl text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+        class="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary-600 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary-700"
         @click="$emit('install', plugin)"
       >
         <ArrowDownTrayIcon class="w-3.5 h-3.5" />
@@ -118,7 +118,7 @@ const isRecommended = computed(() => {
 
 const categoryGradient = computed(() => {
   const g: Record<string, string> = {
-    ai: 'bg-gradient-to-br from-purple-600 to-purple-800',
+    ai: 'bg-gradient-to-br from-primary-600 to-primary-800',
     integration: 'bg-gradient-to-br from-blue-600 to-blue-800',
     analytics: 'bg-gradient-to-br from-emerald-600 to-emerald-800',
     ui: 'bg-gradient-to-br from-pink-600 to-pink-800',
