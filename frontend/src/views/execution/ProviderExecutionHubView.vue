@@ -288,7 +288,7 @@ function itemTypeLabel(t: string | null | undefined): string {
     part: 'قطعة',
     other: 'أخرى',
   }
-  return m[key] ?? key || '—'
+  return (m[key] ?? key) || '—'
 }
 
 const odoFileRef = ref<HTMLInputElement | null>(null)
