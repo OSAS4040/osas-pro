@@ -113,7 +113,7 @@ async function loadSessions(): Promise<void> {
   loading.value = true
   loadError.value = ''
   try {
-    const res = await api.get('/api/v1/auth/sessions')
+    const res = await api.get('/auth/sessions')
     sessions.value = Array.isArray(res.data) ? res.data : []
   } catch (e: any) {
     loadError.value = e?.response?.data?.message || 'تعذّر تحميل الجلسات.'
@@ -126,7 +126,7 @@ async function onRevokeOne(id: number): Promise<void> {
   if (!confirm('إنهاء هذه الجلسة؟ سيتم تسجيل الخروج من هذا الجهاز فقط.')) return
   actionBusy.value = true
   try {
-    await api.del(`/api/v1/auth/sessions/${id}`)
+    await api.del(`/auth/sessions/${id}`)
     await loadSessions()
   } catch (e: any) {
     alert(e?.response?.data?.message || 'تعذّر إنهاء الجلسة.')
@@ -139,7 +139,7 @@ async function onRevokeOthers(): Promise<void> {
   if (!confirm('تسجيل الخروج من جميع الأجهزة الأخرى؟ ستبقى هذه الجلسة فقط نشطة.')) return
   actionBusy.value = true
   try {
-    await api.post('/api/v1/auth/sessions/revoke-others', {})
+    await api.post('/auth/sessions/revoke-others', {})
     await loadSessions()
   } catch (e: any) {
     alert(e?.response?.data?.message || 'تعذّر تنفيذ العملية.')
