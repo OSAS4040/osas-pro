@@ -18,7 +18,13 @@
       <div class="page-head">
         <div class="page-title-wrap">
           <h2 class="page-title-xl">{{ l('إعدادات الشركة', 'Company settings') }}</h2>
-          <p class="page-subtitle">{{ l('المعلومات والهوية البصرية — تظهر في الفواتير والوثائق الرسمية', 'Business profile and visual identity — shown on invoices and official documents') }}</p>
+          <p class="page-subtitle">
+            {{
+              isExecutionPartner
+                ? l('إعدادات المنشأة الأساسية والتشغيل — دون إعدادات الفواتير أو الهوية البصرية', 'Core business and operations settings — invoice and branding options are hidden')
+                : l('المعلومات والهوية البصرية — تظهر في الفواتير والوثائق الرسمية', 'Business profile and visual identity — shown on invoices and official documents')
+            }}
+          </p>
           <RouterLink
             v-if="auth.user?.company_id"
             :to="{ name: 'companies.profile', params: { companyId: String(auth.user.company_id) } }"
@@ -26,7 +32,7 @@
           >
             {{ l('مركز تشغيل الشركة', 'Company operational hub') }} →
           </RouterLink>
-          <p class="text-[11px] text-primary-700 dark:text-primary-300 mt-2 font-medium">
+          <p v-if="!isExecutionPartner" class="text-[11px] text-primary-700 dark:text-primary-300 mt-2 font-medium">
             {{ l('تبويب «إعدادات الفاتورة» يتضمّن نسبة VAT الافتراضية وطرق الدفع المقبولة (تُحفظ مع خيارات الفاتورة).', 'The invoice tab includes default VAT and accepted payment methods (saved with invoice options).') }}
           </p>
         </div>
@@ -628,6 +634,7 @@ import { useTheme, THEME_PRESETS } from '@/composables/useTheme'
 import SmartUserGuidePanel from '@/components/settings/SmartUserGuidePanel.vue'
 import { resolvePublicAssetUrl } from '@/utils/publicUrl'
 import { useLocale } from '@/composables/useLocale'
+import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
 import { useSetupOnboarding } from '@/composables/useSetupOnboarding'
 import {
   DEFAULT_NAV_VISIBILITY,
@@ -644,6 +651,9 @@ const toast = useToast()
 const locale = useLocale()
 const route = useRoute()
 const l = (ar: string, en: string) => (locale.lang.value === 'ar' ? ar : en)
+
+const { active: executionPartnerActive } = usePlatformExecutionPartner()
+const isExecutionPartner = computed(() => executionPartnerActive.value)
 
 const { checklistHidden, revealChecklistFromSettings } = useSetupOnboarding()
 const i18nStore = useI18nStore()
@@ -678,15 +688,36 @@ function applyTabQuery(): void {
 }
 
 watch(() => route.query.tab, applyTabQuery)
-const tabs = computed(() => [
-  { id: 'profile',  label: l('نشاط المنشأة', 'Business profile'), icon: Cog6ToothIcon },
-  { id: 'navigation', label: l('إظهار الأقسام', 'Navigation visibility'), icon: Cog6ToothIcon },
-  { id: 'identity', label: l('الهوية البصرية', 'Visual identity'), icon: PhotoIcon },
-  { id: 'info',     label: l('معلومات الشركة', 'Company info'), icon: BuildingOfficeIcon },
-  { id: 'invoice',  label: l('إعدادات الفاتورة', 'Invoice settings'), icon: DocumentTextIcon },
-  { id: 'theme',    label: l('تخصيص الألوان', 'Color theme'), icon: Cog6ToothIcon },
-  { id: 'guide',    label: l('دليل المستخدم الذكي', 'Smart user guide'), icon: DocumentTextIcon },
-])
+
+const EXECUTION_PARTNER_HIDDEN_SETTING_TABS = ['navigation', 'identity', 'invoice'] as const
+
+const tabs = computed(() => {
+  const rows = [
+    { id: 'profile', label: l('نشاط المنشأة', 'Business profile'), icon: Cog6ToothIcon },
+    { id: 'navigation', label: l('إظهار الأقسام', 'Navigation visibility'), icon: Cog6ToothIcon },
+    { id: 'identity', label: l('الهوية البصرية', 'Visual identity'), icon: PhotoIcon },
+    { id: 'info', label: l('معلومات الشركة', 'Company info'), icon: BuildingOfficeIcon },
+    { id: 'invoice', label: l('إعدادات الفاتورة', 'Invoice settings'), icon: DocumentTextIcon },
+    { id: 'theme', label: l('تخصيص الألوان', 'Color theme'), icon: Cog6ToothIcon },
+    { id: 'guide', label: l('دليل المستخدم الذكي', 'Smart user guide'), icon: DocumentTextIcon },
+  ]
+  if (isExecutionPartner.value) {
+    const hide = new Set<string>([...EXECUTION_PARTNER_HIDDEN_SETTING_TABS])
+    return rows.filter((t) => !hide.has(t.id))
+  }
+  return rows
+})
+
+watch(
+  tabs,
+  (list) => {
+    const ids = list.map((t) => t.id)
+    if (!ids.includes(activeTab.value)) {
+      activeTab.value = ids[0] ?? 'profile'
+    }
+  },
+  { immediate: true },
+)
 
 const businessType = ref<BusinessType>('service_center')
 const featureMatrix = reactive<Record<string, boolean>>({ ...featureMatrixForBusinessType('service_center') })
