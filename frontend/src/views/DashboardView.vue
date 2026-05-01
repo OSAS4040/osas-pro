@@ -534,9 +534,9 @@ const middleRowGridClass = computed(() => {
   return 'grid grid-cols-1 gap-4'
 })
 
-const quickInvoiceCreate = computed(() => tenantOpen('finance') && !platformExecutionPartner)
+const quickInvoiceCreate = computed(() => tenantOpen('finance') && !platformExecutionPartner.value)
 const quickWorkOrders = computed(() => tenantOpen('operations'))
-const quickNewCustomer = computed(() => tenantOpen('crm') && !platformExecutionPartner)
+const quickNewCustomer = computed(() => tenantOpen('crm') && !platformExecutionPartner.value)
 const quickReports = computed(() => tenantOpen('reports') && !platformExecutionPartner.value)
 const quickZatca = computed(() => tenantOpen('accounting') && !platformExecutionPartner.value)
 

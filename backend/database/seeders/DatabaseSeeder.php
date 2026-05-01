@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DemoCompanySeeder::class,
             DemoDataSeeder::class,
+            DemoExecutionPartnerCompanySeeder::class,
             DefaultAdminSeeder::class,
             DemoPlatformAdminSeeder::class,
             IntelligenceSystemSeeder::class,
