@@ -106,6 +106,22 @@ function attachApiInterceptors(instance: AxiosInstance): void {
             localizeBackendMessage(error.response?.data?.message) || uiByLang('فترة السماح: لا يُسمح بتعديل البيانات حتى تجديد الاشتراك.', 'Grace period: editing is blocked until renewal.')
           )
         })
+      } else if (error.response?.status === 403) {
+        import('@/composables/useToast').then(({ useToast }) => {
+          useToast().warning(
+            uiByLang('غير مصرّح', 'Not allowed'),
+            localizeBackendMessage(error.response?.data?.message)
+              || uiByLang('لا تملك صلاحية لهذا الإجراء.', 'You do not have permission for this action.'),
+          )
+        })
+      } else if (error.response?.status === 429) {
+        import('@/composables/useToast').then(({ useToast }) => {
+          useToast().warning(
+            uiByLang('طلبات كثيرة', 'Too many requests'),
+            localizeBackendMessage(error.response?.data?.message)
+              || uiByLang('تم تجاوز الحد المسموح — انتظر قليلاً ثم أعد المحاولة.', 'Rate limit exceeded. Wait a moment and try again.'),
+          )
+        })
       } else if (error.response?.status >= 500) {
         import('@/composables/useToast').then(({ useToast }) => {
           useToast().error(
