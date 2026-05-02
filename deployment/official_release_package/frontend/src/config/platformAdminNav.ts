@@ -243,7 +243,10 @@ export function allPlatformControlPlanePricingRouteNames(): readonly string[] {
   ]
 }
 
-/** تحويل روابط قديمة #admin-section-* إلى مسار /platform/* */
+/**
+ * تحويل روابط قديمة `#admin-section-*` (مع `/admin` القديم) إلى مسار `/platform/*`.
+ * قائمة المفاتيح المعتمدة تُختبر في `platformAdminNav.test.ts`؛ أي قيمة غير معروفة → `/platform/overview`.
+ */
 export function platformPathFromAdminHash(hash: string): string {
   const h = hash.startsWith('#') ? hash : `#${hash}`
   const map: Record<string, string> = {

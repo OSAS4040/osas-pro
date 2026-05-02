@@ -19,6 +19,7 @@
       :risk-class="riskClass"
       :quick-indicator="quickIndicator"
       :company-id="String(route.params.id ?? '')"
+      :active-tab="activeTab"
     />
 
     <CompanyKpiStrip :items="kpiStripItems" />

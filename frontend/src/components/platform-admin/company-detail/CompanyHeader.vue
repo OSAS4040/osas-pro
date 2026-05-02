@@ -17,19 +17,31 @@
         <RouterLink
           v-if="companyId !== ''"
           :to="{ name: 'platform-company-detail', params: { id: companyId }, query: { tab: 'finance' } }"
-          class="rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/30"
+          :class="shortcutClass('finance')"
         >
           المالية
         </RouterLink>
         <RouterLink
           v-if="companyId !== ''"
           :to="{ name: 'platform-company-detail', params: { id: companyId }, query: { tab: 'customers' } }"
-          class="rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/30"
+          :class="shortcutClass('customers')"
         >
           العملاء
         </RouterLink>
-        <PlatformOperationsExitLink to="/vehicles" v-bind="{ ariaName: 'المركبات في بوابة فريق العمل' }" dense>المركبات</PlatformOperationsExitLink>
-        <PlatformOperationsExitLink to="/invoices" v-bind="{ ariaName: 'الفواتير في بوابة فريق العمل' }" dense>الفواتير</PlatformOperationsExitLink>
+        <RouterLink
+          v-if="companyId !== ''"
+          :to="{ name: 'platform-company-detail', params: { id: companyId }, query: { tab: 'vehicles' } }"
+          :class="shortcutClass('vehicles')"
+        >
+          المركبات
+        </RouterLink>
+        <RouterLink
+          v-if="companyId !== ''"
+          :to="{ name: 'platform-company-detail', params: { id: companyId }, query: { tab: 'invoices' } }"
+          :class="shortcutClass('invoices')"
+        >
+          الفواتير
+        </RouterLink>
       </div>
     </div>
   </div>
@@ -37,9 +49,8 @@
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import PlatformOperationsExitLink from '@/components/platform-admin/PlatformOperationsExitLink.vue'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     name: string
     statusLabel: string
@@ -50,7 +61,19 @@ withDefaults(
     quickIndicator: string
     /** معرف الشركة في مسار `/platform/companies/:id` — لربط اختصارات التبويب بنفس الصفحة */
     companyId?: string
+    /** تبويب الشركة النشط (overview | finance | …) لمظهر الاختصار */
+    activeTab?: string
   }>(),
-  { companyId: '' },
+  { companyId: '', activeTab: 'overview' },
 )
+
+function shortcutClass(tab: string): string[] {
+  const base =
+    'rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900'
+  const inactive =
+    'border-primary-300 text-primary-700 hover:bg-primary-50 dark:border-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/30'
+  const active =
+    'border-primary-600 bg-primary-50 text-primary-900 shadow-sm ring-1 ring-primary-500/25 dark:border-primary-500 dark:bg-primary-950/50 dark:text-primary-100 dark:ring-primary-400/20'
+  return [base, props.activeTab === tab ? active : inactive]
+}
 </script>
