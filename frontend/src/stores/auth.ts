@@ -67,6 +67,10 @@ export interface RegisterPayload {
   password: string
   password_confirmation: string
   timezone?: string
+  /** السجل التجاري — اختياري */
+  cr_number?: string | null
+  /** الرقم الضريبي — اختياري */
+  tax_number?: string | null
 }
 
 export const useAuthStore = defineStore('auth', () => {

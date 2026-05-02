@@ -775,12 +775,14 @@ class AuthController extends Controller
         $data = $request->validated();
 
         $company = Company::create([
-            'uuid'      => Str::uuid(),
-            'name'      => $data['company_name'],
-            'currency'  => 'SAR',
-            'timezone'  => $data['timezone'] ?? 'Asia/Riyadh',
-            'status'    => 'active',
-            'is_active' => true,
+            'uuid'       => Str::uuid(),
+            'name'       => $data['company_name'],
+            'currency'   => 'SAR',
+            'timezone'   => $data['timezone'] ?? 'Asia/Riyadh',
+            'status'     => 'active',
+            'is_active'  => true,
+            'cr_number'  => $data['cr_number'] ?? null,
+            'tax_number' => $data['tax_number'] ?? null,
         ]);
 
         $branch = Branch::create([

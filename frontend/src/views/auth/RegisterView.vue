@@ -78,6 +78,31 @@
                 placeholder="you@company.com"
               >
             </div>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400">{{ rt('optionalCommercialHint') }}</p>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">{{ rt('crNumber') }}</label>
+                <input
+                  v-model="form.cr_number"
+                  type="text"
+                  maxlength="50"
+                  autocomplete="off"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                  dir="ltr"
+                >
+              </div>
+              <div>
+                <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">{{ rt('taxNumber') }}</label>
+                <input
+                  v-model="form.tax_number"
+                  type="text"
+                  maxlength="50"
+                  autocomplete="off"
+                  class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-mono text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                  dir="ltr"
+                >
+              </div>
+            </div>
             <div>
               <label class="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">{{ rt('password') }}</label>
               <input
@@ -148,6 +173,8 @@ const form = ref({
   name: '',
   phone: '',
   email: '',
+  cr_number: '',
+  tax_number: '',
   password: '',
   password_confirmation: '',
 })
@@ -191,6 +218,8 @@ async function submit(): Promise<void> {
   err.value = ''
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const cr = form.value.cr_number.trim()
+    const tax = form.value.tax_number.trim()
     await auth.register({
       company_name: form.value.company_name.trim(),
       name: form.value.name.trim(),
@@ -199,6 +228,8 @@ async function submit(): Promise<void> {
       password: form.value.password,
       password_confirmation: form.value.password_confirmation,
       timezone: typeof tz === 'string' && tz !== '' ? tz : undefined,
+      cr_number: cr !== '' ? cr : undefined,
+      tax_number: tax !== '' ? tax : undefined,
     })
     const target = resolvePostLoginTarget({
       accountContext: auth.accountContext,

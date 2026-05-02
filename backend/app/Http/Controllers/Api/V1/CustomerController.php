@@ -98,6 +98,8 @@ class CustomerController extends Controller
             'name_ar'      => 'nullable|string',
             'email'        => 'nullable|email',
             'phone'        => 'nullable|string|max:20',
+            'tax_number'   => 'nullable|string|max:50',
+            'cr_number'    => 'nullable|string|max:50',
             'address'      => 'nullable|string',
             'city'         => 'nullable|string',
             'credit_limit' => 'nullable|numeric|min:0',

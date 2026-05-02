@@ -96,9 +96,14 @@
             </div>
           </div>
 
-          <!-- Ref number -->
-          <p v-if="c.tax_number" class="muted-text text-center mt-2">
-            رقم المرجع: <span class="font-medium text-gray-600 dark:text-slate-300">{{ c.tax_number }}</span>
+          <!-- مرجع ضريبي / سجل تجاري -->
+          <p v-if="c.tax_number || c.cr_number" class="muted-text mt-2 space-y-0.5 text-center text-[11px]">
+            <span v-if="c.tax_number" class="block">
+              الرقم الضريبي: <span class="font-mono font-medium text-gray-600 dark:text-slate-300">{{ c.tax_number }}</span>
+            </span>
+            <span v-if="c.cr_number" class="block">
+              السجل التجاري: <span class="font-mono font-medium text-gray-600 dark:text-slate-300">{{ c.cr_number }}</span>
+            </span>
           </p>
 
           <!-- Actions -->
@@ -215,6 +220,17 @@
             <label class="form-label mb-1">البريد الإلكتروني</label>
             <input v-model="cForm.email" type="email" class="field" dir="ltr" />
           </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">السجل التجاري والرقم الضريبي اختياريان — يمكن إضافتهما لاحقاً من بطاقة العميل أو الإعدادات.</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="form-label mb-1">السجل التجاري</label>
+              <input v-model="cForm.cr_number" type="text" maxlength="50" class="field font-mono text-sm" dir="ltr" placeholder="اختياري" />
+            </div>
+            <div>
+              <label class="form-label mb-1">الرقم الضريبي</label>
+              <input v-model="cForm.tax_number" type="text" maxlength="50" class="field font-mono text-sm" dir="ltr" placeholder="اختياري" />
+            </div>
+          </div>
           <p v-if="modalError" class="text-red-600 text-sm bg-red-50 rounded-xl p-3">{{ modalError }}</p>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" @click="showModal = false">إلغاء</button>
@@ -245,7 +261,7 @@ const viewMode   = ref<'grid'|'table'>('grid')
 const showModal  = ref(false)
 const saving     = ref(false)
 const modalError = ref('')
-const cForm      = ref({ name: '', phone: '', email: '', type: 'b2c' })
+const cForm      = ref({ name: '', phone: '', email: '', type: 'b2c', cr_number: '', tax_number: '' })
 
 /** من لوحة الأوامر (Ctrl+K): `/customers?search=...` */
 watch(
@@ -294,10 +310,15 @@ async function load() {
 async function saveCustomer() {
   saving.value = true; modalError.value = ''
   try {
-    await apiClient.post('/customers', cForm.value)
+    const payload = {
+      ...cForm.value,
+      cr_number: cForm.value.cr_number.trim() || undefined,
+      tax_number: cForm.value.tax_number.trim() || undefined,
+    }
+    await apiClient.post('/customers', payload)
     await load()
     showModal.value = false
-    cForm.value = { name: '', phone: '', email: '', type: 'b2c' }
+    cForm.value = { name: '', phone: '', email: '', type: 'b2c', cr_number: '', tax_number: '' }
   } catch (e: any) {
     modalError.value = e.response?.data?.message ?? 'فشل الحفظ'
   } finally { saving.value = false }
