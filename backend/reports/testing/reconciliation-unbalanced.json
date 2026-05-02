@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-05-01T09:29:09+00:00",
+    "generated_at": "2026-05-02T14:17:19+00:00",
     "checks": {
         "invoice_without_ledger": {
             "detected": 0,
@@ -14,13 +14,13 @@
             "sample": [
                 {
                     "id": 3,
-                    "uuid": "c894335c-3eeb-4c83-8c73-368fd8bb3191",
-                    "company_id": 130,
+                    "uuid": "03f52f32-7742-45d8-9c2c-c7e268eedac5",
+                    "company_id": 143,
                     "entry_number": "JE-REC-UNBAL-001",
                     "type": "adjustment",
                     "total_debit": "100.0000",
                     "total_credit": "90.0000",
-                    "trace_id": "706a52fa-db50-41ff-8e4a-0cacfeda3590"
+                    "trace_id": "9cefa358-6de5-4942-92fb-97c7bcaf6908"
                 }
             ]
         },
@@ -43,13 +43,13 @@
         "unbalanced_journal_entry": [
             {
                 "finding_type": "unbalanced_journal_entry",
-                "company_id": 130,
+                "company_id": 143,
                 "invoice_id": null,
                 "journal_entry_id": 3,
                 "payment_id": null,
                 "reference_type": "journal_entry",
                 "reference_id": 3,
-                "trace_reference": "706a52fa-db50-41ff-8e4a-0cacfeda3590",
+                "trace_reference": "9cefa358-6de5-4942-92fb-97c7bcaf6908",
                 "details": {
                     "entry_number": "JE-REC-UNBAL-001",
                     "entry_type": "adjustment",

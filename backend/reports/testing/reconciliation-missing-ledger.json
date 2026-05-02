@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-05-01T09:29:08+00:00",
+    "generated_at": "2026-05-02T14:17:18+00:00",
     "checks": {
         "invoice_without_ledger": {
             "detected": 1,
@@ -8,8 +8,8 @@
             "sample": [
                 {
                     "id": 109,
-                    "uuid": "9e538b4e-b1b1-4de8-923d-ccf9272f0717",
-                    "company_id": 129,
+                    "uuid": "53e395e8-ff08-4b20-827a-6233c8902bc1",
+                    "company_id": 142,
                     "invoice_number": "INV-REC-MISS-001",
                     "status": "pending"
                 }
@@ -39,7 +39,7 @@
         "invoice_without_ledger": [
             {
                 "finding_type": "invoice_without_ledger",
-                "company_id": 129,
+                "company_id": 142,
                 "invoice_id": 109,
                 "journal_entry_id": null,
                 "payment_id": null,
@@ -47,7 +47,7 @@
                 "reference_id": 109,
                 "trace_reference": null,
                 "details": {
-                    "invoice_uuid": "9e538b4e-b1b1-4de8-923d-ccf9272f0717",
+                    "invoice_uuid": "53e395e8-ff08-4b20-827a-6233c8902bc1",
                     "invoice_number": "INV-REC-MISS-001",
                     "status": "pending"
                 }
