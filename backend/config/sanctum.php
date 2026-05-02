@@ -8,4 +8,3 @@ return [
      */
     'last_used_at' => filter_var((string) env('SANCTUM_UPDATE_LAST_USED_AT', 'false'), FILTER_VALIDATE_BOOL),
 ];
-

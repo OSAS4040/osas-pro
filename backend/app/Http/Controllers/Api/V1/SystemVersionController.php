@@ -14,10 +14,10 @@ class SystemVersionController extends Controller
     {
         return response()->json([
             'data' => [
-                'version'     => (string) config('deployment.version'),
-                'commit'      => (string) config('deployment.commit'),
-                'branch'      => (string) config('deployment.branch'),
-                'build_time'  => config('deployment.build_time'),
+                'version' => (string) config('deployment.version'),
+                'commit' => (string) config('deployment.commit'),
+                'branch' => (string) config('deployment.branch'),
+                'build_time' => config('deployment.build_time'),
                 'environment' => (string) config('deployment.environment'),
             ],
             'trace_id' => app('trace_id'),

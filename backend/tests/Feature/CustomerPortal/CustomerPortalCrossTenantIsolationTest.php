@@ -8,6 +8,7 @@ use App\Enums\WorkOrderStatus;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\OrgUnit;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use Illuminate\Support\Str;
@@ -24,7 +25,7 @@ final class CustomerPortalCrossTenantIsolationTest extends TestCase
     }
 
     /**
-     * @return array{tenantA: array<string, mixed>, tenantB: array<string, mixed>, custA: Customer, custB: Customer, userA: \App\Models\User, userB: \App\Models\User, staffA: \App\Models\User, staffB: \App\Models\User}
+     * @return array{tenantA: array<string, mixed>, tenantB: array<string, mixed>, custA: Customer, custB: Customer, userA: User, userB: User, staffA: User, staffB: User}
      */
     private function twoTenantPortalCustomers(): array
     {

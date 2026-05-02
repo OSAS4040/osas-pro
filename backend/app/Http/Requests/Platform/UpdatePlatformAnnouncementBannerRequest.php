@@ -16,12 +16,12 @@ class UpdatePlatformAnnouncementBannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'is_enabled'  => ['required', 'boolean'],
-            'title'       => ['nullable', 'string', 'max:200'],
-            'message'     => ['nullable', 'string', 'max:2000'],
-            'link_url'    => ['nullable', 'string', 'max:2048'],
-            'link_text'   => ['nullable', 'string', 'max:120'],
-            'variant'     => ['nullable', 'string', 'in:info,success,warning,promo'],
+            'is_enabled' => ['required', 'boolean'],
+            'title' => ['nullable', 'string', 'max:200'],
+            'message' => ['nullable', 'string', 'max:2000'],
+            'link_url' => ['nullable', 'string', 'max:2048'],
+            'link_text' => ['nullable', 'string', 'max:120'],
+            'variant' => ['nullable', 'string', 'in:info,success,warning,promo'],
             'dismissible' => ['required', 'boolean'],
         ];
     }

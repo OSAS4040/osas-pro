@@ -15,8 +15,8 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\User;
 use App\Models\Vehicle;
-use App\Services\CustomerPortalFinancialVisibilityService;
 use App\Models\WorkOrder;
+use App\Services\CustomerPortalFinancialVisibilityService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -155,7 +155,7 @@ final class CustomerPortalReportsController extends Controller
 
         $now = Carbon::now();
         $partialCount = $invoiceRows->filter(static fn ($r) => $r->status === InvoiceStatus::PartialPaid)->count();
-        $paidCount = $invoiceRows->filter(static function ($r) use ($now): bool {
+        $paidCount = $invoiceRows->filter(static function ($r): bool {
             if ($r->status === InvoiceStatus::Paid) {
                 return true;
             }
@@ -1004,10 +1004,9 @@ final class CustomerPortalReportsController extends Controller
     /**
      * ترحيل المؤشرات من الوحدات الفرعية إلى الجذر ضمن مجموعة العرض.
      *
-     * @param Collection<int, OrgUnit> $unitsInScope
-     * @param list<int> $displayIds
-     * @param array<int, array<string, float|int>> $direct
-     *
+     * @param  Collection<int, OrgUnit>  $unitsInScope
+     * @param  list<int>  $displayIds
+     * @param  array<int, array<string, float|int>>  $direct
      * @return array<int, array<string, float|int>>
      */
     private function rollupOrgUnitMetrics(Collection $unitsInScope, array $displayIds, array $direct): array
@@ -1109,7 +1108,7 @@ final class CustomerPortalReportsController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     private function maskSummaryFinancials(array $payload): array
@@ -1123,7 +1122,7 @@ final class CustomerPortalReportsController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     private function maskInvoicesFinancials(array $payload): array
@@ -1145,7 +1144,7 @@ final class CustomerPortalReportsController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     private function maskOrgUnitBreakdownFinancials(array $payload): array
@@ -1177,7 +1176,7 @@ final class CustomerPortalReportsController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     private function maskItemsByServiceFinancials(array $payload): array
@@ -1198,7 +1197,7 @@ final class CustomerPortalReportsController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     private function maskItemsByProductFinancials(array $payload): array
@@ -1219,7 +1218,7 @@ final class CustomerPortalReportsController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
     private function maskWorkOrdersCompletedFinancials(array $payload): array

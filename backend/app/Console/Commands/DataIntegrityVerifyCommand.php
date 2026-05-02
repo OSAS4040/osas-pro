@@ -26,19 +26,19 @@ class DataIntegrityVerifyCommand extends Command
 
         $violations = [
             'invoices_without_journal' => $this->invoicesMissingJournal($companyId),
-            'negative_on_hand_stock'  => $this->negativeInventory($companyId),
-            'wallet_balance_drift'   => $this->walletBalanceDrift($companyId),
+            'negative_on_hand_stock' => $this->negativeInventory($companyId),
+            'wallet_balance_drift' => $this->walletBalanceDrift($companyId),
             'duplicate_invoice_sources' => $this->duplicateInvoiceSources($companyId),
-            'duplicate_invoice_hashes'  => $this->duplicateInvoiceHashes($companyId),
+            'duplicate_invoice_hashes' => $this->duplicateInvoiceHashes($companyId),
         ];
 
         $total = array_sum(array_map('count', $violations));
 
         if ($this->option('json')) {
             $this->line(json_encode([
-                'ok'         => $total === 0,
+                'ok' => $total === 0,
                 'violations' => $violations,
-                'counts'     => array_map('count', $violations),
+                'counts' => array_map('count', $violations),
             ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 
             return $total === 0 ? self::SUCCESS : self::FAILURE;
@@ -48,14 +48,15 @@ class DataIntegrityVerifyCommand extends Command
             $c = count($rows);
             if ($c === 0) {
                 $this->info("✓ {$label}: 0");
+
                 continue;
             }
             $this->error("✗ {$label}: {$c}");
             foreach (array_slice($rows, 0, 20) as $row) {
-                $this->line('  · ' . json_encode($row, JSON_UNESCAPED_UNICODE));
+                $this->line('  · '.json_encode($row, JSON_UNESCAPED_UNICODE));
             }
             if ($c > 20) {
-                $this->line("  … و" . ($c - 20) . ' إضافية');
+                $this->line('  … و'.($c - 20).' إضافية');
             }
         }
 
@@ -141,23 +142,24 @@ class DataIntegrityVerifyCommand extends Command
             if ($last === null) {
                 if (abs($bal) > 0.0001) {
                     $out[] = [
-                        'wallet_id'   => $w->id,
-                        'company_id'  => $w->company_id,
-                        'issue'       => 'no_transactions_but_nonzero_balance',
-                        'balance'     => $bal,
+                        'wallet_id' => $w->id,
+                        'company_id' => $w->company_id,
+                        'issue' => 'no_transactions_but_nonzero_balance',
+                        'balance' => $bal,
                     ];
                 }
+
                 continue;
             }
 
             $after = (float) $last->balance_after;
             if (abs($bal - $after) > 0.02) {
                 $out[] = [
-                    'wallet_id'        => $w->id,
-                    'company_id'       => $w->company_id,
-                    'issue'            => 'balance_ne_last_txn_balance_after',
-                    'wallet_balance'   => $bal,
-                    'last_balance_after'=> $after,
+                    'wallet_id' => $w->id,
+                    'company_id' => $w->company_id,
+                    'issue' => 'balance_ne_last_txn_balance_after',
+                    'wallet_balance' => $bal,
+                    'last_balance_after' => $after,
                 ];
             }
         }

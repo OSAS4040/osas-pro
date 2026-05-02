@@ -105,4 +105,3 @@ class ResolvedConfigVisibilityService
             ->exists();
     }
 }
-

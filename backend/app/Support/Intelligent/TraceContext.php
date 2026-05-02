@@ -2,6 +2,7 @@
 
 namespace App\Support\Intelligent;
 
+use App\Http\Middleware\TraceRequestMiddleware;
 use Illuminate\Support\Str;
 
 /**
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
  * - HTTP: TraceRequestMiddleware sets trace_id + correlation_id on the container.
  * - Console/queue: may be unset; domain events store nullable trace_id.
  *
- * @see \App\Http\Middleware\TraceRequestMiddleware
+ * @see TraceRequestMiddleware
  */
 final class TraceContext
 {
@@ -39,8 +40,8 @@ final class TraceContext
     public static function contextArray(): array
     {
         return [
-            'trace_id'        => self::traceId(),
-            'correlation_id'  => self::correlationId(),
+            'trace_id' => self::traceId(),
+            'correlation_id' => self::correlationId(),
         ];
     }
 

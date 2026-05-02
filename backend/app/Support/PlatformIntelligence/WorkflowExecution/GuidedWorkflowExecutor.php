@@ -112,7 +112,7 @@ final class GuidedWorkflowExecutor
         $this->workflowTrace->started($actor, $incidentKey, $key, []);
 
         try {
-            $result = DB::transaction(function () use ($key, $incidentKey, $actor, $payload, $row): array {
+            $result = DB::transaction(function () use ($key, $incidentKey, $actor, $payload): array {
                 return match ($key) {
                     GuidedWorkflowKey::AcknowledgeAssign => $this->runAcknowledgeAssign($incidentKey, $actor, $payload),
                     GuidedWorkflowKey::UnderReviewDecision => $this->runUnderReviewDecision($incidentKey, $actor, $payload),

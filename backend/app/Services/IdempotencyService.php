@@ -27,19 +27,20 @@ class IdempotencyService
 
         if ($record->expires_at->isPast()) {
             $record->delete();
+
             return null;
         }
 
         if ($record->request_hash !== $requestHash) {
             Log::warning('idempotency.payload_mismatch', [
                 'company_id' => $companyId,
-                'key'        => $key,
-                'endpoint'   => $endpoint,
-                'trace_id'   => app()->bound('trace_id') ? app('trace_id') : null,
+                'key' => $key,
+                'endpoint' => $endpoint,
+                'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
             ]);
 
             throw new \DomainException(
-                'Idempotency key already used with a different request payload. ' .
+                'Idempotency key already used with a different request payload. '.
                 'Use a new key or resend the original payload.'
             );
         }
@@ -53,21 +54,21 @@ class IdempotencyService
      * Store a key and its associated response.
      */
     public function store(
-        int    $companyId,
+        int $companyId,
         string $key,
         string $endpoint,
         string $requestHash,
-        array  $response,
-        int    $ttlHours = self::DEFAULT_TTL_HOURS,
+        array $response,
+        int $ttlHours = self::DEFAULT_TTL_HOURS,
     ): void {
         IdempotencyKey::updateOrCreate(
             ['company_id' => $companyId, 'key' => $key],
             [
-                'endpoint'          => $endpoint,
-                'trace_id'          => app()->bound('trace_id') ? app('trace_id') : null,
-                'request_hash'      => $requestHash,
+                'endpoint' => $endpoint,
+                'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
+                'request_hash' => $requestHash,
                 'response_snapshot' => json_encode($response),
-                'expires_at'        => now()->addHours($ttlHours),
+                'expires_at' => now()->addHours($ttlHours),
             ]
         );
     }
@@ -79,6 +80,7 @@ class IdempotencyService
     {
         unset($payload['idempotency_key']);
         ksort($payload);
+
         return hash('sha256', json_encode($payload));
     }
 }

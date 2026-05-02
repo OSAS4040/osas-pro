@@ -91,12 +91,12 @@ class RolePermissionSeeder extends Seeder
 
     private array $systemRoles = [
         'owner' => [
-            'description'  => 'Full access to all features and settings',
-            'permissions'  => '*',
+            'description' => 'Full access to all features and settings',
+            'permissions' => '*',
         ],
         'manager' => [
-            'description'  => 'Manage operations across the company',
-            'permissions'  => [
+            'description' => 'Manage operations across the company',
+            'permissions' => [
                 'branches.view', 'branches.create', 'branches.update',
                 'users.view', 'users.create', 'users.update',
                 'customers.view', 'customers.create', 'customers.update', 'customers.delete',
@@ -115,8 +115,8 @@ class RolePermissionSeeder extends Seeder
             ],
         ],
         'cashier' => [
-            'description'  => 'POS and invoice operations',
-            'permissions'  => [
+            'description' => 'POS and invoice operations',
+            'permissions' => [
                 'customers.view', 'customers.create', 'customers.update',
                 'vehicles.view',
                 'products.view',
@@ -126,8 +126,8 @@ class RolePermissionSeeder extends Seeder
             ],
         ],
         'accountant' => [
-            'description'  => 'Financial and billing access',
-            'permissions'  => [
+            'description' => 'Financial and billing access',
+            'permissions' => [
                 'customers.view',
                 'invoices.view', 'invoices.create', 'invoices.update',
                 'reports.view',
@@ -137,8 +137,8 @@ class RolePermissionSeeder extends Seeder
             ],
         ],
         'technician' => [
-            'description'  => 'Workshop and vehicle operations',
-            'permissions'  => [
+            'description' => 'Workshop and vehicle operations',
+            'permissions' => [
                 'vehicles.view',
                 'work_orders.view', 'work_orders.update',
                 'inventory.view',
@@ -146,8 +146,8 @@ class RolePermissionSeeder extends Seeder
             ],
         ],
         'viewer' => [
-            'description'  => 'Read-only access',
-            'permissions'  => [
+            'description' => 'Read-only access',
+            'permissions' => [
                 'customers.view',
                 'vehicles.view',
                 'products.view',
@@ -166,21 +166,21 @@ class RolePermissionSeeder extends Seeder
                 Permission::updateOrCreate(
                     ['name' => $perm['name'], 'guard_name' => 'sanctum'],
                     [
-                        'group'       => $group,
+                        'group' => $group,
                         'description' => $perm['description'],
                     ]
                 );
             }
         }
 
-        $this->command->info('Permissions seeded: ' . Permission::count());
+        $this->command->info('Permissions seeded: '.Permission::count());
 
         foreach ($this->systemRoles as $roleName => $roleData) {
             $role = Role::updateOrCreate(
                 ['name' => $roleName, 'company_id' => null, 'guard_name' => 'sanctum'],
                 [
                     'description' => $roleData['description'],
-                    'is_system'   => true,
+                    'is_system' => true,
                 ]
             );
 
@@ -192,7 +192,7 @@ class RolePermissionSeeder extends Seeder
                 $role->permissions()->sync($permIds);
             }
 
-            $this->command->info("Role [{$roleName}] seeded with " . $role->permissions()->count() . ' permissions.');
+            $this->command->info("Role [{$roleName}] seeded with ".$role->permissions()->count().' permissions.');
         }
     }
 }

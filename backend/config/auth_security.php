@@ -20,12 +20,12 @@ return [
     ],
 
     'failed_password_login' => [
-        'window_seconds'       => max(60, min(86400, (int) env('AUTH_SECURITY_FAILED_LOGIN_WINDOW', 900))),
+        'window_seconds' => max(60, min(86400, (int) env('AUTH_SECURITY_FAILED_LOGIN_WINDOW', 900))),
         'burst_signal_after_attempts' => max(5, min(200, (int) env('AUTH_SECURITY_FAILED_LOGIN_BURST_AT', 25))),
     ],
 
     'failed_otp_verify' => [
-        'window_seconds'       => max(60, min(86400, (int) env('AUTH_SECURITY_FAILED_OTP_WINDOW', 900))),
+        'window_seconds' => max(60, min(86400, (int) env('AUTH_SECURITY_FAILED_OTP_WINDOW', 900))),
         'burst_signal_after_attempts' => max(3, min(100, (int) env('AUTH_SECURITY_FAILED_OTP_BURST_AT', 12))),
     ],
 
@@ -46,21 +46,21 @@ return [
     'messages' => [
         'ar' => [
             'auth.security.rate_limited' => 'محاولات كثيرة. حاول لاحقاً.',
-            'auth.phone.invalid_otp'     => 'رمز غير صالح أو منتهٍ.',
-            'auth.phone.otp_expired'     => 'انتهت صلاحية الرمز.',
-            'auth.phone.otp_not_found'   => 'لا يوجد رمز تحقق لهذا الرقم.',
-            'auth.phone.otp_locked'      => 'تم قفل التحقق مؤقتاً لهذا الرقم.',
-            'auth.phone.otp_max_attempts'=> 'تجاوزت الحد المسموح من المحاولات.',
-            'auth.phone.invalid_phone'   => 'رقم الجوال غير صالح.',
+            'auth.phone.invalid_otp' => 'رمز غير صالح أو منتهٍ.',
+            'auth.phone.otp_expired' => 'انتهت صلاحية الرمز.',
+            'auth.phone.otp_not_found' => 'لا يوجد رمز تحقق لهذا الرقم.',
+            'auth.phone.otp_locked' => 'تم قفل التحقق مؤقتاً لهذا الرقم.',
+            'auth.phone.otp_max_attempts' => 'تجاوزت الحد المسموح من المحاولات.',
+            'auth.phone.invalid_phone' => 'رقم الجوال غير صالح.',
         ],
         'en' => [
             'auth.security.rate_limited' => 'Too many attempts. Please try again later.',
-            'auth.phone.invalid_otp'     => 'Invalid or expired verification code.',
-            'auth.phone.otp_expired'     => 'The verification code has expired.',
-            'auth.phone.otp_not_found'   => 'No verification code found for this number.',
-            'auth.phone.otp_locked'      => 'Verification is temporarily locked for this number.',
-            'auth.phone.otp_max_attempts'=> 'Too many incorrect attempts.',
-            'auth.phone.invalid_phone'   => 'Invalid phone number.',
+            'auth.phone.invalid_otp' => 'Invalid or expired verification code.',
+            'auth.phone.otp_expired' => 'The verification code has expired.',
+            'auth.phone.otp_not_found' => 'No verification code found for this number.',
+            'auth.phone.otp_locked' => 'Verification is temporarily locked for this number.',
+            'auth.phone.otp_max_attempts' => 'Too many incorrect attempts.',
+            'auth.phone.invalid_phone' => 'Invalid phone number.',
         ],
     ],
 ];

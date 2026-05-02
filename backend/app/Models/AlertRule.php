@@ -14,9 +14,9 @@ class AlertRule extends Model
     ];
 
     protected $casts = [
-        'condition'  => 'array',
+        'condition' => 'array',
         'recipients' => 'array',
-        'is_active'  => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     protected static function booted(): void

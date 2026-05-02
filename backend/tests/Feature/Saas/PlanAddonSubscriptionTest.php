@@ -40,7 +40,7 @@ class PlanAddonSubscriptionTest extends TestCase
         $token = $user->createToken('t')->plainTextToken;
         $headers = [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ];
 
         $purchase = $this->postJson('/api/v1/subscription/addons', ['addon_slug' => 'addon_smart_reports'], $headers);

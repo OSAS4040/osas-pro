@@ -36,17 +36,17 @@ final class LogIncidentScopeQueueExceptions
         $payload = $event->job->payload();
 
         Log::warning('queue.job.exception_occurred', [
-            'job_class'           => $resolved,
-            'connection'        => $event->connectionName,
-            'queue'             => $event->job->getQueue(),
-            'attempt'           => $event->job->attempts(),
-            'payload_uuid'      => $payload['uuid'] ?? null,
-            'payload_preview'   => Str::limit((string) json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE), 4000),
-            'exception_class'   => $e::class,
+            'job_class' => $resolved,
+            'connection' => $event->connectionName,
+            'queue' => $event->job->getQueue(),
+            'attempt' => $event->job->attempts(),
+            'payload_uuid' => $payload['uuid'] ?? null,
+            'payload_preview' => Str::limit((string) json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE), 4000),
+            'exception_class' => $e::class,
             'exception_message' => $e->getMessage(),
-            'previous_class'    => $prev ? $prev::class : null,
-            'previous_message'  => $prev?->getMessage(),
-            'trace_head'        => Str::limit($e->getTraceAsString(), 6000),
+            'previous_class' => $prev ? $prev::class : null,
+            'previous_message' => $prev?->getMessage(),
+            'trace_head' => Str::limit($e->getTraceAsString(), 6000),
         ]);
     }
 }

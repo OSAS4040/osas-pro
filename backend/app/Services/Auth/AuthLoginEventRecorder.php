@@ -69,15 +69,15 @@ final class AuthLoginEventRecorder
 
         try {
             AuthLoginEvent::query()->create([
-                'user_id'              => $user?->id,
-                'company_id'           => $user?->company_id,
-                'event'                => $event,
-                'auth_channel'         => $authChannel,
-                'reason_code'          => $reasonCode,
-                'token_id'             => $tokenId,
-                'ip_address'           => $request->ip(),
-                'user_agent_summary'   => $summary,
-                'trace_id'             => app()->bound('trace_id') ? (string) app('trace_id') : null,
+                'user_id' => $user?->id,
+                'company_id' => $user?->company_id,
+                'event' => $event,
+                'auth_channel' => $authChannel,
+                'reason_code' => $reasonCode,
+                'token_id' => $tokenId,
+                'ip_address' => $request->ip(),
+                'user_agent_summary' => $summary,
+                'trace_id' => app()->bound('trace_id') ? (string) app('trace_id') : null,
             ]);
         } catch (QueryException $e) {
             if (! $this->isMissingAuthLoginEventsTable($e)) {

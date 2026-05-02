@@ -14,52 +14,56 @@ use Tests\TestCase;
 class PurchaseOrderTest extends TestCase
 {
     private PurchaseOrderService $poService;
-    private GoodsReceiptService  $receiptService;
-    private InventoryService     $inventoryService;
 
-    private array    $tenant;
+    private GoodsReceiptService $receiptService;
+
+    private InventoryService $inventoryService;
+
+    private array $tenant;
+
     private Supplier $supplier;
-    private Product  $product;
+
+    private Product $product;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->poService        = app(PurchaseOrderService::class);
-        $this->receiptService   = app(GoodsReceiptService::class);
+        $this->poService = app(PurchaseOrderService::class);
+        $this->receiptService = app(GoodsReceiptService::class);
         $this->inventoryService = app(InventoryService::class);
 
         $this->tenant = $this->createTenant();
 
         $unit = Unit::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $this->tenant['company']->id,
-            'name'       => 'Each',
-            'symbol'     => 'ea',
-            'is_active'  => true,
+            'name' => 'Each',
+            'symbol' => 'ea',
+            'is_active' => true,
         ]);
 
         $this->product = Product::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->tenant['company']->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->tenant['company']->id,
             'created_by_user_id' => $this->tenant['user']->id,
-            'name'               => 'Oil Filter',
-            'sku'                => 'OF-001',
-            'product_type'       => 'physical',
-            'unit_id'            => $unit->id,
-            'sale_price'         => 30,
-            'cost_price'         => 20,
-            'track_inventory'    => true,
-            'is_active'          => true,
+            'name' => 'Oil Filter',
+            'sku' => 'OF-001',
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => 30,
+            'cost_price' => 20,
+            'track_inventory' => true,
+            'is_active' => true,
         ]);
 
         $this->supplier = Supplier::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->tenant['company']->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->tenant['company']->id,
             'created_by_user_id' => $this->tenant['user']->id,
-            'name'               => 'Test Supplier',
-            'is_active'          => true,
-            'status'             => 'active',
+            'name' => 'Test Supplier',
+            'is_active' => true,
+            'status' => 'active',
         ]);
     }
 
@@ -68,18 +72,18 @@ class PurchaseOrderTest extends TestCase
         return $this->poService->createPO(
             data: [
                 'supplier_id' => $this->supplier->id,
-                'items'       => [[
-                    'name'       => 'Oil Filter',
+                'items' => [[
+                    'name' => 'Oil Filter',
                     'product_id' => $this->product->id,
-                    'quantity'   => $qty,
-                    'unit_cost'  => 20,
-                    'tax_rate'   => 15,
+                    'quantity' => $qty,
+                    'unit_cost' => 20,
+                    'tax_rate' => 15,
                 ]],
             ],
             companyId: $this->tenant['company']->id,
-            branchId:  $this->tenant['branch']->id,
-            userId:    $this->tenant['user']->id,
-            traceId:   'trace-setup',
+            branchId: $this->tenant['branch']->id,
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-setup',
         );
     }
 
@@ -88,15 +92,15 @@ class PurchaseOrderTest extends TestCase
         $po = $this->poService->createPO(
             data: [
                 'supplier_id' => $this->supplier->id,
-                'items'       => [
+                'items' => [
                     ['name' => 'Oil Filter', 'product_id' => $this->product->id, 'quantity' => 10, 'unit_cost' => 25, 'tax_rate' => 15],
                     ['name' => 'Air Filter', 'product_id' => null,               'quantity' => 5,  'unit_cost' => 15, 'tax_rate' => 15],
                 ],
             ],
             companyId: $this->tenant['company']->id,
-            branchId:  $this->tenant['branch']->id,
-            userId:    $this->tenant['user']->id,
-            traceId:   'trace-po-01',
+            branchId: $this->tenant['branch']->id,
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-po-01',
         );
 
         $this->assertNotNull($po->id);
@@ -109,9 +113,9 @@ class PurchaseOrderTest extends TestCase
 
     public function test_po_status_transition_pending_to_ordered(): void
     {
-        $po      = $this->createTestPO();
+        $po = $this->createTestPO();
         $updated = $this->poService->transition($po, 'ordered');
-        $status  = $updated->status instanceof \BackedEnum ? $updated->status->value : $updated->status;
+        $status = $updated->status instanceof \BackedEnum ? $updated->status->value : $updated->status;
 
         $this->assertEquals('ordered', $status);
     }
@@ -137,12 +141,12 @@ class PurchaseOrderTest extends TestCase
         $receipt = $this->receiptService->createReceipt(
             purchase: $po->load('items'),
             data: [
-                'items' => $po->items->map(fn($item) => [
-                    'purchase_item_id'  => $item->id,
+                'items' => $po->items->map(fn ($item) => [
+                    'purchase_item_id' => $item->id,
                     'received_quantity' => (float) $item->quantity,
                 ])->values()->toArray(),
             ],
-            userId:  $this->tenant['user']->id,
+            userId: $this->tenant['user']->id,
             traceId: 'trace-grn-01',
         );
 
@@ -163,12 +167,12 @@ class PurchaseOrderTest extends TestCase
         $this->receiptService->createReceipt(
             purchase: $po->load('items'),
             data: [
-                'items' => $po->items->map(fn($item) => [
-                    'purchase_item_id'  => $item->id,
+                'items' => $po->items->map(fn ($item) => [
+                    'purchase_item_id' => $item->id,
                     'received_quantity' => (float) $item->quantity,
                 ])->values()->toArray(),
             ],
-            userId:  $this->tenant['user']->id,
+            userId: $this->tenant['user']->id,
             traceId: 'trace-grn-full',
         );
 
@@ -179,13 +183,13 @@ class PurchaseOrderTest extends TestCase
 
     public function test_partial_receipt_marks_po_as_partial(): void
     {
-        $po   = $this->createTestPO(qty: 10);
+        $po = $this->createTestPO(qty: 10);
         $item = $po->items->first();
 
         $this->receiptService->createReceipt(
             purchase: $po->load('items'),
             data: ['items' => [['purchase_item_id' => $item->id, 'received_quantity' => 5]]],
-            userId:  $this->tenant['user']->id,
+            userId: $this->tenant['user']->id,
             traceId: 'trace-grn-partial',
         );
 
@@ -208,14 +212,14 @@ class PurchaseOrderTest extends TestCase
         $this->receiptService->createReceipt(
             purchase: $po->load('items'),
             data: ['items' => [['purchase_item_id' => $po->items->first()->id, 'received_quantity' => 1]]],
-            userId:  $this->tenant['user']->id,
+            userId: $this->tenant['user']->id,
             traceId: 'trace-fail',
         );
     }
 
     public function test_tenant_isolation_prevents_cross_company_access(): void
     {
-        $po      = $this->createTestPO();
+        $po = $this->createTestPO();
         $tenant2 = $this->createTenant();
 
         $response = $this->actingAsUser($tenant2['user'])

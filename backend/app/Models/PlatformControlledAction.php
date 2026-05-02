@@ -9,6 +9,7 @@ use App\Support\PlatformIntelligence\ControlledActions\ControlledActionArtifactT
 use App\Support\PlatformIntelligence\ControlledActions\ControlledActionStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property string $action_id
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $status
  * @property string|null $assigned_owner
  * @property bool $follow_up_required
- * @property \Illuminate\Support\Carbon|null $scheduled_for
+ * @property Carbon|null $scheduled_for
  * @property string|null $linked_decision_id
  * @property string|null $linked_notes
  * @property string|null $external_reference

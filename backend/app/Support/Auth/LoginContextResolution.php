@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Support\Auth;
 
+use App\Actions\Auth\ResolveLoginContextAction;
+
 /**
- * Result of {@see \App\Actions\Auth\ResolveLoginContextAction}: eligibility (always) + account context when allowed.
+ * Result of {@see ResolveLoginContextAction}: eligibility (always) + account context when allowed.
  */
 final class LoginContextResolution
 {

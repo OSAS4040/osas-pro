@@ -15,10 +15,13 @@ class AttendanceLog extends Model
 
     protected $casts = [
         'logged_at' => 'datetime',
-        'is_valid'  => 'boolean',
-        'latitude'  => 'decimal:7',
+        'is_valid' => 'boolean',
+        'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
     ];
 
-    public function employee(): BelongsTo { return $this->belongsTo(Employee::class); }
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
 }

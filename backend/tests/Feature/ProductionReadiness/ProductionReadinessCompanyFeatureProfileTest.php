@@ -39,7 +39,7 @@ final class ProductionReadinessCompanyFeatureProfileTest extends TestCase
             ->assertJsonPath('data.effective_feature_matrix.fixed_assets', false);
 
         $auth()->patchJson("/api/v1/companies/{$cid}/feature-profile", [
-            'business_type'  => 'fleet_operator',
+            'business_type' => 'fleet_operator',
             'feature_matrix' => ['fleet' => true],
         ])
             ->assertOk()

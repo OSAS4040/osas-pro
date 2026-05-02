@@ -47,7 +47,7 @@ final class WorkOrderOperationalSummaryQuery
             $status = $row->status;
             $out[] = [
                 'status' => $status instanceof \BackedEnum ? $status->value : (string) $status,
-                'count'  => (int) $row->cnt,
+                'count' => (int) $row->cnt,
             ];
         }
 

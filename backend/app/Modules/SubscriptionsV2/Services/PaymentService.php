@@ -22,30 +22,30 @@ final class PaymentService
     public function createFromPaymentOrder(PaymentOrder $order, int $createdByUserId): Payment
     {
         $company = Company::query()->findOrFail($order->company_id);
-        $branch  = ($this->resolveBranch)($company);
+        $branch = ($this->resolveBranch)($company);
 
         return Payment::query()->create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $order->company_id,
-            'branch_id'          => $branch->id,
-            'invoice_id'         => null,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $order->company_id,
+            'branch_id' => $branch->id,
+            'invoice_id' => null,
             'created_by_user_id' => $createdByUserId,
-            'method'             => 'bank_transfer',
-            'payment_method'     => 'bank_transfer',
-            'amount'             => $order->total,
-            'currency'           => $order->currency,
-            'reference'          => $order->reference_code,
-            'status'             => 'completed',
-            'payment_order_id'   => $order->id,
-            'meta'               => [
+            'method' => 'bank_transfer',
+            'payment_method' => 'bank_transfer',
+            'amount' => $order->total,
+            'currency' => $order->currency,
+            'reference' => $order->reference_code,
+            'status' => 'completed',
+            'payment_order_id' => $order->id,
+            'meta' => [
                 'subscriptions_v2' => true,
                 'payment_order_id' => $order->id,
-                'breakdown'        => [
+                'breakdown' => [
                     'wallet_amount' => '0.00',
-                    'bank_amount'   => (string) $order->total,
+                    'bank_amount' => (string) $order->total,
                 ],
             ],
-            'created_at'         => now(),
+            'created_at' => now(),
         ]);
     }
 
@@ -88,34 +88,34 @@ final class PaymentService
         string $method,
     ): Payment {
         $company = Company::query()->findOrFail($order->company_id);
-        $branch  = ($this->resolveBranch)($company);
-        $total   = round($walletAmount + $bankAmount, 2);
+        $branch = ($this->resolveBranch)($company);
+        $total = round($walletAmount + $bankAmount, 2);
         if (abs($total - (float) $order->total) > 0.01) {
             throw new \DomainException('Payment breakdown does not match payment order total.');
         }
 
         return Payment::query()->create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $order->company_id,
-            'branch_id'          => $branch->id,
-            'invoice_id'         => null,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $order->company_id,
+            'branch_id' => $branch->id,
+            'invoice_id' => null,
             'created_by_user_id' => $createdByUserId,
-            'method'             => $method,
-            'payment_method'     => $method,
-            'amount'             => $order->total,
-            'currency'           => $order->currency,
-            'reference'          => $order->reference_code,
-            'status'             => 'completed',
-            'payment_order_id'   => $order->id,
-            'meta'               => [
+            'method' => $method,
+            'payment_method' => $method,
+            'amount' => $order->total,
+            'currency' => $order->currency,
+            'reference' => $order->reference_code,
+            'status' => 'completed',
+            'payment_order_id' => $order->id,
+            'meta' => [
                 'subscriptions_v2' => true,
                 'payment_order_id' => $order->id,
-                'breakdown'        => [
+                'breakdown' => [
                     'wallet_amount' => number_format($walletAmount, 2, '.', ''),
-                    'bank_amount'   => number_format($bankAmount, 2, '.', ''),
+                    'bank_amount' => number_format($bankAmount, 2, '.', ''),
                 ],
             ],
-            'created_at'         => now(),
+            'created_at' => now(),
         ]);
     }
 }

@@ -80,10 +80,10 @@ class Phase2IntelligenceController extends Controller
     private function readOnlyJson(array $data): JsonResponse
     {
         return response()->json([
-            'data'     => $data,
-            'meta'     => [
+            'data' => $data,
+            'meta' => [
                 'read_only' => true,
-                'phase'     => 2,
+                'phase' => 2,
             ],
             'trace_id' => app('trace_id'),
         ]);
@@ -94,10 +94,10 @@ class Phase2IntelligenceController extends Controller
         $phase = (int) ($data['phase'] ?? 6);
 
         return response()->json([
-            'data'     => $data,
-            'meta'     => [
+            'data' => $data,
+            'meta' => [
                 'read_only' => true,
-                'phase'     => $phase,
+                'phase' => $phase,
             ],
             'trace_id' => app('trace_id'),
         ]);

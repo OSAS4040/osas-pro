@@ -29,14 +29,14 @@ class ZatcaController extends Controller
 
         return response()->json([
             'data' => [
-                'simulation_mode'      => $simulation,
-                'integration_active'   => false,
-                'phase2_active'        => false,
-                'csid_valid'           => false,
-                'cr_valid'             => false,
-                'pending_clearance'    => $clearancePending,
-                'last_sync'            => null,
-                'recent_logs'          => $logs->map(fn (ZatcaLog $l) => $this->logSummary($l))->values()->all(),
+                'simulation_mode' => $simulation,
+                'integration_active' => false,
+                'phase2_active' => false,
+                'csid_valid' => false,
+                'cr_valid' => false,
+                'pending_clearance' => $clearancePending,
+                'last_sync' => null,
+                'recent_logs' => $logs->map(fn (ZatcaLog $l) => $this->logSummary($l))->values()->all(),
             ],
         ]);
     }
@@ -53,8 +53,8 @@ class ZatcaController extends Controller
     {
         if (! config('zatca.simulation_mode', true)) {
             return response()->json([
-                'message'  => 'تكامل ZATCA الإنتاجي غير مهيأ بعد.',
-                'code'     => 'ZATCA_NOT_CONFIGURED',
+                'message' => 'تكامل ZATCA الإنتاجي غير مهيأ بعد.',
+                'code' => 'ZATCA_NOT_CONFIGURED',
                 'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
             ], 501);
         }
@@ -67,23 +67,23 @@ class ZatcaController extends Controller
         $traceId = app()->bound('trace_id') ? (string) app('trace_id') : (string) Str::uuid();
 
         $log = ZatcaLog::create([
-            'uuid'              => (string) Str::uuid(),
-            'company_id'        => (int) $request->user()->company_id,
-            'reference_type'    => Invoice::class,
-            'reference_id'      => $invoice->id,
-            'action'            => 'clearance_simulation',
-            'status'            => 'simulated',
-            'request_payload'   => ['invoice_id' => $invoice->id],
-            'response_payload'  => [
+            'uuid' => (string) Str::uuid(),
+            'company_id' => (int) $request->user()->company_id,
+            'reference_type' => Invoice::class,
+            'reference_id' => $invoice->id,
+            'action' => 'clearance_simulation',
+            'status' => 'simulated',
+            'request_payload' => ['invoice_id' => $invoice->id],
+            'response_payload' => [
                 'invoice_uuid' => $invoice->uuid,
                 'invoice_hash' => $invoice->invoice_hash,
             ],
-            'trace_id'          => $traceId,
+            'trace_id' => $traceId,
         ]);
 
         return response()->json([
             'data' => [
-                'log'             => $this->logSummary($log),
+                'log' => $this->logSummary($log),
                 'simulation_mode' => true,
             ],
             'message' => 'تم تسجيل العملية محلياً (وضع محاكاة — لم يُرسل إلى منصة هيئة الزكاة والضريبة).',
@@ -96,12 +96,12 @@ class ZatcaController extends Controller
     private function logSummary(ZatcaLog $l): array
     {
         return [
-            'id'               => $l->id,
-            'action'           => $l->action,
-            'status'           => $l->status,
-            'reference_type'   => $l->reference_type,
-            'reference_id'     => $l->reference_id,
-            'created_at'       => $l->created_at?->toIso8601String(),
+            'id' => $l->id,
+            'action' => $l->action,
+            'status' => $l->status,
+            'reference_type' => $l->reference_type,
+            'reference_id' => $l->reference_id,
+            'created_at' => $l->created_at?->toIso8601String(),
         ];
     }
 }

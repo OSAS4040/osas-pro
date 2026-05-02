@@ -16,12 +16,12 @@ class Subscription extends Model
     ];
 
     protected $casts = [
-        'status'        => SubscriptionStatus::class,
-        'starts_at'     => 'datetime',
-        'ends_at'       => 'datetime',
+        'status' => SubscriptionStatus::class,
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
         'grace_ends_at' => 'datetime',
-        'features'      => 'array',
-        'amount'        => 'decimal:2',
+        'features' => 'array',
+        'amount' => 'decimal:2',
     ];
 
     public function company()

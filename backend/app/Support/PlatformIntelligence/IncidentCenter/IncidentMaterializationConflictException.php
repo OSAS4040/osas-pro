@@ -6,6 +6,4 @@ namespace App\Support\PlatformIntelligence\IncidentCenter;
 
 use RuntimeException;
 
-final class IncidentMaterializationConflictException extends RuntimeException
-{
-}
+final class IncidentMaterializationConflictException extends RuntimeException {}

@@ -35,13 +35,13 @@ class QaValidationController extends Controller
             );
 
             return response()->json([
-                'data'     => $payload,
+                'data' => $payload,
                 'trace_id' => app('trace_id'),
             ]);
         } catch (\Throwable $e) {
             Log::error('qa.validation.run.exception', [
                 'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -61,8 +61,8 @@ class QaValidationController extends Controller
         $storagePath = storage_path('app/qa-validation-latest.json');
         if (! is_readable($storagePath)) {
             return response()->json([
-                'data'     => null,
-                'message'  => 'No validation run yet — use POST /internal/run-tests',
+                'data' => null,
+                'message' => 'No validation run yet — use POST /internal/run-tests',
                 'trace_id' => app('trace_id'),
             ]);
         }
@@ -71,7 +71,7 @@ class QaValidationController extends Controller
         $data = json_decode($json, true);
 
         return response()->json([
-            'data'     => $data,
+            'data' => $data,
             'trace_id' => app('trace_id'),
         ]);
     }

@@ -16,15 +16,18 @@ class VehicleSetting extends Model
     ];
 
     protected $casts = [
-        'last_oil_change_date'  => 'date',
-        'tire_change_date'      => 'date',
-        'battery_change_date'   => 'date',
-        'last_ac_service_date'  => 'date',
-        'insurance_expiry'      => 'date',
-        'registration_expiry'   => 'date',
-        'next_inspection_date'  => 'date',
-        'custom_settings'       => 'array',
+        'last_oil_change_date' => 'date',
+        'tire_change_date' => 'date',
+        'battery_change_date' => 'date',
+        'last_ac_service_date' => 'date',
+        'insurance_expiry' => 'date',
+        'registration_expiry' => 'date',
+        'next_inspection_date' => 'date',
+        'custom_settings' => 'array',
     ];
 
-    public function vehicle(): BelongsTo { return $this->belongsTo(Vehicle::class); }
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class);
+    }
 }

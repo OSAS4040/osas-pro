@@ -4,6 +4,7 @@ namespace Tests\Feature\Users;
 
 use App\Models\OrgUnit;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class TeamUsersApiTest extends TestCase
@@ -13,11 +14,11 @@ class TeamUsersApiTest extends TestCase
         $t = $this->createTenant('manager');
 
         $sector = OrgUnit::create([
-            'uuid'       => \Illuminate\Support\Str::uuid()->toString(),
+            'uuid' => Str::uuid()->toString(),
             'company_id' => $t['company']->id,
-            'parent_id'  => null,
-            'type'       => OrgUnit::TYPE_SECTOR,
-            'name'       => 'Ops',
+            'parent_id' => null,
+            'type' => OrgUnit::TYPE_SECTOR,
+            'name' => 'Ops',
         ]);
 
         $staff = $this->createUser($t['company'], $t['branch'], 'staff', ['org_unit_id' => $sector->id]);
@@ -39,7 +40,7 @@ class TeamUsersApiTest extends TestCase
         User::query()->where('company_id', $t['company']->id)->where('id', '!=', $t['user']->id)->delete();
 
         $this->createUser($t['company'], $t['branch'], 'staff', [
-            'name'  => 'UniqueSearchNameX',
+            'name' => 'UniqueSearchNameX',
             'email' => 'unique_x_'.uniqid().'@test.sa',
         ]);
 
@@ -65,23 +66,23 @@ class TeamUsersApiTest extends TestCase
         $t = $this->createTenant('owner');
 
         $sector = OrgUnit::create([
-            'uuid'       => \Illuminate\Support\Str::uuid()->toString(),
+            'uuid' => Str::uuid()->toString(),
             'company_id' => $t['company']->id,
-            'parent_id'  => null,
-            'type'       => OrgUnit::TYPE_SECTOR,
-            'name'       => 'Fleet',
+            'parent_id' => null,
+            'type' => OrgUnit::TYPE_SECTOR,
+            'name' => 'Fleet',
         ]);
 
         $email = 'new_staff_'.uniqid().'@test.sa';
 
         $res = $this->actingAsUser($t['user'])->postJson('/api/v1/users', [
-            'name'        => 'New Staff',
-            'email'       => $email,
-            'password'    => 'Password123!',
-            'role'        => 'staff',
-            'branch_id'   => $t['branch']->id,
+            'name' => 'New Staff',
+            'email' => $email,
+            'password' => 'Password123!',
+            'role' => 'staff',
+            'branch_id' => $t['branch']->id,
             'org_unit_id' => $sector->id,
-            'is_active'   => true,
+            'is_active' => true,
         ]);
 
         $res->assertStatus(201);

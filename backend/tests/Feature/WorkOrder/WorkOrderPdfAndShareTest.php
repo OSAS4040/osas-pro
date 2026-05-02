@@ -260,5 +260,4 @@ final class WorkOrderPdfAndShareTest extends TestCase
             ->getJson('/api/v1/work-orders/'.$order->id.'/share-links')
             ->assertNotFound();
     }
-
 }

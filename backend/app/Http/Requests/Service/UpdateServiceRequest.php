@@ -16,20 +16,20 @@ class UpdateServiceRequest extends FormRequest
     {
         $companyId = (int) app('tenant_company_id');
         $routeKey = $this->route('service') ?? $this->route('id');
-        $id        = is_object($routeKey) ? $routeKey->id : $routeKey;
+        $id = is_object($routeKey) ? $routeKey->id : $routeKey;
 
         return [
-            'name'              => ['sometimes', 'string', 'max:200'],
-            'name_ar'           => ['nullable', 'string', 'max:200'],
-            'code'              => [
+            'name' => ['sometimes', 'string', 'max:200'],
+            'name_ar' => ['nullable', 'string', 'max:200'],
+            'code' => [
                 'nullable', 'string', 'max:50',
                 Rule::unique('services', 'code')->where('company_id', $companyId)->ignore($id),
             ],
-            'description'       => ['nullable', 'string'],
-            'base_price'        => ['sometimes', 'numeric', 'min:0'],
-            'tax_rate'          => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'description' => ['nullable', 'string'],
+            'base_price' => ['sometimes', 'numeric', 'min:0'],
+            'tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'estimated_minutes' => ['nullable', 'integer', 'min:1'],
-            'is_active'         => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 }

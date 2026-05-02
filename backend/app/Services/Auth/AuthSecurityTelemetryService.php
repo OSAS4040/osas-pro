@@ -96,7 +96,7 @@ final class AuthSecurityTelemetryService
         $key = $prefix.':pwd_fail:'.$fp;
 
         return [
-            'key'   => $key,
+            'key' => $key,
             'count' => (int) Cache::get($key, 0),
         ];
     }
@@ -111,7 +111,7 @@ final class AuthSecurityTelemetryService
         $key = $prefix.':otp_fail:'.$fp;
 
         return [
-            'key'   => $key,
+            'key' => $key,
             'count' => (int) Cache::get($key, 0),
         ];
     }
@@ -163,13 +163,13 @@ final class AuthSecurityTelemetryService
 
         try {
             AuthSuspiciousLoginSignal::query()->create([
-                'signal_type'          => $signalType,
-                'channel'              => $channel,
-                'subject_fingerprint'  => $subjectFingerprint,
-                'ip_address'           => $request->ip(),
-                'user_agent_hash'      => $uaHash,
-                'trace_id'             => $this->resolveTraceId(),
-                'payload'              => $payload !== [] ? $payload : null,
+                'signal_type' => $signalType,
+                'channel' => $channel,
+                'subject_fingerprint' => $subjectFingerprint,
+                'ip_address' => $request->ip(),
+                'user_agent_hash' => $uaHash,
+                'trace_id' => $this->resolveTraceId(),
+                'payload' => $payload !== [] ? $payload : null,
             ]);
         } catch (QueryException $e) {
             if (! $this->isMissingSuspiciousSignalsTable($e)) {

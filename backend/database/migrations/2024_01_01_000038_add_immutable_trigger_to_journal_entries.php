@@ -18,12 +18,12 @@ return new class extends Migration
             \$\$ LANGUAGE plpgsql;
         ");
 
-        DB::unprepared("
+        DB::unprepared('
             CREATE TRIGGER trg_prevent_journal_update
             BEFORE UPDATE ON journal_entries
             FOR EACH ROW
             EXECUTE FUNCTION prevent_journal_update();
-        ");
+        ');
 
         // Prevent DELETE on journal_entries
         DB::unprepared("
@@ -36,28 +36,28 @@ return new class extends Migration
             \$\$ LANGUAGE plpgsql;
         ");
 
-        DB::unprepared("
+        DB::unprepared('
             CREATE TRIGGER trg_prevent_journal_delete
             BEFORE DELETE ON journal_entries
             FOR EACH ROW
             EXECUTE FUNCTION prevent_journal_delete();
-        ");
+        ');
 
         // Prevent UPDATE on journal_entry_lines
-        DB::unprepared("
+        DB::unprepared('
             CREATE TRIGGER trg_prevent_journal_lines_update
             BEFORE UPDATE ON journal_entry_lines
             FOR EACH ROW
             EXECUTE FUNCTION prevent_journal_update();
-        ");
+        ');
 
         // Prevent DELETE on journal_entry_lines
-        DB::unprepared("
+        DB::unprepared('
             CREATE TRIGGER trg_prevent_journal_lines_delete
             BEFORE DELETE ON journal_entry_lines
             FOR EACH ROW
             EXECUTE FUNCTION prevent_journal_delete();
-        ");
+        ');
     }
 
     public function down(): void

@@ -19,9 +19,9 @@ final class UploadReceiptRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'receipt'        => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:8192'],
+            'receipt' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:8192'],
             'bank_reference' => ['nullable', 'string', 'max:190'],
-            'notes'          => ['nullable', 'string', 'max:5000'],
+            'notes' => ['nullable', 'string', 'max:5000'],
         ];
     }
 }

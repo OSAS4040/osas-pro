@@ -19,8 +19,8 @@ class Task extends Model
     ];
 
     protected $casts = [
-        'due_at'       => 'datetime',
-        'started_at'   => 'datetime',
+        'due_at' => 'datetime',
+        'started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
 
@@ -29,9 +29,20 @@ class Task extends Model
         static::creating(fn ($m) => $m->uuid ??= (string) Str::uuid());
     }
 
-    public function employee(): BelongsTo  { return $this->belongsTo(Employee::class, 'assigned_to'); }
-    public function workOrder(): BelongsTo { return $this->belongsTo(WorkOrder::class); }
-    public function assigner(): BelongsTo  { return $this->belongsTo(User::class, 'assigned_by'); }
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'assigned_to');
+    }
+
+    public function workOrder(): BelongsTo
+    {
+        return $this->belongsTo(WorkOrder::class);
+    }
+
+    public function assigner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_by');
+    }
 
     public function isOverdue(): bool
     {

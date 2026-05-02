@@ -12,6 +12,7 @@ use App\Modules\SubscriptionsV2\Models\PaymentOrder;
 use App\Services\Platform\PlatformPermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+
 /**
  * فحص تشغيلي مؤقت — قراءة فقط، لا تعديلات مالية.
  * يُفعَّل عبر config/platform_subscriptions.php (`PLATFORM_SUBSCRIPTIONS_DEBUG_HEALTH`).

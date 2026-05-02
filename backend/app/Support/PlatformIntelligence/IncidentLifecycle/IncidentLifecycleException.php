@@ -6,6 +6,4 @@ namespace App\Support\PlatformIntelligence\IncidentLifecycle;
 
 use RuntimeException;
 
-final class IncidentLifecycleException extends RuntimeException
-{
-}
+final class IncidentLifecycleException extends RuntimeException {}

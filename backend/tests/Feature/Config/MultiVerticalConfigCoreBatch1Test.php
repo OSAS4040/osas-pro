@@ -4,6 +4,7 @@ namespace Tests\Feature\Config;
 
 use App\Models\ConfigSetting;
 use App\Services\Config\ConfigResolverService;
+use Database\Seeders\VerticalProfilesSeeder;
 use Tests\TestCase;
 
 class MultiVerticalConfigCoreBatch1Test extends TestCase
@@ -75,7 +76,7 @@ class MultiVerticalConfigCoreBatch1Test extends TestCase
 
     public function test_vertical_profiles_seeded(): void
     {
-        $this->seed(\Database\Seeders\VerticalProfilesSeeder::class);
+        $this->seed(VerticalProfilesSeeder::class);
         $this->assertDatabaseHas('vertical_profiles', ['code' => 'service_workshop']);
         $this->assertDatabaseHas('vertical_profiles', ['code' => 'fleet_operations']);
         $this->assertDatabaseHas('vertical_profiles', ['code' => 'retail_pos']);

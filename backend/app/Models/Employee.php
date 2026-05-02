@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Employee extends Model
@@ -20,10 +20,10 @@ class Employee extends Model
     ];
 
     protected $casts = [
-        'skills'           => 'array',
-        'hr_integrations'  => 'array',
-        'base_salary'      => 'decimal:2',
-        'hire_date'        => 'date',
+        'skills' => 'array',
+        'hr_integrations' => 'array',
+        'base_salary' => 'decimal:2',
+        'hire_date' => 'date',
         'termination_date' => 'date',
     ];
 
@@ -41,18 +41,40 @@ class Employee extends Model
     {
         static::creating(function ($m) {
             $m->uuid ??= (string) Str::uuid();
-            if (!$m->employee_number) {
+            if (! $m->employee_number) {
                 $count = self::where('company_id', $m->company_id)->withTrashed()->count() + 1;
-                $m->employee_number = 'EMP-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+                $m->employee_number = 'EMP-'.str_pad($count, 4, '0', STR_PAD_LEFT);
             }
         });
     }
 
-    public function user(): BelongsTo   { return $this->belongsTo(User::class); }
-    public function branch(): BelongsTo { return $this->belongsTo(Branch::class); }
-    public function tasks(): HasMany    { return $this->hasMany(Task::class, 'assigned_to'); }
-    public function commissions(): HasMany { return $this->hasMany(Commission::class); }
-    public function attendance(): HasMany  { return $this->hasMany(AttendanceLog::class); }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
-    public function isActive(): bool { return $this->status === 'active'; }
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'assigned_to');
+    }
+
+    public function commissions(): HasMany
+    {
+        return $this->hasMany(Commission::class);
+    }
+
+    public function attendance(): HasMany
+    {
+        return $this->hasMany(AttendanceLog::class);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
 }

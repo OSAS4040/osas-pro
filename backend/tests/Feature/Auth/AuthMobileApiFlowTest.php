@@ -24,11 +24,11 @@ class AuthMobileApiFlowTest extends TestCase
         $fcmRefresh = str_repeat('2', 32);
 
         $login = $this->postJson('/api/v1/auth/login', [
-            'identifier'   => $user->email,
-            'password'     => 'Password123!',
-            'device_name'  => 'e2e-field',
-            'device_type'  => 'android',
-            'fcm_token'    => $fcmLogin,
+            'identifier' => $user->email,
+            'password' => 'Password123!',
+            'device_name' => 'e2e-field',
+            'device_type' => 'android',
+            'fcm_token' => $fcmLogin,
         ]);
 
         $login->assertStatus(200)
@@ -38,21 +38,21 @@ class AuthMobileApiFlowTest extends TestCase
         $this->assertNotSame('', $bearer);
 
         $this->assertDatabaseHas('user_push_devices', [
-            'user_id'   => $user->id,
+            'user_id' => $user->id,
             'fcm_token' => $fcmLogin,
         ]);
 
         // Same as client receiving onTokenRefresh: register new token while session active.
         $this->withHeader('Authorization', 'Bearer '.$bearer)
             ->postJson('/api/v1/auth/push-device', [
-                'fcm_token'   => $fcmRefresh,
+                'fcm_token' => $fcmRefresh,
                 'device_name' => 'e2e-after-refresh',
                 'device_type' => 'android',
             ])
             ->assertStatus(200);
 
         $this->assertDatabaseHas('user_push_devices', [
-            'user_id'   => $user->id,
+            'user_id' => $user->id,
             'fcm_token' => $fcmRefresh,
         ]);
 
@@ -66,10 +66,10 @@ class AuthMobileApiFlowTest extends TestCase
         $this->assertDatabaseHas('user_push_devices', ['fcm_token' => $fcmLogin]);
 
         $login2 = $this->postJson('/api/v1/auth/login', [
-            'identifier'   => $user->email,
-            'password'     => 'Password123!',
-            'device_name'  => 'e2e-field-2',
-            'device_type'  => 'android',
+            'identifier' => $user->email,
+            'password' => 'Password123!',
+            'device_name' => 'e2e-field-2',
+            'device_type' => 'android',
         ])->assertStatus(200);
 
         $bearer2 = (string) $login2->json('token');

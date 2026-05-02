@@ -71,4 +71,3 @@ final class PruneSubscriptionRealtimeEventsJob implements ShouldQueue
         ]);
     }
 }
-

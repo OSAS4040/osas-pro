@@ -12,8 +12,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * @OA\Tag(name="Vehicles", description="Vehicle management")
@@ -31,23 +31,25 @@ class VehicleController extends Controller
      *     tags={"Vehicles"},
      *     summary="List vehicles",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="customer_id", in="query", required=false, @OA\Schema(type="integer")),
      *     @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string")),
+     *
      *     @OA\Response(response=200, description="Success")
      * )
      */
     public function index(Request $request): JsonResponse
     {
         $vehicles = Vehicle::with(['customer', 'branch'])
-            ->when($request->company_id, fn($q) => $q->where('company_id', (int) $request->company_id))
-            ->when($request->customer_id, fn($q) => $q->where('customer_id', $request->customer_id))
-            ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
+            ->when($request->company_id, fn ($q) => $q->where('company_id', (int) $request->company_id))
+            ->when($request->customer_id, fn ($q) => $q->where('customer_id', $request->customer_id))
+            ->when($request->search, fn ($q) => $q->where(function ($q) use ($request) {
                 $q->where('plate_number', 'ilike', "%{$request->search}%")
-                  ->orWhere('vin', 'ilike', "%{$request->search}%")
-                  ->orWhere('make', 'ilike', "%{$request->search}%")
-                  ->orWhere('model', 'ilike', "%{$request->search}%");
+                    ->orWhere('vin', 'ilike', "%{$request->search}%")
+                    ->orWhere('make', 'ilike', "%{$request->search}%")
+                    ->orWhere('model', 'ilike', "%{$request->search}%");
             }))
-            ->when(isset($request->is_active), fn($q) => $q->where('is_active', $request->boolean('is_active')))
+            ->when(isset($request->is_active), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
             ->orderByDesc('id')
             ->paginate(max(1, min((int) ($request->per_page ?? 25), 200)));
 
@@ -60,9 +62,12 @@ class VehicleController extends Controller
      *     tags={"Vehicles"},
      *     summary="Create a vehicle",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(required=true,
+     *
      *         @OA\JsonContent(
      *             required={"customer_id","plate_number","make","model"},
+     *
      *             @OA\Property(property="customer_id", type="integer"),
      *             @OA\Property(property="plate_number", type="string"),
      *             @OA\Property(property="make", type="string"),
@@ -70,6 +75,7 @@ class VehicleController extends Controller
      *             @OA\Property(property="year", type="integer")
      *         )
      *     ),
+     *
      *     @OA\Response(response=201, description="Created")
      * )
      */
@@ -78,36 +84,36 @@ class VehicleController extends Controller
         $user = $request->user();
 
         $data = $request->validate([
-            'customer_id'   => [
+            'customer_id' => [
                 'required',
                 'integer',
-                Rule::exists('customers', 'id')->where(fn($q) => $q->where('company_id', $user->company_id)),
+                Rule::exists('customers', 'id')->where(fn ($q) => $q->where('company_id', $user->company_id)),
             ],
-            'plate_number'  => [
+            'plate_number' => [
                 'required',
                 'string',
                 'max:20',
                 Rule::unique('vehicles', 'plate_number')
-                    ->where(fn($q) => $q->where('company_id', $user->company_id)),
+                    ->where(fn ($q) => $q->where('company_id', $user->company_id)),
             ],
-            'vin'           => 'nullable|string|max:17',
-            'make'          => 'required|string|max:100',
-            'model'         => 'required|string|max:100',
-            'year'          => 'nullable|integer|min:1900|max:2100',
-            'color'         => 'nullable|string|max:50',
-            'engine_type'   => 'nullable|string|max:100',
-            'fuel_type'     => 'nullable|in:gasoline,diesel,electric,hybrid,other',
-            'transmission'  => 'nullable|in:automatic,manual,cvt',
-            'mileage_in'    => 'nullable|integer|min:0',
-            'notes'         => 'nullable|string',
+            'vin' => 'nullable|string|max:17',
+            'make' => 'required|string|max:100',
+            'model' => 'required|string|max:100',
+            'year' => 'nullable|integer|min:1900|max:2100',
+            'color' => 'nullable|string|max:50',
+            'engine_type' => 'nullable|string|max:100',
+            'fuel_type' => 'nullable|in:gasoline,diesel,electric,hybrid,other',
+            'transmission' => 'nullable|in:automatic,manual,cvt',
+            'mileage_in' => 'nullable|integer|min:0',
+            'notes' => 'nullable|string',
         ]);
 
         try {
             $vehicle = Vehicle::create(array_merge($data, [
-                'uuid'                => Str::uuid(),
-                'company_id'          => $user->company_id,
-                'branch_id'           => $user->branch_id,
-                'created_by_user_id'  => $user->id,
+                'uuid' => Str::uuid(),
+                'company_id' => $user->company_id,
+                'branch_id' => $user->branch_id,
+                'created_by_user_id' => $user->id,
             ]));
         } catch (QueryException $e) {
             return response()->json([
@@ -127,14 +133,14 @@ class VehicleController extends Controller
         ));
 
         return response()->json([
-            'data'     => $vehicle->load('customer'),
+            'data' => $vehicle->load('customer'),
             'trace_id' => app('trace_id'),
         ], 201);
     }
 
     public function show(int $id): JsonResponse
     {
-        $vehicle = Vehicle::with(['customer', 'branch', 'workOrders' => fn($q) => $q->latest()->limit(5)])->findOrFail($id);
+        $vehicle = Vehicle::with(['customer', 'branch', 'workOrders' => fn ($q) => $q->latest()->limit(5)])->findOrFail($id);
 
         return response()->json(['data' => $vehicle, 'trace_id' => app('trace_id')]);
     }
@@ -271,16 +277,16 @@ class VehicleController extends Controller
         $vehicle = Vehicle::findOrFail($id);
 
         $data = $request->validate([
-            'plate_number'  => 'sometimes|string|max:20',
-            'vin'           => 'nullable|string|max:17',
-            'make'          => 'sometimes|string|max:100',
-            'model'         => 'sometimes|string|max:100',
-            'year'          => 'nullable|integer|min:1900|max:2100',
-            'color'         => 'nullable|string|max:50',
-            'fuel_type'     => 'nullable|in:gasoline,diesel,electric,hybrid,other',
-            'transmission'  => 'nullable|in:automatic,manual,cvt',
-            'is_active'     => 'nullable|boolean',
-            'notes'         => 'nullable|string',
+            'plate_number' => 'sometimes|string|max:20',
+            'vin' => 'nullable|string|max:17',
+            'make' => 'sometimes|string|max:100',
+            'model' => 'sometimes|string|max:100',
+            'year' => 'nullable|integer|min:1900|max:2100',
+            'color' => 'nullable|string|max:50',
+            'fuel_type' => 'nullable|in:gasoline,diesel,electric,hybrid,other',
+            'transmission' => 'nullable|in:automatic,manual,cvt',
+            'is_active' => 'nullable|boolean',
+            'notes' => 'nullable|string',
         ]);
 
         $vehicle->update($data);

@@ -27,16 +27,21 @@ class POSController extends Controller
      *     tags={"POS"},
      *     summary="Execute a POS fast-track sale (atomic: invoice + payment + stock deduction)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(
      *         name="Idempotency-Key",
      *         in="header", required=true,
      *         description="Unique key per transaction (UUID recommended)",
+     *
      *         @OA\Schema(type="string")
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"items","payment"},
+     *
      *             @OA\Property(property="customer_id", type="integer"),
      *             @OA\Property(property="vehicle_id", type="integer"),
      *             @OA\Property(property="customer_type", type="string", enum={"b2c","b2b"}, default="b2c"),
@@ -61,6 +66,7 @@ class POSController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse"),
      *     @OA\Response(response=409, description="Idempotency payload mismatch"),
      *     @OA\Response(response=422, description="Insufficient stock or validation error")
@@ -94,31 +100,31 @@ class POSController extends Controller
 
         if (! $idempotencyKey) {
             return response()->json([
-                'message'  => 'Idempotency-Key header is required for financial transactions.',
+                'message' => 'Idempotency-Key header is required for financial transactions.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
 
         $tv = microtime(true);
         $data = $request->validate([
-            'customer_id'            => 'nullable|integer|exists:customers,id',
-            'vehicle_id'             => 'nullable|integer|exists:vehicles,id',
-            'customer_type'          => 'nullable|in:b2c,b2b',
-            'discount_amount'        => 'nullable|numeric|min:0',
-            'notes'                  => 'nullable|string',
-            'items'                  => 'required|array|min:1',
-            'items.*.name'           => 'required|string',
-            'items.*.product_id'     => 'nullable|integer|exists:products,id',
-            'items.*.service_id'     => 'nullable|integer|exists:services,id',
-            'items.*.quantity'       => 'required|numeric|min:0.001',
-            'items.*.unit_price'     => 'required|numeric|min:0',
-            'items.*.cost_price'     => 'nullable|numeric|min:0',
-            'items.*.tax_rate'       => 'nullable|numeric|min:0|max:100',
-            'items.*.discount_amount'=> 'nullable|numeric|min:0',
-            'payment'                => 'required|array',
-            'payment.method'         => 'required|in:cash,card,wallet,bank_transfer',
-            'payment.amount'         => 'required|numeric|min:0',
-            'payment.reference'      => 'nullable|string',
+            'customer_id' => 'nullable|integer|exists:customers,id',
+            'vehicle_id' => 'nullable|integer|exists:vehicles,id',
+            'customer_type' => 'nullable|in:b2c,b2b',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.name' => 'required|string',
+            'items.*.product_id' => 'nullable|integer|exists:products,id',
+            'items.*.service_id' => 'nullable|integer|exists:services,id',
+            'items.*.quantity' => 'required|numeric|min:0.001',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.cost_price' => 'nullable|numeric|min:0',
+            'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
+            'items.*.discount_amount' => 'nullable|numeric|min:0',
+            'payment' => 'required|array',
+            'payment.method' => 'required|in:cash,card,wallet,bank_transfer',
+            'payment.amount' => 'required|numeric|min:0',
+            'payment.reference' => 'nullable|string',
         ]);
         $seg['validate_ms'] = round((microtime(true) - $tv) * 1000, 2);
 
@@ -153,24 +159,25 @@ class POSController extends Controller
         $ts = microtime(true);
         try {
             $invoice = $this->posService->sale(
-                data:           $data,
-                companyId:      $user->company_id,
-                branchId:       $user->branch_id,
-                userId:         $user->id,
+                data: $data,
+                companyId: $user->company_id,
+                branchId: $user->branch_id,
+                userId: $user->id,
                 idempotencyKey: $idempotencyKey,
             );
         } catch (\DomainException $e) {
             $status = str_contains($e->getMessage(), 'Idempotency') ? 409 : 422;
+
             return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], $status);
         } catch (\Throwable $e) {
             Log::error('POS_FAILURE', [
-                'trace_id'         => app()->bound('trace_id') ? (string) app('trace_id') : null,
-                'request_id'       => app()->bound('request_id') ? (string) app('request_id') : null,
-                'idempotency_key'  => $idempotencyKey,
-                'company_id'       => $user->company_id,
-                'endpoint'         => $request->path(),
-                'exception_class'  => $e::class,
-                'exception'        => $e->getMessage(),
+                'trace_id' => app()->bound('trace_id') ? (string) app('trace_id') : null,
+                'request_id' => app()->bound('request_id') ? (string) app('request_id') : null,
+                'idempotency_key' => $idempotencyKey,
+                'company_id' => $user->company_id,
+                'endpoint' => $request->path(),
+                'exception_class' => $e::class,
+                'exception' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -195,8 +202,8 @@ class POSController extends Controller
         ] + $seg);
 
         return response()->json([
-            'data'             => $invoice,
-            'trace_id'         => app('trace_id'),
+            'data' => $invoice,
+            'trace_id' => app('trace_id'),
             'behavior_applied' => $this->behaviorResolver->activeBehaviorMarkers($behavior),
         ], 201);
     }

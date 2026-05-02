@@ -17,8 +17,8 @@ class ApiKey extends Model
 
     protected $casts = [
         'permissions_scope' => 'array',
-        'expires_at'        => 'datetime',
-        'revoked_at'        => 'datetime',
+        'expires_at' => 'datetime',
+        'revoked_at' => 'datetime',
     ];
 
     public function company()

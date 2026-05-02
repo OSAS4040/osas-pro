@@ -28,27 +28,27 @@ final class ExecutionPartnerContractsScopeTest extends TestCase
         $t = $this->createTenant('owner');
 
         $other = Contract::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $t['company']->id,
-            'title'      => 'عقد طرف آخر',
+            'title' => 'عقد طرف آخر',
             'party_name' => 'عميل',
             'start_date' => now()->subDay()->toDateString(),
-            'end_date'   => now()->addYear()->toDateString(),
-            'status'     => 'active',
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
             'created_by' => $t['user']->id,
-            'metadata'   => null,
+            'metadata' => null,
         ]);
 
         $withPlatform = Contract::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $t['company']->id,
-            'title'      => 'إطار مع المنصّة',
+            'title' => 'إطار مع المنصّة',
             'party_name' => 'أسس برو',
             'start_date' => now()->subDay()->toDateString(),
-            'end_date'   => now()->addYear()->toDateString(),
-            'status'     => 'active',
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
             'created_by' => $t['user']->id,
-            'metadata'   => ['platform_provider_agreement' => true],
+            'metadata' => ['platform_provider_agreement' => true],
         ]);
 
         $this->enablePlatformExecutionPartner($t['company']->fresh());
@@ -67,13 +67,13 @@ final class ExecutionPartnerContractsScopeTest extends TestCase
         $t = $this->createTenant('owner');
 
         $other = Contract::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $t['company']->id,
-            'title'      => 'عقد داخلي',
+            'title' => 'عقد داخلي',
             'party_name' => 'X',
             'start_date' => now()->subDay()->toDateString(),
-            'end_date'   => now()->addYear()->toDateString(),
-            'status'     => 'active',
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
             'created_by' => $t['user']->id,
         ]);
 

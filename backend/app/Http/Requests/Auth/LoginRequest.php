@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class LoginRequest extends FormRequest
 {
@@ -64,14 +64,14 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'         => ['required_without:identifier', 'nullable', 'string', 'email', 'max:255'],
-            'identifier'    => ['required_without:email', 'nullable', 'string', 'max:255'],
-            'password'      => ['required', 'string', 'min:6'],
-            'otp'           => ['nullable', 'string', 'regex:/^[0-9]{4,8}$/'],
+            'email' => ['required_without:identifier', 'nullable', 'string', 'email', 'max:255'],
+            'identifier' => ['required_without:email', 'nullable', 'string', 'max:255'],
+            'password' => ['required', 'string', 'min:6'],
+            'otp' => ['nullable', 'string', 'regex:/^[0-9]{4,8}$/'],
             'otp_challenge' => ['nullable', 'string', 'max:80'],
-            'device_name'   => ['required_with:identifier', 'nullable', 'string', 'max:120'],
-            'device_type'   => ['required_with:identifier', 'nullable', 'string', Rule::in(['android', 'ios', 'ipados', 'unknown'])],
-            'fcm_token'     => ['nullable', 'string', 'max:512'],
+            'device_name' => ['required_with:identifier', 'nullable', 'string', 'max:120'],
+            'device_type' => ['required_with:identifier', 'nullable', 'string', Rule::in(['android', 'ios', 'ipados', 'unknown'])],
+            'fcm_token' => ['nullable', 'string', 'max:512'],
         ];
     }
 

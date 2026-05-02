@@ -7,17 +7,18 @@ use App\Jobs\ExpireIdempotencyKeysJob;
 use App\Jobs\ExpireInventoryReservationsJob;
 use App\Jobs\PostPosLedgerJob;
 use App\Jobs\SendDocumentExpiryNotificationsJob;
+use App\Services\AlertService;
 use App\Services\LedgerService;
 use Illuminate\Contracts\Console\Kernel;
 
-require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__.'/../../vendor/autoload.php';
 
-$app = require __DIR__ . '/../../bootstrap/app.php';
+$app = require __DIR__.'/../../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
 
-$mode = (string)($argv[1] ?? '');
-$invoiceId = (int)($argv[2] ?? 0);
-$traceId = (string)($argv[3] ?? 'diag-trace');
+$mode = (string) ($argv[1] ?? '');
+$invoiceId = (int) ($argv[2] ?? 0);
+$traceId = (string) ($argv[3] ?? 'diag-trace');
 
 if ($mode === '') {
     fwrite(STDERR, "Usage:\n");
@@ -39,16 +40,16 @@ try {
             $job->handle($app->make(LedgerService::class));
             break;
         case 'expire-idempotency':
-            (new ExpireIdempotencyKeysJob())->handle();
+            (new ExpireIdempotencyKeysJob)->handle();
             break;
         case 'expire-reservations':
-            (new ExpireInventoryReservationsJob())->handle();
+            (new ExpireInventoryReservationsJob)->handle();
             break;
         case 'check-subscriptions':
-            (new CheckSubscriptionStatusJob())->handle();
+            (new CheckSubscriptionStatusJob)->handle();
             break;
         case 'send-doc-expiry':
-            (new SendDocumentExpiryNotificationsJob())->handle($app->make(\App\Services\AlertService::class));
+            (new SendDocumentExpiryNotificationsJob)->handle($app->make(AlertService::class));
             break;
         default:
             throw new InvalidArgumentException("Unknown mode: {$mode}");
@@ -57,7 +58,7 @@ try {
     fwrite(STDOUT, "OK\n");
     exit(0);
 } catch (Throwable $e) {
-    fwrite(STDERR, get_class($e) . ': ' . $e->getMessage() . PHP_EOL);
-    fwrite(STDERR, $e->getTraceAsString() . PHP_EOL);
+    fwrite(STDERR, get_class($e).': '.$e->getMessage().PHP_EOL);
+    fwrite(STDERR, $e->getTraceAsString().PHP_EOL);
     exit(1);
 }

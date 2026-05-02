@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('plans')) {
+        if (! Schema::hasTable('plans')) {
             Schema::create('plans', function (Blueprint $table) {
                 $table->id();
                 $table->string('code', 40)->unique();
@@ -23,7 +23,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('subscriptions')) {
+        if (! Schema::hasTable('subscriptions')) {
             Schema::create('subscriptions', function (Blueprint $table) {
                 $table->id();
                 $table->uuid('uuid')->unique();
@@ -42,7 +42,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('subscription_invoices')) {
+        if (! Schema::hasTable('subscription_invoices')) {
             Schema::create('subscription_invoices', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('company_id')->index();

@@ -25,13 +25,13 @@ class CommissionRule extends Model
     ];
 
     protected $casts = [
-        'rate'                    => 'decimal:2',
-        'min_amount'              => 'decimal:2',
-        'max_commission_amount'   => 'decimal:2',
-        'attendance_multiplier'   => 'decimal:2',
-        'is_active'               => 'boolean',
-        'priority'                => 'integer',
-        'meta'                    => 'array',
+        'rate' => 'decimal:2',
+        'min_amount' => 'decimal:2',
+        'max_commission_amount' => 'decimal:2',
+        'attendance_multiplier' => 'decimal:2',
+        'is_active' => 'boolean',
+        'priority' => 'integer',
+        'meta' => 'array',
     ];
 
     public function employee(): BelongsTo

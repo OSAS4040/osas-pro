@@ -54,7 +54,7 @@ final class ArabicPdfText
         }
 
         try {
-            return (new Arabic())->utf8Glyphs($text);
+            return (new Arabic)->utf8Glyphs($text);
         } catch (\Throwable $e) {
             Log::warning(
                 '[dompdf:arabic-text] utf8Glyphs failed — Arabic PDF line may render incorrectly.',

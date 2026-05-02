@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\StockMovementType;
 use App\Intelligence\Events\StockMovementRecorded;
 use App\Models\Inventory;
+use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\Unit;
 use Illuminate\Support\Facades\DB;
@@ -17,15 +18,15 @@ class InventoryService
     ) {}
 
     public function deductStock(
-        int    $companyId,
-        int    $branchId,
-        int    $productId,
-        float  $quantity,
-        int    $userId,
+        int $companyId,
+        int $branchId,
+        int $productId,
+        float $quantity,
+        int $userId,
         string $referenceType,
-        int    $referenceId,
+        int $referenceId,
         string $traceId,
-        ?int   $unitId = null,
+        ?int $unitId = null,
         ?float $unitCost = null,
         ?string $note = null,
         bool $allowNegativeStock = false,
@@ -49,34 +50,34 @@ class InventoryService
 
             if (! $allowNegativeStock && $inventory->available_quantity < $baseQty) {
                 throw new \DomainException(
-                    "Insufficient stock for product #{$productId}. " .
+                    "Insufficient stock for product #{$productId}. ".
                     "Available: {$inventory->available_quantity}, Requested: {$baseQty}."
                 );
             }
 
             $before = (float) $inventory->quantity;
-            $after  = $before - $baseQty;
+            $after = $before - $baseQty;
 
             $inventory->decrement('quantity', $baseQty);
             $inventory->increment('version');
 
             $movement = StockMovement::create([
-                'uuid'               => Str::uuid(),
-                'company_id'         => $companyId,
-                'branch_id'          => $branchId,
-                'product_id'         => $productId,
+                'uuid' => Str::uuid(),
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'product_id' => $productId,
                 'created_by_user_id' => $userId,
-                'unit_id'            => $unitId,
-                'type'               => StockMovementType::SaleDeduction->value,
-                'quantity'           => -$baseQty,
-                'unit_cost'          => $unitCost,
-                'quantity_before'    => $before,
-                'quantity_after'     => $after,
-                'reference_type'     => $referenceType,
-                'reference_id'       => $referenceId,
-                'trace_id'           => $traceId,
-                'note'               => $note,
-                'created_at'         => now(),
+                'unit_id' => $unitId,
+                'type' => StockMovementType::SaleDeduction->value,
+                'quantity' => -$baseQty,
+                'unit_cost' => $unitCost,
+                'quantity_before' => $before,
+                'quantity_after' => $after,
+                'reference_type' => $referenceType,
+                'reference_id' => $referenceId,
+                'trace_id' => $traceId,
+                'note' => $note,
+                'created_at' => now(),
             ]);
             DB::afterCommit(function () use ($movement): void {
                 $this->emitStockMovement($movement, 'InventoryService::deductStock');
@@ -87,18 +88,18 @@ class InventoryService
     }
 
     public function addStock(
-        int    $companyId,
-        int    $branchId,
-        int    $productId,
-        float  $quantity,
-        int    $userId,
+        int $companyId,
+        int $branchId,
+        int $productId,
+        float $quantity,
+        int $userId,
         string $type,
         string $traceId,
-        ?int   $unitId = null,
+        ?int $unitId = null,
         ?float $unitCost = null,
         ?string $note = null,
         ?string $referenceType = null,
-        ?int   $referenceId = null,
+        ?int $referenceId = null,
     ): StockMovement {
         return DB::transaction(function () use (
             $companyId, $branchId, $productId, $quantity,
@@ -115,38 +116,38 @@ class InventoryService
 
             if (! $inventory) {
                 $inventory = Inventory::create([
-                    'company_id'        => $companyId,
-                    'branch_id'         => $branchId,
-                    'product_id'        => $productId,
-                    'quantity'          => 0,
+                    'company_id' => $companyId,
+                    'branch_id' => $branchId,
+                    'product_id' => $productId,
+                    'quantity' => 0,
                     'reserved_quantity' => 0,
-                    'version'           => 0,
+                    'version' => 0,
                 ]);
             }
 
             $before = (float) $inventory->quantity;
-            $after  = $before + $baseQty;
+            $after = $before + $baseQty;
 
             $inventory->increment('quantity', $baseQty);
             $inventory->increment('version');
 
             $movement = StockMovement::create([
-                'uuid'               => Str::uuid(),
-                'company_id'         => $companyId,
-                'branch_id'          => $branchId,
-                'product_id'         => $productId,
+                'uuid' => Str::uuid(),
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'product_id' => $productId,
                 'created_by_user_id' => $userId,
-                'unit_id'            => $unitId,
-                'type'               => $type,
-                'quantity'           => $baseQty,
-                'unit_cost'          => $unitCost,
-                'quantity_before'    => $before,
-                'quantity_after'     => $after,
-                'reference_type'     => $referenceType,
-                'reference_id'       => $referenceId,
-                'trace_id'           => $traceId,
-                'note'               => $note,
-                'created_at'         => now(),
+                'unit_id' => $unitId,
+                'type' => $type,
+                'quantity' => $baseQty,
+                'unit_cost' => $unitCost,
+                'quantity_before' => $before,
+                'quantity_after' => $after,
+                'reference_type' => $referenceType,
+                'reference_id' => $referenceId,
+                'trace_id' => $traceId,
+                'note' => $note,
+                'created_at' => now(),
             ]);
             DB::afterCommit(function () use ($movement): void {
                 $this->emitStockMovement($movement, 'InventoryService::addStock');
@@ -164,33 +165,33 @@ class InventoryService
             }
 
             $isDeduction = (float) $original->quantity < 0;
-            $reverseQty  = abs((float) $original->quantity);
+            $reverseQty = abs((float) $original->quantity);
 
             $reversal = $isDeduction
                 ? $this->addStock(
-                    companyId:     $original->company_id,
-                    branchId:      $original->branch_id,
-                    productId:     $original->product_id,
-                    quantity:      $reverseQty,
-                    userId:        $userId,
-                    type:          StockMovementType::Reversal->value,
-                    traceId:       $traceId,
-                    unitId:        $original->unit_id,
-                    note:          "Reversal of movement #{$original->id}",
+                    companyId: $original->company_id,
+                    branchId: $original->branch_id,
+                    productId: $original->product_id,
+                    quantity: $reverseQty,
+                    userId: $userId,
+                    type: StockMovementType::Reversal->value,
+                    traceId: $traceId,
+                    unitId: $original->unit_id,
+                    note: "Reversal of movement #{$original->id}",
                     referenceType: 'stock_movement',
-                    referenceId:   $original->id,
+                    referenceId: $original->id,
                 )
                 : $this->deductStock(
-                    companyId:     $original->company_id,
-                    branchId:      $original->branch_id,
-                    productId:     $original->product_id,
-                    quantity:      $reverseQty,
-                    userId:        $userId,
+                    companyId: $original->company_id,
+                    branchId: $original->branch_id,
+                    productId: $original->product_id,
+                    quantity: $reverseQty,
+                    userId: $userId,
                     referenceType: 'stock_movement',
-                    referenceId:   $original->id,
-                    traceId:       $traceId,
-                    unitId:        $original->unit_id,
-                    note:          "Reversal of movement #{$original->id}",
+                    referenceId: $original->id,
+                    traceId: $traceId,
+                    unitId: $original->unit_id,
+                    note: "Reversal of movement #{$original->id}",
                 );
 
             DB::table('stock_movements')
@@ -226,8 +227,8 @@ class InventoryService
         }
 
         return [
-            'quantity'  => (float) $inventory->quantity,
-            'reserved'  => (float) $inventory->reserved_quantity,
+            'quantity' => (float) $inventory->quantity,
+            'reserved' => (float) $inventory->reserved_quantity,
             'available' => $inventory->available_quantity,
         ];
     }
@@ -238,14 +239,14 @@ class InventoryService
             return $quantity;
         }
 
-        $product = \App\Models\Product::find($productId);
+        $product = Product::find($productId);
 
         if (! $product || ! $product->unit_id || $product->unit_id === $unitId) {
             return $quantity;
         }
 
         $fromUnit = Unit::find($unitId);
-        $toUnit   = Unit::find($product->unit_id);
+        $toUnit = Unit::find($product->unit_id);
 
         if (! $fromUnit || ! $toUnit) {
             return $quantity;

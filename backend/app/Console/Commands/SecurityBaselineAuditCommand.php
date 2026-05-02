@@ -408,4 +408,3 @@ class SecurityBaselineAuditCommand extends Command
         fclose($fh);
     }
 }
-

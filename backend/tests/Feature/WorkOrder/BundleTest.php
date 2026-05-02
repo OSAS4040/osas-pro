@@ -19,7 +19,9 @@ class BundleTest extends TestCase
     use RefreshDatabase;
 
     private Company $company;
+
     private Branch $branch;
+
     private User $user;
 
     protected function setUp(): void
@@ -27,20 +29,20 @@ class BundleTest extends TestCase
         parent::setUp();
 
         $this->company = $this->createCompany();
-        $this->branch  = $this->createBranch($this->company);
-        $this->user    = $this->createUser($this->company, $this->branch);
+        $this->branch = $this->createBranch($this->company);
+        $this->user = $this->createUser($this->company, $this->branch);
         $this->createActiveSubscription($this->company);
     }
 
     private function createService(float $price): Service
     {
         return Service::create([
-            'company_id'         => $this->company->id,
+            'company_id' => $this->company->id,
             'created_by_user_id' => $this->user->id,
-            'name'               => 'Service ' . Str::random(4),
-            'base_price'         => $price,
-            'tax_rate'           => 15,
-            'is_active'          => true,
+            'name' => 'Service '.Str::random(4),
+            'base_price' => $price,
+            'tax_rate' => 15,
+            'is_active' => true,
         ]);
     }
 
@@ -54,30 +56,30 @@ class BundleTest extends TestCase
         ]);
 
         return Product::create([
-            'uuid'            => Str::uuid(),
-            'company_id'      => $this->company->id,
-            'name'            => 'Product ' . Str::random(4),
-            'sku'             => 'SKU-' . Str::random(5),
-            'product_type'    => 'physical',
-            'unit_id'         => $unit->id,
-            'sale_price'      => $price,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
+            'name' => 'Product '.Str::random(4),
+            'sku' => 'SKU-'.Str::random(5),
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => $price,
             'track_inventory' => true,
-            'is_active'       => true,
+            'is_active' => true,
         ]);
     }
 
     public function test_bundle_calculates_total_from_items(): void
     {
-        $svc1    = $this->createService(100);
-        $svc2    = $this->createService(50);
+        $svc1 = $this->createService(100);
+        $svc2 = $this->createService(50);
         $product = $this->createProduct(30);
 
         $bundle = Bundle::create([
-            'company_id'           => $this->company->id,
-            'name'                 => 'Test Bundle',
+            'company_id' => $this->company->id,
+            'name' => 'Test Bundle',
             'override_item_prices' => false,
-            'base_price'           => 0,
-            'is_active'            => true,
+            'base_price' => 0,
+            'is_active' => true,
         ]);
 
         BundleItem::create(['bundle_id' => $bundle->id, 'item_type' => 'service', 'service_id' => $svc1->id, 'quantity' => 1]);
@@ -96,11 +98,11 @@ class BundleTest extends TestCase
         $svc = $this->createService(100);
 
         $bundle = Bundle::create([
-            'company_id'           => $this->company->id,
-            'name'                 => 'Fixed Bundle',
+            'company_id' => $this->company->id,
+            'name' => 'Fixed Bundle',
             'override_item_prices' => true,
-            'base_price'           => 199.99,
-            'is_active'            => true,
+            'base_price' => 199.99,
+            'is_active' => true,
         ]);
 
         BundleItem::create(['bundle_id' => $bundle->id, 'item_type' => 'service', 'service_id' => $svc->id, 'quantity' => 1]);
@@ -115,18 +117,18 @@ class BundleTest extends TestCase
         $svc = $this->createService(100);
 
         $bundle = Bundle::create([
-            'company_id'           => $this->company->id,
-            'name'                 => 'Override Bundle',
+            'company_id' => $this->company->id,
+            'name' => 'Override Bundle',
             'override_item_prices' => false,
-            'base_price'           => 0,
-            'is_active'            => true,
+            'base_price' => 0,
+            'is_active' => true,
         ]);
 
         BundleItem::create([
-            'bundle_id'           => $bundle->id,
-            'item_type'           => 'service',
-            'service_id'          => $svc->id,
-            'quantity'            => 2,
+            'bundle_id' => $bundle->id,
+            'item_type' => 'service',
+            'service_id' => $svc->id,
+            'quantity' => 2,
             'unit_price_override' => 70.00,
         ]);
 
@@ -141,7 +143,7 @@ class BundleTest extends TestCase
 
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/v1/bundles', [
-                'name'  => 'Oil Change Bundle',
+                'name' => 'Oil Change Bundle',
                 'items' => [
                     ['item_type' => 'service', 'service_id' => $svc->id, 'quantity' => 1],
                 ],
@@ -162,9 +164,9 @@ class BundleTest extends TestCase
     {
         $store = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/v1/services', [
-                'name'       => 'Engine Flush',
+                'name' => 'Engine Flush',
                 'base_price' => 150,
-                'tax_rate'   => 15,
+                'tax_rate' => 15,
             ]);
 
         $store->assertStatus(201);

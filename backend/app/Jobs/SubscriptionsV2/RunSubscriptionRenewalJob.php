@@ -30,4 +30,3 @@ final class RunSubscriptionRenewalJob implements ShouldQueue
         $subscriptionService->applyScheduledDowngrades();
     }
 }
-

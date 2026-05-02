@@ -17,9 +17,9 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
-        Company::class      => CompanyPolicy::class,
-        Branch::class       => BranchPolicy::class,
-        User::class         => UserPolicy::class,
+        Company::class => CompanyPolicy::class,
+        Branch::class => BranchPolicy::class,
+        User::class => UserPolicy::class,
         Subscription::class => SubscriptionPolicy::class,
         WalletTopUpRequest::class => WalletTopUpRequestPolicy::class,
     ];

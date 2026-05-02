@@ -4,11 +4,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         // SLA Policies
-        if (!Schema::hasTable('sla_policies')) {
+        if (! Schema::hasTable('sla_policies')) {
             Schema::create('sla_policies', function (Blueprint $table) {
                 $table->id();
                 $table->string('uuid', 36)->unique();
@@ -27,7 +28,7 @@ return new class extends Migration {
         }
 
         // Support Tickets
-        if (!Schema::hasTable('support_tickets')) {
+        if (! Schema::hasTable('support_tickets')) {
             Schema::create('support_tickets', function (Blueprint $table) {
                 $table->id();
                 $table->string('uuid', 36)->unique();
@@ -88,7 +89,7 @@ return new class extends Migration {
         }
 
         // Ticket Replies / Timeline
-        if (!Schema::hasTable('support_ticket_replies')) {
+        if (! Schema::hasTable('support_ticket_replies')) {
             Schema::create('support_ticket_replies', function (Blueprint $table) {
                 $table->id();
                 $table->string('uuid', 36)->unique();
@@ -109,7 +110,7 @@ return new class extends Migration {
         }
 
         // Knowledge Base Categories
-        if (!Schema::hasTable('kb_categories')) {
+        if (! Schema::hasTable('kb_categories')) {
             Schema::create('kb_categories', function (Blueprint $table) {
                 $table->id();
                 $table->string('uuid', 36)->unique();
@@ -126,7 +127,7 @@ return new class extends Migration {
         }
 
         // Knowledge Base Articles
-        if (!Schema::hasTable('knowledge_base')) {
+        if (! Schema::hasTable('knowledge_base')) {
             Schema::create('knowledge_base', function (Blueprint $table) {
                 $table->id();
                 $table->string('uuid', 36)->unique();
@@ -154,7 +155,7 @@ return new class extends Migration {
         }
 
         // Escalation Rules
-        if (!Schema::hasTable('escalation_rules')) {
+        if (! Schema::hasTable('escalation_rules')) {
             Schema::create('escalation_rules', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('company_id');
@@ -171,7 +172,7 @@ return new class extends Migration {
         }
 
         // Ticket Watchers
-        if (!Schema::hasTable('ticket_watchers')) {
+        if (! Schema::hasTable('ticket_watchers')) {
             Schema::create('ticket_watchers', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('ticket_id');

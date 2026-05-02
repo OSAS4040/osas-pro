@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 trait HasRoles
@@ -47,7 +46,7 @@ trait HasRoles
         } else {
             $role = (string) $roleAttr;
         }
-        $configPerms = config('permissions.roles.' . $role, []);
+        $configPerms = config('permissions.roles.'.$role, []);
         if (in_array('*', $configPerms) || in_array($permission, $configPerms)) {
             return true;
         }
@@ -80,7 +79,7 @@ trait HasRoles
     {
         if (is_string($role)) {
             $role = Role::where('name', $role)
-                ->where(fn($q) => $q->whereNull('company_id')
+                ->where(fn ($q) => $q->whereNull('company_id')
                     ->orWhere('company_id', $this->company_id))
                 ->firstOrFail();
         }
@@ -93,7 +92,7 @@ trait HasRoles
     public function syncRoles(array $roleNames): void
     {
         $roleIds = Role::whereIn('name', $roleNames)
-            ->where(fn($q) => $q->whereNull('company_id')
+            ->where(fn ($q) => $q->whereNull('company_id')
                 ->orWhere('company_id', $this->company_id))
             ->pluck('id');
 

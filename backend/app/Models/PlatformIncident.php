@@ -12,6 +12,7 @@ use App\Support\PlatformIntelligence\Enums\PlatformIntelligenceSeverity;
 use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property string $incident_key
@@ -30,12 +31,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property list<int|string> $affected_companies
  * @property list<string> $source_signals
  * @property list<string> $recommended_actions
- * @property \Illuminate\Support\Carbon $first_seen_at
- * @property \Illuminate\Support\Carbon $last_seen_at
- * @property \Illuminate\Support\Carbon|null $acknowledged_at
- * @property \Illuminate\Support\Carbon|null $resolved_at
- * @property \Illuminate\Support\Carbon|null $closed_at
- * @property \Illuminate\Support\Carbon|null $last_status_change_at
+ * @property Carbon $first_seen_at
+ * @property Carbon $last_seen_at
+ * @property Carbon|null $acknowledged_at
+ * @property Carbon|null $resolved_at
+ * @property Carbon|null $closed_at
+ * @property Carbon|null $last_status_change_at
  * @property string|null $resolve_reason
  * @property string|null $close_reason
  * @property list<array<string, mixed>>|null $operator_notes
@@ -107,12 +108,12 @@ final class PlatformIncident extends Model
         );
     }
 
-    private function immutable(\Illuminate\Support\Carbon $c, DateTimeZone $utc): DateTimeImmutable
+    private function immutable(Carbon $c, DateTimeZone $utc): DateTimeImmutable
     {
         return DateTimeImmutable::createFromMutable($c->clone()->timezone($utc));
     }
 
-    private function immutableNullable(?\Illuminate\Support\Carbon $c, DateTimeZone $utc): ?DateTimeImmutable
+    private function immutableNullable(?Carbon $c, DateTimeZone $utc): ?DateTimeImmutable
     {
         if ($c === null) {
             return null;

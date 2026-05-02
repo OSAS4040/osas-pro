@@ -20,7 +20,7 @@ final class ResolveReportingContextAction
         $companyId = (int) $actor->company_id;
         if ($companyId < 1) {
             throw new HttpResponseException(response()->json([
-                'message'  => 'Reporting requires a tenant company context.',
+                'message' => 'Reporting requires a tenant company context.',
                 'trace_id' => app('trace_id'),
             ], 403));
         }
@@ -40,13 +40,13 @@ final class ResolveReportingContextAction
                 ->exists();
             if (! $branchOk) {
                 throw new HttpResponseException(response()->json([
-                    'message'  => 'Invalid branch for this company.',
+                    'message' => 'Invalid branch for this company.',
                     'trace_id' => app('trace_id'),
                 ], 422));
             }
             if (! $hasCrossBranch && (int) $actor->branch_id !== $requestedBranchId) {
                 throw new HttpResponseException(response()->json([
-                    'message'  => 'Cross-branch access is not permitted for your account.',
+                    'message' => 'Cross-branch access is not permitted for your account.',
                     'trace_id' => app('trace_id'),
                 ], 403));
             }
@@ -69,7 +69,7 @@ final class ResolveReportingContextAction
                 ->exists();
             if (! $customerOk) {
                 throw new HttpResponseException(response()->json([
-                    'message'  => 'Invalid customer for this company.',
+                    'message' => 'Invalid customer for this company.',
                     'trace_id' => app('trace_id'),
                 ], 422));
             }
@@ -86,7 +86,7 @@ final class ResolveReportingContextAction
                 ->exists();
             if (! $userOk) {
                 throw new HttpResponseException(response()->json([
-                    'message'  => 'Invalid user for this company.',
+                    'message' => 'Invalid user for this company.',
                     'trace_id' => app('trace_id'),
                 ], 422));
             }

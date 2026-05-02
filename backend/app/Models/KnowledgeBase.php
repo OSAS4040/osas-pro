@@ -7,22 +7,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class KnowledgeBase extends Model
 {
-    use SoftDeletes, HasTenantScope;
+    use HasTenantScope, SoftDeletes;
 
     protected $table = 'knowledge_base';
 
     protected $fillable = [
-        'uuid','company_id','kb_category_id','author_id','title','title_ar',
-        'content','content_ar','summary','tags','related_categories',
-        'status','views','helpful_yes','helpful_no','is_public','is_featured','published_at',
+        'uuid', 'company_id', 'kb_category_id', 'author_id', 'title', 'title_ar',
+        'content', 'content_ar', 'summary', 'tags', 'related_categories',
+        'status', 'views', 'helpful_yes', 'helpful_no', 'is_public', 'is_featured', 'published_at',
     ];
 
     protected $casts = [
-        'tags'               => 'array',
+        'tags' => 'array',
         'related_categories' => 'array',
-        'is_public'          => 'boolean',
-        'is_featured'        => 'boolean',
-        'published_at'       => 'datetime',
+        'is_public' => 'boolean',
+        'is_featured' => 'boolean',
+        'published_at' => 'datetime',
     ];
 
     public function category()
@@ -38,6 +38,7 @@ class KnowledgeBase extends Model
     public function getHelpfulnessRateAttribute(): float
     {
         $total = $this->helpful_yes + $this->helpful_no;
+
         return $total > 0 ? round(($this->helpful_yes / $total) * 100, 1) : 0;
     }
 

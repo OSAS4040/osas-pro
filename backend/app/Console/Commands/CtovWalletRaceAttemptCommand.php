@@ -31,7 +31,7 @@ class CtovWalletRaceAttemptCommand extends Command
         }
 
         $email = (string) $this->option('email');
-        $user  = User::where('email', $email)->first();
+        $user = User::where('email', $email)->first();
         if (! $user) {
             $this->error("User not found: {$email}");
 
@@ -54,17 +54,17 @@ class CtovWalletRaceAttemptCommand extends Command
 
         try {
             $walletService->topUpIndividual(
-                companyId:      (int) $user->company_id,
-                customerId:     (int) $customer->id,
-                vehicleId:      null,
-                amount:         $amount,
-                invoiceId:      null,
-                paymentId:      null,
-                userId:         (int) $user->id,
-                traceId:        (string) Str::uuid(),
+                companyId: (int) $user->company_id,
+                customerId: (int) $customer->id,
+                vehicleId: null,
+                amount: $amount,
+                invoiceId: null,
+                paymentId: null,
+                userId: (int) $user->id,
+                traceId: (string) Str::uuid(),
                 idempotencyKey: $key,
-                branchId:       (int) $user->branch_id,
-                notes:          'ctov race attempt',
+                branchId: (int) $user->branch_id,
+                notes: 'ctov race attempt',
             );
             $this->line('SUCCESS');
 

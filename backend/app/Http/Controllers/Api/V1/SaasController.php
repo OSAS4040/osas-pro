@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\PlanAddon;
 use App\Models\Subscription;
+use App\Modules\SubscriptionsV2\Services\SubscriptionService as SubscriptionLifecycleService;
 use App\Services\Platform\PlatformPermissionService;
 use App\Services\Saas\SubscriptionAddonEntitlements;
-use App\Modules\SubscriptionsV2\Services\SubscriptionService as SubscriptionLifecycleService;
 use App\Support\PlanFeatureDefaults;
 use Database\Seeders\PlanAddonSeeder;
 use Database\Seeders\PlanSeeder;
@@ -52,9 +52,9 @@ class SaasController extends Controller
         }
 
         return response()->json([
-            'data'        => $plans,
+            'data' => $plans,
             'plan_addons' => $planAddons,
-            'trace_id'    => app('trace_id'),
+            'trace_id' => app('trace_id'),
         ]);
     }
 
@@ -63,9 +63,9 @@ class SaasController extends Controller
     public function currentSubscription(Request $request): JsonResponse
     {
         $user = $request->user();
-        $sub  = Subscription::where('company_id', $user->company_id)->first();
+        $sub = Subscription::where('company_id', $user->company_id)->first();
 
-        if (!$sub) {
+        if (! $sub) {
             return response()->json(['data' => null, 'message' => 'لا يوجد اشتراك نشط.'], 404);
         }
 
@@ -74,7 +74,7 @@ class SaasController extends Controller
         $planPayload = $plan?->toArray();
         if ($planPayload === null) {
             $planPayload = [
-                'slug'    => $sub->plan,
+                'slug' => $sub->plan,
                 'name_ar' => $sub->plan,
             ];
         }
@@ -83,11 +83,11 @@ class SaasController extends Controller
 
         return response()->json([
             'data' => [
-                'subscription'   => $sub,
-                'plan'             => $planPayload,
-                'active_addons'    => $addonsSvc->activeAddonPayloadForSubscription($sub),
-                'is_active'        => in_array($sub->status, ['active', 'trialing']),
-                'days_remaining'   => now()->diffInDays($sub->ends_at, false),
+                'subscription' => $sub,
+                'plan' => $planPayload,
+                'active_addons' => $addonsSvc->activeAddonPayloadForSubscription($sub),
+                'is_active' => in_array($sub->status, ['active', 'trialing']),
+                'days_remaining' => now()->diffInDays($sub->ends_at, false),
             ],
         ]);
     }
@@ -132,7 +132,7 @@ class SaasController extends Controller
     {
         $out = [];
         foreach ($tokens as $t) {
-            $key       = $t === 'api' ? 'api_access' : $t;
+            $key = $t === 'api' ? 'api_access' : $t;
             $out[$key] = true;
         }
         foreach (['pos', 'invoices', 'work_orders', 'fleet', 'reports', 'api_access', 'zatca'] as $k) {
@@ -155,7 +155,7 @@ class SaasController extends Controller
 
         $sub = Subscription::where('company_id', $user->company_id)->first();
 
-        if (!$sub) {
+        if (! $sub) {
             return response()->json(['message' => 'لا يوجد اشتراك لتحديثه.'], 404);
         }
 
@@ -179,7 +179,7 @@ class SaasController extends Controller
         }
 
         return response()->json([
-            'data'    => $sub->fresh(),
+            'data' => $sub->fresh(),
             'message' => $message,
         ]);
     }
@@ -191,8 +191,8 @@ class SaasController extends Controller
     {
         if (! Schema::hasTable('plan_addons') || ! Schema::hasTable('subscription_addons')) {
             return response()->json([
-                'message'  => 'كتالوج الإضافات غير مهيأ على الخادم. نفِّذ ترحيل قاعدة البيانات (php artisan migrate).',
-                'code'     => 'ADDONS_SCHEMA_MISSING',
+                'message' => 'كتالوج الإضافات غير مهيأ على الخادم. نفِّذ ترحيل قاعدة البيانات (php artisan migrate).',
+                'code' => 'ADDONS_SCHEMA_MISSING',
                 'trace_id' => app('trace_id'),
             ], 503);
         }
@@ -202,7 +202,7 @@ class SaasController extends Controller
         ]);
 
         $user = $request->user();
-        $sub  = Subscription::where('company_id', $user->company_id)->first();
+        $sub = Subscription::where('company_id', $user->company_id)->first();
         if (! $sub) {
             return response()->json(['message' => 'لا يوجد اشتراك.'], 404);
         }
@@ -222,7 +222,7 @@ class SaasController extends Controller
 
         return response()->json([
             'message' => 'تم تفعيل الإضافة على اشتراككم.',
-            'data'    => [
+            'data' => [
                 'active_addons' => $svc->activeAddonPayloadForSubscription($sub->fresh()),
             ],
         ], 201);
@@ -235,14 +235,14 @@ class SaasController extends Controller
     {
         if (! Schema::hasTable('plan_addons') || ! Schema::hasTable('subscription_addons')) {
             return response()->json([
-                'message'  => 'كتالوج الإضافات غير مهيأ على الخادم. نفِّذ ترحيل قاعدة البيانات (php artisan migrate).',
-                'code'     => 'ADDONS_SCHEMA_MISSING',
+                'message' => 'كتالوج الإضافات غير مهيأ على الخادم. نفِّذ ترحيل قاعدة البيانات (php artisan migrate).',
+                'code' => 'ADDONS_SCHEMA_MISSING',
                 'trace_id' => app('trace_id'),
             ], 503);
         }
 
         $user = $request->user();
-        $sub  = Subscription::where('company_id', $user->company_id)->first();
+        $sub = Subscription::where('company_id', $user->company_id)->first();
         if (! $sub) {
             return response()->json(['message' => 'لا يوجد اشتراك.'], 404);
         }
@@ -260,7 +260,7 @@ class SaasController extends Controller
 
         return response()->json([
             'message' => 'تم إلغاء الإضافة.',
-            'data'    => [
+            'data' => [
                 'active_addons' => $svc->activeAddonPayloadForSubscription($sub->fresh()),
             ],
         ]);
@@ -271,8 +271,8 @@ class SaasController extends Controller
         $user = $request->user();
         if (! $this->platformPermissionService->canManageGlobalPlanCatalog($user)) {
             return response()->json([
-                'message'  => 'تعديل كتالوج الباقات العالمي غير مسموح لهذا الحساب. اضبط SAAS_PLATFORM_ADMIN_EMAILS أو SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT.',
-                'code'     => 'PLAN_CATALOG_FORBIDDEN',
+                'message' => 'تعديل كتالوج الباقات العالمي غير مسموح لهذا الحساب. اضبط SAAS_PLATFORM_ADMIN_EMAILS أو SAAS_ALLOW_TENANT_PLAN_CATALOG_EDIT.',
+                'code' => 'PLAN_CATALOG_FORBIDDEN',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -318,8 +318,8 @@ class SaasController extends Controller
         $user = $request->user();
         if (! $this->platformPermissionService->canManageGlobalPlanCatalog($user)) {
             return response()->json([
-                'message'  => 'إنشاء باقة جديدة غير مسموح لهذا الحساب.',
-                'code'     => 'PLAN_CATALOG_FORBIDDEN',
+                'message' => 'إنشاء باقة جديدة غير مسموح لهذا الحساب.',
+                'code' => 'PLAN_CATALOG_FORBIDDEN',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -373,26 +373,26 @@ class SaasController extends Controller
     public function usageLimits(Request $request): JsonResponse
     {
         $user = $request->user();
-        $sub  = Subscription::where('company_id', $user->company_id)->first();
+        $sub = Subscription::where('company_id', $user->company_id)->first();
 
         $limits = [
             'max_branches' => $sub?->max_branches ?? 1,
-            'max_users'    => $sub?->max_users    ?? 5,
+            'max_users' => $sub?->max_users ?? 5,
         ];
 
         $usage = [
             'branches' => DB::table('branches')->where('company_id', $user->company_id)->count(),
-            'users'    => DB::table('users')->where('company_id', $user->company_id)->count(),
+            'users' => DB::table('users')->where('company_id', $user->company_id)->count(),
         ];
 
         $within = [
             'branches' => $usage['branches'] <= $limits['max_branches'],
-            'users'    => $usage['users']    <= $limits['max_users'],
+            'users' => $usage['users'] <= $limits['max_users'],
         ];
 
         return response()->json([
             'limits' => $limits,
-            'usage'  => $usage,
+            'usage' => $usage,
             'within' => $within,
         ]);
     }
@@ -404,57 +404,57 @@ class SaasController extends Controller
         $user = $request->user();
         if (! $user || ! $this->platformPermissionService->canManageGlobalPlanCatalog($user)) {
             return response()->json([
-                'message'  => 'بذر كتالوج الباقات غير مسموح لهذا الحساب.',
-                'code'     => 'PLAN_CATALOG_FORBIDDEN',
+                'message' => 'بذر كتالوج الباقات غير مسموح لهذا الحساب.',
+                'code' => 'PLAN_CATALOG_FORBIDDEN',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
 
         $plans = [
             [
-                'slug'          => 'starter',
-                'name'          => 'Starter',
-                'name_ar'       => 'المبتدئ',
+                'slug' => 'starter',
+                'name' => 'Starter',
+                'name_ar' => 'المبتدئ',
                 'price_monthly' => 299,
-                'price_yearly'  => 2990,
-                'currency'      => 'SAR',
-                'max_branches'  => 1,
-                'max_users'     => 5,
-                'max_products'  => 500,
+                'price_yearly' => 2990,
+                'currency' => 'SAR',
+                'max_branches' => 1,
+                'max_users' => 5,
+                'max_products' => 500,
                 'grace_period_days' => 3,
-                'features'      => ['pos','invoices','work_orders','basic_reports'],
-                'is_active'     => true,
-                'sort_order'    => 1,
+                'features' => ['pos', 'invoices', 'work_orders', 'basic_reports'],
+                'is_active' => true,
+                'sort_order' => 1,
             ],
             [
-                'slug'          => 'professional',
-                'name'          => 'Professional',
-                'name_ar'       => 'الاحترافي',
+                'slug' => 'professional',
+                'name' => 'Professional',
+                'name_ar' => 'الاحترافي',
                 'price_monthly' => 699,
-                'price_yearly'  => 6990,
-                'currency'      => 'SAR',
-                'max_branches'  => 3,
-                'max_users'     => 20,
-                'max_products'  => 5000,
+                'price_yearly' => 6990,
+                'currency' => 'SAR',
+                'max_branches' => 3,
+                'max_users' => 20,
+                'max_products' => 5000,
                 'grace_period_days' => 7,
-                'features'      => ['pos','invoices','work_orders','fleet','wallet','governance','bookings','reports','employees'],
-                'is_active'     => true,
-                'sort_order'    => 2,
+                'features' => ['pos', 'invoices', 'work_orders', 'fleet', 'wallet', 'governance', 'bookings', 'reports', 'employees'],
+                'is_active' => true,
+                'sort_order' => 2,
             ],
             [
-                'slug'          => 'enterprise',
-                'name'          => 'Enterprise',
-                'name_ar'       => 'المؤسسي',
+                'slug' => 'enterprise',
+                'name' => 'Enterprise',
+                'name_ar' => 'المؤسسي',
                 'price_monthly' => 1499,
-                'price_yearly'  => 14990,
-                'currency'      => 'SAR',
-                'max_branches'  => 999,
-                'max_users'     => 999,
-                'max_products'  => 999999,
+                'price_yearly' => 14990,
+                'currency' => 'SAR',
+                'max_branches' => 999,
+                'max_users' => 999,
+                'max_products' => 999999,
                 'grace_period_days' => 14,
-                'features'      => ['pos','invoices','work_orders','fleet','wallet','governance','bookings','reports','employees','api','zatca','saas_admin'],
-                'is_active'     => true,
-                'sort_order'    => 3,
+                'features' => ['pos', 'invoices', 'work_orders', 'fleet', 'wallet', 'governance', 'bookings', 'reports', 'employees', 'api', 'zatca', 'saas_admin'],
+                'is_active' => true,
+                'sort_order' => 3,
             ],
         ];
 
@@ -466,8 +466,8 @@ class SaasController extends Controller
             (new PlanAddonSeeder)->run();
         } else {
             return response()->json([
-                'message'  => 'جدول plan_addons غير موجود. نفِّذ ترحيل قاعدة البيانات أولاً (php artisan migrate).',
-                'code'     => 'ADDONS_SCHEMA_MISSING',
+                'message' => 'جدول plan_addons غير موجود. نفِّذ ترحيل قاعدة البيانات أولاً (php artisan migrate).',
+                'code' => 'ADDONS_SCHEMA_MISSING',
                 'trace_id' => app('trace_id'),
             ], 503);
         }

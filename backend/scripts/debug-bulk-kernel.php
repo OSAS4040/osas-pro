@@ -1,12 +1,13 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
 require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
-$kernel = $app->make(\Illuminate\Contracts\Http\Kernel::class);
-$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$kernel = $app->make(Kernel::class);
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 $u = User::query()->where('email', 'simulation.owner@demo.local')->firstOrFail();
 $token = $u->createToken('debug')->plainTextToken;

@@ -17,7 +17,7 @@ final class SubscriptionRealtimeBroadcasted implements ShouldBroadcastNow
     use SerializesModels;
 
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     public function __construct(
         public readonly string $eventType,
@@ -53,4 +53,3 @@ final class SubscriptionRealtimeBroadcasted implements ShouldBroadcastNow
         ];
     }
 }
-

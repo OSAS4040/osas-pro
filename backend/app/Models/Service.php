@@ -16,10 +16,10 @@ class Service extends Model
     ];
 
     protected $casts = [
-        'base_price'        => 'decimal:4',
-        'tax_rate'          => 'decimal:2',
+        'base_price' => 'decimal:4',
+        'tax_rate' => 'decimal:2',
         'estimated_minutes' => 'integer',
-        'is_active'         => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function company()

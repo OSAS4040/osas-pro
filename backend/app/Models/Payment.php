@@ -19,8 +19,8 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'amount'     => 'decimal:4',
-        'meta'       => 'array',
+        'amount' => 'decimal:4',
+        'meta' => 'array',
         'created_at' => 'datetime',
     ];
 
@@ -33,12 +33,12 @@ class Payment extends Model
             if ($model->isDirty('invoice_id') && $model->getOriginal('invoice_id') === null) {
                 $allowed[] = 'invoice_id';
             }
-            $dirty   = array_keys($model->getDirty());
+            $dirty = array_keys($model->getDirty());
             $illegal = array_diff($dirty, $allowed);
 
             if (! empty($illegal)) {
                 throw new \RuntimeException(
-                    'Payment records are immutable. Illegal fields modified: ' . implode(', ', $illegal)
+                    'Payment records are immutable. Illegal fields modified: '.implode(', ', $illegal)
                 );
             }
         });

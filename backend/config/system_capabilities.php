@@ -1,10 +1,12 @@
 <?php
 
+use App\Services\SystemCapabilitiesService;
+
 /**
  * كتالوج آمن لعرض «قدرات النظام» — قراءة فقط، بدون أسرار تشغيل أو مسارات إدارية داخلية.
  * يُقيَّم لكل مستخدم حسب: الدور، الصلاحيات، ومصفوفة نشاط المنشأة (عدة أنشطة).
  *
- * @see \App\Services\SystemCapabilitiesService
+ * @see SystemCapabilitiesService
  */
 return [
     'items' => [

@@ -22,7 +22,7 @@ class DashboardController extends Controller
     public function summary(Request $request): JsonResponse
     {
         $from = $request->input('from', now()->startOfMonth()->toDateString());
-        $to   = $request->input('to', now()->endOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
         $companyId = (int) app('tenant_company_id');
 
         $executionPartner = TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId);
@@ -31,7 +31,7 @@ class DashboardController extends Controller
         $cacheKey = $executionPartner
             ? "dashboard:summary:v5:ep:{$companyId}:{$from}:{$to}"
             : "dashboard:summary:v5:{$companyId}:{$from}:{$to}";
-        $ttl      = now()->diffInHours(now()->endOfDay()) < 2 ? 300 : 1800;
+        $ttl = now()->diffInHours(now()->endOfDay()) < 2 ? 300 : 1800;
 
         $refresh = $request->boolean('refresh');
 
@@ -162,21 +162,21 @@ class DashboardController extends Controller
             ->sum('total');
 
         $totalCollected = Payment::where('company_id', $companyId)
-            ->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
             ->where('status', 'completed')
             ->sum('amount');
 
         $newCustomers = Customer::where('company_id', $companyId)
-            ->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
             ->count();
 
         $woCompleted = WorkOrder::where('company_id', $companyId)
-            ->whereBetween('updated_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->whereBetween('updated_at', [$from.' 00:00:00', $to.' 23:59:59'])
             ->where('status', 'completed')
             ->count();
 
         $woTotal = WorkOrder::where('company_id', $companyId)
-            ->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
+            ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
             ->count();
 
         $avgInvoiceValue = Invoice::where('company_id', $companyId)
@@ -201,7 +201,7 @@ class DashboardController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $day = now()->subDays($i)->toDateString();
             $revenueLast7Days[] = [
-                'date'    => $day,
+                'date' => $day,
                 'revenue' => round((float) Invoice::where('company_id', $companyId)
                     ->whereDate('issued_at', $day)
                     ->whereNotIn('status', ['cancelled', 'draft'])
@@ -215,7 +215,7 @@ class DashboardController extends Controller
                 ->where('status', 'completed')
                 ->count();
             $workOrdersLast7Days[] = [
-                'date'  => $day,
+                'date' => $day,
                 'count' => $woDayCreated,
             ];
             $woLast7Created += $woDayCreated;
@@ -224,15 +224,15 @@ class DashboardController extends Controller
 
         return [
             'period' => ['from' => $from, 'to' => $to],
-            'sales'  => [
-                'total_revenue'      => round((float) $totalRevenue, 2),
-                'total_collected'    => round((float) $totalCollected, 2),
-                'collection_rate'    => $totalRevenue > 0 ? round(((float) $totalCollected / (float) $totalRevenue) * 100, 1) : 0.0,
-                'avg_invoice_value'  => round((float) ($avgInvoiceValue ?? 0), 2),
+            'sales' => [
+                'total_revenue' => round((float) $totalRevenue, 2),
+                'total_collected' => round((float) $totalCollected, 2),
+                'collection_rate' => $totalRevenue > 0 ? round(((float) $totalCollected / (float) $totalRevenue) * 100, 1) : 0.0,
+                'avg_invoice_value' => round((float) ($avgInvoiceValue ?? 0), 2),
             ],
             'receivables' => [
                 'open_invoice_count' => $openInvoices,
-                'total_outstanding'  => round((float) $totalOutstanding, 2),
+                'total_outstanding' => round((float) $totalOutstanding, 2),
             ],
             'customers' => [
                 'new_in_period' => $newCustomers,
@@ -240,7 +240,7 @@ class DashboardController extends Controller
             'work_orders' => [
                 'created_in_period' => $woTotal,
                 'completed_in_period' => $woCompleted,
-                'completion_rate'     => $woTotal > 0 ? round(($woCompleted / $woTotal) * 100, 1) : 0.0,
+                'completion_rate' => $woTotal > 0 ? round(($woCompleted / $woTotal) * 100, 1) : 0.0,
                 'created_last_7_days' => $woLast7Created,
                 'completed_last_7_days' => $woLast7Completed,
                 'completion_rate_last_7_days' => $woLast7Created > 0
@@ -251,7 +251,7 @@ class DashboardController extends Controller
                 'balance_by_type' => array_map(fn ($v) => round($v, 2), $walletTotals),
             ],
             'charts' => [
-                'revenue_last_7_days'     => $revenueLast7Days,
+                'revenue_last_7_days' => $revenueLast7Days,
                 'work_orders_last_7_days' => $workOrdersLast7Days,
             ],
         ];

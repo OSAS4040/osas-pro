@@ -20,10 +20,10 @@ final class CreatePaymentOrderAction
     {
         return DB::transaction(function () use ($companyId, $planId, $actorUserId): PaymentOrder {
             $order = $this->paymentOrderService->createPaymentOrder(
-            $companyId,
-            $planId,
-            $actorUserId,
-        );
+                $companyId,
+                $planId,
+                $actorUserId,
+            );
             DB::afterCommit(function () use ($companyId, $order): void {
                 $this->realtimeNotificationService->publish(
                     'payment_order_created',

@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Sentry\State\Scope;
 use Symfony\Component\HttpFoundation\Response;
 
 class TraceRequestMiddleware
@@ -24,9 +25,9 @@ class TraceRequestMiddleware
         app()->instance('request_id', $requestId);
 
         Log::withContext([
-            'trace_id'        => $traceId,
-            'request_id'      => $requestId,
-            'correlation_id'  => $correlationId,
+            'trace_id' => $traceId,
+            'request_id' => $requestId,
+            'correlation_id' => $correlationId,
         ]);
 
         $response = $next($request);
@@ -46,30 +47,30 @@ class TraceRequestMiddleware
             return;
         }
 
-        \Sentry\configureScope(function (\Sentry\State\Scope $scope) use ($request, $traceId): void {
+        \Sentry\configureScope(function (Scope $scope) use ($request, $traceId): void {
             $scope->setTag('trace_id', $traceId);
 
             $user = $request->user();
             if ($user) {
                 $scope->setUser([
-                    'id'         => $user->id,
-                    'email'      => $user->email,
+                    'id' => $user->id,
+                    'email' => $user->email,
                     'company_id' => $user->company_id,
-                    'branch_id'  => $user->branch_id,
+                    'branch_id' => $user->branch_id,
                 ]);
                 $scope->setTag('company_id', (string) $user->company_id);
-                $scope->setTag('branch_id',  (string) ($user->branch_id ?? ''));
+                $scope->setTag('branch_id', (string) ($user->branch_id ?? ''));
             }
 
             $apiKey = $request->attributes->get('api_key');
             if ($apiKey) {
-                $scope->setTag('api_key_id',  $apiKey->key_id);
-                $scope->setTag('company_id',  (string) $apiKey->company_id);
+                $scope->setTag('api_key_id', $apiKey->key_id);
+                $scope->setTag('company_id', (string) $apiKey->company_id);
             }
 
             $scope->setContext('request', [
-                'method'   => $request->method(),
-                'path'     => $request->path(),
+                'method' => $request->method(),
+                'path' => $request->path(),
                 'trace_id' => $traceId,
             ]);
         });

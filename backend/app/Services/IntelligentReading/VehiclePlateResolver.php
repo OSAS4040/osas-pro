@@ -4,11 +4,12 @@ namespace App\Services\IntelligentReading;
 
 use App\Models\Vehicle;
 use App\Models\VehicleDocument;
+use Illuminate\Support\Collection;
 
 final class VehiclePlateResolver
 {
     /**
-     * @return array{registered: bool, plate?: string, reason?: string, vehicle?: Vehicle, documents?: \Illuminate\Support\Collection, recent_work_orders?: \Illuminate\Support\Collection}
+     * @return array{registered: bool, plate?: string, reason?: string, vehicle?: Vehicle, documents?: Collection, recent_work_orders?: Collection}
      */
     public static function resolve(int $companyId, string $plateInput): array
     {

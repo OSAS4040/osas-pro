@@ -1,18 +1,38 @@
 <?php
 
+use App\Exceptions\LedgerPostingFailedException;
+use App\Http\Middleware\ApiKeyAuthMiddleware;
+use App\Http\Middleware\ApiUsageLoggingMiddleware;
+use App\Http\Middleware\BranchScopeMiddleware;
+use App\Http\Middleware\EnsureBusinessFeatureEnabled;
+use App\Http\Middleware\EnsureIntelligentInternalAccess;
+use App\Http\Middleware\EnsurePhase2ReadonlyEnabled;
+use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\EnsurePlatformPermission;
+use App\Http\Middleware\FinancialOperationProtectionMiddleware;
+use App\Http\Middleware\ForceJsonForApi;
+use App\Http\Middleware\GlobalTenantGuardMiddleware;
+use App\Http\Middleware\IdempotencyMiddleware;
+use App\Http\Middleware\RequirePermissionMiddleware;
+use App\Http\Middleware\SubscriptionMiddleware;
+use App\Http\Middleware\TenantScopeMiddleware;
+use App\Http\Middleware\TraceRequestMiddleware;
+use App\Providers\AppServiceProvider;
+use App\Providers\AuthServiceProvider;
+use App\Providers\IntelligentServiceProvider;
+use App\Services\Auth\AuthSecurityTelemetryService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\TraceRequestMiddleware;
-use App\Http\Middleware\TenantScopeMiddleware;
-use App\Http\Middleware\GlobalTenantGuardMiddleware;
-use App\Http\Middleware\FinancialOperationProtectionMiddleware;
-use App\Http\Middleware\SubscriptionMiddleware;
-use App\Http\Middleware\IdempotencyMiddleware;
-use App\Http\Middleware\ApiKeyAuthMiddleware;
-use App\Http\Middleware\ApiUsageLoggingMiddleware;
-use App\Http\Middleware\ForceJsonForApi;
-use App\Http\Middleware\RequirePermissionMiddleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Sentry\Laravel\Integration;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 if (PHP_SAPI === 'cli') {
     $argv = $_SERVER['argv'] ?? [];
@@ -41,7 +61,7 @@ if (PHP_SAPI === 'cli') {
         ];
 
         foreach ($pairs as $key => $value) {
-            putenv($key . '=' . $value);
+            putenv($key.'='.$value);
             $_ENV[$key] = $value;
             $_SERVER[$key] = $value;
         }
@@ -61,9 +81,9 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
     )
     ->withProviders([
-        \App\Providers\AuthServiceProvider::class,
-        \App\Providers\IntelligentServiceProvider::class,
-        \App\Providers\AppServiceProvider::class,
+        AuthServiceProvider::class,
+        IntelligentServiceProvider::class,
+        AppServiceProvider::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->prepend(TraceRequestMiddleware::class);
@@ -72,20 +92,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'tenant'               => TenantScopeMiddleware::class,
-            'global.tenant'        => GlobalTenantGuardMiddleware::class,
+            'tenant' => TenantScopeMiddleware::class,
+            'global.tenant' => GlobalTenantGuardMiddleware::class,
             'financial.protection' => FinancialOperationProtectionMiddleware::class,
-            'branch.scope'         => \App\Http\Middleware\BranchScopeMiddleware::class,
-            'subscription'         => SubscriptionMiddleware::class,
-            'idempotent'           => IdempotencyMiddleware::class,
-            'auth.apikey'          => ApiKeyAuthMiddleware::class,
-            'api.log'              => ApiUsageLoggingMiddleware::class,
-            'permission'           => RequirePermissionMiddleware::class,
-            'intelligent.internal' => \App\Http\Middleware\EnsureIntelligentInternalAccess::class,
-            'intelligent.phase2'   => \App\Http\Middleware\EnsurePhase2ReadonlyEnabled::class,
-            'business.feature'     => \App\Http\Middleware\EnsureBusinessFeatureEnabled::class,
-            'platform.admin'       => \App\Http\Middleware\EnsurePlatformAdmin::class,
-            'platform.permission'  => \App\Http\Middleware\EnsurePlatformPermission::class,
+            'branch.scope' => BranchScopeMiddleware::class,
+            'subscription' => SubscriptionMiddleware::class,
+            'idempotent' => IdempotencyMiddleware::class,
+            'auth.apikey' => ApiKeyAuthMiddleware::class,
+            'api.log' => ApiUsageLoggingMiddleware::class,
+            'permission' => RequirePermissionMiddleware::class,
+            'intelligent.internal' => EnsureIntelligentInternalAccess::class,
+            'intelligent.phase2' => EnsurePhase2ReadonlyEnabled::class,
+            'business.feature' => EnsureBusinessFeatureEnabled::class,
+            'platform.admin' => EnsurePlatformAdmin::class,
+            'platform.permission' => EnsurePlatformPermission::class,
         ]);
 
         // Bearer token auth only — no stateful SPA session needed
@@ -94,74 +114,74 @@ return Application::configure(basePath: dirname(__DIR__))
         // ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $apiExpectsJson = static function (\Illuminate\Http\Request $request): bool {
+        $apiExpectsJson = static function (Request $request): bool {
             return $request->is('api') || $request->is('api/*') || $request->expectsJson();
         };
 
-        $exceptions->report(function (\Throwable $e) {
+        $exceptions->report(function (Throwable $e) {
             if (app()->bound('sentry')) {
-                \Sentry\Laravel\Integration::captureUnhandledException($e);
+                Integration::captureUnhandledException($e);
             }
         });
 
-        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) use ($apiExpectsJson) {
+        $exceptions->render(function (AuthenticationException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
-                return new \Illuminate\Http\JsonResponse([
-                    'message'  => 'Unauthenticated.',
+                return new JsonResponse([
+                    'message' => 'Unauthenticated.',
                     'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 401);
             }
         });
 
-        $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, $request) use ($apiExpectsJson) {
+        $exceptions->render(function (AuthorizationException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
-                return new \Illuminate\Http\JsonResponse([
-                    'message'  => 'This action is unauthorized.',
+                return new JsonResponse([
+                    'message' => 'This action is unauthorized.',
                     'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 403);
             }
         });
 
-        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) use ($apiExpectsJson) {
+        $exceptions->render(function (ValidationException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
                 $first = collect($e->errors())
                     ->flatten()
                     ->filter(static fn ($m) => is_string($m) && $m !== '')
                     ->first();
 
-                return new \Illuminate\Http\JsonResponse([
-                    'message'  => $first ?: 'Validation failed.',
-                    'errors'   => $e->errors(),
+                return new JsonResponse([
+                    'message' => $first ?: 'Validation failed.',
+                    'errors' => $e->errors(),
                     'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 422);
             }
         });
 
-        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, $request) use ($apiExpectsJson) {
+        $exceptions->render(function (ModelNotFoundException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
                 $model = class_basename($e->getModel());
 
-                return new \Illuminate\Http\JsonResponse([
-                    'message'  => "{$model} not found.",
+                return new JsonResponse([
+                    'message' => "{$model} not found.",
                     'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 404);
             }
         });
 
-        $exceptions->render(function (\DomainException $e, $request) use ($apiExpectsJson) {
+        $exceptions->render(function (DomainException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
-                return new \Illuminate\Http\JsonResponse([
-                    'message'  => $e->getMessage(),
+                return new JsonResponse([
+                    'message' => $e->getMessage(),
                     'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 422);
             }
         });
 
-        $exceptions->render(function (\App\Exceptions\LedgerPostingFailedException $e, $request) use ($apiExpectsJson) {
+        $exceptions->render(function (LedgerPostingFailedException $e, $request) use ($apiExpectsJson) {
             if ($apiExpectsJson($request)) {
-                return new \Illuminate\Http\JsonResponse([
-                    'message'  => $e->getMessage(),
-                    'code'     => \App\Exceptions\LedgerPostingFailedException::ERROR_CODE,
+                return new JsonResponse([
+                    'message' => $e->getMessage(),
+                    'code' => LedgerPostingFailedException::ERROR_CODE,
                     'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
                 ], 503, [
                     'Retry-After' => '5',
@@ -170,7 +190,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         /** 404 / 403 / … from the HTTP layer — must be JSON for /api/* (NotFoundHttpException, etc.). */
-        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e, $request) use ($apiExpectsJson) {
+        $exceptions->render(function (HttpExceptionInterface $e, $request) use ($apiExpectsJson) {
             if (! $apiExpectsJson($request)) {
                 return null;
             }
@@ -182,7 +202,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             $payload = [
-                'message'  => $message,
+                'message' => $message,
                 'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
             ];
 
@@ -196,40 +216,40 @@ return Application::configure(basePath: dirname(__DIR__))
                 $payload['message_key'] = 'auth.security.rate_limited';
                 $payload['reason_code'] = 'RATE_LIMITED';
 
-                if ($e instanceof \Illuminate\Http\Exceptions\ThrottleRequestsException) {
+                if ($e instanceof ThrottleRequestsException) {
                     $headers = $e->getHeaders();
                 }
 
                 try {
-                    app(\App\Services\Auth\AuthSecurityTelemetryService::class)->recordRateLimitedIfAuthEndpoint($request);
-                } catch (\Throwable $t) {
+                    app(AuthSecurityTelemetryService::class)->recordRateLimitedIfAuthEndpoint($request);
+                } catch (Throwable $t) {
                     report($t);
                 }
             }
 
-            return new \Illuminate\Http\JsonResponse($payload, $status, $headers);
+            return new JsonResponse($payload, $status, $headers);
         });
 
         /** Unhandled server errors only — does not replace specialized handlers above. */
-        $exceptions->render(function (\Throwable $e, $request) use ($apiExpectsJson) {
+        $exceptions->render(function (Throwable $e, $request) use ($apiExpectsJson) {
             if (! $apiExpectsJson($request)) {
                 return null;
             }
 
-            if ($e instanceof \Illuminate\Auth\AuthenticationException
-                || $e instanceof \Illuminate\Auth\Access\AuthorizationException
-                || $e instanceof \Illuminate\Validation\ValidationException
-                || $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException
-                || $e instanceof \DomainException
-                || $e instanceof \App\Exceptions\LedgerPostingFailedException
-                || $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+            if ($e instanceof AuthenticationException
+                || $e instanceof AuthorizationException
+                || $e instanceof ValidationException
+                || $e instanceof ModelNotFoundException
+                || $e instanceof DomainException
+                || $e instanceof LedgerPostingFailedException
+                || $e instanceof HttpExceptionInterface) {
                 return null;
             }
 
             report($e);
 
-            return new \Illuminate\Http\JsonResponse([
-                'message'  => config('app.debug')
+            return new JsonResponse([
+                'message' => config('app.debug')
                     ? $e->getMessage().' ['.basename($e->getFile()).':'.$e->getLine().']'
                     : 'Server error.',
                 'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,

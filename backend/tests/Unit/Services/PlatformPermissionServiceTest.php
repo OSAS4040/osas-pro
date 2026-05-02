@@ -73,7 +73,7 @@ class PlatformPermissionServiceTest extends TestCase
         $tenant = $this->createTenant('owner');
         $tenant['user']->update([
             'is_platform_user' => true,
-            'platform_role'      => 'super_admin',
+            'platform_role' => 'super_admin',
         ]);
 
         $this->assertTrue(app(PlatformPermissionService::class)->canManageGlobalPlanCatalog($tenant['user']->fresh()));

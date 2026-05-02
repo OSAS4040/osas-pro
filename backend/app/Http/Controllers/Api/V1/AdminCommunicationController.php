@@ -26,12 +26,12 @@ class AdminCommunicationController extends Controller
             $archived = (bool) ($item['archived'] ?? false);
 
             $inTab = match ($tab) {
-                'outbox' => in_array($state, ['submitted', 'under_review', 'signed', 'sent'], true) && !$archived,
-                'assigned' => $assignedTo !== '' && !$archived,
+                'outbox' => in_array($state, ['submitted', 'under_review', 'signed', 'sent'], true) && ! $archived,
+                'assigned' => $assignedTo !== '' && ! $archived,
                 'archived' => $archived,
-                default => in_array($state, ['submitted', 'under_review', 'signed', 'sent', 'returned', 'rejected'], true) && $destination !== '' && !$archived,
+                default => in_array($state, ['submitted', 'under_review', 'signed', 'sent', 'returned', 'rejected'], true) && $destination !== '' && ! $archived,
             };
-            if (!$inTab) {
+            if (! $inTab) {
                 return false;
             }
 
@@ -54,7 +54,7 @@ class AdminCommunicationController extends Controller
             return str_contains($haystack, $q);
         }));
 
-        usort($filtered, fn(array $a, array $b) => strcmp((string) ($b['updated_at'] ?? ''), (string) ($a['updated_at'] ?? '')));
+        usort($filtered, fn (array $a, array $b) => strcmp((string) ($b['updated_at'] ?? ''), (string) ($a['updated_at'] ?? '')));
 
         return response()->json([
             'data' => $filtered,
@@ -98,7 +98,7 @@ class AdminCommunicationController extends Controller
             'destination' => (string) ($payload['destination'] ?? ''),
             'assigned_to' => (string) ($payload['assigned_to'] ?? ''),
             'due_date' => $payload['due_date'] ?? null,
-            'tags' => array_values(array_filter((array) ($payload['tags'] ?? []), fn($t) => trim((string) $t) !== '')),
+            'tags' => array_values(array_filter((array) ($payload['tags'] ?? []), fn ($t) => trim((string) $t) !== '')),
             'state' => 'draft',
             'archived' => false,
             'signature' => [
@@ -177,6 +177,7 @@ class AdminCommunicationController extends Controller
             $item['state'] = 'submitted';
             $this->pushTimeline($item, (string) ($request->user()?->name ?? 'system'), 'submitted', 'تم إرسال المعاملة للمراجعة');
         });
+
         return response()->json(['data' => $updated, 'trace_id' => app('trace_id')]);
     }
 
@@ -239,11 +240,11 @@ class AdminCommunicationController extends Controller
 
         $updated = $this->mutateRecord($company, $id, function (array &$item) use ($payload, $request): void {
             $signed = (array) ($item['signature']['signed_by'] ?? []);
-            if (!in_array($payload['signer'], $signed, true)) {
+            if (! in_array($payload['signer'], $signed, true)) {
                 $signed[] = $payload['signer'];
             }
             $requested = (array) ($item['signature']['requested_signers'] ?? []);
-            $allSigned = !empty($requested) && count(array_intersect($requested, $signed)) >= count($requested);
+            $allSigned = ! empty($requested) && count(array_intersect($requested, $signed)) >= count($requested);
 
             $item['signature']['signed_by'] = $signed;
             $item['signature']['status'] = $allSigned ? 'completed' : 'pending';
@@ -252,7 +253,7 @@ class AdminCommunicationController extends Controller
                 $item,
                 (string) ($request->user()?->name ?? 'system'),
                 'signed',
-                'تم اعتماد المعاملة من ' . $payload['signer'] . (($payload['note'] ?? '') ? (' - ' . $payload['note']) : '')
+                'تم اعتماد المعاملة من '.$payload['signer'].(($payload['note'] ?? '') ? (' - '.$payload['note']) : '')
             );
         });
 
@@ -300,6 +301,7 @@ class AdminCommunicationController extends Controller
     {
         $company = Company::findOrFail($request->user()->company_id);
         $this->authorize($forUpdate ? 'update' : 'view', $company);
+
         return $company;
     }
 
@@ -308,6 +310,7 @@ class AdminCommunicationController extends Controller
         $settings = is_array($company->settings) ? $company->settings : [];
         $bucket = $settings['administrative_communications'] ?? [];
         $bucket['transactions'] = is_array($bucket['transactions'] ?? null) ? $bucket['transactions'] : [];
+
         return $bucket;
     }
 
@@ -340,6 +343,7 @@ class AdminCommunicationController extends Controller
 
         $bucket['transactions'] = $items;
         $this->persistBucket($company, $bucket);
+
         return $found;
     }
 
@@ -353,7 +357,7 @@ class AdminCommunicationController extends Controller
             }
         }
 
-        return 'ASASPRO-COM-' . str_pad((string) ($max + 1), 5, '0', STR_PAD_LEFT);
+        return 'ASASPRO-COM-'.str_pad((string) ($max + 1), 5, '0', STR_PAD_LEFT);
     }
 
     private function pushTimeline(array &$item, string $actor, string $action, string $note): void

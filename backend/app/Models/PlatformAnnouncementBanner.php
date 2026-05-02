@@ -24,7 +24,7 @@ class PlatformAnnouncementBanner extends Model
     protected function casts(): array
     {
         return [
-            'is_enabled'  => 'boolean',
+            'is_enabled' => 'boolean',
             'dismissible' => 'boolean',
         ];
     }
@@ -37,13 +37,13 @@ class PlatformAnnouncementBanner extends Model
         }
 
         return static::query()->create([
-            'is_enabled'    => false,
-            'title'         => null,
-            'message'       => null,
-            'link_url'      => null,
-            'link_text'     => null,
-            'variant'       => 'promo',
-            'dismissible'   => true,
+            'is_enabled' => false,
+            'title' => null,
+            'message' => null,
+            'link_url' => null,
+            'link_text' => null,
+            'variant' => 'promo',
+            'dismissible' => true,
             'dismiss_token' => Str::random(32),
         ]);
     }
@@ -56,7 +56,7 @@ class PlatformAnnouncementBanner extends Model
         $message = trim((string) $this->message);
         if (! $this->is_enabled || $message === '') {
             return [
-                'enabled'       => false,
+                'enabled' => false,
                 'dismiss_token' => (string) $this->dismiss_token,
             ];
         }
@@ -66,13 +66,13 @@ class PlatformAnnouncementBanner extends Model
             : 'promo';
 
         return [
-            'enabled'       => true,
-            'title'         => $this->title ? (string) $this->title : null,
-            'message'       => $message,
-            'link_url'      => $this->link_url ? (string) $this->link_url : null,
-            'link_text'     => $this->link_text ? (string) $this->link_text : null,
-            'variant'       => $variant,
-            'dismissible'   => (bool) $this->dismissible,
+            'enabled' => true,
+            'title' => $this->title ? (string) $this->title : null,
+            'message' => $message,
+            'link_url' => $this->link_url ? (string) $this->link_url : null,
+            'link_text' => $this->link_text ? (string) $this->link_text : null,
+            'variant' => $variant,
+            'dismissible' => (bool) $this->dismissible,
             'dismiss_token' => (string) $this->dismiss_token,
         ];
     }

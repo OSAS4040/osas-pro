@@ -11,7 +11,7 @@ class KbCategory extends Model
     protected $table = 'kb_categories';
 
     protected $fillable = [
-        'uuid','company_id','name','name_ar','icon','color','sort_order','is_public',
+        'uuid', 'company_id', 'name', 'name_ar', 'icon', 'color', 'sort_order', 'is_public',
     ];
 
     protected $casts = ['is_public' => 'boolean'];

@@ -48,7 +48,7 @@ final class UploadReceiptAction
 
             $path = $receipt->store('bank-receipts', 'public');
 
-            $submission->receipt_path          = $path;
+            $submission->receipt_path = $path;
             $submission->receipt_original_name = $receipt->getClientOriginalName();
             if ($bankReference !== null && $bankReference !== '') {
                 $submission->bank_reference = $bankReference;

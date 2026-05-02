@@ -10,6 +10,7 @@ use App\Models\StockMovement;
 use App\Services\Config\VerticalBehaviorResolverService;
 use App\Services\InventoryService;
 use App\Services\ReservationService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,7 +20,7 @@ use Illuminate\Http\Request;
 class InventoryController extends Controller
 {
     public function __construct(
-        private readonly InventoryService   $inventoryService,
+        private readonly InventoryService $inventoryService,
         private readonly ReservationService $reservationService,
         private readonly VerticalBehaviorResolverService $behaviorResolver,
     ) {}
@@ -30,18 +31,20 @@ class InventoryController extends Controller
      *     tags={"Inventory"},
      *     summary="List inventory levels",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="branch_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="product_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="low_stock", in="query", @OA\Schema(type="boolean")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/PaginatedResponse")
      * )
      */
     public function index(Request $request): JsonResponse
     {
         $inventory = Inventory::with(['product.unit', 'branch'])
-            ->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))
-            ->when($request->product_id, fn($q) => $q->where('product_id', $request->product_id))
-            ->when($request->boolean('low_stock'), fn($q) => $q->whereColumn('quantity', '<=', 'reorder_point'))
+            ->when($request->branch_id, fn ($q) => $q->where('branch_id', $request->branch_id))
+            ->when($request->product_id, fn ($q) => $q->where('product_id', $request->product_id))
+            ->when($request->boolean('low_stock'), fn ($q) => $q->whereColumn('quantity', '<=', 'reorder_point'))
             ->paginate($request->per_page ?? 25);
 
         return response()->json(['data' => $inventory, 'trace_id' => app('trace_id')]);
@@ -53,7 +56,9 @@ class InventoryController extends Controller
      *     tags={"Inventory"},
      *     summary="Get inventory record",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -70,10 +75,13 @@ class InventoryController extends Controller
      *     tags={"Inventory"},
      *     summary="Adjust inventory (add / subtract / set)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"branch_id","product_id","quantity","type"},
+     *
      *             @OA\Property(property="branch_id", type="integer"),
      *             @OA\Property(property="product_id", type="integer"),
      *             @OA\Property(property="quantity", type="number"),
@@ -83,50 +91,51 @@ class InventoryController extends Controller
      *             @OA\Property(property="note", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse")
      * )
      */
     public function adjust(AdjustInventoryRequest $request): JsonResponse
     {
-        $data    = $request->validated();
-        $user    = $request->user();
+        $data = $request->validated();
+        $user = $request->user();
         $traceId = app('trace_id');
         $behavior = $this->behaviorResolver->resolve((int) $user->company_id, $user->branch_id ? (int) $user->branch_id : null);
         $allowNegativeStock = (bool) ($behavior['flags']['allow_negative_stock'] ?? false);
 
-        $movement = match($data['type']) {
+        $movement = match ($data['type']) {
             'subtract' => $this->inventoryService->deductStock(
-                companyId:     $user->company_id,
-                branchId:      $data['branch_id'],
-                productId:     $data['product_id'],
-                quantity:      $data['quantity'],
-                userId:        $user->id,
+                companyId: $user->company_id,
+                branchId: $data['branch_id'],
+                productId: $data['product_id'],
+                quantity: $data['quantity'],
+                userId: $user->id,
                 referenceType: 'manual_adjustment',
-                referenceId:   0,
-                traceId:       $traceId,
-                unitId:        $data['unit_id'] ?? null,
-                unitCost:      $data['unit_cost'] ?? null,
-                note:          $data['note'] ?? null,
+                referenceId: 0,
+                traceId: $traceId,
+                unitId: $data['unit_id'] ?? null,
+                unitCost: $data['unit_cost'] ?? null,
+                note: $data['note'] ?? null,
                 allowNegativeStock: $allowNegativeStock,
             ),
             'set' => $this->handleSetAdjustment($data, $user, $traceId),
             default => $this->inventoryService->addStock(
-                companyId:     $user->company_id,
-                branchId:      $data['branch_id'],
-                productId:     $data['product_id'],
-                quantity:      $data['quantity'],
-                userId:        $user->id,
-                type:          'manual_add',
-                traceId:       $traceId,
-                unitId:        $data['unit_id'] ?? null,
-                unitCost:      $data['unit_cost'] ?? null,
-                note:          $data['note'] ?? null,
+                companyId: $user->company_id,
+                branchId: $data['branch_id'],
+                productId: $data['product_id'],
+                quantity: $data['quantity'],
+                userId: $user->id,
+                type: 'manual_add',
+                traceId: $traceId,
+                unitId: $data['unit_id'] ?? null,
+                unitCost: $data['unit_cost'] ?? null,
+                note: $data['note'] ?? null,
             ),
         };
 
         return response()->json([
-            'data'             => $movement,
-            'trace_id'         => $traceId,
+            'data' => $movement,
+            'trace_id' => $traceId,
             'behavior_applied' => $this->behaviorResolver->activeBehaviorMarkers($behavior),
         ], 201);
     }
@@ -137,18 +146,20 @@ class InventoryController extends Controller
      *     tags={"Inventory"},
      *     summary="List stock movements",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="product_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="branch_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/PaginatedResponse")
      * )
      */
     public function movements(Request $request): JsonResponse
     {
         $movements = StockMovement::with(['product', 'unit', 'createdBy'])
-            ->when($request->product_id, fn($q) => $q->where('product_id', $request->product_id))
-            ->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))
-            ->when($request->type, fn($q) => $q->where('type', $request->type))
+            ->when($request->product_id, fn ($q) => $q->where('product_id', $request->product_id))
+            ->when($request->branch_id, fn ($q) => $q->where('branch_id', $request->branch_id))
+            ->when($request->type, fn ($q) => $q->where('type', $request->type))
             ->orderByDesc('created_at')
             ->paginate($request->per_page ?? 25);
 
@@ -161,17 +172,19 @@ class InventoryController extends Controller
      *     tags={"Inventory"},
      *     summary="List inventory reservations",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="status", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="product_id", in="query", @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/PaginatedResponse")
      * )
      */
     public function reservations(Request $request): JsonResponse
     {
         $reservations = InventoryReservation::with(['product', 'workOrder', 'createdBy'])
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->product_id, fn($q) => $q->where('product_id', $request->product_id))
-            ->when($request->branch_id, fn($q) => $q->where('branch_id', $request->branch_id))
+            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($request->product_id, fn ($q) => $q->where('product_id', $request->product_id))
+            ->when($request->branch_id, fn ($q) => $q->where('branch_id', $request->branch_id))
             ->orderByDesc('id')
             ->paginate($request->per_page ?? 25);
 
@@ -184,10 +197,13 @@ class InventoryController extends Controller
      *     tags={"Inventory"},
      *     summary="Create an inventory reservation",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"branch_id","product_id","quantity","reference_type","reference_id"},
+     *
      *             @OA\Property(property="branch_id", type="integer"),
      *             @OA\Property(property="product_id", type="integer"),
      *             @OA\Property(property="quantity", type="number"),
@@ -197,19 +213,20 @@ class InventoryController extends Controller
      *             @OA\Property(property="expires_at", type="string", format="date-time")
      *         )
      *     ),
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse")
      * )
      */
     public function createReservation(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'branch_id'      => ['required', 'integer', 'exists:branches,id'],
-            'product_id'     => ['required', 'integer', 'exists:products,id'],
-            'quantity'       => ['required', 'numeric', 'min:0.0001'],
+            'branch_id' => ['required', 'integer', 'exists:branches,id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'quantity' => ['required', 'numeric', 'min:0.0001'],
             'reference_type' => ['required', 'string'],
-            'reference_id'   => ['required', 'integer'],
-            'work_order_id'  => ['nullable', 'integer', 'exists:work_orders,id'],
-            'expires_at'     => ['nullable', 'date', 'after:now'],
+            'reference_id' => ['required', 'integer'],
+            'work_order_id' => ['nullable', 'integer', 'exists:work_orders,id'],
+            'expires_at' => ['nullable', 'date', 'after:now'],
         ]);
         $behavior = $this->behaviorResolver->resolve((int) $request->user()->company_id, $request->user()->branch_id ? (int) $request->user()->branch_id : null);
         if (($behavior['flags']['track_expiry'] ?? false) && empty($data['expires_at'])) {
@@ -221,16 +238,16 @@ class InventoryController extends Controller
         }
 
         $reservation = $this->reservationService->reserve(
-            companyId:     $request->user()->company_id,
-            branchId:      $data['branch_id'],
-            productId:     $data['product_id'],
-            quantity:      $data['quantity'],
-            userId:        $request->user()->id,
+            companyId: $request->user()->company_id,
+            branchId: $data['branch_id'],
+            productId: $data['product_id'],
+            quantity: $data['quantity'],
+            userId: $request->user()->id,
             referenceType: $data['reference_type'],
-            referenceId:   $data['reference_id'],
-            workOrderId:   $data['work_order_id'] ?? null,
-            expiresAt:     isset($data['expires_at']) ? \Carbon\Carbon::parse($data['expires_at']) : null,
-            traceId:       app('trace_id'),
+            referenceId: $data['reference_id'],
+            workOrderId: $data['work_order_id'] ?? null,
+            expiresAt: isset($data['expires_at']) ? Carbon::parse($data['expires_at']) : null,
+            traceId: app('trace_id'),
         );
 
         return response()->json(['data' => $reservation, 'trace_id' => app('trace_id')], 201);
@@ -242,14 +259,16 @@ class InventoryController extends Controller
      *     tags={"Inventory"},
      *     summary="Consume a reservation (deducts actual stock)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
     public function consumeReservation(int $id): JsonResponse
     {
         $reservation = InventoryReservation::findOrFail($id);
-        $result      = $this->reservationService->consume($reservation, app('trace_id'));
+        $result = $this->reservationService->consume($reservation, app('trace_id'));
 
         return response()->json(['data' => $result, 'trace_id' => app('trace_id')]);
     }
@@ -260,14 +279,16 @@ class InventoryController extends Controller
      *     tags={"Inventory"},
      *     summary="Release a reservation (frees reserved quantity)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
     public function releaseReservation(int $id): JsonResponse
     {
         $reservation = InventoryReservation::findOrFail($id);
-        $result      = $this->reservationService->release($reservation);
+        $result = $this->reservationService->release($reservation);
 
         return response()->json(['data' => $result, 'trace_id' => app('trace_id')]);
     }
@@ -278,21 +299,23 @@ class InventoryController extends Controller
      *     tags={"Inventory"},
      *     summary="Cancel a reservation",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
     public function cancelReservation(int $id): JsonResponse
     {
         $reservation = InventoryReservation::findOrFail($id);
-        $current     = (string) $reservation->status->value;
+        $current = (string) $reservation->status->value;
         $allowedFrom = ['pending'];
 
         if (! in_array($current, $allowedFrom, true)) {
             return response()->json([
-                'message'  => "Reservation status transition {$current} -> cancel is not allowed.",
-                'code'     => 'TRANSITION_NOT_ALLOWED',
-                'status'   => 409,
+                'message' => "Reservation status transition {$current} -> cancel is not allowed.",
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
                 'trace_id' => app('trace_id'),
             ], 409);
         }
@@ -301,9 +324,9 @@ class InventoryController extends Controller
             $result = $this->reservationService->cancel($reservation);
         } catch (\DomainException $e) {
             return response()->json([
-                'message'  => $e->getMessage(),
-                'code'     => 'TRANSITION_NOT_ALLOWED',
-                'status'   => 409,
+                'message' => $e->getMessage(),
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
                 'trace_id' => app('trace_id'),
             ], 409);
         }
@@ -318,7 +341,7 @@ class InventoryController extends Controller
         );
 
         $currentQty = $stock['quantity'];
-        $diff       = $data['quantity'] - $currentQty;
+        $diff = $data['quantity'] - $currentQty;
 
         if (abs($diff) < 0.0001) {
             throw new \DomainException("Stock is already at {$currentQty}. No adjustment needed.");
@@ -326,28 +349,28 @@ class InventoryController extends Controller
 
         return $diff > 0
             ? $this->inventoryService->addStock(
-                companyId:  $user->company_id,
-                branchId:   $data['branch_id'],
-                productId:  $data['product_id'],
-                quantity:   $diff,
-                userId:     $user->id,
-                type:       'set_adjustment',
-                traceId:    $traceId,
-                unitId:     $data['unit_id'] ?? null,
-                unitCost:   $data['unit_cost'] ?? null,
-                note:       $data['note'] ?? 'Set quantity adjustment',
+                companyId: $user->company_id,
+                branchId: $data['branch_id'],
+                productId: $data['product_id'],
+                quantity: $diff,
+                userId: $user->id,
+                type: 'set_adjustment',
+                traceId: $traceId,
+                unitId: $data['unit_id'] ?? null,
+                unitCost: $data['unit_cost'] ?? null,
+                note: $data['note'] ?? 'Set quantity adjustment',
             )
             : $this->inventoryService->deductStock(
-                companyId:     $user->company_id,
-                branchId:      $data['branch_id'],
-                productId:     $data['product_id'],
-                quantity:      abs($diff),
-                userId:        $user->id,
+                companyId: $user->company_id,
+                branchId: $data['branch_id'],
+                productId: $data['product_id'],
+                quantity: abs($diff),
+                userId: $user->id,
                 referenceType: 'set_adjustment',
-                referenceId:   0,
-                traceId:       $traceId,
-                unitId:        $data['unit_id'] ?? null,
-                note:          $data['note'] ?? 'Set quantity adjustment',
+                referenceId: 0,
+                traceId: $traceId,
+                unitId: $data['unit_id'] ?? null,
+                note: $data['note'] ?? 'Set quantity adjustment',
             );
     }
 }

@@ -7,6 +7,7 @@ namespace App\Reporting\Queries;
 use App\Enums\CompanyStatus;
 use App\Models\Company;
 use App\Reporting\ReportingDateRange;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -28,23 +29,23 @@ final class PlatformPulseSummaryQuery
         $summary = $this->buildSummary($start, $end);
         $breakdown = [
             'by_status' => [
-                'companies'       => $this->groupCountOnTable('companies', 'status', 'deleted_at'),
+                'companies' => $this->groupCountOnTable('companies', 'status', 'deleted_at'),
                 'subscriptions' => $this->subscriptionStatusBreakdown(),
                 'support_tickets' => $this->supportTicketStatusBreakdown(),
             ],
             'by_activity' => [
                 'companies_registered_in_period' => $this->countCreatedBetween('companies', $start, $end, 'deleted_at'),
-                'work_orders_created_in_period'  => $this->countCreatedBetween('work_orders', $start, $end, 'deleted_at'),
+                'work_orders_created_in_period' => $this->countCreatedBetween('work_orders', $start, $end, 'deleted_at'),
             ],
             'by_time_period' => [
-                'granularity'   => 'week',
-                'work_orders'   => $this->weeklyBuckets('work_orders', $start, $end, $maxBuckets),
-                'companies'     => $this->weeklyBuckets('companies', $start, $end, $maxBuckets),
+                'granularity' => 'week',
+                'work_orders' => $this->weeklyBuckets('work_orders', $start, $end, $maxBuckets),
+                'companies' => $this->weeklyBuckets('companies', $start, $end, $maxBuckets),
             ],
         ];
 
         return [
-            'summary'   => $summary,
+            'summary' => $summary,
             'breakdown' => $breakdown,
         ];
     }
@@ -52,7 +53,7 @@ final class PlatformPulseSummaryQuery
     /**
      * @return array<string, int|float>
      */
-    private function buildSummary(\Carbon\CarbonInterface $start, \Carbon\CarbonInterface $end): array
+    private function buildSummary(CarbonInterface $start, CarbonInterface $end): array
     {
         $companiesTotal = (int) Company::query()->whereNull('deleted_at')->count();
 
@@ -99,17 +100,17 @@ final class PlatformPulseSummaryQuery
             ->count();
 
         return [
-            'companies_total'               => $companiesTotal,
-            'companies_operational'        => $companiesOperational,
-            'companies_suspended'          => $companiesSuspended,
-            'companies_other'               => $companiesOther,
-            'users_total'                   => $usersTotal,
-            'customers_total'              => $customersTotal,
-            'branches_total'               => $branchesTotal,
-            'subscriptions_total'         => $subscriptionsTotal,
-            'tickets_open'                 => $ticketsOpen,
-            'tickets_overdue'              => $ticketsOverdue,
-            'work_orders_in_period'        => $workOrdersInPeriod,
+            'companies_total' => $companiesTotal,
+            'companies_operational' => $companiesOperational,
+            'companies_suspended' => $companiesSuspended,
+            'companies_other' => $companiesOther,
+            'users_total' => $usersTotal,
+            'customers_total' => $customersTotal,
+            'branches_total' => $branchesTotal,
+            'subscriptions_total' => $subscriptionsTotal,
+            'tickets_open' => $ticketsOpen,
+            'tickets_overdue' => $ticketsOverdue,
+            'work_orders_in_period' => $workOrdersInPeriod,
         ];
     }
 
@@ -141,7 +142,7 @@ final class PlatformPulseSummaryQuery
 
         return $q->orderBy('k')->get()->map(fn ($r) => [
             'status' => (string) $r->k,
-            'count'  => (int) $r->c,
+            'count' => (int) $r->c,
         ])->all();
     }
 
@@ -184,8 +185,8 @@ final class PlatformPulseSummaryQuery
 
     private function countCreatedBetween(
         string $table,
-        \Carbon\CarbonInterface $start,
-        \Carbon\CarbonInterface $end,
+        CarbonInterface $start,
+        CarbonInterface $end,
         ?string $deletedAtColumn,
     ): int {
         if (! Schema::hasTable($table)) {
@@ -204,8 +205,8 @@ final class PlatformPulseSummaryQuery
      */
     private function weeklyBuckets(
         string $table,
-        \Carbon\CarbonInterface $start,
-        \Carbon\CarbonInterface $end,
+        CarbonInterface $start,
+        CarbonInterface $end,
         int $maxBuckets,
     ): array {
         if (! Schema::hasTable($table)) {
@@ -231,7 +232,7 @@ final class PlatformPulseSummaryQuery
             $bucket = $row->bucket ?? null;
             $out[] = [
                 'period_start' => $bucket ? (string) $bucket : '',
-                'count'        => (int) ($row->c ?? 0),
+                'count' => (int) ($row->c ?? 0),
             ];
         }
 

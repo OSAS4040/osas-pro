@@ -12,25 +12,27 @@ use Tests\TestCase;
 
 class IntegrationTest extends TestCase
 {
-    private array  $tenant;
+    private array $tenant;
+
     private string $rawSecret;
+
     private ApiKey $apiKey;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->tenant    = $this->createTenant();
+        $this->tenant = $this->createTenant();
         $this->rawSecret = Str::random(64);
 
         $this->apiKey = ApiKey::create([
-            'key_id'             => (string) Str::uuid(),
-            'company_id'         => $this->tenant['company']->id,
+            'key_id' => (string) Str::uuid(),
+            'company_id' => $this->tenant['company']->id,
             'created_by_user_id' => $this->tenant['user']->id,
-            'name'               => 'Test Key',
-            'secret_hash'        => hash('sha256', $this->rawSecret),
-            'permissions_scope'  => ['invoices.read', 'invoices.write'],
-            'rate_limit'         => 1000,
+            'name' => 'Test Key',
+            'secret_hash' => hash('sha256', $this->rawSecret),
+            'permissions_scope' => ['invoices.read', 'invoices.write'],
+            'rate_limit' => 1000,
         ]);
     }
 
@@ -71,7 +73,7 @@ class IntegrationTest extends TestCase
     {
         $response = $this->actingAsUser($this->tenant['user'])
             ->postJson('/api/v1/api-keys', [
-                'name'       => 'My Integration Key',
+                'name' => 'My Integration Key',
                 'rate_limit' => 500,
             ]);
 
@@ -94,8 +96,8 @@ class WebhookSignatureTest extends TestCase
 
     public function test_verify_accepts_valid_signature(): void
     {
-        $ts        = time();
-        $payload   = ['event' => 'invoice.created', 'id' => 1];
+        $ts = time();
+        $payload = ['event' => 'invoice.created', 'id' => 1];
         $signature = WebhookService::sign('my_secret', $payload, $ts);
 
         $this->assertTrue(WebhookService::verify('my_secret', $payload, $signature));
@@ -103,8 +105,8 @@ class WebhookSignatureTest extends TestCase
 
     public function test_verify_rejects_tampered_payload(): void
     {
-        $ts        = time();
-        $payload   = ['event' => 'invoice.created', 'id' => 1];
+        $ts = time();
+        $payload = ['event' => 'invoice.created', 'id' => 1];
         $signature = WebhookService::sign('my_secret', $payload, $ts);
 
         $this->assertFalse(WebhookService::verify('my_secret', ['id' => 999], $signature));
@@ -112,8 +114,8 @@ class WebhookSignatureTest extends TestCase
 
     public function test_verify_rejects_expired_timestamp(): void
     {
-        $payload   = ['event' => 'test'];
-        $old_ts    = time() - 400;
+        $payload = ['event' => 'test'];
+        $old_ts = time() - 400;
         $signature = WebhookService::sign('my_secret', $payload, $old_ts);
 
         $this->assertFalse(WebhookService::verify('my_secret', $payload, $signature, 300));
@@ -126,13 +128,13 @@ class WebhookSignatureTest extends TestCase
         $tenant = $this->createTenant();
 
         WebhookEndpoint::create([
-            'uuid'                => Str::uuid(),
-            'company_id'          => $tenant['company']->id,
-            'created_by_user_id'  => $tenant['user']->id,
-            'url'                 => 'https://example.com/hook',
-            'events'              => ['invoice.created'],
-            'secret_hash'         => hash('sha256', 'secret'),
-            'is_active'           => true,
+            'uuid' => Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'created_by_user_id' => $tenant['user']->id,
+            'url' => 'https://example.com/hook',
+            'events' => ['invoice.created'],
+            'secret_hash' => hash('sha256', 'secret'),
+            'is_active' => true,
         ]);
 
         app(WebhookService::class)->dispatch(
@@ -149,13 +151,13 @@ class WebhookSignatureTest extends TestCase
         $tenant = $this->createTenant();
 
         WebhookEndpoint::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $tenant['company']->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $tenant['company']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'url'                => 'https://example.com/hook',
-            'events'             => ['payment.created'],
-            'secret_hash'        => hash('sha256', 'secret'),
-            'is_active'          => true,
+            'url' => 'https://example.com/hook',
+            'events' => ['payment.created'],
+            'secret_hash' => hash('sha256', 'secret'),
+            'is_active' => true,
         ]);
 
         app(WebhookService::class)->dispatch(
@@ -180,7 +182,7 @@ class TraceIdTest extends TestCase
 
     public function test_trace_id_in_request_is_propagated_to_response(): void
     {
-        $tenant  = $this->createTenant();
+        $tenant = $this->createTenant();
         $myTrace = 'custom-trace-12345';
 
         $response = $this->actingAsUser($tenant['user'])

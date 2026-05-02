@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -10,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('contracts', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique()->default(\Illuminate\Support\Str::uuid());
+            $table->uuid('uuid')->unique()->default(Str::uuid());
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->string('party_name');

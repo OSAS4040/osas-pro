@@ -24,18 +24,18 @@ class UomConversionTest extends TestCase
     {
         return Unit::create([
             'company_id' => $this->company->id,
-            'name'       => $symbol,
-            'symbol'     => $symbol,
-            'type'       => 'quantity',
-            'is_base'    => false,
-            'is_system'  => false,
-            'is_active'  => true,
+            'name' => $symbol,
+            'symbol' => $symbol,
+            'type' => 'quantity',
+            'is_base' => false,
+            'is_system' => false,
+            'is_active' => true,
         ]);
     }
 
     public function test_convert_to_same_unit_returns_same_quantity(): void
     {
-        $unit   = $this->createUnit('kg');
+        $unit = $this->createUnit('kg');
         $result = $unit->convertTo($unit, 10);
 
         $this->assertEquals(10.0, $result);
@@ -44,14 +44,14 @@ class UomConversionTest extends TestCase
     public function test_forward_conversion_applies_factor(): void
     {
         $kg = $this->createUnit('kg');
-        $g  = $this->createUnit('g');
+        $g = $this->createUnit('g');
 
         UnitConversion::create([
-            'company_id'   => $this->company->id,
+            'company_id' => $this->company->id,
             'from_unit_id' => $kg->id,
-            'to_unit_id'   => $g->id,
-            'factor'       => 1000,
-            'is_active'    => true,
+            'to_unit_id' => $g->id,
+            'factor' => 1000,
+            'is_active' => true,
         ]);
 
         $result = $kg->convertTo($g, 2.5);
@@ -62,14 +62,14 @@ class UomConversionTest extends TestCase
     public function test_reverse_conversion_uses_inverse_factor(): void
     {
         $kg = $this->createUnit('kg2');
-        $g  = $this->createUnit('g2');
+        $g = $this->createUnit('g2');
 
         UnitConversion::create([
-            'company_id'   => $this->company->id,
+            'company_id' => $this->company->id,
             'from_unit_id' => $kg->id,
-            'to_unit_id'   => $g->id,
-            'factor'       => 1000,
-            'is_active'    => true,
+            'to_unit_id' => $g->id,
+            'factor' => 1000,
+            'is_active' => true,
         ]);
 
         $result = $g->convertTo($kg, 500);
@@ -89,17 +89,17 @@ class UomConversionTest extends TestCase
     public function test_unit_conversion_api_store_and_list(): void
     {
         $branch = $this->createBranch($this->company);
-        $user   = $this->createUser($this->company, $branch);
+        $user = $this->createUser($this->company, $branch);
         $this->createActiveSubscription($this->company);
 
         $from = $this->createUnit('box');
-        $to   = $this->createUnit('pcs');
+        $to = $this->createUnit('pcs');
 
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/units/conversions', [
                 'from_unit_id' => $from->id,
-                'to_unit_id'   => $to->id,
-                'factor'       => 12,
+                'to_unit_id' => $to->id,
+                'factor' => 12,
             ]);
 
         $response->assertStatus(201);
@@ -113,14 +113,14 @@ class UomConversionTest extends TestCase
     public function test_unit_store_and_delete(): void
     {
         $branch = $this->createBranch($this->company);
-        $user   = $this->createUser($this->company, $branch);
+        $user = $this->createUser($this->company, $branch);
         $this->createActiveSubscription($this->company);
 
         $store = $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/units', [
-                'name'   => 'Dozen',
+                'name' => 'Dozen',
                 'symbol' => 'dz',
-                'type'   => 'quantity',
+                'type' => 'quantity',
             ]);
 
         $store->assertStatus(201);

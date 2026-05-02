@@ -19,7 +19,7 @@ final class PlatformIntelligenceIncidentCandidatesController extends Controller
 {
     public function index(PlatformSignalEngine $signalEngine, PlatformIncidentCandidateEngine $candidateEngine): JsonResponse
     {
-        $trace = new NullPlatformIntelligenceTraceRecorder();
+        $trace = new NullPlatformIntelligenceTraceRecorder;
         $signals = $signalEngine->build($trace);
         $candidates = $candidateEngine->buildFromSignals($signals, $trace);
 

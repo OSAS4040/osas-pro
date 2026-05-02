@@ -26,7 +26,18 @@ class FuelLog extends Model
         'fuel_efficiency' => 'float',
     ];
 
-    public function vehicle(): BelongsTo { return $this->belongsTo(Vehicle::class); }
-    public function driver(): BelongsTo  { return $this->belongsTo(User::class, 'driver_user_id'); }
-    public function creator(): BelongsTo { return $this->belongsTo(User::class, 'created_by'); }
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class);
+    }
+
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'driver_user_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

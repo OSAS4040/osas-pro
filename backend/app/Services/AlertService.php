@@ -15,21 +15,21 @@ class AlertService
         string $code,
         string $message,
         string $severity = 'info',
-        string|null $subjectType = null,
-        int|null $subjectId = null,
+        ?string $subjectType = null,
+        ?int $subjectId = null,
         array $meta = [],
-        int|null $userId = null,
+        ?int $userId = null,
     ): AlertNotification {
         AlertNotification::create([
-            'company_id'   => $companyId,
-            'code'         => $code,
-            'severity'     => $severity,
+            'company_id' => $companyId,
+            'code' => $code,
+            'severity' => $severity,
             'subject_type' => $subjectType,
-            'subject_id'   => $subjectId,
-            'message'      => $message,
-            'meta'         => $meta ?: null,
-            'is_read'      => false,
-            'user_id'      => $userId,
+            'subject_id' => $subjectId,
+            'message' => $message,
+            'meta' => $meta ?: null,
+            'is_read' => false,
+            'user_id' => $userId,
         ]);
 
         // Also fire to additional recipients from rule if configured
@@ -38,19 +38,21 @@ class AlertService
             ->where('is_active', true)
             ->first();
 
-        if ($rule && !empty($rule->recipients)) {
+        if ($rule && ! empty($rule->recipients)) {
             foreach ($rule->recipients as $recipientId) {
-                if ($recipientId == $userId) continue;
+                if ($recipientId == $userId) {
+                    continue;
+                }
                 AlertNotification::create([
-                    'company_id'   => $companyId,
-                    'code'         => $code,
-                    'severity'     => $severity,
+                    'company_id' => $companyId,
+                    'code' => $code,
+                    'severity' => $severity,
                     'subject_type' => $subjectType,
-                    'subject_id'   => $subjectId,
-                    'message'      => $message,
-                    'meta'         => $meta ?: null,
-                    'is_read'      => false,
-                    'user_id'      => $recipientId,
+                    'subject_id' => $subjectId,
+                    'message' => $message,
+                    'meta' => $meta ?: null,
+                    'is_read' => false,
+                    'user_id' => $recipientId,
                 ]);
             }
         }
@@ -72,7 +74,10 @@ class AlertService
     public function markRead(int $companyId, int $userId, array $ids = []): int
     {
         $q = AlertNotification::where('company_id', $companyId)->where('user_id', $userId);
-        if ($ids) $q->whereIn('id', $ids);
+        if ($ids) {
+            $q->whereIn('id', $ids);
+        }
+
         return $q->update(['is_read' => true, 'read_at' => now()]);
     }
 }

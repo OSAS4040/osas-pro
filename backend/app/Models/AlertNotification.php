@@ -12,8 +12,8 @@ class AlertNotification extends Model
     ];
 
     protected $casts = [
-        'meta'     => 'array',
-        'is_read'  => 'boolean',
-        'read_at'  => 'datetime',
+        'meta' => 'array',
+        'is_read' => 'boolean',
+        'read_at' => 'datetime',
     ];
 }

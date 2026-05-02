@@ -26,18 +26,18 @@ final class AuthSuspiciousLoginSignalsController extends Controller
 
         $data = $rows->map(static function ($row) {
             return [
-                'id'                      => $row->id,
-                'signal_type'             => $row->signal_type,
-                'channel'                 => $row->channel,
-                'subject_fingerprint_mask'=> AuthSecurityTelemetryService::maskFingerprint((string) $row->subject_fingerprint),
-                'ip_address'              => $row->ip_address,
-                'trace_id'                => $row->trace_id,
-                'created_at'              => $row->created_at?->toIso8601String(),
+                'id' => $row->id,
+                'signal_type' => $row->signal_type,
+                'channel' => $row->channel,
+                'subject_fingerprint_mask' => AuthSecurityTelemetryService::maskFingerprint((string) $row->subject_fingerprint),
+                'ip_address' => $row->ip_address,
+                'trace_id' => $row->trace_id,
+                'created_at' => $row->created_at?->toIso8601String(),
             ];
         });
 
         return response()->json([
-            'data'     => $data,
+            'data' => $data,
             'trace_id' => app('trace_id'),
         ]);
     }

@@ -121,6 +121,7 @@ class PrunePoisonNonFinancialQueueJobsCommand extends Command
             }
             if ($this->isPrunableHousekeepingPayload($payload)) {
                 $removed++;
+
                 continue;
             }
             $kept[] = $payload;

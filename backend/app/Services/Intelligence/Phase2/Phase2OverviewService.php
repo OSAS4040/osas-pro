@@ -34,35 +34,35 @@ final class Phase2OverviewService
 
         return [
             'read_only' => true,
-            'phase'     => 2,
-            'scope'     => [
+            'phase' => 2,
+            'scope' => [
                 'description' => 'Aggregated from domain_events (+ failure counts from event_record_failures) using SELECT only.',
             ],
-            'window'    => $ins['window'],
-            'summary'   => [
-                'total_domain_events'     => $ins['totals']['events'],
-                'distinct_event_names'    => count($ins['by_event_name']),
-                'distinct_aggregate_types'=> count($ins['by_aggregate_type']),
-                'event_record_failures'   => $failuresInWindow,
+            'window' => $ins['window'],
+            'summary' => [
+                'total_domain_events' => $ins['totals']['events'],
+                'distinct_event_names' => count($ins['by_event_name']),
+                'distinct_aggregate_types' => count($ins['by_aggregate_type']),
+                'event_record_failures' => $failuresInWindow,
             ],
             'endpoints' => [
-                'insights'         => '/api/v1/internal/intelligence/insights',
-                'recommendations'  => '/api/v1/internal/intelligence/recommendations',
-                'alerts'           => '/api/v1/internal/intelligence/alerts',
-                'command_center'   => '/api/v1/internal/intelligence/command-center',
+                'insights' => '/api/v1/internal/intelligence/insights',
+                'recommendations' => '/api/v1/internal/intelligence/recommendations',
+                'alerts' => '/api/v1/internal/intelligence/alerts',
+                'command_center' => '/api/v1/internal/intelligence/command-center',
             ],
             'feature_flags' => [
                 'internal_dashboard' => (bool) config('intelligent.internal_dashboard.enabled'),
-                'read_models'          => (bool) config('intelligent.read_models.enabled'),
-                'overview_api'         => (bool) config('intelligent.overview_api.enabled')
+                'read_models' => (bool) config('intelligent.read_models.enabled'),
+                'overview_api' => (bool) config('intelligent.overview_api.enabled')
                     || (bool) config('intelligent.phase2.features.overview'),
-                'insights'             => (bool) config('intelligent.insights.enabled')
+                'insights' => (bool) config('intelligent.insights.enabled')
                     || (bool) config('intelligent.phase2.features.insights'),
-                'recommendations'      => (bool) config('intelligent.recommendations.enabled')
+                'recommendations' => (bool) config('intelligent.recommendations.enabled')
                     || (bool) config('intelligent.phase2.features.recommendations'),
-                'alerts'               => (bool) config('intelligent.alerts.enabled')
+                'alerts' => (bool) config('intelligent.alerts.enabled')
                     || (bool) config('intelligent.phase2.features.alerts'),
-                'command_center'       => (bool) config('intelligent.command_center_api.enabled')
+                'command_center' => (bool) config('intelligent.command_center_api.enabled')
                     || (bool) config('intelligent.phase2.features.command_center'),
                 'command_center_governance' => (bool) config('intelligent.command_center_governance.enabled'),
                 'phase2_master_legacy' => (bool) config('intelligent.phase2.enabled'),

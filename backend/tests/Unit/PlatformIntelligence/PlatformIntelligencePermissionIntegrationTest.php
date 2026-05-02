@@ -7,6 +7,7 @@ namespace Tests\Unit\PlatformIntelligence;
 use App\Services\Platform\PlatformPermissionService;
 use App\Support\PlatformIntelligence\ControlledActions\ControlledActionPermissionMatrix;
 use App\Support\PlatformIntelligence\PlatformIntelligenceCapability;
+use App\Support\PlatformIntelligence\PlatformRolePermissionResolver;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
@@ -67,7 +68,7 @@ final class PlatformIntelligencePermissionIntegrationTest extends TestCase
             'platform_role' => 'auditor',
         ]);
 
-        $grants = app(\App\Support\PlatformIntelligence\PlatformRolePermissionResolver::class)
+        $grants = app(PlatformRolePermissionResolver::class)
             ->platformPermissionGrantsForUser($user);
 
         $this->assertContains('platform.intelligence.signals.read', $grants);

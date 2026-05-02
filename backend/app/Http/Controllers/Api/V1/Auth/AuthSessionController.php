@@ -52,19 +52,19 @@ final class AuthSessionController extends Controller
 
         $data = $rows->map(function (AuthPersonalAccessToken $t) use ($current): array {
             return [
-                'id'                   => $t->id,
-                'device_name'          => $t->name,
-                'auth_channel'         => $t->auth_channel,
-                'ip_summary'           => IpAddressSummarizer::summarize($t->ip_address),
-                'user_agent_summary'   => $t->user_agent_summary,
-                'last_used_at'         => $t->last_used_at?->toIso8601String(),
-                'created_at'           => $t->created_at?->toIso8601String(),
-                'is_current'           => $current !== null && (int) $t->id === (int) $current->id,
+                'id' => $t->id,
+                'device_name' => $t->name,
+                'auth_channel' => $t->auth_channel,
+                'ip_summary' => IpAddressSummarizer::summarize($t->ip_address),
+                'user_agent_summary' => $t->user_agent_summary,
+                'last_used_at' => $t->last_used_at?->toIso8601String(),
+                'created_at' => $t->created_at?->toIso8601String(),
+                'is_current' => $current !== null && (int) $t->id === (int) $current->id,
             ];
         });
 
         return response()->json([
-            'data'     => $data,
+            'data' => $data,
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -82,7 +82,7 @@ final class AuthSessionController extends Controller
 
         if ($token === null) {
             return response()->json([
-                'message'  => 'الجلسة غير موجودة.',
+                'message' => 'الجلسة غير موجودة.',
                 'trace_id' => app('trace_id'),
             ], 404);
         }
@@ -90,7 +90,7 @@ final class AuthSessionController extends Controller
         $current = $this->resolveActivePersonalAccessToken($request, $user);
         if ($current !== null && (int) $token->id === (int) $current->id) {
             return response()->json([
-                'message'  => 'استخدم تسجيل الخروج لإنهاء الجلسة الحالية.',
+                'message' => 'استخدم تسجيل الخروج لإنهاء الجلسة الحالية.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -99,7 +99,7 @@ final class AuthSessionController extends Controller
         $token->delete();
 
         return response()->json([
-            'message'  => 'تم إنهاء الجلسة.',
+            'message' => 'تم إنهاء الجلسة.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -110,7 +110,7 @@ final class AuthSessionController extends Controller
         $current = $this->resolveActivePersonalAccessToken($request, $user);
         if ($current === null) {
             return response()->json([
-                'message'  => 'لا توجد جلسة حالية.',
+                'message' => 'لا توجد جلسة حالية.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -126,7 +126,7 @@ final class AuthSessionController extends Controller
             ->delete();
 
         return response()->json([
-            'message'  => 'تم إنهاء الجلسات الأخرى.',
+            'message' => 'تم إنهاء الجلسات الأخرى.',
             'trace_id' => app('trace_id'),
         ]);
     }

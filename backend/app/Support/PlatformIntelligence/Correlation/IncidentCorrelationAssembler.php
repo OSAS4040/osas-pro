@@ -6,7 +6,6 @@ namespace App\Support\PlatformIntelligence\Correlation;
 
 use App\Models\PlatformDecisionLogEntry;
 use App\Models\PlatformGuidedWorkflowIdempotency;
-use App\Models\PlatformIncident;
 use App\Models\User;
 use App\Services\Platform\PlatformPermissionService;
 use App\Support\PlatformIntelligence\CandidateEngine\PlatformIncidentCandidateEngine;

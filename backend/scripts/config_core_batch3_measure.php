@@ -38,6 +38,5 @@ file_put_contents(
     json_encode($after, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
 );
 
-echo 'COMPANIES_WITH_VERTICAL_PROFILE=' . $after['companies_with_vertical_profile'] . PHP_EOL;
-echo 'BRANCHES_WITH_VERTICAL_PROFILE=' . $after['branches_with_vertical_profile'] . PHP_EOL;
-
+echo 'COMPANIES_WITH_VERTICAL_PROFILE='.$after['companies_with_vertical_profile'].PHP_EOL;
+echo 'BRANCHES_WITH_VERTICAL_PROFILE='.$after['branches_with_vertical_profile'].PHP_EOL;

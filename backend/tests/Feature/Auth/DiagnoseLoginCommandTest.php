@@ -21,7 +21,7 @@ class DiagnoseLoginCommandTest extends TestCase
     public function test_diagnose_lists_tenant_user_without_printing_secrets(): void
     {
         $tenant = $this->createTenant('owner');
-        $email  = $tenant['user']->email;
+        $email = $tenant['user']->email;
 
         $this->artisan('auth:diagnose', ['email' => $email])
             ->assertSuccessful()

@@ -2,12 +2,13 @@
 
 namespace App\Services\Auth;
 
-use App\Support\Auth\PhoneNormalizer;
-use App\Support\SaasPlatformAccess;
 use App\Enums\BranchStatus;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\User;
+use App\Support\Auth\PhoneNormalizer;
+use App\Support\SaasPlatformAccess;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -24,20 +25,20 @@ final class LoginBootstrapService
         if ($user->company_id === null) {
             if (SaasPlatformAccess::isPlatformOperator($user)) {
                 return [
-                    'company'         => null,
-                    'branches'        => [],
+                    'company' => null,
+                    'branches' => [],
                     'enabled_modules' => [],
-                    'home_screen'     => 'dashboard',
-                    'profile'         => $this->profileStub($user, null),
+                    'home_screen' => 'dashboard',
+                    'profile' => $this->profileStub($user, null),
                 ];
             }
 
             return [
-                'company'         => null,
-                'branches'        => [],
+                'company' => null,
+                'branches' => [],
                 'enabled_modules' => [],
-                'home_screen'     => 'phone_onboarding',
-                'profile'         => $this->profileStub($user, null),
+                'home_screen' => 'phone_onboarding',
+                'profile' => $this->profileStub($user, null),
             ];
         }
 
@@ -58,18 +59,18 @@ final class LoginBootstrapService
         $homeScreen = $this->resolveHomeScreen($enabledModules);
 
         return [
-            'company'          => $companyPayload,
-            'branches'         => $branches->map(fn (Branch $b) => [
-                'id'      => $b->id,
-                'uuid'    => $b->uuid,
-                'name'    => $b->name,
+            'company' => $companyPayload,
+            'branches' => $branches->map(fn (Branch $b) => [
+                'id' => $b->id,
+                'uuid' => $b->uuid,
+                'name' => $b->name,
                 'name_ar' => $b->name_ar,
-                'code'    => $b->code,
+                'code' => $b->code,
                 'is_main' => (bool) $b->is_main,
             ])->values()->all(),
-            'enabled_modules'  => $enabledModules,
-            'home_screen'      => $homeScreen,
-            'profile'          => $this->profileStub($user, $company),
+            'enabled_modules' => $enabledModules,
+            'home_screen' => $homeScreen,
+            'profile' => $this->profileStub($user, $company),
         ];
     }
 
@@ -83,12 +84,12 @@ final class LoginBootstrapService
         }
 
         return [
-            'id'        => $company->id,
-            'uuid'      => $company->uuid,
-            'name'      => $company->name,
-            'currency'  => $company->currency,
-            'timezone'  => $company->timezone,
-            'status'    => $company->status instanceof \BackedEnum ? $company->status->value : (string) $company->status,
+            'id' => $company->id,
+            'uuid' => $company->uuid,
+            'name' => $company->name,
+            'currency' => $company->currency,
+            'timezone' => $company->timezone,
+            'status' => $company->status instanceof \BackedEnum ? $company->status->value : (string) $company->status,
         ];
     }
 
@@ -142,10 +143,10 @@ final class LoginBootstrapService
     private function profileStub(User $user, ?Company $company): array
     {
         return [
-            'locale'     => 'ar',
-            'timezone'   => $company?->timezone ?? 'Asia/Riyadh',
-            'currency'   => $company?->currency ?? 'SAR',
-            'branch_id'  => $user->branch_id,
+            'locale' => 'ar',
+            'timezone' => $company?->timezone ?? 'Asia/Riyadh',
+            'currency' => $company?->currency ?? 'SAR',
+            'branch_id' => $user->branch_id,
             'company_id' => $user->company_id,
         ];
     }
@@ -154,9 +155,9 @@ final class LoginBootstrapService
      * Find users matching normalized phone variants; password verification remains caller responsibility.
      *
      * @param  list<string>  $digitVariants
-     * @return \Illuminate\Support\Collection<int, User>
+     * @return Collection<int, User>
      */
-    public function usersMatchingPhoneVariants(array $digitVariants): \Illuminate\Support\Collection
+    public function usersMatchingPhoneVariants(array $digitVariants): Collection
     {
         if ($digitVariants === []) {
             return collect();

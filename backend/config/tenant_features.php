@@ -1,11 +1,13 @@
 <?php
 
+use App\Support\TenantBusinessFeatures;
+
 /**
  * تجاوزات تشغيلية لمصفوفة الميزات الفعّالة — دون تعديل JSON في عمود settings للشركة.
  *
  * الاستخدام: البيئة التجريبية، قواعد قديمة، أو مطابقة سريعة مع سياسة المنصة قبل ضبط الواجهة الإدارية.
  *
- * @see \App\Support\TenantBusinessFeatures::effectiveMatrix()
+ * @see TenantBusinessFeatures::effectiveMatrix()
  */
 return [
     /**

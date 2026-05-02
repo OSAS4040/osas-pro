@@ -13,9 +13,9 @@ final class OperationFeedEntityRouteResolver
     {
         return match ($feedType) {
             'work_order' => '/work-orders/'.$entityId,
-            'invoice'    => '/invoices/'.$entityId,
-            'ticket'     => '/support',
-            'payment'    => $linkId !== null && $linkId > 0
+            'invoice' => '/invoices/'.$entityId,
+            'ticket' => '/support',
+            'payment' => $linkId !== null && $linkId > 0
                 ? '/invoices/'.$linkId
                 : null,
             default => null,

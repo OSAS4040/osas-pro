@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
 {
-    use HasFactory, SoftDeletes, HasTenantScope;
+    use HasFactory, HasTenantScope, SoftDeletes;
 
     protected $fillable = [
         'uuid', 'company_id', 'branch_id', 'created_by_user_id',
@@ -19,7 +19,7 @@ class Supplier extends Model
 
     protected $casts = [
         'credit_limit' => 'decimal:2',
-        'is_active'    => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function purchases()

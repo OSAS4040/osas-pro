@@ -30,7 +30,7 @@ final class DemoPlatformAdminSeederLoginTest extends TestCase
         (new DemoPlatformAdminSeeder)->run();
 
         $login = $this->postJson('/api/v1/auth/login', [
-            'email'    => DemoPlatformAdminSeeder::DEMO_EMAIL,
+            'email' => DemoPlatformAdminSeeder::DEMO_EMAIL,
             'password' => DemoPlatformAdminSeeder::DEMO_PASSWORD,
         ]);
 
@@ -66,7 +66,7 @@ final class DemoPlatformAdminSeederLoginTest extends TestCase
         (new DemoPlatformAdminSeeder)->run();
 
         $res = $this->postJson('/api/v1/auth/login', [
-            'email'    => DemoPlatformAdminSeeder::DEMO_EMAIL,
+            'email' => DemoPlatformAdminSeeder::DEMO_EMAIL,
             'password' => 'definitely-not-the-demo-password-xyz',
         ]);
 

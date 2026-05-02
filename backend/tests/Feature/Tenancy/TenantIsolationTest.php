@@ -47,7 +47,7 @@ class TenantIsolationTest extends TestCase
         $tenant['subscription']->update(['status' => 'suspended']);
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
@@ -58,15 +58,15 @@ class TenantIsolationTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $tenant['subscription']->update([
-            'ends_at'       => now()->subDay(),
+            'ends_at' => now()->subDay(),
             'grace_ends_at' => now()->addDays(14),
-            'status'        => 'grace_period',
+            'status' => 'grace_period',
         ]);
 
         $response = $this->actingAsUser($tenant['user'])
             ->postJson('/api/v1/customers', [
-                'name'  => 'Test Customer',
-                'type'  => 'b2c',
+                'name' => 'Test Customer',
+                'type' => 'b2c',
                 'phone' => '+966500000002',
             ]);
 
@@ -77,9 +77,9 @@ class TenantIsolationTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $tenant['subscription']->update([
-            'ends_at'       => now()->subDay(),
+            'ends_at' => now()->subDay(),
             'grace_ends_at' => now()->addDays(14),
-            'status'        => 'grace_period',
+            'status' => 'grace_period',
         ]);
 
         $response = $this->actingAsUser($tenant['user'])

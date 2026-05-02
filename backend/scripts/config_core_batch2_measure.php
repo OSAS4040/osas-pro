@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\ConfigSetting;
 use App\Services\Config\ConfigResolverService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -61,5 +60,4 @@ file_put_contents(
     json_encode($after, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
 );
 
-echo 'CONFIG_SETTINGS_TOTAL=' . $after['config_settings_total'] . PHP_EOL;
-
+echo 'CONFIG_SETTINGS_TOTAL='.$after['config_settings_total'].PHP_EOL;

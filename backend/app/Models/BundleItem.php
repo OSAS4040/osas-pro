@@ -14,9 +14,9 @@ class BundleItem extends Model
     ];
 
     protected $casts = [
-        'quantity'            => 'decimal:4',
+        'quantity' => 'decimal:4',
         'unit_price_override' => 'decimal:4',
-        'sort_order'          => 'integer',
+        'sort_order' => 'integer',
     ];
 
     public function bundle()
@@ -43,7 +43,7 @@ class BundleItem extends Model
         return match ($this->item_type) {
             'service' => (float) ($this->service?->base_price ?? 0),
             'product' => (float) ($this->product?->sale_price ?? 0),
-            default   => 0,
+            default => 0,
         };
     }
 

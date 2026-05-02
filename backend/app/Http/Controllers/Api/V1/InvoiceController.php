@@ -19,10 +19,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @OA\Tag(name="Invoices", description="Invoice management")
@@ -43,12 +43,14 @@ class InvoiceController extends Controller
      *     tags={"Invoices"},
      *     summary="List invoices",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="status", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="customer_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="branch_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="from", in="query", @OA\Schema(type="string", format="date")),
      *     @OA\Parameter(name="to", in="query", @OA\Schema(type="string", format="date")),
      *     @OA\Parameter(name="search", in="query", @OA\Schema(type="string")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/PaginatedResponse")
      * )
      */
@@ -242,9 +244,12 @@ class InvoiceController extends Controller
      *     tags={"Invoices"},
      *     summary="Create an invoice (B2B / manual)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="Idempotency-Key", in="header", required=true, @OA\Schema(type="string")),
+     *
      *     @OA\RequestBody(required=true, @OA\JsonContent(
      *         required={"items"},
+     *
      *         @OA\Property(property="customer_id", type="integer"),
      *         @OA\Property(property="vehicle_id", type="integer"),
      *         @OA\Property(property="type", type="string", enum={"sale","refund","proforma"}),
@@ -255,6 +260,7 @@ class InvoiceController extends Controller
      *         @OA\Property(property="items", type="array", @OA\Items(type="object")),
      *         @OA\Property(property="payment", type="object")
      *     )),
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse"),
      *     @OA\Response(response=409, description="Idempotency payload mismatch")
      * )
@@ -265,7 +271,7 @@ class InvoiceController extends Controller
 
         if (! $idempotencyKey) {
             return response()->json([
-                'message'  => 'Idempotency-Key header is required.',
+                'message' => 'Idempotency-Key header is required.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -284,27 +290,27 @@ class InvoiceController extends Controller
         }
 
         $data = $request->validate([
-            'customer_id'             => 'nullable|integer|exists:customers,id',
-            'vehicle_id'              => 'nullable|integer|exists:vehicles,id',
-            'customer_type'           => 'nullable|in:b2c,b2b',
-            'type'                    => 'nullable|in:sale,refund,proforma',
-            'discount_amount'         => 'nullable|numeric|min:0',
-            'currency'                => 'nullable|string|size:3',
-            'notes'                   => 'nullable|string',
-            'due_at'                  => 'nullable|date',
-            'items'                   => 'required|array|min:1',
-            'items.*.name'            => 'required|string',
-            'items.*.product_id'      => 'nullable|integer|exists:products,id',
-            'items.*.service_id'      => 'nullable|integer|exists:services,id',
-            'items.*.quantity'        => 'required|numeric|min:0.001',
-            'items.*.unit_price'      => 'required|numeric|min:0',
-            'items.*.cost_price'      => 'nullable|numeric|min:0',
-            'items.*.tax_rate'        => 'nullable|numeric|min:0|max:100',
+            'customer_id' => 'nullable|integer|exists:customers,id',
+            'vehicle_id' => 'nullable|integer|exists:vehicles,id',
+            'customer_type' => 'nullable|in:b2c,b2b',
+            'type' => 'nullable|in:sale,refund,proforma',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|size:3',
+            'notes' => 'nullable|string',
+            'due_at' => 'nullable|date',
+            'items' => 'required|array|min:1',
+            'items.*.name' => 'required|string',
+            'items.*.product_id' => 'nullable|integer|exists:products,id',
+            'items.*.service_id' => 'nullable|integer|exists:services,id',
+            'items.*.quantity' => 'required|numeric|min:0.001',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.cost_price' => 'nullable|numeric|min:0',
+            'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
             'items.*.discount_amount' => 'nullable|numeric|min:0',
-            'payment'                 => 'nullable|array',
-            'payment.method'          => 'required_with:payment|in:cash,card,wallet,bank_transfer',
-            'payment.amount'          => 'required_with:payment|numeric|min:0',
-            'payment.reference'       => 'nullable|string',
+            'payment' => 'nullable|array',
+            'payment.method' => 'required_with:payment|in:cash,card,wallet,bank_transfer',
+            'payment.amount' => 'required_with:payment|numeric|min:0',
+            'payment.reference' => 'nullable|string',
         ]);
 
         $data['idempotency_key'] = $idempotencyKey;
@@ -312,10 +318,10 @@ class InvoiceController extends Controller
 
         try {
             $invoice = $this->invoiceService->createInvoice(
-                data:      $data,
+                data: $data,
                 companyId: $user->company_id,
-                branchId:  $user->branch_id,
-                userId:    $user->id,
+                branchId: $user->branch_id,
+                userId: $user->id,
             );
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 409);
@@ -330,9 +336,9 @@ class InvoiceController extends Controller
     public function pay(Request $request, int $id): JsonResponse
     {
         $data = $request->validate([
-            'amount'                 => 'required|numeric|min:0.01',
-            'method'                 => 'required|in:cash,card,wallet,bank_transfer',
-            'reference'              => 'nullable|string|max:255',
+            'amount' => 'required|numeric|min:0.01',
+            'method' => 'required|in:cash,card,wallet,bank_transfer',
+            'reference' => 'nullable|string|max:255',
             'wallet_idempotency_key' => 'nullable|string|max:255',
         ]);
 
@@ -365,12 +371,12 @@ class InvoiceController extends Controller
                 $traceId = trim((string) (app('trace_id') ?? '')) ?: Str::uuid()->toString();
 
                 $payment = $this->paymentService->createPayment(
-                    invoice:   $invoice,
-                    amount:    (float) $data['amount'],
-                    method:    $data['method'],
-                    userId:    $user->id,
-                    traceId:   $traceId,
-                    branchId:  $invoice->branch_id,
+                    invoice: $invoice,
+                    amount: (float) $data['amount'],
+                    method: $data['method'],
+                    userId: $user->id,
+                    traceId: $traceId,
+                    branchId: $invoice->branch_id,
                     reference: $data['reference'] ?? null,
                 );
 
@@ -379,7 +385,7 @@ class InvoiceController extends Controller
                 if ($data['method'] === 'wallet' && $invoice->customer_id) {
                     $walletKey = $data['wallet_idempotency_key']
                         ?? ($invoice->idempotency_key !== null && $invoice->idempotency_key !== ''
-                            ? $invoice->idempotency_key . '_wallet'
+                            ? $invoice->idempotency_key.'_wallet'
                             : null);
                     if ($walletKey === null || $walletKey === '') {
                         throw new \DomainException('wallet_idempotency_key is required when method is wallet.');
@@ -389,33 +395,33 @@ class InvoiceController extends Controller
 
                     if ($vehicleId && $invoice->customer_type === 'b2b') {
                         $this->walletService->debitVehicleForInvoice(
-                            companyId:      $invoice->company_id,
-                            customerId:     $invoice->customer_id,
-                            vehicleId:      $vehicleId,
-                            amount:         (float) $payment->amount,
-                            invoiceId:      $invoice->id,
-                            paymentId:      $payment->id,
-                            userId:         $user->id,
-                            traceId:        $traceId,
+                            companyId: $invoice->company_id,
+                            customerId: $invoice->customer_id,
+                            vehicleId: $vehicleId,
+                            amount: (float) $payment->amount,
+                            invoiceId: $invoice->id,
+                            paymentId: $payment->id,
+                            userId: $user->id,
+                            traceId: $traceId,
                             idempotencyKey: $walletKey,
-                            branchId:       $invoice->branch_id,
-                            notes:          null,
-                            paymentMode:    'prepaid',
+                            branchId: $invoice->branch_id,
+                            notes: null,
+                            paymentMode: 'prepaid',
                         );
                     } else {
                         $this->walletService->debitIndividualForInvoice(
-                            companyId:      $invoice->company_id,
-                            customerId:     $invoice->customer_id,
-                            vehicleId:      $vehicleId,
-                            amount:         (float) $payment->amount,
-                            invoiceId:      $invoice->id,
-                            paymentId:      $payment->id,
-                            userId:         $user->id,
-                            traceId:        $traceId,
+                            companyId: $invoice->company_id,
+                            customerId: $invoice->customer_id,
+                            vehicleId: $vehicleId,
+                            amount: (float) $payment->amount,
+                            invoiceId: $invoice->id,
+                            paymentId: $payment->id,
+                            userId: $user->id,
+                            traceId: $traceId,
                             idempotencyKey: $walletKey,
-                            branchId:       $invoice->branch_id,
-                            notes:          null,
-                            paymentMode:    'prepaid',
+                            branchId: $invoice->branch_id,
+                            notes: null,
+                            paymentMode: 'prepaid',
                         );
                     }
                 }
@@ -427,7 +433,7 @@ class InvoiceController extends Controller
         }
 
         return response()->json([
-            'data'     => $result,
+            'data' => $result,
             'trace_id' => app('trace_id'),
         ], 201);
     }
@@ -438,7 +444,9 @@ class InvoiceController extends Controller
      *     tags={"Invoices"},
      *     summary="Get invoice details",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -481,7 +489,9 @@ class InvoiceController extends Controller
      *     tags={"Invoices"},
      *     summary="Update a draft invoice",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -495,7 +505,7 @@ class InvoiceController extends Controller
         }
 
         $data = $request->validate([
-            'notes'  => 'nullable|string',
+            'notes' => 'nullable|string',
             'due_at' => 'nullable|date',
             'status' => 'nullable|in:draft,pending,cancelled',
         ]);
@@ -529,7 +539,9 @@ class InvoiceController extends Controller
      *     tags={"Invoices"},
      *     summary="Delete a draft invoice",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -553,12 +565,17 @@ class InvoiceController extends Controller
      *     tags={"Invoices"},
      *     summary="Upload before/after images or video for an invoice",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\RequestBody(
      *         required=false,
+     *
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
+     *
      *             @OA\Schema(
+     *
      *                 @OA\Property(property="before[]", type="array", @OA\Items(type="string", format="binary")),
      *                 @OA\Property(property="after[]", type="array", @OA\Items(type="string", format="binary")),
      *                 @OA\Property(property="video", type="string", format="binary"),
@@ -566,6 +583,7 @@ class InvoiceController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -575,9 +593,9 @@ class InvoiceController extends Controller
         $this->assertWorkshopExecutionPartnerMayAccessInvoice($request->user(), $invoice);
 
         $request->validate([
-            'before.*'   => 'image|max:5120',
-            'after.*'    => 'image|max:5120',
-            'video'      => 'file|mimes:mp4,webm,ogg|max:51200',
+            'before.*' => 'image|max:5120',
+            'after.*' => 'image|max:5120',
+            'video' => 'file|mimes:mp4,webm,ogg|max:51200',
             'video_link' => 'nullable|url',
             'provider_invoice_files.*' => 'file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
             'provider_invoice_links' => 'nullable|array',
@@ -671,8 +689,10 @@ class InvoiceController extends Controller
      *     tags={"Invoices"},
      *     summary="Issue invoice from a completed work order (B2B)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="workOrderId", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Parameter(name="Idempotency-Key", in="header", required=true, @OA\Schema(type="string")),
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse"),
      *     @OA\Response(response=422, description="Work order not completed or invoice already exists")
      * )
@@ -714,8 +734,8 @@ class InvoiceController extends Controller
 
         try {
             $invoice = $this->invoiceService->issueFromWorkOrder(
-                order:          $order,
-                userId:         $request->user()->id,
+                order: $order,
+                userId: $request->user()->id,
                 idempotencyKey: $idempotencyKey,
                 providerPurchasePayload: $providerPurchase['provider_purchase'] ?? null,
             );

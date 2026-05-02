@@ -19,8 +19,8 @@ class InventoryReservation extends Model
     ];
 
     protected $casts = [
-        'status'     => ReservationStatus::class,
-        'quantity'   => 'decimal:4',
+        'status' => ReservationStatus::class,
+        'quantity' => 'decimal:4',
         'expires_at' => 'datetime',
     ];
 
@@ -67,14 +67,15 @@ class InventoryReservation extends Model
     public function canTransitionTo(ReservationStatus $newStatus): bool
     {
         $transitions = [
-            ReservationStatus::Pending->value   => [ReservationStatus::Consumed, ReservationStatus::Released, ReservationStatus::Canceled, ReservationStatus::Expired],
-            ReservationStatus::Consumed->value  => [],
-            ReservationStatus::Released->value  => [],
-            ReservationStatus::Canceled->value  => [],
-            ReservationStatus::Expired->value   => [],
+            ReservationStatus::Pending->value => [ReservationStatus::Consumed, ReservationStatus::Released, ReservationStatus::Canceled, ReservationStatus::Expired],
+            ReservationStatus::Consumed->value => [],
+            ReservationStatus::Released->value => [],
+            ReservationStatus::Canceled->value => [],
+            ReservationStatus::Expired->value => [],
         ];
 
         $allowed = $transitions[$this->status->value] ?? [];
+
         return in_array($newStatus, $allowed);
     }
 }

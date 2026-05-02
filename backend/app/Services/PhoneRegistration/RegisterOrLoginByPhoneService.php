@@ -32,7 +32,7 @@ final class RegisterOrLoginByPhoneService
             if ($existing) {
                 $existing->forceFill([
                     'phone_verified_at' => now(),
-                    'last_login_at'     => now(),
+                    'last_login_at' => now(),
                 ])->save();
 
                 $this->ensureProfile($existing);
@@ -41,26 +41,26 @@ final class RegisterOrLoginByPhoneService
             }
 
             $user = User::withoutGlobalScopes()->create([
-                'uuid'                => Str::uuid(),
-                'company_id'          => null,
-                'branch_id'           => null,
-                'org_unit_id'         => null,
-                'name'                => $phone,
-                'email'               => null,
-                'password'            => Hash::make(Str::random(64)),
-                'phone'               => $phone,
-                'phone_verified_at'   => now(),
-                'role'                => UserRole::PhoneOnboarding,
-                'status'              => UserStatus::Active,
-                'is_active'           => true,
-                'registration_stage'  => 'phone_verified',
+                'uuid' => Str::uuid(),
+                'company_id' => null,
+                'branch_id' => null,
+                'org_unit_id' => null,
+                'name' => $phone,
+                'email' => null,
+                'password' => Hash::make(Str::random(64)),
+                'phone' => $phone,
+                'phone_verified_at' => now(),
+                'role' => UserRole::PhoneOnboarding,
+                'status' => UserStatus::Active,
+                'is_active' => true,
+                'registration_stage' => 'phone_verified',
             ]);
 
             RegistrationProfile::query()->create([
-                'user_id'                   => $user->id,
-                'status'                    => 'draft',
+                'user_id' => $user->id,
+                'status' => 'draft',
                 'company_activation_status' => 'not_applicable',
-                'profile_completion_percent'=> 10,
+                'profile_completion_percent' => 10,
             ]);
 
             return ['user' => $user->fresh(), 'is_new_user' => true];
@@ -72,8 +72,8 @@ final class RegisterOrLoginByPhoneService
         RegistrationProfile::query()->firstOrCreate(
             ['user_id' => $user->id],
             [
-                'status'                     => 'draft',
-                'company_activation_status'  => 'not_applicable',
+                'status' => 'draft',
+                'company_activation_status' => 'not_applicable',
                 'profile_completion_percent' => 10,
             ],
         );

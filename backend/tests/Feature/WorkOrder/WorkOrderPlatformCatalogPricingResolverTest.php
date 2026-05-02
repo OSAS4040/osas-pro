@@ -6,6 +6,7 @@ namespace Tests\Feature\WorkOrder;
 
 use App\Enums\ServicePricingPolicyType;
 use App\Enums\WorkOrderPricingSource;
+use App\Models\Contract;
 use App\Models\ContractServiceItem;
 use App\Models\Customer;
 use App\Models\PlatformCustomerPriceVersion;
@@ -118,7 +119,7 @@ final class WorkOrderPlatformCatalogPricingResolverTest extends TestCase
 
         $fx = $this->seedFx();
 
-        $contract = \App\Models\Contract::create([
+        $contract = Contract::create([
             'uuid' => Str::uuid(),
             'company_id' => $fx['company']->id,
             'title' => 'MA',

@@ -45,7 +45,7 @@ final class PlatformSignalEngine
      */
     public function build(?PlatformIntelligenceTraceRecorderInterface $trace = null): array
     {
-        $trace ??= new NullPlatformIntelligenceTraceRecorder();
+        $trace ??= new NullPlatformIntelligenceTraceRecorder;
         $correlationId = (string) Str::uuid();
         $traceId = null;
         if (app()->bound('trace_id')) {

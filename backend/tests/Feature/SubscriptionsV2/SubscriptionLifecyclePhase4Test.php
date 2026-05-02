@@ -8,8 +8,6 @@ use App\Enums\SubscriptionStatus;
 use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Subscription;
-use App\Models\Wallet;
-use App\Models\WalletTransaction;
 use App\Modules\SubscriptionsV2\Models\PaymentOrder;
 use App\Modules\SubscriptionsV2\Services\PaymentService;
 use App\Modules\SubscriptionsV2\Services\SubscriptionService;
@@ -22,35 +20,35 @@ final class SubscriptionLifecyclePhase4Test extends TestCase
     private function makePlan(float $monthly = 1000): Plan
     {
         return Plan::query()->create([
-            'slug'              => 'p4-'.Str::lower(Str::random(8)),
-            'name'              => 'Phase4 Plan',
-            'name_ar'           => 'باقة',
-            'price_monthly'     => $monthly,
-            'price_yearly'      => $monthly * 10,
-            'currency'          => 'SAR',
-            'max_branches'      => 3,
-            'max_users'         => 10,
-            'max_products'      => 100,
+            'slug' => 'p4-'.Str::lower(Str::random(8)),
+            'name' => 'Phase4 Plan',
+            'name_ar' => 'باقة',
+            'price_monthly' => $monthly,
+            'price_yearly' => $monthly * 10,
+            'currency' => 'SAR',
+            'max_branches' => 3,
+            'max_users' => 10,
+            'max_products' => 100,
             'grace_period_days' => 3,
-            'features'          => ['pos' => true],
-            'is_active'         => true,
-            'sort_order'        => 0,
+            'features' => ['pos' => true],
+            'is_active' => true,
+            'sort_order' => 0,
         ]);
     }
 
     private function makePaymentOrder(int $companyId, int $planId, int $createdBy, float $total = 1150): PaymentOrder
     {
         return PaymentOrder::query()->create([
-            'company_id'     => $companyId,
-            'plan_id'        => $planId,
-            'amount'         => round($total / 1.15, 2),
-            'vat'            => round($total - round($total / 1.15, 2), 2),
-            'total'          => $total,
-            'currency'       => 'SAR',
+            'company_id' => $companyId,
+            'plan_id' => $planId,
+            'amount' => round($total / 1.15, 2),
+            'vat' => round($total - round($total / 1.15, 2), 2),
+            'total' => $total,
+            'currency' => 'SAR',
             'reference_code' => 'SUB-ORD-P4'.Str::upper(Str::random(8)),
-            'status'         => 'pending_transfer',
-            'expires_at'     => now()->addDay(),
-            'created_by'     => $createdBy,
+            'status' => 'pending_transfer',
+            'expires_at' => now()->addDay(),
+            'created_by' => $createdBy,
         ]);
     }
 
@@ -179,4 +177,3 @@ final class SubscriptionLifecyclePhase4Test extends TestCase
         $svc->debit((int) $tenant['company']->id, 50, 'charge-again', (int) $tenant['user']->id, 'dup-key');
     }
 }
-

@@ -4,18 +4,18 @@ namespace App\Enums;
 
 enum ProductType: string
 {
-    case Physical    = 'physical';
-    case Service     = 'service';
-    case Consumable  = 'consumable';
-    case Labor       = 'labor';
+    case Physical = 'physical';
+    case Service = 'service';
+    case Consumable = 'consumable';
+    case Labor = 'labor';
 
     public function label(): string
     {
-        return match($this) {
-            self::Physical   => 'Physical Product',
-            self::Service    => 'Service',
+        return match ($this) {
+            self::Physical => 'Physical Product',
+            self::Service => 'Service',
             self::Consumable => 'Consumable',
-            self::Labor      => 'Labor',
+            self::Labor => 'Labor',
         };
     }
 

@@ -5,8 +5,10 @@ namespace Tests\Feature\Auth;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
+use App\Support\Auth\LoginEligibilityResult;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
@@ -21,7 +23,7 @@ class LoginTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
@@ -29,7 +31,7 @@ class LoginTest extends TestCase
             ->assertJsonStructure([
                 'token',
                 'token_type',
-                'user'        => ['id', 'uuid', 'name', 'email', 'role', 'company_id'],
+                'user' => ['id', 'uuid', 'name', 'email', 'role', 'company_id'],
                 'permissions',
                 'account_context' => [
                     'principal_kind',
@@ -51,10 +53,10 @@ class LoginTest extends TestCase
     public function test_login_email_is_case_insensitive(): void
     {
         $tenant = $this->createTenant('owner');
-        $email  = $tenant['user']->email;
+        $email = $tenant['user']->email;
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => strtoupper($email),
+            'email' => strtoupper($email),
             'password' => 'Password123!',
         ])->assertStatus(200)
             ->assertJsonPath('user.id', $tenant['user']->id);
@@ -63,48 +65,48 @@ class LoginTest extends TestCase
     public function test_login_picks_user_matching_password_when_email_exists_on_multiple_companies(): void
     {
         $companyA = $this->createCompany(['name' => 'Company A']);
-        $branchA  = $this->createBranch($companyA);
+        $branchA = $this->createBranch($companyA);
         $this->createActiveSubscription($companyA);
 
         $companyB = $this->createCompany(['name' => 'Company B']);
-        $branchB  = $this->createBranch($companyB);
+        $branchB = $this->createBranch($companyB);
         $this->createActiveSubscription($companyB);
 
         $sharedEmail = 'same-email@multi-tenant.test';
 
         $userA = User::create([
-            'uuid'       => \Illuminate\Support\Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $companyA->id,
-            'branch_id'  => $branchA->id,
-            'name'       => 'User A',
-            'email'      => $sharedEmail,
-            'password'   => 'Password-Alpha-9!',
-            'role'       => UserRole::Owner,
-            'status'     => UserStatus::Active,
-            'is_active'  => true,
+            'branch_id' => $branchA->id,
+            'name' => 'User A',
+            'email' => $sharedEmail,
+            'password' => 'Password-Alpha-9!',
+            'role' => UserRole::Owner,
+            'status' => UserStatus::Active,
+            'is_active' => true,
         ]);
 
         $userB = User::create([
-            'uuid'       => \Illuminate\Support\Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $companyB->id,
-            'branch_id'  => $branchB->id,
-            'name'       => 'User B',
-            'email'      => $sharedEmail,
-            'password'   => 'Password-Bravo-9!',
-            'role'       => UserRole::Owner,
-            'status'     => UserStatus::Active,
-            'is_active'  => true,
+            'branch_id' => $branchB->id,
+            'name' => 'User B',
+            'email' => $sharedEmail,
+            'password' => 'Password-Bravo-9!',
+            'role' => UserRole::Owner,
+            'status' => UserStatus::Active,
+            'is_active' => true,
         ]);
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $sharedEmail,
+            'email' => $sharedEmail,
             'password' => 'Password-Bravo-9!',
         ])->assertStatus(200)
             ->assertJsonPath('user.id', $userB->id)
             ->assertJsonPath('user.company_id', $companyB->id);
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $sharedEmail,
+            'email' => $sharedEmail,
             'password' => 'Password-Alpha-9!',
         ])->assertStatus(200)
             ->assertJsonPath('user.id', $userA->id);
@@ -115,7 +117,7 @@ class LoginTest extends TestCase
         $tenant = $this->createTenant();
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'WrongPassword!',
         ]);
 
@@ -130,12 +132,12 @@ class LoginTest extends TestCase
         $tenant['user']->update(['is_active' => false]);
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
         $response->assertStatus(403)
-            ->assertJsonPath('reason_code', \App\Support\Auth\LoginEligibilityResult::REASON_ACCOUNT_DISABLED);
+            ->assertJsonPath('reason_code', LoginEligibilityResult::REASON_ACCOUNT_DISABLED);
     }
 
     public function test_login_requires_email_and_password(): void
@@ -154,7 +156,7 @@ class LoginTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ])->assertStatus(200)
             ->assertJsonPath('otp_required', true)
@@ -196,10 +198,10 @@ class LoginTest extends TestCase
         $tenant['user']->update(['phone' => '0500112233']);
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'identifier'   => '+966 500 112 233',
-            'password'     => 'Password123!',
-            'device_name'  => 'PHPUnit device',
-            'device_type'  => 'android',
+            'identifier' => '+966 500 112 233',
+            'password' => 'Password123!',
+            'device_name' => 'PHPUnit device',
+            'device_type' => 'android',
         ]);
 
         $response->assertStatus(200)
@@ -243,12 +245,12 @@ class LoginTest extends TestCase
     public function test_register_creates_company_branch_user_subscription(): void
     {
         $response = $this->postJson('/api/v1/auth/register', [
-            'company_name'          => 'New Auto Center',
-            'name'                  => 'John Owner',
-            'email'                 => 'john@newcenter.sa',
-            'password'              => 'Password123!',
+            'company_name' => 'New Auto Center',
+            'name' => 'John Owner',
+            'email' => 'john@newcenter.sa',
+            'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
-            'phone'                 => '+966500000001',
+            'phone' => '+966500000001',
         ]);
 
         $response->assertStatus(201)
@@ -269,21 +271,21 @@ class LoginTest extends TestCase
     public function test_register_rejects_duplicate_phone_variants(): void
     {
         $this->postJson('/api/v1/auth/register', [
-            'company_name'          => 'First Co',
-            'name'                  => 'Owner One',
-            'email'                 => 'owner1@dupphone.test',
-            'password'              => 'Password123!',
+            'company_name' => 'First Co',
+            'name' => 'Owner One',
+            'email' => 'owner1@dupphone.test',
+            'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
-            'phone'                 => '0500112233',
+            'phone' => '0500112233',
         ])->assertStatus(201);
 
         $this->postJson('/api/v1/auth/register', [
-            'company_name'          => 'Second Co',
-            'name'                  => 'Owner Two',
-            'email'                 => 'owner2@dupphone.test',
-            'password'              => 'Password123!',
+            'company_name' => 'Second Co',
+            'name' => 'Owner Two',
+            'email' => 'owner2@dupphone.test',
+            'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
-            'phone'                 => '+966 500 112 233',
+            'phone' => '+966 500 112 233',
         ])->assertStatus(422)
             ->assertJsonValidationErrors(['phone']);
     }

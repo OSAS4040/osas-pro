@@ -11,10 +11,11 @@ use App\Models\Invoice;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
-use App\Services\IntelligentReading\KsaPlateNormalizer;
+use App\Models\WorkOrderItem;
 use App\Services\Config\VerticalBehaviorResolverService;
-use App\Services\Ocr\TesseractOcrRunner;
+use App\Services\IntelligentReading\KsaPlateNormalizer;
 use App\Services\Messaging\WhatsAppOutboundService;
+use App\Services\Ocr\TesseractOcrRunner;
 use App\Services\PlatformPricingApprovalGateService;
 use App\Services\SensitivePreviewTokenService;
 use App\Services\WorkOrderPdfService;
@@ -22,6 +23,8 @@ use App\Services\WorkOrderPricingResolverService;
 use App\Services\WorkOrderService;
 use App\Support\Media\TenantUploadDisk;
 use App\Support\TenantBusinessFeatures;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -47,10 +50,12 @@ class WorkOrderController extends Controller
      *     tags={"WorkOrders"},
      *     summary="List work orders",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="status", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="customer_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="vehicle_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="branch_id", in="query", @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/PaginatedResponse")
      * )
      */
@@ -112,7 +117,7 @@ class WorkOrderController extends Controller
     /**
      * Filters shared by list + status aggregates (excludes status filter so counts reflect search scope).
      */
-    private function workOrdersBaseQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    private function workOrdersBaseQuery(Request $request): Builder
     {
         $branchScope = $this->workOrderBranchConstraint($request);
 
@@ -392,25 +397,25 @@ class WorkOrderController extends Controller
         if (! $hasOnBehalf) {
             if (! $user->company_id) {
                 return response()->json([
-                    'message'  => 'يجب اختيار مزوّد (شريك تنفيذ) من القائمة أعلاه — البحث يتم في سياق شركاء التنفيذ فقط عند العمل نيابةً عنهم.',
+                    'message' => 'يجب اختيار مزوّد (شريك تنفيذ) من القائمة أعلاه — البحث يتم في سياق شركاء التنفيذ فقط عند العمل نيابةً عنهم.',
                     'trace_id' => app('trace_id'),
                 ], 422);
             }
 
             return [
-                'company_id'            => (int) $user->company_id,
+                'company_id' => (int) $user->company_id,
                 'delegated_by_platform' => false,
             ];
         }
         if (! (bool) $user->is_platform_user) {
             return response()->json([
-                'message'  => 'تنفيذ البحث بالنيابة عن شركة محدّدة مخصّص لمشغّلي المنصّة فقط.',
+                'message' => 'تنفيذ البحث بالنيابة عن شركة محدّدة مخصّص لمشغّلي المنصّة فقط.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
         if (! $user->hasPermission('platform.companies.read') && ! $user->hasPermission('platform.ops.read')) {
             return response()->json([
-                'message'  => 'لا تملك صلاحية التحكّم في سياق مزوّد آخر (مطلوب: قراءة المشتركين أو عمليات المنصّة).',
+                'message' => 'لا تملك صلاحية التحكّم في سياق مزوّد آخر (مطلوب: قراءة المشتركين أو عمليات المنصّة).',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -418,19 +423,19 @@ class WorkOrderController extends Controller
         $company = Company::query()->find($cid);
         if ($company === null) {
             return response()->json([
-                'message'  => 'الشركة المحدّدة غير موجودة.',
+                'message' => 'الشركة المحدّدة غير موجودة.',
                 'trace_id' => app('trace_id'),
             ], 404);
         }
         if (! TenantBusinessFeatures::isPlatformExecutionPartnerTenant($cid)) {
             return response()->json([
-                'message'  => 'الشركة المختارة ليست مُسجّلة كشريك تنفيذ منصّة. اختر مزوّداً مُفعّلاً في إعدادات المنصّة.',
+                'message' => 'الشركة المختارة ليست مُسجّلة كشريك تنفيذ منصّة. اختر مزوّداً مُفعّلاً في إعدادات المنصّة.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
 
         return [
-            'company_id'            => $cid,
+            'company_id' => $cid,
             'delegated_by_platform' => true,
         ];
     }
@@ -450,19 +455,19 @@ class WorkOrderController extends Controller
         $tenantCompany = Company::query()->find($companyId);
         if ($tenantCompany === null) {
             return [
-                'data'     => [
-                    'lookup'          => [
+                'data' => [
+                    'lookup' => [
                         'order_number' => ($orderNumber ?? '') !== '' ? $orderNumber : null,
-                        'plate_number'   => ($plateNumber ?? '') !== '' ? $plateNumber : null,
+                        'plate_number' => ($plateNumber ?? '') !== '' ? $plateNumber : null,
                     ],
-                    'work_order'      => null,
-                    'vehicle'         => null,
+                    'work_order' => null,
+                    'vehicle' => null,
                     'show_service_lines' => false,
-                    'service_lines'   => [],
-                    'prepaid'         => [],
-                    'execution'       => [],
-                    'arrival'         => [],
-                    'delegation'      => ['by_platform' => $delegatedByPlatform, 'company_id' => null, 'company_name' => null],
+                    'service_lines' => [],
+                    'prepaid' => [],
+                    'execution' => [],
+                    'arrival' => [],
+                    'delegation' => ['by_platform' => $delegatedByPlatform, 'company_id' => null, 'company_name' => null],
                 ],
                 'trace_id' => app('trace_id'),
             ];
@@ -547,8 +552,8 @@ class WorkOrderController extends Controller
         $showServiceLines = $order !== null && ! $isTerminalOrder && ($isActiveOrder || $hasAnyWalletCredit);
         $serviceLines = [];
         if ($showServiceLines) {
-            $order->load(['items' => static fn (\Illuminate\Database\Eloquent\Relations\HasMany $q) => $q->orderBy('id')]);
-            $serviceLines = $order->items->map(static function (\App\Models\WorkOrderItem $it): array {
+            $order->load(['items' => static fn (HasMany $q) => $q->orderBy('id')]);
+            $serviceLines = $order->items->map(static function (WorkOrderItem $it): array {
                 return [
                     'id' => $it->id,
                     'item_type' => $it->item_type instanceof \BackedEnum ? $it->item_type->value : (string) $it->item_type,
@@ -624,10 +629,13 @@ class WorkOrderController extends Controller
      *     tags={"WorkOrders"},
      *     summary="Create a work order",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"customer_id","vehicle_id"},
+     *
      *             @OA\Property(property="customer_id", type="integer"),
      *             @OA\Property(property="vehicle_id", type="integer"),
      *             @OA\Property(property="assigned_technician_id", type="integer"),
@@ -640,6 +648,7 @@ class WorkOrderController extends Controller
      *             @OA\Property(property="items", type="array", @OA\Items(type="object"))
      *         )
      *     ),
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -669,30 +678,30 @@ class WorkOrderController extends Controller
         $companyId = (int) app('tenant_company_id');
 
         $data = $request->validate([
-            'customer_id'            => 'required|integer|exists:customers,id',
-            'vehicle_id'             => 'required|integer|exists:vehicles,id',
+            'customer_id' => 'required|integer|exists:customers,id',
+            'vehicle_id' => 'required|integer|exists:vehicles,id',
             'assigned_technician_id' => 'nullable|integer|exists:users,id',
-            'priority'               => 'nullable|in:low,normal,high,urgent',
-            'customer_complaint'     => 'nullable|string',
-            'driver_name'            => 'nullable|string|max:120',
-            'driver_phone'           => 'nullable|string|max:30',
-            'odometer_reading'       => 'nullable|integer|min:0',
-            'mileage_in'             => 'nullable|integer|min:0',
-            'vehicle_plate'          => 'nullable|string|max:20',
-            'notes'                  => 'nullable|string',
-            'items'                  => 'required|array|min:1',
-            'items.*.item_type'      => 'required|in:part,labor,service,other',
-            'items.*.name'           => 'nullable|string',
-            'items.*.product_id'     => 'nullable|integer',
-            'items.*.service_id'     => [
+            'priority' => 'nullable|in:low,normal,high,urgent',
+            'customer_complaint' => 'nullable|string',
+            'driver_name' => 'nullable|string|max:120',
+            'driver_phone' => 'nullable|string|max:30',
+            'odometer_reading' => 'nullable|integer|min:0',
+            'mileage_in' => 'nullable|integer|min:0',
+            'vehicle_plate' => 'nullable|string|max:20',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.item_type' => 'required|in:part,labor,service,other',
+            'items.*.name' => 'nullable|string',
+            'items.*.product_id' => 'nullable|integer',
+            'items.*.service_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('services', 'id')->where(fn ($q) => $q->where('company_id', $companyId)),
             ],
-            'items.*.quantity'       => 'required|numeric|min:0.001',
-            'items.*.unit_price'     => 'nullable|numeric|min:0',
-            'items.*.tax_rate'       => 'nullable|numeric|min:0|max:100',
-            'items.*.discount_amount'=> 'nullable|numeric|min:0',
+            'items.*.quantity' => 'required|numeric|min:0.001',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
+            'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
+            'items.*.discount_amount' => 'nullable|numeric|min:0',
         ]);
 
         foreach ($data['items'] as $idx => $line) {
@@ -700,13 +709,13 @@ class WorkOrderController extends Controller
             $hasManualPrice = array_key_exists('unit_price', $line) && $line['unit_price'] !== null && $line['unit_price'] !== '';
             if (! $hasService && ! $hasManualPrice) {
                 return response()->json([
-                    'message' => "البند رقم ".($idx + 1).": يجب تحديد service_id للتسعير المركزي أو unit_price للبنود اليدوية.",
+                    'message' => 'البند رقم '.($idx + 1).': يجب تحديد service_id للتسعير المركزي أو unit_price للبنود اليدوية.',
                     'trace_id' => app('trace_id'),
                 ], 422);
             }
             if (! $hasService && empty(trim((string) ($line['name'] ?? '')))) {
                 return response()->json([
-                    'message' => "البند رقم ".($idx + 1).": اسم البند مطلوب عند عدم ربط خدمة من الكتالوج.",
+                    'message' => 'البند رقم '.($idx + 1).': اسم البند مطلوب عند عدم ربط خدمة من الكتالوج.',
                     'trace_id' => app('trace_id'),
                 ], 422);
             }
@@ -746,9 +755,9 @@ class WorkOrderController extends Controller
         }
 
         return response()->json([
-            'data'               => $order->load(['items', 'vehicle', 'customer']),
-            'trace_id'           => app('trace_id'),
-            'behavior_applied'   => $this->behaviorResolver->activeBehaviorMarkers($behavior),
+            'data' => $order->load(['items', 'vehicle', 'customer']),
+            'trace_id' => app('trace_id'),
+            'behavior_applied' => $this->behaviorResolver->activeBehaviorMarkers($behavior),
         ], 201);
     }
 
@@ -758,7 +767,9 @@ class WorkOrderController extends Controller
      *     tags={"WorkOrders"},
      *     summary="Get work order details",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -1036,14 +1047,18 @@ class WorkOrderController extends Controller
      *     tags={"WorkOrders"},
      *     summary="Update a work order",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\RequestBody(required=true, @OA\JsonContent(
      *         required={"version"},
+     *
      *         @OA\Property(property="version", type="integer"),
      *         @OA\Property(property="notes", type="string"),
      *         @OA\Property(property="driver_name", type="string"),
      *         @OA\Property(property="driver_phone", type="string")
      *     )),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -1054,30 +1069,30 @@ class WorkOrderController extends Controller
         $catalogOnlyPricingActor = $user->role->isFleetSide() || $user->role->isCustomer();
 
         $data = $request->validate([
-            'version'                => 'required|integer',
+            'version' => 'required|integer',
             'assigned_technician_id' => 'nullable|integer|exists:users,id',
-            'priority'               => 'nullable|in:low,normal,high,urgent',
-            'customer_complaint'     => 'nullable|string',
-            'diagnosis'              => 'nullable|string',
-            'technician_notes'       => 'nullable|string',
-            'mileage_in'             => 'nullable|integer|min:0',
-            'mileage_out'            => 'nullable|integer|min:0',
-            'odometer_reading'       => 'nullable|integer|min:0',
-            'driver_name'            => 'nullable|string|max:120',
-            'driver_phone'           => 'nullable|string|max:30',
-            'notes'                  => 'nullable|string',
-            'items'                  => 'sometimes|required|array|min:1',
-            'items.*.item_type'      => 'required|in:part,labor,service,other',
-            'items.*.name'           => 'nullable|string',
-            'items.*.product_id'     => 'nullable|integer',
-            'items.*.service_id'     => [
+            'priority' => 'nullable|in:low,normal,high,urgent',
+            'customer_complaint' => 'nullable|string',
+            'diagnosis' => 'nullable|string',
+            'technician_notes' => 'nullable|string',
+            'mileage_in' => 'nullable|integer|min:0',
+            'mileage_out' => 'nullable|integer|min:0',
+            'odometer_reading' => 'nullable|integer|min:0',
+            'driver_name' => 'nullable|string|max:120',
+            'driver_phone' => 'nullable|string|max:30',
+            'notes' => 'nullable|string',
+            'items' => 'sometimes|required|array|min:1',
+            'items.*.item_type' => 'required|in:part,labor,service,other',
+            'items.*.name' => 'nullable|string',
+            'items.*.product_id' => 'nullable|integer',
+            'items.*.service_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('services', 'id')->where(fn ($q) => $q->where('company_id', $companyId)),
             ],
-            'items.*.quantity'       => 'required|numeric|min:0.001',
-            'items.*.unit_price'     => 'nullable|numeric|min:0',
-            'items.*.tax_rate'       => 'nullable|numeric|min:0|max:100',
+            'items.*.quantity' => 'required|numeric|min:0.001',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
+            'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
         ]);
 
         if (isset($data['items'])) {
@@ -1086,13 +1101,13 @@ class WorkOrderController extends Controller
                 $hasManualPrice = array_key_exists('unit_price', $line) && $line['unit_price'] !== null && $line['unit_price'] !== '';
                 if (! $hasService && ! $hasManualPrice) {
                     return response()->json([
-                        'message' => "البند رقم ".($idx + 1).": يجب تحديد service_id للتسعير المركزي أو unit_price للبنود اليدوية.",
+                        'message' => 'البند رقم '.($idx + 1).': يجب تحديد service_id للتسعير المركزي أو unit_price للبنود اليدوية.',
                         'trace_id' => app('trace_id'),
                     ], 422);
                 }
                 if (! $hasService && empty(trim((string) ($line['name'] ?? '')))) {
                     return response()->json([
-                        'message' => "البند رقم ".($idx + 1).": اسم البند مطلوب عند عدم ربط خدمة من الكتالوج.",
+                        'message' => 'البند رقم '.($idx + 1).': اسم البند مطلوب عند عدم ربط خدمة من الكتالوج.',
                         'trace_id' => app('trace_id'),
                     ], 422);
                 }
@@ -1124,7 +1139,7 @@ class WorkOrderController extends Controller
         }
 
         return response()->json([
-            'data'     => $updated->load(['items', 'vehicle', 'customer']),
+            'data' => $updated->load(['items', 'vehicle', 'customer']),
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -1135,9 +1150,12 @@ class WorkOrderController extends Controller
      *     tags={"WorkOrders"},
      *     summary="Transition work order status",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\RequestBody(required=true, @OA\JsonContent(
      *         required={"status","version"},
+     *
      *         @OA\Property(property="status", type="string",
      *             enum={"pending","in_progress","on_hold","completed","delivered","cancelled"}),
      *         @OA\Property(property="version", type="integer"),
@@ -1145,6 +1163,7 @@ class WorkOrderController extends Controller
      *         @OA\Property(property="diagnosis", type="string"),
      *         @OA\Property(property="mileage_out", type="integer")
      *     )),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse"),
      *     @OA\Response(response=409, description="Version conflict"),
      *     @OA\Response(response=422, description="Invalid transition")
@@ -1205,16 +1224,16 @@ class WorkOrderController extends Controller
             $updated = $this->workOrderService->transition($order, $newStatus, $data);
         } catch (\DomainException $e) {
             return response()->json([
-                'message'  => $e->getMessage(),
-                'code'     => 'TRANSITION_NOT_ALLOWED',
-                'status'   => 409,
+                'message' => $e->getMessage(),
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
                 'trace_id' => app('trace_id'),
             ], 409);
         } catch (\RuntimeException $e) {
             return response()->json([
-                'message'  => $e->getMessage(),
-                'code'     => 'RESOURCE_VERSION_MISMATCH',
-                'status'   => 409,
+                'message' => $e->getMessage(),
+                'code' => 'RESOURCE_VERSION_MISMATCH',
+                'status' => 409,
                 'trace_id' => app('trace_id'),
             ], 409);
         }
@@ -1232,7 +1251,9 @@ class WorkOrderController extends Controller
      *     tags={"WorkOrders"},
      *     summary="Delete a work order (draft or cancelled only)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -1242,7 +1263,7 @@ class WorkOrderController extends Controller
 
         if (! in_array($order->status->value, ['draft', 'pending_manager_approval', 'cancelled'], true)) {
             return response()->json([
-                'message'  => 'Only draft, pending approval queue, or cancelled work orders can be deleted.',
+                'message' => 'Only draft, pending approval queue, or cancelled work orders can be deleted.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }

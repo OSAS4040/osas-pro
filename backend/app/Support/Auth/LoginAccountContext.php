@@ -34,16 +34,16 @@ final class LoginAccountContext
     public function toArray(): array
     {
         return [
-            'principal_kind'               => $this->principalKind->value,
-            'user_id'                      => $this->userId,
-            'company_id'                   => $this->companyId,
-            'customer_id'                  => $this->customerId,
-            'home_route_hint'              => $this->homeRouteHint,
-            'guard_hint'                   => $this->guardHint->value,
-            'role'                         => $this->role,
-            'requires_context_selection'   => $this->requiresContextSelection,
-            'display_context'              => $this->displayContext,
-            'platform_role'                => $this->platformRole,
+            'principal_kind' => $this->principalKind->value,
+            'user_id' => $this->userId,
+            'company_id' => $this->companyId,
+            'customer_id' => $this->customerId,
+            'home_route_hint' => $this->homeRouteHint,
+            'guard_hint' => $this->guardHint->value,
+            'role' => $this->role,
+            'requires_context_selection' => $this->requiresContextSelection,
+            'display_context' => $this->displayContext,
+            'platform_role' => $this->platformRole,
         ];
     }
 }

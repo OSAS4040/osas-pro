@@ -36,14 +36,14 @@ class SaasPlanCatalogGateTest extends TestCase
         config(['saas.platform_admin_emails' => []]);
 
         $company = $this->createCompany();
-        $branch  = $this->createBranch($company);
-        $user    = $this->createUser($company, $branch, 'owner');
+        $branch = $this->createBranch($company);
+        $user = $this->createUser($company, $branch, 'owner');
 
         $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->postJson('/api/v1/plans/seed', [], [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ]);
 
         $res->assertStatus(403);
@@ -56,14 +56,14 @@ class SaasPlanCatalogGateTest extends TestCase
         config(['saas.platform_admin_emails' => ['owner_test@platform.sa']]);
 
         $company = $this->createCompany();
-        $branch  = $this->createBranch($company);
-        $user    = $this->createUser($company, $branch, 'owner', ['email' => 'owner_test@platform.sa']);
+        $branch = $this->createBranch($company);
+        $user = $this->createUser($company, $branch, 'owner', ['email' => 'owner_test@platform.sa']);
 
         $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->postJson('/api/v1/plans/seed', [], [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ]);
 
         $res->assertStatus(403);
@@ -75,12 +75,12 @@ class SaasPlanCatalogGateTest extends TestCase
         config(['saas.allow_tenant_plan_catalog_edit' => false]);
         config(['saas.platform_admin_emails' => ['owner_test@platform.sa']]);
 
-        $user  = $this->createStandalonePlatformOperator('owner_test@platform.sa');
+        $user = $this->createStandalonePlatformOperator('owner_test@platform.sa');
         $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->postJson('/api/v1/plans/seed', [], [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ]);
 
         $res->assertSuccessful();
@@ -92,30 +92,30 @@ class SaasPlanCatalogGateTest extends TestCase
         config(['saas.platform_admin_emails' => []]);
 
         Plan::query()->create([
-            'slug'           => 'gate-test-plan',
-            'name'           => 'Gate',
-            'name_ar'        => 'بوابة',
-            'price_monthly'  => 100,
-            'price_yearly'   => 1000,
-            'currency'       => 'SAR',
-            'max_branches'   => 1,
-            'max_users'      => 5,
-            'max_products'   => 100,
+            'slug' => 'gate-test-plan',
+            'name' => 'Gate',
+            'name_ar' => 'بوابة',
+            'price_monthly' => 100,
+            'price_yearly' => 1000,
+            'currency' => 'SAR',
+            'max_branches' => 1,
+            'max_users' => 5,
+            'max_products' => 100,
             'grace_period_days' => 3,
-            'features'       => ['pos'],
-            'is_active'      => true,
-            'sort_order'     => 99,
+            'features' => ['pos'],
+            'is_active' => true,
+            'sort_order' => 99,
         ]);
 
         $company = $this->createCompany();
-        $branch  = $this->createBranch($company);
+        $branch = $this->createBranch($company);
         $this->createActiveSubscription($company);
-        $user  = $this->createUser($company, $branch, 'owner');
+        $user = $this->createUser($company, $branch, 'owner');
         $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->putJson('/api/v1/plans/gate-test-plan', ['name_ar' => 'معدّل'], [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ]);
 
         $res->assertStatus(403);
@@ -128,27 +128,27 @@ class SaasPlanCatalogGateTest extends TestCase
         config(['saas.platform_admin_emails' => ['catalog-ops@platform.sa']]);
 
         Plan::query()->create([
-            'slug'           => 'platform-route-plan',
-            'name'           => 'PR',
-            'name_ar'        => 'مسار المنصة',
-            'price_monthly'  => 50,
-            'price_yearly'   => 500,
-            'currency'       => 'SAR',
-            'max_branches'   => 1,
-            'max_users'      => 5,
-            'max_products'   => 100,
+            'slug' => 'platform-route-plan',
+            'name' => 'PR',
+            'name_ar' => 'مسار المنصة',
+            'price_monthly' => 50,
+            'price_yearly' => 500,
+            'currency' => 'SAR',
+            'max_branches' => 1,
+            'max_users' => 5,
+            'max_products' => 100,
             'grace_period_days' => 3,
-            'features'       => ['pos'],
-            'is_active'      => true,
-            'sort_order'     => 88,
+            'features' => ['pos'],
+            'is_active' => true,
+            'sort_order' => 88,
         ]);
 
-        $user  = $this->createStandalonePlatformOperator('catalog-ops@platform.sa');
+        $user = $this->createStandalonePlatformOperator('catalog-ops@platform.sa');
         $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->putJson('/api/v1/platform/plans/platform-route-plan', ['name_ar' => 'محدّث من المنصة'], [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ]);
 
         $res->assertSuccessful();
@@ -161,22 +161,22 @@ class SaasPlanCatalogGateTest extends TestCase
         config(['saas.platform_admin_emails' => ['catalog-ops@platform.sa']]);
 
         Plan::query()->create([
-            'slug'           => 'addon-eligible-plan',
-            'name'           => 'P',
-            'name_ar'        => 'باقة للإضافة',
-            'price_monthly'  => 10,
-            'price_yearly'   => 100,
-            'currency'       => 'SAR',
-            'max_branches'   => 1,
-            'max_users'      => 2,
-            'max_products'   => 50,
+            'slug' => 'addon-eligible-plan',
+            'name' => 'P',
+            'name_ar' => 'باقة للإضافة',
+            'price_monthly' => 10,
+            'price_yearly' => 100,
+            'currency' => 'SAR',
+            'max_branches' => 1,
+            'max_users' => 2,
+            'max_products' => 50,
             'grace_period_days' => 3,
-            'features'       => ['pos'],
-            'is_active'      => true,
-            'sort_order'     => 1,
+            'features' => ['pos'],
+            'is_active' => true,
+            'sort_order' => 1,
         ]);
 
-        $user  = $this->createStandalonePlatformOperator('catalog-ops@platform.sa');
+        $user = $this->createStandalonePlatformOperator('catalog-ops@platform.sa');
         $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->postJson('/api/v1/platform/plan-addons', [
@@ -191,7 +191,7 @@ class SaasPlanCatalogGateTest extends TestCase
             'sort_order' => 9,
         ], [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ]);
 
         $res->assertStatus(201);
@@ -204,7 +204,7 @@ class SaasPlanCatalogGateTest extends TestCase
         config(['saas.allow_tenant_plan_catalog_edit' => false]);
         config(['saas.platform_admin_emails' => ['catalog-ops@platform.sa']]);
 
-        $user  = $this->createStandalonePlatformOperator('catalog-ops@platform.sa');
+        $user = $this->createStandalonePlatformOperator('catalog-ops@platform.sa');
         $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->postJson('/api/v1/platform/plan-addons', [
@@ -216,7 +216,7 @@ class SaasPlanCatalogGateTest extends TestCase
             'eligible_plan_slugs' => ['no-such-plan-slug'],
         ], [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ]);
 
         $res->assertStatus(422);
@@ -228,11 +228,11 @@ class SaasPlanCatalogGateTest extends TestCase
         config(['saas.platform_admin_emails' => []]);
 
         $tenant = $this->createTenant();
-        $token  = $tenant['user']->createToken('t')->plainTextToken;
+        $token = $tenant['user']->createToken('t')->plainTextToken;
 
         $res = $this->getJson('/api/v1/admin/companies', [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ]);
 
         $res->assertStatus(403);
@@ -243,12 +243,12 @@ class SaasPlanCatalogGateTest extends TestCase
     {
         config(['saas.platform_admin_emails' => ['operator@platform.sa']]);
 
-        $user  = $this->createStandalonePlatformOperator('operator@platform.sa');
+        $user = $this->createStandalonePlatformOperator('operator@platform.sa');
         $token = $user->createToken('t')->plainTextToken;
 
         $res = $this->getJson('/api/v1/admin/companies', [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ]);
 
         $res->assertSuccessful();

@@ -20,12 +20,12 @@ class AuthSessionsTest extends TestCase
     public function test_login_success_writes_audit_and_token_metadata(): void
     {
         $tenant = $this->createTenant('owner');
-        $user    = $tenant['user'];
+        $user = $tenant['user'];
 
         $before = AuthLoginEvent::query()->count();
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ], [
             'User-Agent' => 'PHPUnitAuthSessions/1.0',
@@ -48,12 +48,12 @@ class AuthSessionsTest extends TestCase
     public function test_login_denied_writes_audit_without_token(): void
     {
         $tenant = $this->createTenant('owner');
-        $user    = $tenant['user'];
+        $user = $tenant['user'];
 
         $before = AuthLoginEvent::query()->count();
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'WrongPassword!',
         ])->assertUnauthorized();
 
@@ -67,17 +67,17 @@ class AuthSessionsTest extends TestCase
     public function test_sessions_list_scoped_to_authenticated_user_and_marks_current(): void
     {
         $tenant = $this->createTenant('owner');
-        $user   = $tenant['user'];
+        $user = $tenant['user'];
 
         $login1 = $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ], ['User-Agent' => 'Device-A'])->assertOk();
         $token1 = (string) $login1->json('token');
 
         $login2 = $this->postJson('/api/v1/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'Password123!',
+            'email' => $user->email,
+            'password' => 'Password123!',
             'device_name' => 'other-device',
         ], ['User-Agent' => 'Device-B'])->assertOk();
         $token2 = (string) $login2->json('token');
@@ -113,12 +113,12 @@ class AuthSessionsTest extends TestCase
         $b = $this->createTenant('owner');
 
         $tokenA = (string) $this->postJson('/api/v1/auth/login', [
-            'email'    => $a['user']->email,
+            'email' => $a['user']->email,
             'password' => 'Password123!',
         ])->assertOk()->json('token');
 
         $tokenB = (string) $this->postJson('/api/v1/auth/login', [
-            'email'    => $b['user']->email,
+            'email' => $b['user']->email,
             'password' => 'Password123!',
         ])->assertOk()->json('token');
 
@@ -134,10 +134,10 @@ class AuthSessionsTest extends TestCase
     public function test_cannot_revoke_current_session_via_delete_endpoint(): void
     {
         $tenant = $this->createTenant('owner');
-        $user   = $tenant['user'];
+        $user = $tenant['user'];
 
         $token = (string) $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ])->assertOk()->json('token');
 
@@ -154,16 +154,16 @@ class AuthSessionsTest extends TestCase
     public function test_revoke_specific_non_current_session_and_audit(): void
     {
         $tenant = $this->createTenant('owner');
-        $user   = $tenant['user'];
+        $user = $tenant['user'];
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ], ['User-Agent' => 'First'])->assertOk();
 
         $token2 = (string) $this->postJson('/api/v1/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'Password123!',
+            'email' => $user->email,
+            'password' => 'Password123!',
             'device_name' => 'second',
         ], ['User-Agent' => 'Second'])->assertOk()->json('token');
 
@@ -188,16 +188,16 @@ class AuthSessionsTest extends TestCase
     public function test_revoke_others_keeps_only_current_and_writes_audit(): void
     {
         $tenant = $this->createTenant('owner');
-        $user   = $tenant['user'];
+        $user = $tenant['user'];
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ])->assertOk();
 
         $tokenCurrent = (string) $this->postJson('/api/v1/auth/login', [
-            'email'       => $user->email,
-            'password'    => 'Password123!',
+            'email' => $user->email,
+            'password' => 'Password123!',
             'device_name' => 'keeper',
         ])->assertOk()->json('token');
 
@@ -220,10 +220,10 @@ class AuthSessionsTest extends TestCase
     public function test_logout_success_records_audit(): void
     {
         $tenant = $this->createTenant('owner');
-        $user   = $tenant['user'];
+        $user = $tenant['user'];
 
         $token = (string) $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ])->assertOk()->json('token');
 
@@ -247,15 +247,15 @@ class AuthSessionsTest extends TestCase
     public function test_manual_token_gets_metadata_via_writer_like_otp_channel(): void
     {
         $tenant = $this->createTenant('owner');
-        $user   = $tenant['user'];
+        $user = $tenant['user'];
 
         $plain = $user->createToken('otp-device', ['*'])->plainTextToken;
-        $pat   = $user->tokens()->latest('id')->first();
+        $pat = $user->tokens()->latest('id')->first();
         $this->assertNotNull($pat);
 
         $req = Request::create('/test', 'GET', [], [], [], [
             'HTTP_USER_AGENT' => 'OtpTestAgent/2.0',
-            'REMOTE_ADDR'     => '203.0.113.10',
+            'REMOTE_ADDR' => '203.0.113.10',
         ]);
         app(AuthSessionMetadataWriter::class)->apply($pat, $req, 'otp_phone');
         $pat->refresh();
@@ -271,12 +271,12 @@ class AuthSessionsTest extends TestCase
         $b = $this->createTenant('owner');
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $b['user']->email,
+            'email' => $b['user']->email,
             'password' => 'Password123!',
         ])->assertOk();
 
         $tokenA = (string) $this->postJson('/api/v1/auth/login', [
-            'email'    => $a['user']->email,
+            'email' => $a['user']->email,
             'password' => 'Password123!',
         ])->assertOk()->json('token');
 

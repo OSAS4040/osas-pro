@@ -19,7 +19,7 @@ final class ProductionReadinessAuthContractTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ])
             ->assertOk()
@@ -36,7 +36,7 @@ final class ProductionReadinessAuthContractTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'DefinitelyNotThePassword99!',
         ])
             ->assertUnauthorized()

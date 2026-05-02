@@ -25,7 +25,7 @@ class ReportingWorkOrderSummaryTest extends TestCase
     {
         return [
             'from' => now()->subDays(7)->toDateString(),
-            'to'   => now()->toDateString(),
+            'to' => now()->toDateString(),
         ];
     }
 
@@ -35,40 +35,40 @@ class ReportingWorkOrderSummaryTest extends TestCase
         $user = $tenant['user'];
 
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'Rep Customer',
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2c',
+            'name' => 'Rep Customer',
+            'is_active' => true,
         ]);
 
         $vehicle = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $user->id,
-            'plate_number'       => 'RPT-'.Str::upper(Str::random(5)),
-            'make'               => 'X',
-            'model'              => 'Y',
-            'year'               => 2024,
-            'is_active'          => true,
+            'plate_number' => 'RPT-'.Str::upper(Str::random(5)),
+            'make' => 'X',
+            'model' => 'Y',
+            'year' => 2024,
+            'is_active' => true,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $vehicle->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
             'created_by_user_id' => $user->id,
-            'order_number'       => 'WO-RPT-'.Str::upper(Str::random(5)),
-            'status'             => WorkOrderStatus::Draft,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-RPT-'.Str::upper(Str::random(5)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         $response = $this->actingAsUser($user)
@@ -82,7 +82,7 @@ class ReportingWorkOrderSummaryTest extends TestCase
             ->assertJsonPath('meta.intelligence_version', 'v1')
             ->assertJsonStructure([
                 'report' => ['id', 'version', 'generated_at', 'period', 'filters', 'read_only', 'export'],
-                'data'   => ['by_status', 'totals', 'intelligence'],
+                'data' => ['by_status', 'totals', 'intelligence'],
                 'trace_id',
             ]);
 
@@ -104,40 +104,40 @@ class ReportingWorkOrderSummaryTest extends TestCase
         $b = $this->createTenant('owner');
 
         $customerB = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $b['company']->id,
-            'branch_id'  => $b['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'B Only',
-            'is_active'  => true,
+            'branch_id' => $b['branch']->id,
+            'type' => 'b2c',
+            'name' => 'B Only',
+            'is_active' => true,
         ]);
 
         $vehicleB = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $b['company']->id,
-            'branch_id'          => $b['branch']->id,
-            'customer_id'        => $customerB->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $b['company']->id,
+            'branch_id' => $b['branch']->id,
+            'customer_id' => $customerB->id,
             'created_by_user_id' => $b['user']->id,
-            'plate_number'       => 'B-'.Str::upper(Str::random(5)),
-            'make'               => 'X',
-            'model'              => 'Y',
-            'year'               => 2024,
-            'is_active'          => true,
+            'plate_number' => 'B-'.Str::upper(Str::random(5)),
+            'make' => 'X',
+            'model' => 'Y',
+            'year' => 2024,
+            'is_active' => true,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $b['company']->id,
-            'branch_id'          => $b['branch']->id,
-            'customer_id'        => $customerB->id,
-            'vehicle_id'         => $vehicleB->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $b['company']->id,
+            'branch_id' => $b['branch']->id,
+            'customer_id' => $customerB->id,
+            'vehicle_id' => $vehicleB->id,
             'created_by_user_id' => $b['user']->id,
-            'order_number'       => 'WO-B-'.Str::upper(Str::random(5)),
-            'status'             => WorkOrderStatus::InProgress,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-B-'.Str::upper(Str::random(5)),
+            'status' => WorkOrderStatus::InProgress,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         $response = $this->actingAsUser($a['user'])
@@ -153,12 +153,12 @@ class ReportingWorkOrderSummaryTest extends TestCase
         $b = $this->createTenant('owner');
 
         $customerB = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $b['company']->id,
-            'branch_id'  => $b['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'Foreign',
-            'is_active'  => true,
+            'branch_id' => $b['branch']->id,
+            'type' => 'b2c',
+            'name' => 'Foreign',
+            'is_active' => true,
         ]);
 
         $q = array_merge($this->dateRangeQuery(), ['customer_id' => $customerB->id]);
@@ -175,7 +175,7 @@ class ReportingWorkOrderSummaryTest extends TestCase
 
         $q = [
             'from' => now()->subDays(20)->toDateString(),
-            'to'   => now()->toDateString(),
+            'to' => now()->toDateString(),
         ];
 
         $this->actingAsUser($tenant['user'])
@@ -194,68 +194,68 @@ class ReportingWorkOrderSummaryTest extends TestCase
         $staff = $this->createUser($company, $branch1, 'staff');
 
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $company->id,
-            'branch_id'  => $branch1->id,
-            'type'       => 'b2c',
-            'name'       => 'C1',
-            'is_active'  => true,
+            'branch_id' => $branch1->id,
+            'type' => 'b2c',
+            'name' => 'C1',
+            'is_active' => true,
         ]);
 
         $v1 = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $branch1->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $branch1->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $staff->id,
-            'plate_number'       => 'V1-'.Str::upper(Str::random(4)),
-            'make'               => 'A',
-            'model'              => 'B',
-            'year'               => 2023,
-            'is_active'          => true,
+            'plate_number' => 'V1-'.Str::upper(Str::random(4)),
+            'make' => 'A',
+            'model' => 'B',
+            'year' => 2023,
+            'is_active' => true,
         ]);
 
         $v2 = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $branch2->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $branch2->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $staff->id,
-            'plate_number'       => 'V2-'.Str::upper(Str::random(4)),
-            'make'               => 'A',
-            'model'              => 'B',
-            'year'               => 2023,
-            'is_active'          => true,
+            'plate_number' => 'V2-'.Str::upper(Str::random(4)),
+            'make' => 'A',
+            'model' => 'B',
+            'year' => 2023,
+            'is_active' => true,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $branch1->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $v1->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $branch1->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $v1->id,
             'created_by_user_id' => $staff->id,
-            'order_number'       => 'WO-B1-'.Str::upper(Str::random(4)),
-            'status'             => WorkOrderStatus::Draft,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-B1-'.Str::upper(Str::random(4)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $branch2->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $v2->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $branch2->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $v2->id,
             'created_by_user_id' => $staff->id,
-            'order_number'       => 'WO-B2-'.Str::upper(Str::random(4)),
-            'status'             => WorkOrderStatus::Draft,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-B2-'.Str::upper(Str::random(4)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         $response = $this->actingAsUser($staff)
@@ -271,67 +271,67 @@ class ReportingWorkOrderSummaryTest extends TestCase
         $owner = $tenant['user'];
 
         $other = User::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'name'       => 'Other Staff',
-            'email'      => 'other_'.Str::random(6).'@test.sa',
-            'password'   => bcrypt('Password123!'),
-            'role'       => 'staff',
-            'status'     => UserStatus::Active,
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'name' => 'Other Staff',
+            'email' => 'other_'.Str::random(6).'@test.sa',
+            'password' => bcrypt('Password123!'),
+            'role' => 'staff',
+            'status' => UserStatus::Active,
+            'is_active' => true,
         ]);
 
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'Cu',
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2c',
+            'name' => 'Cu',
+            'is_active' => true,
         ]);
 
         $v = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $owner->id,
-            'plate_number'       => 'VF-'.Str::upper(Str::random(4)),
-            'make'               => 'A',
-            'model'              => 'B',
-            'year'               => 2023,
-            'is_active'          => true,
+            'plate_number' => 'VF-'.Str::upper(Str::random(4)),
+            'make' => 'A',
+            'model' => 'B',
+            'year' => 2023,
+            'is_active' => true,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $v->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $v->id,
             'created_by_user_id' => $owner->id,
-            'order_number'       => 'WO-O-'.Str::upper(Str::random(4)),
-            'status'             => WorkOrderStatus::Draft,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-O-'.Str::upper(Str::random(4)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $v->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $v->id,
             'created_by_user_id' => $other->id,
-            'order_number'       => 'WO-X-'.Str::upper(Str::random(4)),
-            'status'             => WorkOrderStatus::Draft,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-X-'.Str::upper(Str::random(4)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         $q = array_merge($this->dateRangeQuery(), ['user_id' => $owner->id]);

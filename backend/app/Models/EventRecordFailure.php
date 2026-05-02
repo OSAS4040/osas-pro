@@ -20,7 +20,7 @@ class EventRecordFailure extends Model
     {
         return [
             'payload_json' => 'array',
-            'created_at'   => 'datetime',
+            'created_at' => 'datetime',
         ];
     }
 

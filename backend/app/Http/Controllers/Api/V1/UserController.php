@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
-use App\Enums\UserRole;
-use App\Support\SubscriptionQuota;
 use App\Services\NavigationVisibilityService;
+use App\Support\SubscriptionQuota;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -22,14 +22,17 @@ class UserController extends Controller
     public function __construct(
         private readonly NavigationVisibilityService $navigationVisibility,
     ) {}
+
     /**
      * @OA\Get(
      *     path="/api/v1/users",
      *     tags={"Users"},
      *     summary="List users",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="branch_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="role", in="query", @OA\Schema(type="string")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/PaginatedResponse")
      * )
      */
@@ -38,12 +41,12 @@ class UserController extends Controller
         $this->authorize('viewAny', User::class);
 
         $request->validate([
-            'branch_id'  => ['sometimes', 'nullable', 'integer', 'min:1'],
-            'role'       => ['sometimes', 'nullable', 'string', Rule::in(UserRole::values())],
-            'is_active'  => ['sometimes', 'nullable', 'boolean'],
-            'search'     => ['sometimes', 'nullable', 'string', 'max:120'],
-            'page'       => ['sometimes', 'integer', 'min:1', 'max:10000'],
-            'per_page'   => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'branch_id' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'role' => ['sometimes', 'nullable', 'string', Rule::in(UserRole::values())],
+            'is_active' => ['sometimes', 'nullable', 'boolean'],
+            'search' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'page' => ['sometimes', 'integer', 'min:1', 'max:10000'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
 
         $users = User::with(['branch', 'orgUnit'])
@@ -81,6 +84,7 @@ class UserController extends Controller
      *     tags={"Users"},
      *     summary="Create a user",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -95,7 +99,7 @@ class UserController extends Controller
         $user = User::create(array_merge(
             $validated,
             [
-                'uuid'       => Str::uuid(),
+                'uuid' => Str::uuid(),
                 'company_id' => $request->user()->company_id,
             ]
         ));
@@ -105,7 +109,7 @@ class UserController extends Controller
         $user->load(['branch', 'orgUnit']);
 
         return response()->json([
-            'data'     => array_merge(
+            'data' => array_merge(
                 $user->makeHidden(['password'])->toArray(),
                 [
                     'navigation_visibility_override' => $this->navigationVisibility->userOverride($user),
@@ -122,7 +126,9 @@ class UserController extends Controller
      *     tags={"Users"},
      *     summary="Get a user",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -150,7 +156,9 @@ class UserController extends Controller
      *     tags={"Users"},
      *     summary="Update a user",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -175,7 +183,7 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'data'     => array_merge(
+            'data' => array_merge(
                 $user->fresh(['branch', 'orgUnit'])->makeHidden(['password'])->toArray(),
                 [
                     'navigation_visibility_override' => $this->navigationVisibility->userOverride($user),
@@ -192,7 +200,9 @@ class UserController extends Controller
      *     tags={"Users"},
      *     summary="Delete a user",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */

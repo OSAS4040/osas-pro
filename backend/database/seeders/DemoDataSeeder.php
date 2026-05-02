@@ -5,11 +5,11 @@ namespace Database\Seeders;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Customer;
-use App\Models\Vehicle;
-use App\Models\WorkOrder;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\WorkOrder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -18,14 +18,15 @@ class DemoDataSeeder extends Seeder
     public function run(): void
     {
         $company = Company::where('email', 'demo@autocenter.sa')->first();
-        if (!$company) {
+        if (! $company) {
             $this->command->error('Demo company not found. Run DemoCompanySeeder first.');
+
             return;
         }
 
         $branch = Branch::where('company_id', $company->id)->where('is_main', true)->first();
-        $owner  = User::where('email', 'owner@demo.sa')->first();
-        $tech   = User::where('email', 'tech@demo.sa')->first();
+        $owner = User::where('email', 'owner@demo.sa')->first();
+        $tech = User::where('email', 'tech@demo.sa')->first();
 
         // ── Customers ─────────────────────────────────────────────────
         $customersData = [
@@ -41,13 +42,13 @@ class DemoDataSeeder extends Seeder
             $customers[] = Customer::firstOrCreate(
                 ['company_id' => $company->id, 'phone' => $data['phone']],
                 [
-                    'uuid'      => Str::uuid(),
-                    'company_id'=> $company->id,
+                    'uuid' => Str::uuid(),
+                    'company_id' => $company->id,
                     'branch_id' => $branch->id,
-                    'name'      => $data['name'],
-                    'email'     => $data['email'],
-                    'phone'     => $data['phone'],
-                    'type'      => 'b2c',
+                    'name' => $data['name'],
+                    'email' => $data['email'],
+                    'phone' => $data['phone'],
+                    'type' => 'b2c',
                     'is_active' => true,
                 ]
             );
@@ -70,17 +71,17 @@ class DemoDataSeeder extends Seeder
             $products[] = Product::firstOrCreate(
                 ['company_id' => $company->id, 'sku' => $data['sku']],
                 [
-                    'uuid'             => Str::uuid(),
-                    'company_id'       => $company->id,
-                    'name'             => $data['name'],
-                    'name_ar'          => $data['name'],
-                    'sku'              => $data['sku'],
-                    'sale_price'       => $data['price'],
-                    'cost_price'       => round($data['price'] * 0.6, 2),
-                    'product_type'     => $data['type'],
-                    'is_active'        => true,
-                    'track_inventory'  => false,
-                    'tax_rate'         => 15,
+                    'uuid' => Str::uuid(),
+                    'company_id' => $company->id,
+                    'name' => $data['name'],
+                    'name_ar' => $data['name'],
+                    'sku' => $data['sku'],
+                    'sale_price' => $data['price'],
+                    'cost_price' => round($data['price'] * 0.6, 2),
+                    'product_type' => $data['type'],
+                    'is_active' => true,
+                    'track_inventory' => false,
+                    'tax_rate' => 15,
                 ]
             );
         }
@@ -100,18 +101,18 @@ class DemoDataSeeder extends Seeder
             $vehicles[] = Vehicle::firstOrCreate(
                 ['company_id' => $company->id, 'plate_number' => $data['plate']],
                 [
-                    'uuid'              => Str::uuid(),
-                    'company_id'        => $company->id,
-                    'branch_id'         => $branch->id,
-                    'customer_id'       => $customer->id,
-                    'created_by_user_id'=> $owner ? $owner->id : 1,
-                    'plate_number'      => $data['plate'],
-                    'make'              => $data['make'],
-                    'model'             => $data['model'],
-                    'year'              => $data['year'],
-                    'color'             => $data['color'],
-                    'vin'               => strtoupper(Str::random(17)),
-                    'is_active'         => true,
+                    'uuid' => Str::uuid(),
+                    'company_id' => $company->id,
+                    'branch_id' => $branch->id,
+                    'customer_id' => $customer->id,
+                    'created_by_user_id' => $owner ? $owner->id : 1,
+                    'plate_number' => $data['plate'],
+                    'make' => $data['make'],
+                    'model' => $data['model'],
+                    'year' => $data['year'],
+                    'color' => $data['color'],
+                    'vin' => strtoupper(Str::random(17)),
+                    'is_active' => true,
                 ]
             );
         }
@@ -128,28 +129,28 @@ class DemoDataSeeder extends Seeder
         $workOrders = [];
         $counter = 1001;
         foreach ($workOrdersData as $data) {
-            $vehicle  = $vehicles[$data['vehicle_idx']];
-            $product  = $products[$data['product_idx']];
+            $vehicle = $vehicles[$data['vehicle_idx']];
+            $product = $products[$data['product_idx']];
             $customer = $customers[$data['vehicle_idx']];
 
             $wo = WorkOrder::firstOrCreate(
-                ['company_id' => $company->id, 'order_number' => 'WO-' . $counter],
+                ['company_id' => $company->id, 'order_number' => 'WO-'.$counter],
                 [
-                    'uuid'                  => Str::uuid(),
-                    'company_id'            => $company->id,
-                    'branch_id'             => $branch->id,
-                    'customer_id'           => $customer->id,
-                    'vehicle_id'            => $vehicle->id,
-                    'created_by_user_id'    => $owner ? $owner->id : 1,
-                    'assigned_technician_id'=> $tech ? $tech->id : null,
-                    'order_number'          => 'WO-' . $counter,
-                    'status'                => $data['status'],
-                    'priority'              => 'normal',
-                    'customer_complaint'    => 'طلب صيانة: ' . $product->name,
-                    'estimated_total'       => $product->sale_price,
-                    'actual_total'          => $data['status'] === 'completed' ? $product->sale_price : 0,
-                    'started_at'            => $data['status'] !== 'draft' ? now()->subDays($data['days_ago']) : null,
-                    'completed_at'          => $data['status'] === 'completed' ? now()->subDays(max(0, $data['days_ago'] - 1)) : null,
+                    'uuid' => Str::uuid(),
+                    'company_id' => $company->id,
+                    'branch_id' => $branch->id,
+                    'customer_id' => $customer->id,
+                    'vehicle_id' => $vehicle->id,
+                    'created_by_user_id' => $owner ? $owner->id : 1,
+                    'assigned_technician_id' => $tech ? $tech->id : null,
+                    'order_number' => 'WO-'.$counter,
+                    'status' => $data['status'],
+                    'priority' => 'normal',
+                    'customer_complaint' => 'طلب صيانة: '.$product->name,
+                    'estimated_total' => $product->sale_price,
+                    'actual_total' => $data['status'] === 'completed' ? $product->sale_price : 0,
+                    'started_at' => $data['status'] !== 'draft' ? now()->subDays($data['days_ago']) : null,
+                    'completed_at' => $data['status'] === 'completed' ? now()->subDays(max(0, $data['days_ago'] - 1)) : null,
                 ]
             );
             $workOrders[] = $wo;
@@ -166,44 +167,44 @@ class DemoDataSeeder extends Seeder
         ];
 
         foreach ($invoicesData as $idx => $data) {
-            $customer  = $customers[$data['customer_idx']];
+            $customer = $customers[$data['customer_idx']];
             $workOrder = $workOrders[$data['wo_idx']];
-            $subtotal  = round($data['total'] / 1.15, 2);
-            $tax       = round($data['total'] - $subtotal, 2);
-            $counter   = $idx + 1;
+            $subtotal = round($data['total'] / 1.15, 2);
+            $tax = round($data['total'] - $subtotal, 2);
+            $counter = $idx + 1;
 
             Invoice::firstOrCreate(
-                ['company_id' => $company->id, 'invoice_number' => 'SEED-' . str_pad($counter, 4, '0', STR_PAD_LEFT)],
+                ['company_id' => $company->id, 'invoice_number' => 'SEED-'.str_pad($counter, 4, '0', STR_PAD_LEFT)],
                 [
-                    'uuid'              => Str::uuid(),
-                    'company_id'        => $company->id,
-                    'branch_id'         => $branch->id,
-                    'customer_id'       => $customer->id,
-                    'created_by_user_id'=> $owner ? $owner->id : 1,
-                    'invoice_number'    => 'SEED-' . str_pad($counter, 4, '0', STR_PAD_LEFT),
-                    'invoice_counter'   => 0,
-                    'type'              => 'sale',
-                    'status'            => $data['status'],
-                    'customer_type'     => 'b2c',
-                    'subtotal'          => $subtotal,
-                    'tax_amount'        => $tax,
-                    'total'             => $data['total'],
-                    'paid_amount'       => $data['status'] === 'paid' ? $data['total'] : 0,
-                    'due_amount'        => $data['status'] === 'paid' ? 0 : $data['total'],
-                    'currency'          => 'SAR',
-                    'issued_at'         => now()->subDays($data['days_ago']),
-                    'due_at'            => now()->subDays($data['days_ago'])->addDays(30),
-                    'invoice_hash'      => hash('sha256', 'SEED-' . $counter . now()->timestamp),
+                    'uuid' => Str::uuid(),
+                    'company_id' => $company->id,
+                    'branch_id' => $branch->id,
+                    'customer_id' => $customer->id,
+                    'created_by_user_id' => $owner ? $owner->id : 1,
+                    'invoice_number' => 'SEED-'.str_pad($counter, 4, '0', STR_PAD_LEFT),
+                    'invoice_counter' => 0,
+                    'type' => 'sale',
+                    'status' => $data['status'],
+                    'customer_type' => 'b2c',
+                    'subtotal' => $subtotal,
+                    'tax_amount' => $tax,
+                    'total' => $data['total'],
+                    'paid_amount' => $data['status'] === 'paid' ? $data['total'] : 0,
+                    'due_amount' => $data['status'] === 'paid' ? 0 : $data['total'],
+                    'currency' => 'SAR',
+                    'issued_at' => now()->subDays($data['days_ago']),
+                    'due_at' => now()->subDays($data['days_ago'])->addDays(30),
+                    'invoice_hash' => hash('sha256', 'SEED-'.$counter.now()->timestamp),
                     'previous_invoice_hash' => hash('sha256', 'genesis'),
                 ]
             );
         }
 
         $this->command->info('✅ Demo data seeded!');
-        $this->command->info('   Customers:   ' . count($customers));
-        $this->command->info('   Products:    ' . count($products));
-        $this->command->info('   Vehicles:    ' . count($vehicles));
-        $this->command->info('   Work Orders: ' . count($workOrders));
-        $this->command->info('   Invoices:    ' . count($invoicesData));
+        $this->command->info('   Customers:   '.count($customers));
+        $this->command->info('   Products:    '.count($products));
+        $this->command->info('   Vehicles:    '.count($vehicles));
+        $this->command->info('   Work Orders: '.count($workOrders));
+        $this->command->info('   Invoices:    '.count($invoicesData));
     }
 }

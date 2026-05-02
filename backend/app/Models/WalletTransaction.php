@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\WalletTransactionType;
-use App\Models\HasTenantScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -24,11 +23,11 @@ class WalletTransaction extends Model
     ];
 
     protected $casts = [
-        'type'         => WalletTransactionType::class,
-        'amount'       => 'decimal:4',
+        'type' => WalletTransactionType::class,
+        'amount' => 'decimal:4',
         'balance_before' => 'decimal:4',
-        'balance_after'  => 'decimal:4',
-        'created_at'   => 'datetime',
+        'balance_after' => 'decimal:4',
+        'created_at' => 'datetime',
     ];
 
     protected static function boot(): void

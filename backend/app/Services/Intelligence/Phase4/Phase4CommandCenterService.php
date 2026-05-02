@@ -82,25 +82,25 @@ final class Phase4CommandCenterService
         $totalSignals = count($now) + count($next) + count($watch);
 
         return [
-            'read_only'     => true,
-            'phase'         => 6,
-            'generated_at'  => $snapshotGeneratedAt,
-            'window'        => $insights['window'],
-            'summary'       => [
-                'total_now'   => count($now),
-                'total_next'  => count($next),
+            'read_only' => true,
+            'phase' => 6,
+            'generated_at' => $snapshotGeneratedAt,
+            'window' => $insights['window'],
+            'summary' => [
+                'total_now' => count($now),
+                'total_next' => count($next),
                 'total_watch' => count($watch),
-                'low_signal'  => $totalSignals <= 1,
+                'low_signal' => $totalSignals <= 1,
             ],
             'zones' => [
-                'now'   => $now,
-                'next'  => $next,
+                'now' => $now,
+                'next' => $next,
                 'watch' => $watch,
             ],
             'insights_snapshot' => [
-                'total_events'       => (int) ($insights['totals']['events'] ?? 0),
-                'last_occurred_at'   => $insights['last_occurred_at'] ?? null,
-                'first_occurred_at'  => $insights['first_occurred_at'] ?? null,
+                'total_events' => (int) ($insights['totals']['events'] ?? 0),
+                'last_occurred_at' => $insights['last_occurred_at'] ?? null,
+                'first_occurred_at' => $insights['first_occurred_at'] ?? null,
             ],
         ];
     }
@@ -123,10 +123,10 @@ final class Phase4CommandCenterService
             $stamp = function (array $items): array {
                 return array_map(function (array $item): array {
                     return array_merge($item, [
-                        'governance_ref'           => null,
-                        'latest_governance_action'   => null,
-                        'latest_governance_at'     => null,
-                        'latest_governance_by'       => null,
+                        'governance_ref' => null,
+                        'latest_governance_action' => null,
+                        'latest_governance_at' => null,
+                        'latest_governance_by' => null,
                     ]);
                 }, $items);
             };
@@ -135,9 +135,9 @@ final class Phase4CommandCenterService
         }
 
         $companyId = (int) $user->company_id;
-        $window    = $insights['window'] ?? [];
-        $wf        = (string) ($window['from'] ?? '');
-        $wt        = (string) ($window['to'] ?? '');
+        $window = $insights['window'] ?? [];
+        $wf = (string) ($window['from'] ?? '');
+        $wt = (string) ($window['to'] ?? '');
 
         $withRefs = function (array $items, string $zone) use ($companyId, $wf, $wt): array {
             $out = [];
@@ -166,8 +166,8 @@ final class Phase4CommandCenterService
             return $out;
         };
 
-        $now   = $withRefs($now, 'now');
-        $next  = $withRefs($next, 'next');
+        $now = $withRefs($now, 'now');
+        $next = $withRefs($next, 'next');
         $watch = $withRefs($watch, 'watch');
 
         $refs = [];
@@ -183,12 +183,12 @@ final class Phase4CommandCenterService
                 $ref = $item['governance_ref'] ?? null;
                 if ($ref !== null && isset($latest[$ref])) {
                     $item['latest_governance_action'] = $latest[$ref]['action'];
-                    $item['latest_governance_at']     = $latest[$ref]['at'];
-                    $item['latest_governance_by']     = $latest[$ref]['by'];
+                    $item['latest_governance_at'] = $latest[$ref]['at'];
+                    $item['latest_governance_by'] = $latest[$ref]['by'];
                 } else {
                     $item['latest_governance_action'] = null;
-                    $item['latest_governance_at']     = null;
-                    $item['latest_governance_by']     = null;
+                    $item['latest_governance_at'] = null;
+                    $item['latest_governance_by'] = null;
                 }
             }
             unset($item);
@@ -210,17 +210,17 @@ final class Phase4CommandCenterService
         $message = (string) ($a['message'] ?? $a['type'] ?? 'Alert');
 
         $item = [
-            'id'                         => (string) ($a['id'] ?? ''),
-            'source'                     => 'alert',
-            'severity'                   => $severity,
-            'title'                      => $this->truncate($message, 140),
-            'why_now'                    => (string) ($a['basis'] ?? ''),
-            'suggested_action'           => $message,
-            'impact_if_ignored'          => $this->impactForSeverity($severity),
-            'related_entity_references'  => [],
-            'meta'                       => [
-                'type'         => $a['type'] ?? null,
-                'detected_at'  => $a['detected_at'] ?? null,
+            'id' => (string) ($a['id'] ?? ''),
+            'source' => 'alert',
+            'severity' => $severity,
+            'title' => $this->truncate($message, 140),
+            'why_now' => (string) ($a['basis'] ?? ''),
+            'suggested_action' => $message,
+            'impact_if_ignored' => $this->impactForSeverity($severity),
+            'related_entity_references' => [],
+            'meta' => [
+                'type' => $a['type'] ?? null,
+                'detected_at' => $a['detected_at'] ?? null,
             ],
         ];
         $item['related_entity_references'] = $this->composeRefs($item, $refPool, 'alert', $a);
@@ -239,15 +239,15 @@ final class Phase4CommandCenterService
         $severity = (string) ($r['severity'] ?? 'info');
 
         $item = [
-            'id'                         => (string) ($r['id'] ?? ''),
-            'source'                     => 'recommendation',
-            'severity'                   => $severity,
-            'title'                      => (string) ($r['title'] ?? ''),
-            'why_now'                    => (string) ($r['basis'] ?? ''),
-            'suggested_action'           => (string) ($r['detail'] ?? ''),
-            'impact_if_ignored'          => $this->impactForSeverity($severity),
-            'related_entity_references'  => [],
-            'meta'                       => [],
+            'id' => (string) ($r['id'] ?? ''),
+            'source' => 'recommendation',
+            'severity' => $severity,
+            'title' => (string) ($r['title'] ?? ''),
+            'why_now' => (string) ($r['basis'] ?? ''),
+            'suggested_action' => (string) ($r['detail'] ?? ''),
+            'impact_if_ignored' => $this->impactForSeverity($severity),
+            'related_entity_references' => [],
+            'meta' => [],
         ];
         $item['related_entity_references'] = $this->composeRefs($item, $refPool, 'recommendation', $r);
         $explain = CommandCenterExplainability::forRecommendation($r, $insights);
@@ -302,34 +302,34 @@ final class Phase4CommandCenterService
     {
         return match ($aggregateType) {
             'invoice' => [
-                'type'  => 'invoice',
-                'id'    => $id,
+                'type' => 'invoice',
+                'id' => $id,
                 'label' => "فاتورة #{$id}",
-                'href'  => "/invoices/{$id}",
+                'href' => "/invoices/{$id}",
             ],
             'work_order' => [
-                'type'  => 'work_order',
-                'id'    => $id,
+                'type' => 'work_order',
+                'id' => $id,
                 'label' => "أمر عمل #{$id}",
-                'href'  => "/work-orders/{$id}",
+                'href' => "/work-orders/{$id}",
             ],
             'vehicle' => [
-                'type'  => 'vehicle',
-                'id'    => $id,
+                'type' => 'vehicle',
+                'id' => $id,
                 'label' => "مركبة #{$id}",
-                'href'  => "/vehicles/{$id}",
+                'href' => "/vehicles/{$id}",
             ],
             'customer' => [
-                'type'  => 'customer',
-                'id'    => $id,
+                'type' => 'customer',
+                'id' => $id,
                 'label' => "عميل #{$id}",
-                'href'  => '/customers',
+                'href' => '/customers',
             ],
             'wallet_transaction' => [
-                'type'  => 'wallet_transaction',
-                'id'    => $id,
+                'type' => 'wallet_transaction',
+                'id' => $id,
                 'label' => 'المحفظة',
-                'href'  => '/wallet',
+                'href' => '/wallet',
             ],
             default => null,
         };
@@ -362,16 +362,16 @@ final class Phase4CommandCenterService
     {
         return match ($a['id'] ?? '') {
             'event_record_failures_present' => [[
-                'type'  => 'governance',
-                'id'    => 'event-ingestion',
+                'type' => 'governance',
+                'id' => 'event-ingestion',
                 'label' => 'الحوكمة والسياسات',
-                'href'  => '/governance',
+                'href' => '/governance',
             ]],
             'zero_events_while_persist_enabled' => [[
-                'type'  => 'settings_integrations',
-                'id'    => 'telemetry',
+                'type' => 'settings_integrations',
+                'id' => 'telemetry',
                 'label' => 'التكاملات',
-                'href'  => '/settings/integrations',
+                'href' => '/settings/integrations',
             ]],
             default => [],
         };
@@ -386,19 +386,19 @@ final class Phase4CommandCenterService
 
         if (in_array($id, ['no_events_in_window', 'no_recommendations'], true)) {
             return [[
-                'type'  => 'command_center',
-                'id'    => 'intelligence',
+                'type' => 'command_center',
+                'id' => 'intelligence',
                 'label' => 'مركز العمليات الذكي',
-                'href'  => '/internal/intelligence',
+                'href' => '/internal/intelligence',
             ]];
         }
 
         if ($id === 'wallet_debit_credit_skew') {
             return [[
-                'type'  => 'wallet',
-                'id'    => 'summary',
+                'type' => 'wallet',
+                'id' => 'summary',
                 'label' => 'المحفظة',
-                'href'  => '/wallet',
+                'href' => '/wallet',
             ]];
         }
 

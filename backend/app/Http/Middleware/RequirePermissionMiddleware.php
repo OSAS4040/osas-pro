@@ -14,7 +14,7 @@ class RequirePermissionMiddleware
 
         if (! $user) {
             return response()->json([
-                'message'  => 'Unauthenticated.',
+                'message' => 'Unauthenticated.',
                 'trace_id' => app('trace_id'),
             ], 401);
         }
@@ -22,8 +22,8 @@ class RequirePermissionMiddleware
         foreach ($permissions as $permission) {
             if (! $user->hasPermission($permission)) {
                 return response()->json([
-                    'message'    => "Permission denied: [{$permission}].",
-                    'trace_id'   => app('trace_id'),
+                    'message' => "Permission denied: [{$permission}].",
+                    'trace_id' => app('trace_id'),
                     'permission' => $permission,
                 ], 403);
             }

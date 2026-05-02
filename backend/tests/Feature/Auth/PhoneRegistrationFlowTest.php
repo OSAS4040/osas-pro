@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
@@ -58,16 +59,16 @@ class PhoneRegistrationFlowTest extends TestCase
     public function test_verify_otp_rejects_expired_code(): void
     {
         PhoneOtp::query()->create([
-            'phone'         => '966500554433',
+            'phone' => '966500554433',
             'otp_code_hash' => Hash::make('888777'),
-            'purpose'       => 'phone_register_login',
-            'expires_at'    => now()->subMinute(),
-            'max_attempts'  => 8,
+            'purpose' => 'phone_register_login',
+            'expires_at' => now()->subMinute(),
+            'max_attempts' => 8,
         ]);
 
         $this->postJson('/api/v1/auth/phone/verify-otp', [
             'phone' => '0500554433',
-            'otp'   => '888777',
+            'otp' => '888777',
         ])->assertStatus(422)
             ->assertJsonPath('message_key', 'auth.phone.otp_expired')
             ->assertJsonPath('reason_code', 'OTP_EXPIRED');
@@ -76,32 +77,32 @@ class PhoneRegistrationFlowTest extends TestCase
     public function test_verify_otp_existing_user_is_not_new(): void
     {
         User::withoutGlobalScopes()->create([
-            'uuid'               => \Illuminate\Support\Str::uuid(),
-            'company_id'         => null,
-            'branch_id'          => null,
-            'name'               => '966500778899',
-            'email'              => null,
-            'password'           => bcrypt('secret'),
-            'phone'              => '966500778899',
-            'phone_verified_at'  => now()->subDay(),
-            'role'               => UserRole::PhoneOnboarding,
-            'status'             => 'active',
-            'is_active'          => true,
+            'uuid' => Str::uuid(),
+            'company_id' => null,
+            'branch_id' => null,
+            'name' => '966500778899',
+            'email' => null,
+            'password' => bcrypt('secret'),
+            'phone' => '966500778899',
+            'phone_verified_at' => now()->subDay(),
+            'role' => UserRole::PhoneOnboarding,
+            'status' => 'active',
+            'is_active' => true,
             'registration_stage' => 'account_type_selected',
-            'account_type'       => 'individual',
+            'account_type' => 'individual',
         ]);
 
         PhoneOtp::query()->create([
-            'phone'         => '966500778899',
+            'phone' => '966500778899',
             'otp_code_hash' => Hash::make('909090'),
-            'purpose'       => 'phone_register_login',
-            'expires_at'    => now()->addMinutes(5),
-            'max_attempts'  => 8,
+            'purpose' => 'phone_register_login',
+            'expires_at' => now()->addMinutes(5),
+            'max_attempts' => 8,
         ]);
 
         $this->postJson('/api/v1/auth/phone/verify-otp', [
             'phone' => '0500778899',
-            'otp'   => '909090',
+            'otp' => '909090',
         ])->assertOk()
             ->assertJsonPath('is_new_user', false)
             ->assertJsonStructure(['account_context', 'token'])
@@ -111,16 +112,16 @@ class PhoneRegistrationFlowTest extends TestCase
     public function test_verify_otp_rejects_invalid_code(): void
     {
         PhoneOtp::query()->create([
-            'phone'         => '966500112233',
+            'phone' => '966500112233',
             'otp_code_hash' => Hash::make('123456'),
-            'purpose'       => 'phone_register_login',
-            'expires_at'    => now()->addMinutes(5),
-            'max_attempts'  => 8,
+            'purpose' => 'phone_register_login',
+            'expires_at' => now()->addMinutes(5),
+            'max_attempts' => 8,
         ]);
 
         $this->postJson('/api/v1/auth/phone/verify-otp', [
             'phone' => '0500112233',
-            'otp'   => '000000',
+            'otp' => '000000',
         ])->assertStatus(422)
             ->assertJsonPath('message_key', 'auth.phone.invalid_otp')
             ->assertJsonPath('reason_code', 'INVALID_OTP');
@@ -129,16 +130,16 @@ class PhoneRegistrationFlowTest extends TestCase
     public function test_verify_otp_creates_new_user_and_profile(): void
     {
         PhoneOtp::query()->create([
-            'phone'         => '966500112233',
+            'phone' => '966500112233',
             'otp_code_hash' => Hash::make('654321'),
-            'purpose'       => 'phone_register_login',
-            'expires_at'    => now()->addMinutes(5),
-            'max_attempts'  => 8,
+            'purpose' => 'phone_register_login',
+            'expires_at' => now()->addMinutes(5),
+            'max_attempts' => 8,
         ]);
 
         $res = $this->postJson('/api/v1/auth/phone/verify-otp', [
             'phone' => '0500112233',
-            'otp'   => '654321',
+            'otp' => '654321',
         ]);
 
         $res->assertOk()
@@ -148,35 +149,35 @@ class PhoneRegistrationFlowTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'phone' => '966500112233',
-            'role'  => UserRole::PhoneOnboarding->value,
+            'role' => UserRole::PhoneOnboarding->value,
         ]);
 
         $user = User::withoutGlobalScopes()->where('phone', '966500112233')->first();
         $this->assertNotNull($user);
         $this->assertDatabaseHas('registration_profiles', [
             'user_id' => $user->id,
-            'status'  => 'draft',
+            'status' => 'draft',
         ]);
     }
 
     public function test_cannot_reuse_verified_otp(): void
     {
         PhoneOtp::query()->create([
-            'phone'         => '966500112233',
+            'phone' => '966500112233',
             'otp_code_hash' => Hash::make('111222'),
-            'purpose'       => 'phone_register_login',
-            'expires_at'    => now()->addMinutes(5),
-            'max_attempts'  => 8,
+            'purpose' => 'phone_register_login',
+            'expires_at' => now()->addMinutes(5),
+            'max_attempts' => 8,
         ]);
 
         $this->postJson('/api/v1/auth/phone/verify-otp', [
             'phone' => '0500112233',
-            'otp'   => '111222',
+            'otp' => '111222',
         ])->assertOk();
 
         $this->postJson('/api/v1/auth/phone/verify-otp', [
             'phone' => '0500112233',
-            'otp'   => '111222',
+            'otp' => '111222',
         ])->assertStatus(422)
             ->assertJsonPath('message_key', 'auth.phone.otp_not_found')
             ->assertJsonPath('reason_code', 'OTP_NOT_FOUND');
@@ -185,22 +186,22 @@ class PhoneRegistrationFlowTest extends TestCase
     public function test_complete_flow_individual(): void
     {
         $user = User::withoutGlobalScopes()->create([
-            'uuid'               => \Illuminate\Support\Str::uuid(),
-            'company_id'         => null,
-            'branch_id'          => null,
-            'name'               => '966500112233',
-            'email'              => null,
-            'password'           => bcrypt('x'),
-            'phone'              => '966500112233',
-            'phone_verified_at'  => now(),
-            'role'               => UserRole::PhoneOnboarding,
-            'status'             => 'active',
-            'is_active'          => true,
+            'uuid' => Str::uuid(),
+            'company_id' => null,
+            'branch_id' => null,
+            'name' => '966500112233',
+            'email' => null,
+            'password' => bcrypt('x'),
+            'phone' => '966500112233',
+            'phone_verified_at' => now(),
+            'role' => UserRole::PhoneOnboarding,
+            'status' => 'active',
+            'is_active' => true,
             'registration_stage' => 'phone_verified',
         ]);
         RegistrationProfile::query()->create([
-            'user_id'                   => $user->id,
-            'status'                    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
             'company_activation_status' => 'not_applicable',
         ]);
 
@@ -224,25 +225,25 @@ class PhoneRegistrationFlowTest extends TestCase
     public function test_company_submission_sets_pending_review(): void
     {
         $user = User::withoutGlobalScopes()->create([
-            'uuid'               => \Illuminate\Support\Str::uuid(),
-            'company_id'         => null,
-            'branch_id'          => null,
-            'name'               => '966500112233',
-            'email'              => null,
-            'password'           => bcrypt('x'),
-            'phone'              => '966500112233',
-            'phone_verified_at'  => now(),
-            'role'               => UserRole::PhoneOnboarding,
-            'status'             => 'active',
-            'is_active'          => true,
+            'uuid' => Str::uuid(),
+            'company_id' => null,
+            'branch_id' => null,
+            'name' => '966500112233',
+            'email' => null,
+            'password' => bcrypt('x'),
+            'phone' => '966500112233',
+            'phone_verified_at' => now(),
+            'role' => UserRole::PhoneOnboarding,
+            'status' => 'active',
+            'is_active' => true,
             'registration_stage' => 'phone_verified',
-            'account_type'       => 'company',
+            'account_type' => 'company',
         ]);
         RegistrationProfile::query()->create([
-            'user_id'                   => $user->id,
-            'status'                    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
             'company_activation_status' => 'not_applicable',
-            'account_type'              => 'company',
+            'account_type' => 'company',
         ]);
 
         $token = $user->createToken('t', ['phone_registration.flow'])->plainTextToken;

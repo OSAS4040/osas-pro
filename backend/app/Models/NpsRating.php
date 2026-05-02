@@ -13,6 +13,13 @@ class NpsRating extends Model
 
     protected $casts = ['alert_sent' => 'boolean', 'resolved' => 'boolean'];
 
-    public function invoice() { return $this->belongsTo(Invoice::class); }
-    public function customer() { return $this->belongsTo(Customer::class); }
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }

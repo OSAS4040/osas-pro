@@ -16,9 +16,9 @@ class Bundle extends Model
     ];
 
     protected $casts = [
-        'base_price'            => 'decimal:4',
-        'override_item_prices'  => 'boolean',
-        'is_active'             => 'boolean',
+        'base_price' => 'decimal:4',
+        'override_item_prices' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function company()

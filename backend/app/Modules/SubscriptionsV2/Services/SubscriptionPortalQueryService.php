@@ -77,4 +77,3 @@ final class SubscriptionPortalQueryService
             ->get(['id', 'invoice_number', 'status', 'total', 'paid_amount', 'due_amount', 'currency', 'issued_at', 'due_at']);
     }
 }
-

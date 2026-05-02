@@ -23,7 +23,7 @@ class Permission extends Model
     {
         return static::all()
             ->groupBy('group')
-            ->map(fn($perms) => $perms->pluck('name')->toArray())
+            ->map(fn ($perms) => $perms->pluck('name')->toArray())
             ->toArray();
     }
 }

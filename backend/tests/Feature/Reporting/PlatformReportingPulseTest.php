@@ -18,7 +18,7 @@ class PlatformReportingPulseTest extends TestCase
     {
         return [
             'from' => now()->subDays(14)->toDateString(),
-            'to'   => now()->toDateString(),
+            'to' => now()->toDateString(),
         ];
     }
 
@@ -102,7 +102,7 @@ class PlatformReportingPulseTest extends TestCase
 
         $q = [
             'from' => now()->subDays(20)->toDateString(),
-            'to'   => now()->toDateString(),
+            'to' => now()->toDateString(),
         ];
 
         $this->actingAsUser($user)

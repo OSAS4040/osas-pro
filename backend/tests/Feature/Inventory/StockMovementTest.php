@@ -19,9 +19,13 @@ class StockMovementTest extends TestCase
     use RefreshDatabase;
 
     private Company $company;
+
     private Branch $branch;
+
     private User $user;
+
     private Product $product;
+
     private Unit $unit;
 
     protected function setUp(): void
@@ -29,9 +33,9 @@ class StockMovementTest extends TestCase
         parent::setUp();
 
         $this->company = $this->createCompany();
-        $this->branch  = $this->createBranch($this->company);
-        $this->user    = $this->createUser($this->company, $this->branch);
-        $this->unit    = $this->createUnit($this->company);
+        $this->branch = $this->createBranch($this->company);
+        $this->user = $this->createUser($this->company, $this->branch);
+        $this->unit = $this->createUnit($this->company);
         $this->product = $this->createProduct($this->company, $this->unit);
     }
 
@@ -39,29 +43,29 @@ class StockMovementTest extends TestCase
     {
         return Unit::create([
             'company_id' => $company->id,
-            'name'       => 'Piece',
-            'symbol'     => 'pcs',
-            'type'       => 'quantity',
-            'is_base'    => true,
-            'is_system'  => false,
-            'is_active'  => true,
+            'name' => 'Piece',
+            'symbol' => 'pcs',
+            'type' => 'quantity',
+            'is_base' => true,
+            'is_system' => false,
+            'is_active' => true,
         ]);
     }
 
     private function createProduct(Company $company, Unit $unit): Product
     {
         return Product::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $company->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $company->id,
             'created_by_user_id' => null,
-            'name'               => 'Test Product',
-            'sku'                => 'SKU-' . Str::random(6),
-            'product_type'       => 'physical',
-            'unit_id'            => $unit->id,
-            'sale_price'         => 10.00,
-            'cost_price'         => 5.00,
-            'track_inventory'    => true,
-            'is_active'          => true,
+            'name' => 'Test Product',
+            'sku' => 'SKU-'.Str::random(6),
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => 10.00,
+            'cost_price' => 5.00,
+            'track_inventory' => true,
+            'is_active' => true,
         ]);
     }
 
@@ -71,12 +75,12 @@ class StockMovementTest extends TestCase
 
         $movement = $service->addStock(
             companyId: $this->company->id,
-            branchId:  $this->branch->id,
+            branchId: $this->branch->id,
             productId: $this->product->id,
-            quantity:  10,
-            userId:    $this->user->id,
-            type:      'manual_add',
-            traceId:   'trace-001',
+            quantity: 10,
+            userId: $this->user->id,
+            type: 'manual_add',
+            traceId: 'trace-001',
         );
 
         $this->assertInstanceOf(StockMovement::class, $movement);
@@ -84,7 +88,7 @@ class StockMovementTest extends TestCase
 
         $inventory = Inventory::where([
             'company_id' => $this->company->id,
-            'branch_id'  => $this->branch->id,
+            'branch_id' => $this->branch->id,
             'product_id' => $this->product->id,
         ])->first();
 
@@ -98,28 +102,28 @@ class StockMovementTest extends TestCase
 
         $service->addStock(
             companyId: $this->company->id,
-            branchId:  $this->branch->id,
+            branchId: $this->branch->id,
             productId: $this->product->id,
-            quantity:  20,
-            userId:    $this->user->id,
-            type:      'manual_add',
-            traceId:   'trace-002',
+            quantity: 20,
+            userId: $this->user->id,
+            type: 'manual_add',
+            traceId: 'trace-002',
         );
 
         $service->deductStock(
-            companyId:     $this->company->id,
-            branchId:      $this->branch->id,
-            productId:     $this->product->id,
-            quantity:      7,
-            userId:        $this->user->id,
+            companyId: $this->company->id,
+            branchId: $this->branch->id,
+            productId: $this->product->id,
+            quantity: 7,
+            userId: $this->user->id,
             referenceType: 'test',
-            referenceId:   1,
-            traceId:       'trace-003',
+            referenceId: 1,
+            traceId: 'trace-003',
         );
 
         $inventory = Inventory::where([
             'company_id' => $this->company->id,
-            'branch_id'  => $this->branch->id,
+            'branch_id' => $this->branch->id,
             'product_id' => $this->product->id,
         ])->first();
 
@@ -132,25 +136,25 @@ class StockMovementTest extends TestCase
 
         $service->addStock(
             companyId: $this->company->id,
-            branchId:  $this->branch->id,
+            branchId: $this->branch->id,
             productId: $this->product->id,
-            quantity:  5,
-            userId:    $this->user->id,
-            type:      'manual_add',
-            traceId:   'trace-004',
+            quantity: 5,
+            userId: $this->user->id,
+            type: 'manual_add',
+            traceId: 'trace-004',
         );
 
         $this->expectException(\DomainException::class);
 
         $service->deductStock(
-            companyId:     $this->company->id,
-            branchId:      $this->branch->id,
-            productId:     $this->product->id,
-            quantity:      10,
-            userId:        $this->user->id,
+            companyId: $this->company->id,
+            branchId: $this->branch->id,
+            productId: $this->product->id,
+            quantity: 10,
+            userId: $this->user->id,
             referenceType: 'test',
-            referenceId:   1,
-            traceId:       'trace-005',
+            referenceId: 1,
+            traceId: 'trace-005',
         );
     }
 
@@ -159,12 +163,12 @@ class StockMovementTest extends TestCase
         $service = app(InventoryService::class);
         $movement = $service->addStock(
             companyId: $this->company->id,
-            branchId:  $this->branch->id,
+            branchId: $this->branch->id,
             productId: $this->product->id,
-            quantity:  5,
-            userId:    $this->user->id,
-            type:      'manual_add',
-            traceId:   'trace-006',
+            quantity: 5,
+            userId: $this->user->id,
+            type: 'manual_add',
+            traceId: 'trace-006',
         );
 
         $this->expectException(\RuntimeException::class);
@@ -176,12 +180,12 @@ class StockMovementTest extends TestCase
         $service = app(InventoryService::class);
         $movement = $service->addStock(
             companyId: $this->company->id,
-            branchId:  $this->branch->id,
+            branchId: $this->branch->id,
             productId: $this->product->id,
-            quantity:  5,
-            userId:    $this->user->id,
-            type:      'manual_add',
-            traceId:   'trace-007',
+            quantity: 5,
+            userId: $this->user->id,
+            type: 'manual_add',
+            traceId: 'trace-007',
         );
 
         $this->expectException(\RuntimeException::class);

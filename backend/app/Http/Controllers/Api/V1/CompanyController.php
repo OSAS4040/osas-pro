@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Config\AssignVerticalProfileRequest;
 use App\Http\Requests\Company\StoreCompanyRequest;
 use App\Http\Requests\Company\UpdateCompanyRequest;
+use App\Http\Requests\Config\AssignVerticalProfileRequest;
 use App\Models\Company;
-use App\Services\NavigationVisibilityService;
 use App\Models\Subscription;
 use App\Models\VerticalProfile;
 use App\Services\Config\ResolvedConfigVisibilityService;
 use App\Services\Config\VerticalProfileGovernanceService;
+use App\Services\NavigationVisibilityService;
 use App\Support\Media\TenantUploadDisk;
 use App\Support\TenantBusinessFeatures;
 use Illuminate\Http\JsonResponse;
@@ -28,10 +28,12 @@ class CompanyController extends Controller
     public function __construct(
         private readonly NavigationVisibilityService $navigationVisibility,
     ) {}
+
     public function index(): JsonResponse
     {
         $this->authorize('viewAny', Company::class);
         $companies = Company::paginate(25);
+
         return response()->json(['data' => $companies, 'trace_id' => app('trace_id')]);
     }
 
@@ -41,6 +43,7 @@ class CompanyController extends Controller
             $request->validated(),
             ['uuid' => Str::uuid()]
         ));
+
         return response()->json(['data' => $company, 'trace_id' => app('trace_id')], 201);
     }
 
@@ -48,6 +51,7 @@ class CompanyController extends Controller
     {
         $company = Company::with(['branches', 'activeSubscription'])->findOrFail($id);
         $this->authorize('view', $company);
+
         return response()->json(['data' => $company, 'trace_id' => app('trace_id')]);
     }
 
@@ -56,6 +60,7 @@ class CompanyController extends Controller
         $company = Company::findOrFail($id);
         $this->authorize('update', $company);
         $company->update($request->validated());
+
         return response()->json(['data' => $company, 'trace_id' => app('trace_id')]);
     }
 
@@ -63,8 +68,7 @@ class CompanyController extends Controller
         AssignVerticalProfileRequest $request,
         int $id,
         VerticalProfileGovernanceService $governance
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $company = Company::findOrFail($id);
         $this->authorize('update', $company);
 
@@ -81,8 +85,7 @@ class CompanyController extends Controller
     public function effectiveConfig(
         int $id,
         ResolvedConfigVisibilityService $visibility
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $company = Company::findOrFail($id);
         $this->authorize('view', $company);
 
@@ -118,6 +121,7 @@ class CompanyController extends Controller
         $company = Company::findOrFail($id);
         $this->authorize('delete', $company);
         $company->delete();
+
         return response()->json(['message' => 'Company deleted.', 'trace_id' => app('trace_id')]);
     }
 
@@ -137,7 +141,7 @@ class CompanyController extends Controller
 
         $disk = TenantUploadDisk::name();
         $path = $request->file('logo')->store("logos/company_{$id}", $disk);
-        $url  = Storage::disk($disk)->url($path);
+        $url = Storage::disk($disk)->url($path);
         $company->update(['logo_url' => $url]);
 
         return response()->json(['data' => ['logo_url' => $url], 'trace_id' => app('trace_id')]);
@@ -159,7 +163,7 @@ class CompanyController extends Controller
 
         $disk = TenantUploadDisk::name();
         $path = $request->file('signature')->store("signatures/company_{$id}", $disk);
-        $url  = Storage::disk($disk)->url($path);
+        $url = Storage::disk($disk)->url($path);
         $company->update(['signature_url' => $url]);
 
         return response()->json(['data' => ['signature_url' => $url], 'trace_id' => app('trace_id')]);
@@ -194,7 +198,7 @@ class CompanyController extends Controller
 
         $disk = TenantUploadDisk::name();
         $path = $request->file('stamp')->store("stamps/company_{$id}", $disk);
-        $url  = Storage::disk($disk)->url($path);
+        $url = Storage::disk($disk)->url($path);
         $company->update(['stamp_url' => $url]);
 
         return response()->json(['data' => ['stamp_url' => $url], 'trace_id' => app('trace_id')]);
@@ -228,23 +232,23 @@ class CompanyController extends Controller
         $this->authorize('update', $company);
 
         $request->validate([
-            'whatsapp'        => ['sometimes', 'array'],
-            'email'           => ['sometimes', 'array'],
-            'tracking'        => ['sometimes', 'array'],
-            'dashcam'         => ['sometimes', 'array'],
-            'loyalty'         => ['sometimes', 'array'],
-            'cameras'         => ['sometimes', 'array'],
-            'booking_portal'  => ['sometimes', 'array'],
+            'whatsapp' => ['sometimes', 'array'],
+            'email' => ['sometimes', 'array'],
+            'tracking' => ['sometimes', 'array'],
+            'dashcam' => ['sometimes', 'array'],
+            'loyalty' => ['sometimes', 'array'],
+            'cameras' => ['sometimes', 'array'],
+            'booking_portal' => ['sometimes', 'array'],
             'invoice_options' => ['sometimes', 'array'],
             'smart_user_guide' => ['sometimes', 'array'],
-            'ui'              => ['sometimes', 'array'],
+            'ui' => ['sometimes', 'array'],
             /** ألوان واجهة SPA — يُحمَّل من useTheme (preset + primary) */
-            'ui_theme'        => ['sometimes', 'array'],
-            'referrals'       => ['sometimes', 'array'],
+            'ui_theme' => ['sometimes', 'array'],
+            'referrals' => ['sometimes', 'array'],
             'invoice_footer_note' => ['sometimes', 'string'],
             'default_vat_rate' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'accepted_payment_methods' => ['sometimes', 'array'],
-            'pos'             => ['sometimes', 'array'],
+            'pos' => ['sometimes', 'array'],
             'documents_notifications' => ['sometimes', 'array'],
             'documents_registry' => ['sometimes', 'array'],
             'supplier_contract_notifications' => ['sometimes', 'array'],
@@ -255,8 +259,8 @@ class CompanyController extends Controller
             'wallet_treasury_accounts.*.beneficiary_label' => ['nullable', 'string', 'max:200'],
         ]);
 
-        $current  = $company->settings ?? [];
-        $merged   = array_merge($current, $request->only([
+        $current = $company->settings ?? [];
+        $merged = array_merge($current, $request->only([
             'whatsapp', 'email', 'tracking', 'dashcam', 'loyalty', 'cameras', 'booking_portal', 'invoice_options',
             'smart_user_guide', 'ui', 'ui_theme', 'referrals', 'invoice_footer_note', 'default_vat_rate', 'accepted_payment_methods',
             'pos', 'documents_notifications', 'documents_registry', 'supplier_contract_notifications',
@@ -416,7 +420,7 @@ class CompanyController extends Controller
         try {
             if ($protocol === 'tcp') {
                 $target = $host;
-                if (!str_contains($target, ':')) {
+                if (! str_contains($target, ':')) {
                     $target .= ':9100';
                 }
                 [$tcpHost, $tcpPort] = explode(':', $target, 2);
@@ -433,7 +437,7 @@ class CompanyController extends Controller
                     : "{$protocol}://{$host}";
                 $response = Http::timeout(max(1, (int) ceil($timeout / 1000)))->get($url);
                 $ok = $response->successful() || in_array($response->status(), [401, 403]);
-                if (!$ok) {
+                if (! $ok) {
                     $detail = "http_status_{$response->status()}";
                 }
             }
@@ -502,5 +506,4 @@ class CompanyController extends Controller
 
         return false;
     }
-
 }

@@ -67,8 +67,8 @@ final class GlobalOperationsFeedQuery
 
         if ($parts === []) {
             return [
-                'items'   => [],
-                'total'   => 0,
+                'items' => [],
+                'total' => 0,
                 'summary' => $this->emptySummary(),
             ];
         }
@@ -115,8 +115,8 @@ final class GlobalOperationsFeedQuery
             ->all();
 
         return [
-            'items'   => $rows,
-            'total'   => $total,
+            'items' => $rows,
+            'total' => $total,
             'summary' => $summary,
         ];
     }
@@ -138,11 +138,11 @@ final class GlobalOperationsFeedQuery
 
         return [
             'total_items_in_window' => $total,
-            'work_orders_count'     => (int) ($byType['work_order'] ?? 0),
-            'invoices_count'        => (int) ($byType['invoice'] ?? 0),
-            'payments_count'        => (int) ($byType['payment'] ?? 0),
-            'tickets_count'         => (int) ($byType['ticket'] ?? 0),
-            'attention_count'       => $attention,
+            'work_orders_count' => (int) ($byType['work_order'] ?? 0),
+            'invoices_count' => (int) ($byType['invoice'] ?? 0),
+            'payments_count' => (int) ($byType['payment'] ?? 0),
+            'tickets_count' => (int) ($byType['ticket'] ?? 0),
+            'attention_count' => $attention,
         ];
     }
 
@@ -153,11 +153,11 @@ final class GlobalOperationsFeedQuery
     {
         return [
             'total_items_in_window' => 0,
-            'work_orders_count'     => 0,
-            'invoices_count'        => 0,
-            'payments_count'        => 0,
-            'tickets_count'         => 0,
-            'attention_count'       => 0,
+            'work_orders_count' => 0,
+            'invoices_count' => 0,
+            'payments_count' => 0,
+            'tickets_count' => 0,
+            'attention_count' => 0,
         ];
     }
 

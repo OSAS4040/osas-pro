@@ -1,18 +1,19 @@
 <?php
 
+use App\Jobs\CheckSubscriptionStatusJob;
+use App\Jobs\DispatchWebhookJob;
+use App\Jobs\ExpireIdempotencyKeysJob;
+use App\Jobs\ExpireInventoryReservationsJob;
+use App\Jobs\SendDocumentExpiryNotificationsJob;
+use App\Jobs\SendSupplierContractExpiryNotificationsJob;
+use App\Jobs\SubscriptionsV2\PruneSubscriptionRealtimeEventsJob;
+use App\Jobs\SubscriptionsV2\RunSubscriptionRenewalJob;
+use App\Models\WebhookDelivery;
 use App\Services\Platform\PlatformAdminOverviewService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
-use App\Jobs\ExpireIdempotencyKeysJob;
-use App\Jobs\CheckSubscriptionStatusJob;
-use App\Jobs\ExpireInventoryReservationsJob;
-use App\Jobs\DispatchWebhookJob;
-use App\Jobs\SendDocumentExpiryNotificationsJob;
-use App\Jobs\SendSupplierContractExpiryNotificationsJob;
-use App\Jobs\SubscriptionsV2\PruneSubscriptionRealtimeEventsJob;
-use App\Jobs\SubscriptionsV2\RunSubscriptionRenewalJob;
 
 /**
  * During RC/peak diagnostics we can isolate recurring housekeeping jobs
@@ -52,7 +53,7 @@ if (! $isolateRecurringForRc) {
 
 // Retry failed webhook deliveries that are past their next_attempt_at window
 Schedule::call(function () {
-    $failed = \App\Models\WebhookDelivery::where('status', 'pending')
+    $failed = WebhookDelivery::where('status', 'pending')
         ->where('next_attempt_at', '<=', now())
         ->where('attempt', '<', 3)
         ->get();
@@ -77,4 +78,3 @@ Schedule::call(function (): void {
         now()->addDays(14),
     );
 })->everyMinute()->name('platform.schedule_run_heartbeat');
-

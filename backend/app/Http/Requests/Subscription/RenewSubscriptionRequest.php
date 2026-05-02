@@ -14,8 +14,8 @@ class RenewSubscriptionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'plan'     => ['required', 'string', 'exists:plans,slug'],
-            'months'   => ['nullable', 'integer', 'min:1', 'max:24'],
+            'plan' => ['required', 'string', 'exists:plans,slug'],
+            'months' => ['nullable', 'integer', 'min:1', 'max:24'],
             'currency' => ['nullable', 'string', 'size:3'],
         ];
     }

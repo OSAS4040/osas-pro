@@ -21,11 +21,11 @@ final class CustomerReportingPulseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'from'         => ['required', 'date_format:Y-m-d'],
-            'to'           => ['required', 'date_format:Y-m-d'],
-            'customer_id'  => ['required', 'integer', 'min:1'],
-            'branch_id'    => ['nullable', 'integer', 'min:1'],
-            'user_id'      => ['nullable', 'integer', 'min:1'],
+            'from' => ['required', 'date_format:Y-m-d'],
+            'to' => ['required', 'date_format:Y-m-d'],
+            'customer_id' => ['required', 'integer', 'min:1'],
+            'branch_id' => ['nullable', 'integer', 'min:1'],
+            'user_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 

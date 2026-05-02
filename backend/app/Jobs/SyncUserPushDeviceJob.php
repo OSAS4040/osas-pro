@@ -37,19 +37,19 @@ class SyncUserPushDeviceJob implements ShouldQueue
             UserPushDevice::query()->updateOrCreate(
                 ['fcm_token' => $token],
                 [
-                    'user_id'            => $this->userId,
-                    'company_id'         => $this->companyId,
-                    'device_name'        => $this->deviceName,
-                    'device_type'        => $this->deviceType,
+                    'user_id' => $this->userId,
+                    'company_id' => $this->companyId,
+                    'device_name' => $this->deviceName,
+                    'device_type' => $this->deviceType,
                     'last_registered_at' => now(),
                 ]
             );
         });
 
         Log::info('push_device.synced', [
-            'user_id'  => $this->userId,
+            'user_id' => $this->userId,
             'company_id' => $this->companyId,
-            'suffix'   => substr($token, -8),
+            'suffix' => substr($token, -8),
             'trace_id' => app('trace_id'),
         ]);
     }

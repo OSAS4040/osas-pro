@@ -4,6 +4,4 @@ namespace App\Services\Finance\Exceptions;
 
 use RuntimeException;
 
-class ReconciliationStuckRunException extends RuntimeException
-{
-}
+class ReconciliationStuckRunException extends RuntimeException {}

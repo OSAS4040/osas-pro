@@ -17,14 +17,14 @@ class IdempotencyMiddleware
 
         if (! $key) {
             return response()->json([
-                'message'  => 'Idempotency-Key header is required.',
+                'message' => 'Idempotency-Key header is required.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
 
         $companyId = app('tenant_company_id');
-        $endpoint  = $request->path();
-        $payload   = $request->except(['idempotency_key']);
+        $endpoint = $request->path();
+        $payload = $request->except(['idempotency_key']);
         foreach ($request->route()?->parameters() ?? [] as $name => $value) {
             if ($value instanceof Model) {
                 $value = $value->getKey();
@@ -44,21 +44,21 @@ class IdempotencyMiddleware
         if ($existing) {
             if ($existing->request_hash !== $requestHash) {
                 return response()->json([
-                    'message'  => 'Idempotency key already used with different payload.',
+                    'message' => 'Idempotency key already used with different payload.',
                     'trace_id' => app('trace_id'),
                 ], 409);
             }
 
             if ($existing->response_snapshot) {
                 $decoded = json_decode($existing->response_snapshot, true);
-                $status  = 200;
-                $body    = $decoded;
+                $status = 200;
+                $body = $decoded;
                 if (is_array($decoded)
                     && array_key_exists('__idempotent_v2__', $decoded)
                     && array_key_exists('__payload__', $decoded)
                     && is_array($decoded['__idempotent_v2__'])) {
                     $status = (int) ($decoded['__idempotent_v2__']['status'] ?? 200);
-                    $body   = $decoded['__payload__'];
+                    $body = $decoded['__payload__'];
                 }
 
                 return response()->json(
@@ -72,10 +72,10 @@ class IdempotencyMiddleware
         IdempotencyKey::updateOrCreate(
             ['company_id' => $companyId, 'key' => $key],
             [
-                'endpoint'     => $endpoint,
-                'trace_id'     => app('trace_id'),
+                'endpoint' => $endpoint,
+                'trace_id' => app('trace_id'),
                 'request_hash' => $requestHash,
-                'expires_at'   => now()->addHours(24),
+                'expires_at' => now()->addHours(24),
             ]
         );
 
@@ -88,7 +88,7 @@ class IdempotencyMiddleware
             $payload = json_decode($response->getContent(), true);
             $snapshot = json_encode([
                 '__idempotent_v2__' => ['status' => $response->getStatusCode()],
-                '__payload__'       => $payload,
+                '__payload__' => $payload,
             ]);
             IdempotencyKey::where('company_id', $companyId)
                 ->where('key', $key)

@@ -4,15 +4,15 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasTenantScope, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, HasTenantScope, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'uuid', 'company_id', 'branch_id', 'name', 'email',
@@ -23,10 +23,10 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
-        'is_active'         => 'boolean',
-        'status'            => UserStatus::class,
-        'role'              => UserRole::class,
+        'password' => 'hashed',
+        'is_active' => 'boolean',
+        'status' => UserStatus::class,
+        'role' => UserRole::class,
     ];
 
     public function company()

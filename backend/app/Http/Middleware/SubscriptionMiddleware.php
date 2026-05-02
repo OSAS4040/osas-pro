@@ -17,7 +17,7 @@ class SubscriptionMiddleware
         $block = SubscriptionAccessEvaluator::evaluate($companyId, $request, false);
         if ($block !== null) {
             return response()->json([
-                'message'  => $block['message'],
+                'message' => $block['message'],
                 'trace_id' => app('trace_id'),
             ], $block['code']);
         }

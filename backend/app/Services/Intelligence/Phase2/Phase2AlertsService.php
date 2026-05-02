@@ -35,12 +35,12 @@ final class Phase2AlertsService
 
         if ($cPrev >= 5 && $cLast > $cPrev * 2) {
             $alerts[] = [
-                'id'          => 'event_volume_spike',
-                'severity'    => 'warning',
-                'type'        => 'volume',
-                'message'     => 'حجم أحداث المجال في آخر 24 ساعة أكثر من ضعف الـ 24 ساعة السابقة.',
+                'id' => 'event_volume_spike',
+                'severity' => 'warning',
+                'type' => 'volume',
+                'message' => 'حجم أحداث المجال في آخر 24 ساعة أكثر من ضعف الـ 24 ساعة السابقة.',
                 'detected_at' => $now->toIso8601String(),
-                'basis'       => "آخر_24س={$cLast}، سابق_24س={$cPrev}، عتبة: سابق≥5 وأخير>2×سابق",
+                'basis' => "آخر_24س={$cLast}، سابق_24س={$cPrev}، عتبة: سابق≥5 وأخير>2×سابق",
             ];
         }
 
@@ -56,24 +56,24 @@ final class Phase2AlertsService
         $failCount = (clone $failQ)->where('created_at', '>=', $failSince)->count();
         if ($failCount > 0) {
             $alerts[] = [
-                'id'          => 'event_record_failures_present',
-                'severity'    => 'warning',
-                'type'        => 'ingestion',
-                'message'     => 'توجد سجلات حديثة في فشل تسجيل الأحداث لهذا النطاق.',
+                'id' => 'event_record_failures_present',
+                'severity' => 'warning',
+                'type' => 'ingestion',
+                'message' => 'توجد سجلات حديثة في فشل تسجيل الأحداث لهذا النطاق.',
                 'detected_at' => $now->toIso8601String(),
-                'basis'       => "عدد(failures منذ {$failSince->toDateString()}) = {$failCount}",
+                'basis' => "عدد(failures منذ {$failSince->toDateString()}) = {$failCount}",
             ];
         }
 
         $inWindow = (clone $base)->whereBetween('occurred_at', [$from, $to])->count();
         if ($inWindow === 0 && config('intelligent.events.persist.enabled')) {
             $alerts[] = [
-                'id'          => 'zero_events_while_persist_enabled',
-                'severity'    => 'info',
-                'type'        => 'coverage',
-                'message'     => 'لا أحداث مجال في النافذة المطلوبة رغم تفعيل حفظ الأحداث في الإعدادات.',
+                'id' => 'zero_events_while_persist_enabled',
+                'severity' => 'info',
+                'type' => 'coverage',
+                'message' => 'لا أحداث مجال في النافذة المطلوبة رغم تفعيل حفظ الأحداث في الإعدادات.',
                 'detected_at' => $now->toIso8601String(),
-                'basis'       => 'عدد(أحداث المجال في النافذة)=0 وintelligent.events.persist.enabled=true',
+                'basis' => 'عدد(أحداث المجال في النافذة)=0 وintelligent.events.persist.enabled=true',
             ];
         }
 

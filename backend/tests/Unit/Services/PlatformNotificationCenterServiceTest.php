@@ -25,4 +25,3 @@ final class PlatformNotificationCenterServiceTest extends TestCase
         );
     }
 }
-

@@ -24,7 +24,7 @@ class LoginAccountContextTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
@@ -42,24 +42,24 @@ class LoginAccountContextTest extends TestCase
         Config::set('saas.platform_admin_phones', ['05049998877']);
 
         User::withoutGlobalScopes()->create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => null,
-            'branch_id'          => null,
-            'name'               => 'Standalone platform',
-            'email'              => 'platform+standalonetest@internal.platform.sa',
-            'password'           => 'Password123!X',
-            'phone'              => '9665049998877',
-            'phone_verified_at'  => now(),
-            'role'               => UserRole::Owner,
-            'status'             => UserStatus::Active,
-            'is_active'          => true,
+            'uuid' => Str::uuid(),
+            'company_id' => null,
+            'branch_id' => null,
+            'name' => 'Standalone platform',
+            'email' => 'platform+standalonetest@internal.platform.sa',
+            'password' => 'Password123!X',
+            'phone' => '9665049998877',
+            'phone_verified_at' => now(),
+            'role' => UserRole::Owner,
+            'status' => UserStatus::Active,
+            'is_active' => true,
         ]);
 
         $this->postJson('/api/v1/auth/login', [
-            'identifier'   => '05049998877',
-            'password'     => 'Password123!X',
-            'device_name'  => 'phpunit',
-            'device_type'  => 'unknown',
+            'identifier' => '05049998877',
+            'password' => 'Password123!X',
+            'device_name' => 'phpunit',
+            'device_type' => 'unknown',
         ])
             ->assertOk()
             ->assertJsonPath('account_context.principal_kind', LoginPrincipalKind::PlatformEmployee->value)
@@ -78,7 +78,7 @@ class LoginAccountContextTest extends TestCase
         $this->createStandalonePlatformOperator('platform-lead@test.sa');
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => 'platform-lead@test.sa',
+            'email' => 'platform-lead@test.sa',
             'password' => 'Password123!',
         ])
             ->assertOk()
@@ -94,7 +94,7 @@ class LoginAccountContextTest extends TestCase
         $tenant = $this->createTenant('fleet_manager');
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ])
             ->assertOk()

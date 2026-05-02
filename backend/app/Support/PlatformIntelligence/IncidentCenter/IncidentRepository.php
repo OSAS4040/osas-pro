@@ -6,7 +6,6 @@ namespace App\Support\PlatformIntelligence\IncidentCenter;
 
 use App\Models\PlatformIncident;
 use App\Models\PlatformIncidentLifecycleEvent;
-use App\Support\PlatformIntelligence\Contracts\PlatformIncidentContract;
 use Illuminate\Database\Eloquent\Collection;
 
 final class IncidentRepository

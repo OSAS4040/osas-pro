@@ -24,9 +24,9 @@ class EnsureBusinessFeatureEnabled
         $company = Company::query()->find((int) $user->company_id);
         if ($company === null || ! TenantBusinessFeatures::isEnabled($company, $featureKey)) {
             return response()->json([
-                'message'  => 'هذه الإمكانية غير مفعّلة لملف نشاط منشأتك. فعّلها من الإعدادات ← نشاط المنشأة، أو غيّر نوع النشاط المناسب.',
-                'code'     => 'business_feature_disabled',
-                'feature'  => $featureKey,
+                'message' => 'هذه الإمكانية غير مفعّلة لملف نشاط منشأتك. فعّلها من الإعدادات ← نشاط المنشأة، أو غيّر نوع النشاط المناسب.',
+                'code' => 'business_feature_disabled',
+                'feature' => $featureKey,
                 'trace_id' => app('trace_id'),
             ], 403);
         }

@@ -19,8 +19,7 @@ final class IncidentOperationalTraceWriter
 {
     public function __construct(
         private readonly ?PlatformIntelligenceTraceRecorderInterface $trace = null,
-    ) {
-    }
+    ) {}
 
     public function recorder(): PlatformIntelligenceTraceRecorderInterface
     {

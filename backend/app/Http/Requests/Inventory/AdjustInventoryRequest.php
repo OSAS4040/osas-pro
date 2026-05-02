@@ -14,13 +14,13 @@ class AdjustInventoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id'  => ['required', 'integer', 'exists:branches,id'],
+            'branch_id' => ['required', 'integer', 'exists:branches,id'],
             'product_id' => ['required', 'integer', 'exists:products,id'],
-            'quantity'   => ['required', 'numeric', 'min:0.0001'],
-            'type'       => ['required', 'string', 'in:add,subtract,set'],
-            'unit_id'    => ['nullable', 'integer', 'exists:units,id'],
-            'unit_cost'  => ['nullable', 'numeric', 'min:0'],
-            'note'       => ['nullable', 'string', 'max:500'],
+            'quantity' => ['required', 'numeric', 'min:0.0001'],
+            'type' => ['required', 'string', 'in:add,subtract,set'],
+            'unit_id' => ['nullable', 'integer', 'exists:units,id'],
+            'unit_cost' => ['nullable', 'numeric', 'min:0'],
+            'note' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

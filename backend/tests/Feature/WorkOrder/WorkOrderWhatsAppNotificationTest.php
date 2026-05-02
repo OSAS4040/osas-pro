@@ -12,6 +12,7 @@ use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use App\Services\Messaging\WhatsAppOutboundService;
 use App\Services\WorkOrderService;
+use Illuminate\Http\Client\Request;
 use Illuminate\Queue\SyncQueue;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Config;
@@ -49,24 +50,24 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         $this->createActiveSubscription($this->company);
 
         $this->customer = Customer::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $this->company->id,
-            'name'       => 'WA Test Customer',
-            'type'       => 'individual',
-            'phone'      => '0501234567',
-            'is_active'  => true,
+            'name' => 'WA Test Customer',
+            'type' => 'individual',
+            'phone' => '0501234567',
+            'is_active' => true,
         ]);
 
         $this->vehicle = Vehicle::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->company->id,
-            'branch_id'          => $this->branch->id,
-            'customer_id'        => $this->customer->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
+            'branch_id' => $this->branch->id,
+            'customer_id' => $this->customer->id,
             'created_by_user_id' => $this->user->id,
-            'plate_number'       => 'WA-001',
-            'make'               => 'Toyota',
-            'model'              => 'Camry',
-            'year'               => 2022,
+            'plate_number' => 'WA-001',
+            'make' => 'Toyota',
+            'model' => 'Camry',
+            'year' => 2022,
         ]);
 
         $this->service = app(WorkOrderService::class);
@@ -111,7 +112,7 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         $order = $this->service->transition($order, WorkOrderStatus::InProgress);
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'WhatsApp notification test',
-            'mileage_out'      => 41000,
+            'mileage_out' => 41000,
         ]);
         $order = $this->service->transition($order, WorkOrderStatus::Completed);
         $this->service->transition($order, WorkOrderStatus::Delivered);
@@ -124,10 +125,10 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         Config::set('whatsapp_work_order_notifications.enabled', false);
         $this->mergeWhatsAppSettings([
             'provider' => 'twilio',
-            'config'   => [
-                'twilio_sid'   => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            'config' => [
+                'twilio_sid' => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
                 'twilio_token' => 'test_auth_token',
-                'twilio_from'  => '14155238886',
+                'twilio_from' => '14155238886',
             ],
             'triggers' => [
                 'wo_delivered' => true,
@@ -151,7 +152,7 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         $order = $this->service->transition($order, WorkOrderStatus::InProgress);
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'WhatsApp notification test',
-            'mileage_out'      => 41000,
+            'mileage_out' => 41000,
         ]);
         $order = $this->service->transition($order, WorkOrderStatus::Completed);
         $order = $this->service->transition($order, WorkOrderStatus::Delivered);
@@ -173,10 +174,10 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
     {
         $this->mergeWhatsAppSettings([
             'provider' => 'twilio',
-            'config'   => [
-                'twilio_sid'   => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            'config' => [
+                'twilio_sid' => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
                 'twilio_token' => 'test_auth_token',
-                'twilio_from'  => '14155238886',
+                'twilio_from' => '14155238886',
             ],
             'triggers' => [
                 'wo_delivered' => true,
@@ -196,7 +197,7 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         $this->assertSame(false, $job->afterCommit);
         Bus::dispatch($job);
 
-        Http::assertSent(function (\Illuminate\Http\Client\Request $request) {
+        Http::assertSent(function (Request $request) {
             return str_contains($request->url(), 'api.twilio.com')
                 && str_contains($request->url(), 'Messages.json');
         });
@@ -206,10 +207,10 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
     {
         $this->mergeWhatsAppSettings([
             'provider' => 'twilio',
-            'config'   => [
-                'twilio_sid'   => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            'config' => [
+                'twilio_sid' => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
                 'twilio_token' => 'test_auth_token',
-                'twilio_from'  => '14155238886',
+                'twilio_from' => '14155238886',
             ],
             'triggers' => [
                 'wo_delivered' => true,
@@ -221,7 +222,7 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         $order = $this->createOrder();
         NotifyCustomerWorkOrderWhatsAppJob::dispatchSync($order->id, (int) $this->company->id, 'delivered');
 
-        Http::assertSent(function (\Illuminate\Http\Client\Request $request) {
+        Http::assertSent(function (Request $request) {
             return str_contains($request->url(), 'api.twilio.com')
                 && str_contains($request->url(), 'Messages.json');
         });
@@ -231,10 +232,10 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
     {
         $this->mergeWhatsAppSettings([
             'provider' => 'twilio',
-            'config'   => [
-                'twilio_sid'   => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            'config' => [
+                'twilio_sid' => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
                 'twilio_token' => 'test_auth_token',
-                'twilio_from'  => '14155238886',
+                'twilio_from' => '14155238886',
             ],
             'triggers' => [
                 'wo_delivered' => true,
@@ -248,12 +249,12 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         $order = $this->service->transition($order, WorkOrderStatus::InProgress);
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'WhatsApp notification test',
-            'mileage_out'      => 41000,
+            'mileage_out' => 41000,
         ]);
         $order = $this->service->transition($order, WorkOrderStatus::Completed);
         $this->service->transition($order, WorkOrderStatus::Delivered);
 
-        Http::assertSent(function (\Illuminate\Http\Client\Request $request) {
+        Http::assertSent(function (Request $request) {
             return str_contains($request->url(), 'api.twilio.com')
                 && str_contains($request->url(), 'Messages.json');
         });
@@ -263,10 +264,10 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
     {
         $this->mergeWhatsAppSettings([
             'provider' => 'twilio',
-            'config'   => [
-                'twilio_sid'   => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            'config' => [
+                'twilio_sid' => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
                 'twilio_token' => 'test_auth_token',
-                'twilio_from'  => '14155238886',
+                'twilio_from' => '14155238886',
             ],
             'triggers' => [
                 'wo_delivered' => false,
@@ -280,7 +281,7 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         $order = $this->service->transition($order, WorkOrderStatus::InProgress);
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'WhatsApp notification test',
-            'mileage_out'      => 41000,
+            'mileage_out' => 41000,
         ]);
         $order = $this->service->transition($order, WorkOrderStatus::Completed);
         $this->service->transition($order, WorkOrderStatus::Delivered);
@@ -292,10 +293,10 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
     {
         $this->mergeWhatsAppSettings([
             'provider' => 'twilio',
-            'config'   => [
-                'twilio_sid'   => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            'config' => [
+                'twilio_sid' => 'ACaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
                 'twilio_token' => 'test_auth_token',
-                'twilio_from'  => '14155238886',
+                'twilio_from' => '14155238886',
             ],
             'triggers' => [
                 'wo_delivered' => true,

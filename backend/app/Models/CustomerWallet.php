@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\WalletType;
-use App\Models\HasTenantScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +18,7 @@ class CustomerWallet extends Model
 
     protected $casts = [
         'wallet_type' => WalletType::class,
-        'balance'     => 'decimal:4',
+        'balance' => 'decimal:4',
     ];
 
     public function company(): BelongsTo

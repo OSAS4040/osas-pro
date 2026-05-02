@@ -56,24 +56,24 @@ class OrgUnitController extends Controller
         $companyId = (int) $request->user()->company_id;
 
         $data = $request->validate([
-            'parent_id'   => [
+            'parent_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('org_units', 'id')->where(fn ($q) => $q->where('company_id', $companyId)),
             ],
-            'type'        => ['required', 'string', 'in:sector,department,division'],
-            'name'        => ['required', 'string', 'max:255'],
-            'name_ar'     => ['nullable', 'string', 'max:255'],
-            'code'        => ['nullable', 'string', 'max:64'],
-            'sort_order'  => ['nullable', 'integer', 'min:0', 'max:65535'],
-            'is_active'   => ['nullable', 'boolean'],
+            'type' => ['required', 'string', 'in:sector,department,division'],
+            'name' => ['required', 'string', 'max:255'],
+            'name_ar' => ['nullable', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:64'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         $row = OrgUnit::create(array_merge($data, [
-            'uuid'        => Str::uuid()->toString(),
-            'company_id'  => $companyId,
-            'sort_order'  => $data['sort_order'] ?? 0,
-            'is_active'   => $data['is_active'] ?? true,
+            'uuid' => Str::uuid()->toString(),
+            'company_id' => $companyId,
+            'sort_order' => $data['sort_order'] ?? 0,
+            'is_active' => $data['is_active'] ?? true,
         ]));
 
         return response()->json(['data' => $row, 'trace_id' => app('trace_id')], 201);
@@ -85,17 +85,17 @@ class OrgUnitController extends Controller
         $companyId = (int) $request->user()->company_id;
 
         $data = $request->validate([
-            'parent_id'   => [
+            'parent_id' => [
                 'nullable',
                 'integer',
                 Rule::exists('org_units', 'id')->where(fn ($q) => $q->where('company_id', $companyId)),
             ],
-            'type'        => ['sometimes', 'string', 'in:sector,department,division'],
-            'name'        => ['sometimes', 'string', 'max:255'],
-            'name_ar'     => ['nullable', 'string', 'max:255'],
-            'code'        => ['nullable', 'string', 'max:64'],
-            'sort_order'  => ['nullable', 'integer', 'min:0', 'max:65535'],
-            'is_active'   => ['nullable', 'boolean'],
+            'type' => ['sometimes', 'string', 'in:sector,department,division'],
+            'name' => ['sometimes', 'string', 'max:255'],
+            'name_ar' => ['nullable', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:64'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         if (array_key_exists('parent_id', $data)) {
@@ -133,7 +133,7 @@ class OrgUnitController extends Controller
     private function wouldCreateCycle(int $unitId, int $newParentId): bool
     {
         $current = OrgUnit::find($newParentId);
-        $guard   = 0;
+        $guard = 0;
         while ($current !== null && $guard < 32) {
             if ((int) $current->id === $unitId) {
                 return true;

@@ -51,12 +51,12 @@ class DomainEventInspectionController extends Controller
         $paginator = $q->paginate($perPage);
 
         return response()->json([
-            'data'     => $paginator->items(),
-            'meta'     => [
+            'data' => $paginator->items(),
+            'meta' => [
                 'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
             ],
             'trace_id' => app('trace_id'),
         ]);

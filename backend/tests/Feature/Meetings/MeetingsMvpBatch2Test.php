@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Meetings;
 
-use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 

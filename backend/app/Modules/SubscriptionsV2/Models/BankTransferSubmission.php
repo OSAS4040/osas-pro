@@ -26,8 +26,8 @@ class BankTransferSubmission extends Model
     ];
 
     protected $casts = [
-        'status'        => BankTransferReviewStatus::class,
-        'amount'        => 'decimal:2',
+        'status' => BankTransferReviewStatus::class,
+        'amount' => 'decimal:2',
         'transfer_date' => 'date',
     ];
 

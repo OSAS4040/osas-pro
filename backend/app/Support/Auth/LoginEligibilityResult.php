@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Support\Auth;
 
+use App\Actions\Auth\ResolveLoginEligibilityAction;
+
 /**
- * Outcome of {@see \App\Actions\Auth\ResolveLoginEligibilityAction}.
+ * Outcome of {@see ResolveLoginEligibilityAction}.
  */
 final class LoginEligibilityResult
 {
@@ -49,11 +51,11 @@ final class LoginEligibilityResult
     public function toArray(): array
     {
         return [
-            'allowed'      => $this->allowed,
-            'reason_code'  => $this->reasonCode,
-            'message_key'  => $this->messageKey,
-            'status'       => $this->statusRaw,
-            'is_active'    => $this->isActive,
+            'allowed' => $this->allowed,
+            'reason_code' => $this->reasonCode,
+            'message_key' => $this->messageKey,
+            'status' => $this->statusRaw,
+            'is_active' => $this->isActive,
         ];
     }
 
@@ -78,10 +80,10 @@ final class LoginEligibilityResult
     public function toForbiddenResponseBody(string $locale = 'ar'): array
     {
         return [
-            'message'     => $this->resolvedMessage($locale),
+            'message' => $this->resolvedMessage($locale),
             'reason_code' => $this->reasonCode,
             'message_key' => $this->messageKey,
-            'trace_id'    => app('trace_id'),
+            'trace_id' => app('trace_id'),
         ];
     }
 }

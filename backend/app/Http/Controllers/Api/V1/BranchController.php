@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Config\AssignVerticalProfileRequest;
 use App\Http\Requests\Branch\StoreBranchRequest;
 use App\Http\Requests\Branch\UpdateBranchRequest;
+use App\Http\Requests\Config\AssignVerticalProfileRequest;
 use App\Models\Branch;
 use App\Models\Subscription;
 use App\Models\VerticalProfile;
-use App\Support\SubscriptionQuota;
 use App\Services\Config\ResolvedConfigVisibilityService;
 use App\Services\Config\VerticalProfileGovernanceService;
+use App\Support\SubscriptionQuota;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -27,7 +27,9 @@ class BranchController extends Controller
      *     tags={"Branches"},
      *     summary="List branches for current company",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="is_active", in="query", @OA\Schema(type="boolean")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/PaginatedResponse")
      * )
      */
@@ -42,7 +44,7 @@ class BranchController extends Controller
 
         if ($request->boolean('for_map')) {
             return response()->json([
-                'data'     => $query->get(),
+                'data' => $query->get(),
                 'trace_id' => app('trace_id'),
             ]);
         }
@@ -58,6 +60,7 @@ class BranchController extends Controller
      *     tags={"Branches"},
      *     summary="Create a branch",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -68,7 +71,7 @@ class BranchController extends Controller
         $branch = Branch::create(array_merge(
             $request->validated(),
             [
-                'uuid'       => Str::uuid(),
+                'uuid' => Str::uuid(),
                 'company_id' => $request->user()->company_id,
             ]
         ));
@@ -82,7 +85,9 @@ class BranchController extends Controller
      *     tags={"Branches"},
      *     summary="Get a branch",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -101,7 +106,9 @@ class BranchController extends Controller
      *     tags={"Branches"},
      *     summary="Update a branch",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -120,8 +127,7 @@ class BranchController extends Controller
         AssignVerticalProfileRequest $request,
         int $id,
         VerticalProfileGovernanceService $governance
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $branch = Branch::findOrFail($id);
         $this->authorize('update', $branch);
 
@@ -138,8 +144,7 @@ class BranchController extends Controller
     public function effectiveConfig(
         int $id,
         ResolvedConfigVisibilityService $visibility
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $branch = Branch::findOrFail($id);
         $this->authorize('view', $branch);
 
@@ -177,7 +182,9 @@ class BranchController extends Controller
      *     tags={"Branches"},
      *     summary="Delete a branch",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */

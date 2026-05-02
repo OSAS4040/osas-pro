@@ -78,7 +78,7 @@ class SystemCapabilitiesEndpointTest extends TestCase
         $t['company']->update([
             'settings' => [
                 'business_profile' => [
-                    'business_type'  => 'retail',
+                    'business_type' => 'retail',
                     'feature_matrix' => [],
                 ],
             ],
@@ -88,7 +88,7 @@ class SystemCapabilitiesEndpointTest extends TestCase
         $response->assertStatus(200);
 
         $items = $response->json('data.items');
-        $row    = collect($items)->firstWhere('id', 'supplier_contract_layer');
+        $row = collect($items)->firstWhere('id', 'supplier_contract_layer');
         $this->assertNotNull($row);
         $this->assertSame('restricted_activity', $row['status']);
         $this->assertNull($row['path']);

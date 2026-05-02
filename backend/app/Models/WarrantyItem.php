@@ -14,11 +14,14 @@ class WarrantyItem extends Model
 
     protected $casts = [
         'warranty_start' => 'date',
-        'warranty_end'   => 'date',
-        'reminder_sent'  => 'boolean',
+        'warranty_end' => 'date',
+        'reminder_sent' => 'boolean',
     ];
 
-    public function invoice() { return $this->belongsTo(Invoice::class); }
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
+    }
 
     public function getDaysRemainingAttribute(): int
     {
@@ -28,9 +31,16 @@ class WarrantyItem extends Model
     public function getStatusAttribute(): string
     {
         $days = $this->days_remaining;
-        if ($days <= 0)   return 'expired';
-        if ($days <= 7)   return 'expiring_soon';
-        if ($days <= 30)  return 'warning';
+        if ($days <= 0) {
+            return 'expired';
+        }
+        if ($days <= 7) {
+            return 'expiring_soon';
+        }
+        if ($days <= 30) {
+            return 'warning';
+        }
+
         return 'active';
     }
 }

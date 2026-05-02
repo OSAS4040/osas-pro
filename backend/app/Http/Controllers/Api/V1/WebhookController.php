@@ -29,27 +29,27 @@ class WebhookController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'url'    => 'required|url|max:500',
+            'url' => 'required|url|max:500',
             'events' => 'required|array|min:1',
             'events.*' => 'required|string|max:100',
         ]);
 
-        $user   = $request->user();
+        $user = $request->user();
         $secret = Str::random(64);
 
         $endpoint = WebhookEndpoint::create([
-            'uuid'                => Str::uuid(),
-            'company_id'          => $user->company_id,
-            'created_by_user_id'  => $user->id,
-            'url'                 => $data['url'],
-            'events'              => $data['events'],
-            'secret_hash'         => hash('sha256', $secret),
-            'is_active'           => true,
+            'uuid' => Str::uuid(),
+            'company_id' => $user->company_id,
+            'created_by_user_id' => $user->id,
+            'url' => $data['url'],
+            'events' => $data['events'],
+            'secret_hash' => hash('sha256', $secret),
+            'is_active' => true,
         ]);
 
         return response()->json([
-            'data'    => $endpoint,
-            'secret'  => $secret,
+            'data' => $endpoint,
+            'secret' => $secret,
             'message' => 'Store this webhook secret now — it will not be shown again.',
             'trace_id' => app('trace_id'),
         ], 201);
@@ -67,7 +67,7 @@ class WebhookController extends Controller
 
     public function deliveries(Request $request, int $endpointId): JsonResponse
     {
-        $user     = $request->user();
+        $user = $request->user();
         $endpoint = WebhookEndpoint::where('company_id', $user->company_id)->findOrFail($endpointId);
 
         $deliveries = WebhookDelivery::where('webhook_endpoint_id', $endpoint->id)

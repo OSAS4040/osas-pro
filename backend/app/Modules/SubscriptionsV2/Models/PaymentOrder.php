@@ -3,11 +3,11 @@
 namespace App\Modules\SubscriptionsV2\Models;
 
 use App\Models\Company;
+use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\User;
 use App\Modules\SubscriptionsV2\Enums\PaymentOrderStatus;
 use App\Modules\SubscriptionsV2\Enums\ReconciliationMatchStatus;
-use App\Models\Payment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -30,12 +30,12 @@ class PaymentOrder extends Model
     ];
 
     protected $casts = [
-        'status'       => PaymentOrderStatus::class,
-        'amount'       => 'decimal:2',
-        'vat'          => 'decimal:2',
-        'total'        => 'decimal:2',
-        'expires_at'   => 'datetime',
-        'approved_at'  => 'datetime',
+        'status' => PaymentOrderStatus::class,
+        'amount' => 'decimal:2',
+        'vat' => 'decimal:2',
+        'total' => 'decimal:2',
+        'expires_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     public function company(): BelongsTo

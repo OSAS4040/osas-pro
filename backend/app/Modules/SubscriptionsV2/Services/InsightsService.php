@@ -145,4 +145,3 @@ final class InsightsService
         return $out;
     }
 }
-

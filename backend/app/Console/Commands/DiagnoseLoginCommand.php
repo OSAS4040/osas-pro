@@ -65,14 +65,14 @@ class DiagnoseLoginCommand extends Command
         foreach ($candidates as $u) {
             $hash = $u->getRawOriginal('password');
             $rows[] = [
-                'id'         => $u->id,
+                'id' => $u->id,
                 'company_id' => $u->company_id,
-                'branch_id'  => $u->branch_id ?? '—',
-                'role'       => (string) $u->getRawOriginal('role'),
-                'is_active'  => $u->is_active ? 'yes' : 'no',
-                'status'     => $this->enumish($u->status),
-                'can_login'  => $u->canLogin() ? 'yes' : 'no',
-                'password'   => $this->passwordStorageSummary($hash),
+                'branch_id' => $u->branch_id ?? '—',
+                'role' => (string) $u->getRawOriginal('role'),
+                'is_active' => $u->is_active ? 'yes' : 'no',
+                'status' => $this->enumish($u->status),
+                'can_login' => $u->canLogin() ? 'yes' : 'no',
+                'password' => $this->passwordStorageSummary($hash),
             ];
         }
         $this->table(

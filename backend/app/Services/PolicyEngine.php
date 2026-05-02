@@ -16,17 +16,16 @@ class PolicyEngine
     /**
      * Evaluate a policy rule for a company.
      *
-     * @param  int    $companyId
-     * @param  string $code       e.g. 'discount.max'
-     * @param  mixed  $input      the value to check
-     * @param  array  $context    extra context (entity_type, entity_id, role…)
+     * @param  string  $code  e.g. 'discount.max'
+     * @param  mixed  $input  the value to check
+     * @param  array  $context  extra context (entity_type, entity_id, role…)
      * @return array{passed: bool, action: string|null, rule: PolicyRule|null}
      */
     public function evaluate(int $companyId, string $code, mixed $input, array $context = []): array
     {
         $rule = $this->findRule($companyId, $code, $context);
 
-        if (!$rule) {
+        if (! $rule) {
             return ['passed' => true, 'action' => null, 'rule' => null];
         }
 
@@ -35,7 +34,7 @@ class PolicyEngine
         return [
             'passed' => $passed,
             'action' => $passed ? null : $rule->action,
-            'rule'   => $rule,
+            'rule' => $rule,
         ];
     }
 
@@ -49,12 +48,14 @@ class PolicyEngine
                 ->where('is_active', true);
 
             // Prefer entity-specific rule over global
-            if (!empty($context['entity_type']) && !empty($context['entity_id'])) {
+            if (! empty($context['entity_type']) && ! empty($context['entity_id'])) {
                 $specific = (clone $query)
                     ->where('entity_type', $context['entity_type'])
                     ->where('entity_id', $context['entity_id'])
                     ->first();
-                if ($specific) return $specific;
+                if ($specific) {
+                    return $specific;
+                }
             }
 
             return $query->whereNull('entity_type')->orWhere('entity_type', 'global')->first();
@@ -66,15 +67,15 @@ class PolicyEngine
         $threshold = is_array($threshold) ? $threshold : [$threshold];
 
         return match ($operator) {
-            'lte'     => (float) $input <= (float) ($threshold[0] ?? 0),
-            'gte'     => (float) $input >= (float) ($threshold[0] ?? 0),
-            'eq'      => $input == ($threshold[0] ?? null),
-            'neq'     => $input != ($threshold[0] ?? null),
-            'in'      => in_array($input, $threshold),
-            'not_in'  => !in_array($input, $threshold),
+            'lte' => (float) $input <= (float) ($threshold[0] ?? 0),
+            'gte' => (float) $input >= (float) ($threshold[0] ?? 0),
+            'eq' => $input == ($threshold[0] ?? null),
+            'neq' => $input != ($threshold[0] ?? null),
+            'in' => in_array($input, $threshold),
+            'not_in' => ! in_array($input, $threshold),
             'between' => (float) $input >= (float) ($threshold[0] ?? 0)
                       && (float) $input <= (float) ($threshold[1] ?? PHP_INT_MAX),
-            default   => true,
+            default => true,
         };
     }
 

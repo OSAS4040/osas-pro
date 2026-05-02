@@ -164,7 +164,6 @@ class NavigationVisibilityService
     }
 
     /**
-     * @param  mixed  $raw
      * @return array{sections: array<string, bool>, groups: array<string, bool>}
      */
     private function normalizePolicy(mixed $raw): array

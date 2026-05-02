@@ -7,6 +7,7 @@ namespace App\Reporting\Queries;
 use App\Reporting\ReportingContext;
 use App\Reporting\ReportingDateRange;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -35,7 +36,7 @@ final class CustomerPulseSummaryQuery
             'by_time_period' => [
                 'granularity' => 'week',
                 'work_orders' => $this->weeklySeries('work_orders', 'created_at', $companyId, $customerId, $branchIds, $range, $maxBuckets),
-                'invoices'    => $includeFinancial
+                'invoices' => $includeFinancial
                     ? $this->weeklySeries('invoices', 'issued_at', $companyId, $customerId, $branchIds, $range, $maxBuckets)
                     : [],
             ],
@@ -119,19 +120,19 @@ final class CustomerPulseSummaryQuery
 
         return [
             'work_orders_in_period' => $workOrdersInPeriod,
-            'invoices_in_period'    => $invoicesInPeriod,
-            'payments_in_period'    => $paymentsInPeriod,
-            'tickets_open'         => $ticketsOpen,
-            'tickets_overdue'      => $ticketsOverdue,
-            'last_activity_at'     => $lastActivity,
-            'vehicles_count'       => $vehiclesCount,
+            'invoices_in_period' => $invoicesInPeriod,
+            'payments_in_period' => $paymentsInPeriod,
+            'tickets_open' => $ticketsOpen,
+            'tickets_overdue' => $ticketsOverdue,
+            'last_activity_at' => $lastActivity,
+            'vehicles_count' => $vehiclesCount,
         ];
     }
 
     /**
      * @param  list<int>|null  $branchIds
      */
-    private function applyBranchFilter(\Illuminate\Database\Query\Builder $q, string $column, ?array $branchIds): void
+    private function applyBranchFilter(Builder $q, string $column, ?array $branchIds): void
     {
         if ($branchIds !== null) {
             $q->whereIn($column, $branchIds);
@@ -141,7 +142,7 @@ final class CustomerPulseSummaryQuery
     /**
      * @param  list<int>|null  $branchIds
      */
-    private function applyBranchFilterOnAlias(\Illuminate\Database\Query\Builder $q, string $column, ?array $branchIds): void
+    private function applyBranchFilterOnAlias(Builder $q, string $column, ?array $branchIds): void
     {
         if ($branchIds !== null) {
             $q->whereIn($column, $branchIds);
@@ -302,8 +303,8 @@ final class CustomerPulseSummaryQuery
         }
 
         return [
-            'work_orders'     => $wo,
-            'invoices'        => $inv,
+            'work_orders' => $wo,
+            'invoices' => $inv,
             'support_tickets' => $tickets,
         ];
     }
@@ -338,7 +339,7 @@ final class CustomerPulseSummaryQuery
 
         return $q->orderBy('k')->get()->map(fn ($r) => [
             'status' => (string) $r->k,
-            'count'  => (int) $r->c,
+            'count' => (int) $r->c,
         ])->all();
     }
 
@@ -382,8 +383,8 @@ final class CustomerPulseSummaryQuery
 
         return [
             'work_orders_created_in_period' => (int) $wo->count(),
-            'invoices_issued_in_period'     => $inv,
-            'payments_recorded_in_period'   => $pay,
+            'invoices_issued_in_period' => $inv,
+            'payments_recorded_in_period' => $pay,
         ];
     }
 
@@ -426,7 +427,7 @@ final class CustomerPulseSummaryQuery
             $bucket = $row->bucket ?? null;
             $out[] = [
                 'period_start' => $bucket ? (string) $bucket : '',
-                'count'        => (int) ($row->c ?? 0),
+                'count' => (int) ($row->c ?? 0),
             ];
         }
 

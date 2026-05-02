@@ -43,30 +43,30 @@ final class OperationFeedItemPresenter
         $financialVisibilityApplied = ! $financialVisible && in_array($type, ['invoice', 'payment'], true);
 
         return [
-            'type'                         => $type,
-            'id'                           => $id,
-            'occurred_at'                  => $row['occurred_at'] ? (string) $row['occurred_at'] : null,
-            'title'                        => $titles['title'],
-            'subtitle'                     => $titles['subtitle'],
-            'description'                  => $titles['description'],
-            'status'                       => (string) $row['status'],
-            'severity'                     => (string) $row['attention_level'],
-            'attention_level'              => (string) $row['attention_level'],
-            'company_id'                   => (int) $row['company_id'],
-            'company_name'                 => (string) ($row['company_name'] ?? ''),
-            'branch_id'                    => $row['branch_id'] !== null ? (int) $row['branch_id'] : null,
-            'branch_name'                  => $row['branch_name'] !== null ? (string) $row['branch_name'] : null,
-            'customer_id'                  => $row['customer_id'] !== null ? (int) $row['customer_id'] : null,
-            'customer_name'                => $row['customer_name'] !== null ? (string) $row['customer_name'] : null,
-            'actor_user_id'                => $row['actor_user_id'] !== null ? (int) $row['actor_user_id'] : null,
-            'actor_name'                   => $row['actor_name'] !== null ? (string) $row['actor_name'] : null,
-            'amount'                       => $amount,
-            'currency'                     => $currency,
-            'reference'                    => (string) ($row['reference'] ?? ''),
-            'entity_route'                 => $this->routes->resolve($type, $id, $linkId),
-            'tags'                         => $tags,
+            'type' => $type,
+            'id' => $id,
+            'occurred_at' => $row['occurred_at'] ? (string) $row['occurred_at'] : null,
+            'title' => $titles['title'],
+            'subtitle' => $titles['subtitle'],
+            'description' => $titles['description'],
+            'status' => (string) $row['status'],
+            'severity' => (string) $row['attention_level'],
+            'attention_level' => (string) $row['attention_level'],
+            'company_id' => (int) $row['company_id'],
+            'company_name' => (string) ($row['company_name'] ?? ''),
+            'branch_id' => $row['branch_id'] !== null ? (int) $row['branch_id'] : null,
+            'branch_name' => $row['branch_name'] !== null ? (string) $row['branch_name'] : null,
+            'customer_id' => $row['customer_id'] !== null ? (int) $row['customer_id'] : null,
+            'customer_name' => $row['customer_name'] !== null ? (string) $row['customer_name'] : null,
+            'actor_user_id' => $row['actor_user_id'] !== null ? (int) $row['actor_user_id'] : null,
+            'actor_name' => $row['actor_name'] !== null ? (string) $row['actor_name'] : null,
+            'amount' => $amount,
+            'currency' => $currency,
+            'reference' => (string) ($row['reference'] ?? ''),
+            'entity_route' => $this->routes->resolve($type, $id, $linkId),
+            'tags' => $tags,
             'financial_visibility_applied' => $financialVisibilityApplied,
-            'read_only'                    => true,
+            'read_only' => true,
         ];
     }
 
@@ -81,28 +81,28 @@ final class OperationFeedItemPresenter
 
         return match ($type) {
             'work_order' => [
-                'title'       => 'Work order activity',
-                'subtitle'    => $ref !== '' ? $ref : 'Work order #'.$row['entity_id'],
+                'title' => 'Work order activity',
+                'subtitle' => $ref !== '' ? $ref : 'Work order #'.$row['entity_id'],
                 'description' => $cust !== '' ? 'Customer: '.$cust : null,
             ],
             'invoice' => [
-                'title'       => 'Invoice issued',
-                'subtitle'    => $ref !== '' ? $ref : 'Invoice #'.$row['entity_id'],
+                'title' => 'Invoice issued',
+                'subtitle' => $ref !== '' ? $ref : 'Invoice #'.$row['entity_id'],
                 'description' => $cust !== '' ? 'Customer: '.$cust : null,
             ],
             'payment' => [
-                'title'       => 'Payment recorded',
-                'subtitle'    => $ref !== '' ? $ref : 'Payment #'.$row['entity_id'],
+                'title' => 'Payment recorded',
+                'subtitle' => $ref !== '' ? $ref : 'Payment #'.$row['entity_id'],
                 'description' => null,
             ],
             'ticket' => [
-                'title'       => 'Support ticket update',
-                'subtitle'    => $ref !== '' ? $ref : 'Ticket #'.$row['entity_id'],
+                'title' => 'Support ticket update',
+                'subtitle' => $ref !== '' ? $ref : 'Ticket #'.$row['entity_id'],
                 'description' => $cust !== '' ? 'Customer: '.$cust : null,
             ],
             default => [
-                'title'       => 'Operational event',
-                'subtitle'    => $ref,
+                'title' => 'Operational event',
+                'subtitle' => $ref,
                 'description' => null,
             ],
         };
@@ -149,4 +149,3 @@ final class OperationFeedItemPresenter
         return array_values(array_unique($tags));
     }
 }
-

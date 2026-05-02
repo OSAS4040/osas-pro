@@ -21,9 +21,9 @@ class ReconciliationMatch extends Model
     ];
 
     protected $casts = [
-        'score'      => 'decimal:4',
+        'score' => 'decimal:4',
         'match_type' => ReconciliationMatchType::class,
-        'status'     => ReconciliationMatchStatus::class,
+        'status' => ReconciliationMatchStatus::class,
     ];
 
     public function paymentOrder(): BelongsTo

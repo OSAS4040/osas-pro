@@ -19,14 +19,17 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\WalletTransaction;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 require __DIR__.'/../vendor/autoload.php';
 
-/** @var \Illuminate\Foundation\Application $app */
+/** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
 $setupLog = [];
 
@@ -44,45 +47,45 @@ $ensureTenantAndOwner = static function () use (&$setupLog): User {
     }
 
     $company = Company::create([
-        'uuid'      => (string) Str::uuid(),
-        'name'      => 'Phase2 Live Demo Co',
-        'currency'  => 'SAR',
-        'timezone'  => 'Asia/Riyadh',
-        'status'    => 'active',
+        'uuid' => (string) Str::uuid(),
+        'name' => 'Phase2 Live Demo Co',
+        'currency' => 'SAR',
+        'timezone' => 'Asia/Riyadh',
+        'status' => 'active',
         'is_active' => true,
     ]);
 
     $branch = Branch::create([
-        'uuid'       => (string) Str::uuid(),
+        'uuid' => (string) Str::uuid(),
         'company_id' => $company->id,
-        'name'       => 'Main',
-        'code'       => 'MAIN',
-        'status'     => 'active',
-        'is_main'    => true,
-        'is_active'  => true,
+        'name' => 'Main',
+        'code' => 'MAIN',
+        'status' => 'active',
+        'is_main' => true,
+        'is_active' => true,
     ]);
 
     Subscription::create([
-        'uuid'         => (string) Str::uuid(),
-        'company_id'   => $company->id,
-        'plan'         => 'professional',
-        'status'       => SubscriptionStatus::Active,
-        'starts_at'    => now()->subDay(),
-        'ends_at'      => now()->addYear(),
+        'uuid' => (string) Str::uuid(),
+        'company_id' => $company->id,
+        'plan' => 'professional',
+        'status' => SubscriptionStatus::Active,
+        'starts_at' => now()->subDay(),
+        'ends_at' => now()->addYear(),
         'max_branches' => 5,
-        'max_users'    => 20,
+        'max_users' => 20,
     ]);
 
     $user = User::create([
-        'uuid'       => (string) Str::uuid(),
+        'uuid' => (string) Str::uuid(),
         'company_id' => $company->id,
-        'branch_id'  => $branch->id,
-        'name'       => 'Phase2 Owner',
-        'email'      => 'phase2_owner_'.Str::lower(Str::random(8)).'@demo.local',
-        'password'   => bcrypt('Password123!'),
-        'role'       => UserRole::Owner,
-        'status'     => 'active',
-        'is_active'  => true,
+        'branch_id' => $branch->id,
+        'name' => 'Phase2 Owner',
+        'email' => 'phase2_owner_'.Str::lower(Str::random(8)).'@demo.local',
+        'password' => bcrypt('Password123!'),
+        'role' => UserRole::Owner,
+        'status' => 'active',
+        'is_active' => true,
     ]);
 
     $setupLog[] = 'Created demo tenant + owner user id='.$user->id;
@@ -94,18 +97,18 @@ $user = $ensureTenantAndOwner();
 
 if (DomainEvent::query()->where('company_id', $user->company_id)->doesntExist()) {
     DomainEvent::create([
-        'uuid'              => (string) Str::uuid(),
-        'company_id'        => $user->company_id,
-        'branch_id'         => $user->branch_id,
-        'aggregate_type'    => 'Customer',
-        'aggregate_id'      => 'demo-1',
-        'event_name'        => 'CustomerCreated',
-        'event_version'     => 1,
-        'payload_json'      => ['source' => 'phase2_overview_live.php'],
-        'metadata_json'     => [],
-        'trace_id'          => 'phase2-live',
-        'correlation_id'    => 'phase2-live',
-        'occurred_at'       => now()->subHour(),
+        'uuid' => (string) Str::uuid(),
+        'company_id' => $user->company_id,
+        'branch_id' => $user->branch_id,
+        'aggregate_type' => 'Customer',
+        'aggregate_id' => 'demo-1',
+        'event_name' => 'CustomerCreated',
+        'event_version' => 1,
+        'payload_json' => ['source' => 'phase2_overview_live.php'],
+        'metadata_json' => [],
+        'trace_id' => 'phase2-live',
+        'correlation_id' => 'phase2-live',
+        'occurred_at' => now()->subHour(),
         'processing_status' => 'recorded',
     ]);
     $setupLog[] = 'Inserted one sample domain_events row for company_id='.$user->company_id;
@@ -114,16 +117,16 @@ if (DomainEvent::query()->where('company_id', $user->company_id)->doesntExist())
 $token = $user->createToken('phase2-live-demo')->plainTextToken;
 
 $snapshot = static fn (): array => [
-    'domain_events'           => DomainEvent::query()->count(),
-    'invoices'                => Invoice::query()->count(),
-    'wallet_transactions'     => WalletTransaction::query()->count(),
-    'personal_access_tokens'  => DB::table('personal_access_tokens')->count(),
+    'domain_events' => DomainEvent::query()->count(),
+    'invoices' => Invoice::query()->count(),
+    'wallet_transactions' => WalletTransaction::query()->count(),
+    'personal_access_tokens' => DB::table('personal_access_tokens')->count(),
 ];
 
 $before = $snapshot();
 
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
-$request = Illuminate\Http\Request::create(
+$request = Request::create(
     '/api/v1/internal/intelligence/overview',
     'GET',
     [],
@@ -131,7 +134,7 @@ $request = Illuminate\Http\Request::create(
     [],
     [
         'HTTP_AUTHORIZATION' => 'Bearer '.$token,
-        'HTTP_ACCEPT'        => 'application/json',
+        'HTTP_ACCEPT' => 'application/json',
     ]
 );
 
@@ -141,15 +144,15 @@ $kernel->terminate($request, $response);
 $after = $snapshot();
 
 $out = [
-    'setup_log'                    => $setupLog,
-    'http_status'                  => $response->getStatusCode(),
-    'response_json'                => json_decode($response->getContent(), true),
-    'row_counts_before_get'        => $before,
-    'row_counts_after_get'         => $after,
-    'delta_during_get'             => [
-        'domain_events'          => $after['domain_events'] - $before['domain_events'],
-        'invoices'               => $after['invoices'] - $before['invoices'],
-        'wallet_transactions'    => $after['wallet_transactions'] - $before['wallet_transactions'],
+    'setup_log' => $setupLog,
+    'http_status' => $response->getStatusCode(),
+    'response_json' => json_decode($response->getContent(), true),
+    'row_counts_before_get' => $before,
+    'row_counts_after_get' => $after,
+    'delta_during_get' => [
+        'domain_events' => $after['domain_events'] - $before['domain_events'],
+        'invoices' => $after['invoices'] - $before['invoices'],
+        'wallet_transactions' => $after['wallet_transactions'] - $before['wallet_transactions'],
         'personal_access_tokens' => $after['personal_access_tokens'] - $before['personal_access_tokens'],
     ],
 ];

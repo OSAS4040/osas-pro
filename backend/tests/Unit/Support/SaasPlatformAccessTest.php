@@ -58,7 +58,7 @@ class SaasPlatformAccessTest extends TestCase
 
         $user = new User([
             'company_id' => null,
-            'phone'      => '966504644804',
+            'phone' => '966504644804',
         ]);
 
         $this->assertTrue(SaasPlatformAccess::isPlatformOperator($user));
@@ -73,7 +73,7 @@ class SaasPlatformAccessTest extends TestCase
 
         $user = new User([
             'company_id' => 99,
-            'phone'      => '966504644804',
+            'phone' => '966504644804',
         ]);
 
         $this->assertFalse(SaasPlatformAccess::isPlatformOperator($user));
@@ -87,7 +87,7 @@ class SaasPlatformAccessTest extends TestCase
         ]);
 
         $user = new User([
-            'company_id'       => null,
+            'company_id' => null,
             'is_platform_user' => true,
         ]);
 
@@ -102,7 +102,7 @@ class SaasPlatformAccessTest extends TestCase
         ]);
 
         $user = new User([
-            'company_id'       => 42,
+            'company_id' => 42,
             'is_platform_user' => true,
         ]);
 

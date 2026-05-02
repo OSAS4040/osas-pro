@@ -30,9 +30,9 @@ class JournalEntry extends Model
     ];
 
     protected $casts = [
-        'type'       => JournalEntryType::class,
+        'type' => JournalEntryType::class,
         'entry_date' => 'date',
-        'total_debit'  => 'float',
+        'total_debit' => 'float',
         'total_credit' => 'float',
     ];
 
@@ -68,6 +68,6 @@ class JournalEntry extends Model
 
     public function isBalanced(): bool
     {
-        return abs((float)$this->total_debit - (float)$this->total_credit) < 0.001;
+        return abs((float) $this->total_debit - (float) $this->total_credit) < 0.001;
     }
 }

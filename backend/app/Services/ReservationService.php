@@ -9,6 +9,7 @@ use App\Intelligence\Events\StockMovementRecorded;
 use App\Models\Inventory;
 use App\Models\InventoryReservation;
 use App\Models\StockMovement;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -19,21 +20,21 @@ class ReservationService
     ) {}
 
     public function reserve(
-        int     $companyId,
-        int     $branchId,
-        int     $productId,
-        float   $quantity,
-        int     $userId,
-        string  $referenceType,
-        int     $referenceId,
-        ?int    $workOrderId = null,
-        ?\Carbon\Carbon $expiresAt = null,
+        int $companyId,
+        int $branchId,
+        int $productId,
+        float $quantity,
+        int $userId,
+        string $referenceType,
+        int $referenceId,
+        ?int $workOrderId = null,
+        ?Carbon $expiresAt = null,
         ?string $traceId = null,
     ): InventoryReservation {
         return DB::transaction(function () use (
             $companyId, $branchId, $productId, $quantity,
             $userId, $referenceType, $referenceId,
-            $workOrderId, $expiresAt, $traceId
+            $workOrderId, $expiresAt
         ) {
             $inventory = Inventory::where('company_id', $companyId)
                 ->where('branch_id', $branchId)
@@ -57,18 +58,18 @@ class ReservationService
             $inventory->increment('version');
 
             $reservation = InventoryReservation::create([
-                'uuid'               => Str::uuid(),
-                'company_id'         => $companyId,
-                'branch_id'          => $branchId,
+                'uuid' => Str::uuid(),
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
                 'created_by_user_id' => $userId,
-                'product_id'         => $productId,
-                'inventory_id'       => $inventory->id,
-                'work_order_id'      => $workOrderId,
-                'reference_type'     => $referenceType,
-                'reference_id'       => $referenceId,
-                'quantity'           => $quantity,
-                'status'             => ReservationStatus::Pending,
-                'expires_at'         => $expiresAt,
+                'product_id' => $productId,
+                'inventory_id' => $inventory->id,
+                'work_order_id' => $workOrderId,
+                'reference_type' => $referenceType,
+                'reference_id' => $referenceId,
+                'quantity' => $quantity,
+                'status' => ReservationStatus::Pending,
+                'expires_at' => $expiresAt,
             ]);
 
             $this->intelligentEvents->emit(new InventoryReserved(
@@ -108,20 +109,20 @@ class ReservationService
             $inventory->increment('version');
 
             $movement = StockMovement::create([
-                'uuid'               => Str::uuid(),
-                'company_id'         => $reservation->company_id,
-                'branch_id'          => $reservation->branch_id,
-                'product_id'         => $reservation->product_id,
+                'uuid' => Str::uuid(),
+                'company_id' => $reservation->company_id,
+                'branch_id' => $reservation->branch_id,
+                'product_id' => $reservation->product_id,
                 'created_by_user_id' => $reservation->created_by_user_id,
-                'type'               => StockMovementType::SaleDeduction->value,
-                'quantity'           => -$reservation->quantity,
-                'quantity_before'    => (float) $inventory->quantity + $reservation->quantity,
-                'quantity_after'     => (float) $inventory->quantity,
-                'reference_type'     => $reservation->reference_type,
-                'reference_id'       => $reservation->reference_id,
-                'trace_id'           => $traceId,
-                'note'               => "Reservation #{$reservation->id} consumed.",
-                'created_at'         => now(),
+                'type' => StockMovementType::SaleDeduction->value,
+                'quantity' => -$reservation->quantity,
+                'quantity_before' => (float) $inventory->quantity + $reservation->quantity,
+                'quantity_after' => (float) $inventory->quantity,
+                'reference_type' => $reservation->reference_type,
+                'reference_id' => $reservation->reference_id,
+                'trace_id' => $traceId,
+                'note' => "Reservation #{$reservation->id} consumed.",
+                'created_at' => now(),
             ]);
 
             $typeStr = $movement->type instanceof \BackedEnum

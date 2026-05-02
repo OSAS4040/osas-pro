@@ -22,12 +22,12 @@ use Illuminate\Support\Str;
 class InvoiceService
 {
     public function __construct(
-        private readonly WalletService      $walletService,
-        private readonly InventoryService   $inventoryService,
+        private readonly WalletService $walletService,
+        private readonly InventoryService $inventoryService,
         private readonly IdempotencyService $idempotency,
-        private readonly LedgerService      $ledger,
+        private readonly LedgerService $ledger,
         private readonly IntelligentEventEmitter $intelligentEvents,
-        private readonly PaymentService     $paymentService,
+        private readonly PaymentService $paymentService,
     ) {}
 
     /**
@@ -44,40 +44,40 @@ class InvoiceService
             [$subtotal, $taxAmount, $itemsData] = $this->buildItems($data['items'], $companyId);
 
             $discount = (float) ($data['discount_amount'] ?? 0);
-            $total    = round($subtotal + $taxAmount - $discount, 4);
+            $total = round($subtotal + $taxAmount - $discount, 4);
 
             $invoice = Invoice::create([
-                'uuid'                  => Str::uuid(),
-                'company_id'            => $companyId,
-                'branch_id'             => $branchId,
-                'customer_id'           => $data['customer_id'] ?? null,
-                'vehicle_id'            => $data['vehicle_id'] ?? null,
-                'created_by_user_id'    => $userId,
-                'invoice_number'        => $invoiceNumber,
-                'type'                  => $data['type'] ?? 'sale',
-                'source_type'           => $data['source_type'] ?? null,
-                'source_id'             => $data['source_id'] ?? null,
-                'billing_flow_type'     => $data['billing_flow_type'] ?? null,
-                'customer_visible'       => (bool) ($data['customer_visible'] ?? true),
+                'uuid' => Str::uuid(),
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'customer_id' => $data['customer_id'] ?? null,
+                'vehicle_id' => $data['vehicle_id'] ?? null,
+                'created_by_user_id' => $userId,
+                'invoice_number' => $invoiceNumber,
+                'type' => $data['type'] ?? 'sale',
+                'source_type' => $data['source_type'] ?? null,
+                'source_id' => $data['source_id'] ?? null,
+                'billing_flow_type' => $data['billing_flow_type'] ?? null,
+                'customer_visible' => (bool) ($data['customer_visible'] ?? true),
                 'work_order_number_snapshot' => $data['work_order_number_snapshot'] ?? null,
                 'vehicle_plate_snapshot' => $data['vehicle_plate_snapshot'] ?? null,
-                'status'                => InvoiceStatus::Pending,
-                'customer_type'         => $data['customer_type'] ?? 'b2c',
-                'subtotal'              => $subtotal,
-                'discount_amount'       => $discount,
-                'tax_amount'            => $taxAmount,
-                'total'                 => $total,
-                'paid_amount'           => 0,
-                'due_amount'            => $total,
-                'currency'              => $data['currency'] ?? 'SAR',
-                'idempotency_key'       => $data['idempotency_key'] ?? null,
-                'invoice_hash'          => $invoiceHash,
+                'status' => InvoiceStatus::Pending,
+                'customer_type' => $data['customer_type'] ?? 'b2c',
+                'subtotal' => $subtotal,
+                'discount_amount' => $discount,
+                'tax_amount' => $taxAmount,
+                'total' => $total,
+                'paid_amount' => 0,
+                'due_amount' => $total,
+                'currency' => $data['currency'] ?? 'SAR',
+                'idempotency_key' => $data['idempotency_key'] ?? null,
+                'invoice_hash' => $invoiceHash,
                 'previous_invoice_hash' => $previousHash,
-                'invoice_counter'       => $counter,
-                'trace_id'              => $traceId,
-                'notes'                 => $data['notes'] ?? null,
-                'issued_at'             => now(),
-                'due_at'                => $data['due_at'] ?? null,
+                'invoice_counter' => $counter,
+                'trace_id' => $traceId,
+                'notes' => $data['notes'] ?? null,
+                'issued_at' => now(),
+                'due_at' => $data['due_at'] ?? null,
             ]);
 
             foreach ($itemsData as $item) {
@@ -137,17 +137,17 @@ class InvoiceService
             $this->ledger->post(
                 companyId: $invoice->company_id,
                 data: [
-                    'type'                      => JournalEntryType::Sale->value,
-                    'description'               => "Sale Invoice {$invoice->invoice_number}",
-                    'source_type'               => Invoice::class,
-                    'source_id'                 => $invoice->id,
-                    'entry_date'                => $invoice->issued_at?->toDateString() ?? now()->toDateString(),
-                    'lines'                     => $lines,
-                    'trace_id'                  => $traceId,
-                    'posting_idempotency_key'   => $idem,
+                    'type' => JournalEntryType::Sale->value,
+                    'description' => "Sale Invoice {$invoice->invoice_number}",
+                    'source_type' => Invoice::class,
+                    'source_id' => $invoice->id,
+                    'entry_date' => $invoice->issued_at?->toDateString() ?? now()->toDateString(),
+                    'lines' => $lines,
+                    'trace_id' => $traceId,
+                    'posting_idempotency_key' => $idem,
                 ],
                 branchId: $invoice->branch_id,
-                userId:   $invoice->created_by_user_id,
+                userId: $invoice->created_by_user_id,
             );
         } catch (LedgerPostingFailedException $e) {
             throw $e;
@@ -163,7 +163,7 @@ class InvoiceService
 
             $diag = LedgerPostingDiagnostics::fromGlLines('invoice', $lines, [
                 'posting_idempotency_key' => $idem,
-                'invoice_number'          => $invoice->invoice_number,
+                'invoice_number' => $invoice->invoice_number,
             ]);
 
             throw new LedgerPostingFailedException(
@@ -186,8 +186,7 @@ class InvoiceService
         int $userId,
         ?string $idempotencyKey = null,
         ?array $providerPurchasePayload = null,
-    ): Invoice
-    {
+    ): Invoice {
         $companyId = $order->company_id;
 
         if (! in_array($order->status->value, ['completed', 'delivered'])) {
@@ -208,46 +207,46 @@ class InvoiceService
 
         $this->assertWorkOrderPricingMatchesPlatformSource($order);
 
-        $items = $order->items->map(fn($item) => [
-            'name'            => $item->name,
-            'description'     => $item->sku ?? null,
-            'product_id'      => $item->product_id ?? null,
-            'service_id'      => null,
-            'sku'             => $item->sku ?? null,
-            'quantity'        => (float) $item->quantity,
-            'unit_price'      => (float) $item->unit_price,
-            'cost_price'      => null,
+        $items = $order->items->map(fn ($item) => [
+            'name' => $item->name,
+            'description' => $item->sku ?? null,
+            'product_id' => $item->product_id ?? null,
+            'service_id' => null,
+            'sku' => $item->sku ?? null,
+            'quantity' => (float) $item->quantity,
+            'unit_price' => (float) $item->unit_price,
+            'cost_price' => null,
             'discount_amount' => (float) $item->discount_amount,
-            'tax_rate'        => (float) $item->tax_rate,
+            'tax_rate' => (float) $item->tax_rate,
         ])->toArray();
 
         $providerToPlatformData = [
-            'customer_id'   => null,
-            'vehicle_id'    => $order->vehicle_id,
-            'type'          => 'sale',
-            'source_type'   => WorkOrder::class,
-            'source_id'     => $order->id,
+            'customer_id' => null,
+            'vehicle_id' => $order->vehicle_id,
+            'type' => 'sale',
+            'source_type' => WorkOrder::class,
+            'source_id' => $order->id,
             'billing_flow_type' => 'provider_to_platform',
             'customer_visible' => false,
             'work_order_number_snapshot' => (string) ($order->order_number ?? ''),
             'vehicle_plate_snapshot' => (string) ($order->vehicle?->plate_number ?? ''),
             'customer_type' => 'b2b',
-            'items'         => $items,
-            'notes'         => $order->notes,
+            'items' => $items,
+            'notes' => $order->notes,
         ];
         $customerFacingData = [
-            'customer_id'   => $order->customer_id,
-            'vehicle_id'    => $order->vehicle_id,
-            'type'          => 'sale',
-            'source_type'   => WorkOrder::class,
-            'source_id'     => $order->id,
+            'customer_id' => $order->customer_id,
+            'vehicle_id' => $order->vehicle_id,
+            'type' => 'sale',
+            'source_type' => WorkOrder::class,
+            'source_id' => $order->id,
             'billing_flow_type' => 'platform_to_customer',
             'customer_visible' => true,
             'work_order_number_snapshot' => (string) ($order->order_number ?? ''),
             'vehicle_plate_snapshot' => (string) ($order->vehicle?->plate_number ?? ''),
             'customer_type' => 'b2b',
-            'items'         => $items,
-            'notes'         => $order->notes,
+            'items' => $items,
+            'notes' => $order->notes,
         ];
 
         if ($idempotencyKey !== null && trim($idempotencyKey) !== '') {
@@ -266,7 +265,7 @@ class InvoiceService
         }
 
         $order->update([
-            'invoice_id'             => $customerInvoice->id,
+            'invoice_id' => $customerInvoice->id,
             'work_order_sync_status' => 'invoiced',
         ]);
         $this->createProviderPurchaseFromPayload($order, $userId, $providerPurchasePayload);
@@ -360,6 +359,7 @@ class InvoiceService
         if ($supplierId <= 0 || $items === []) {
             throw new \DomainException('Provider purchase payload is invalid: supplier_id and items are required.');
         }
+
         return DB::transaction(function () use ($order, $userId, $supplierId, $items): Purchase {
             $subtotal = 0.0;
             $taxTotal = 0.0;
@@ -423,7 +423,7 @@ class InvoiceService
         $maxCounter = Invoice::where('company_id', $companyId)
             ->max('invoice_counter') ?? 0;
 
-        $counter       = $maxCounter + 1;
+        $counter = $maxCounter + 1;
         $invoiceNumber = sprintf('INV-%d-%06d', $companyId, $counter);
 
         while (Invoice::where('company_id', $companyId)->where('invoice_number', $invoiceNumber)->exists()) {
@@ -434,46 +434,45 @@ class InvoiceService
         $previous = Invoice::where('company_id', $companyId)
             ->orderByDesc('invoice_counter')
             ->first();
-        $previousHash  = $previous?->invoice_hash ?? hash('sha256', 'genesis');
+        $previousHash = $previous?->invoice_hash ?? hash('sha256', 'genesis');
 
-        $total       = collect($data['items'])->sum(fn($i) =>
-            ((float)$i['quantity'] * (float)$i['unit_price']) * (1 + (float)($i['tax_rate'] ?? 15) / 100)
+        $total = collect($data['items'])->sum(fn ($i) => ((float) $i['quantity'] * (float) $i['unit_price']) * (1 + (float) ($i['tax_rate'] ?? 15) / 100)
         );
-        $invoiceHash = hash('sha256', $invoiceNumber . number_format($total, 4, '.', '') . $previousHash);
+        $invoiceHash = hash('sha256', $invoiceNumber.number_format($total, 4, '.', '').$previousHash);
 
         return [$counter, $invoiceNumber, $previousHash, $invoiceHash];
     }
 
     private function buildItems(array $items, int $companyId): array
     {
-        $subtotal  = 0.0;
+        $subtotal = 0.0;
         $taxAmount = 0.0;
         $itemsData = [];
 
         foreach ($items as $item) {
-            $lineSub   = round((float)$item['quantity'] * (float)$item['unit_price'] - (float)($item['discount_amount'] ?? 0), 4);
-            $lineTax   = round($lineSub * ((float)($item['tax_rate'] ?? 15) / 100), 4);
+            $lineSub = round((float) $item['quantity'] * (float) $item['unit_price'] - (float) ($item['discount_amount'] ?? 0), 4);
+            $lineTax = round($lineSub * ((float) ($item['tax_rate'] ?? 15) / 100), 4);
             $lineTotal = $lineSub + $lineTax;
 
-            $subtotal  += $lineSub;
+            $subtotal += $lineSub;
             $taxAmount += $lineTax;
 
             $itemsData[] = [
-                'company_id'      => $companyId,
-                'product_id'      => $item['product_id'] ?? null,
-                'service_id'      => $item['service_id'] ?? null,
-                'name'            => $item['name'],
-                'description'     => $item['description'] ?? null,
-                'sku'             => $item['sku'] ?? null,
-                'quantity'        => $item['quantity'],
-                'unit_price'      => $item['unit_price'],
-                'cost_price'      => $item['cost_price'] ?? null,
+                'company_id' => $companyId,
+                'product_id' => $item['product_id'] ?? null,
+                'service_id' => $item['service_id'] ?? null,
+                'name' => $item['name'],
+                'description' => $item['description'] ?? null,
+                'sku' => $item['sku'] ?? null,
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+                'cost_price' => $item['cost_price'] ?? null,
                 'discount_amount' => $item['discount_amount'] ?? 0,
-                'tax_rate'        => $item['tax_rate'] ?? 15,
-                'tax_amount'      => $lineTax,
-                'subtotal'        => $lineSub,
-                'total'           => $lineTotal,
-                'line_total'      => $lineTotal,
+                'tax_rate' => $item['tax_rate'] ?? 15,
+                'tax_amount' => $lineTax,
+                'subtotal' => $lineSub,
+                'total' => $lineTotal,
+                'line_total' => $lineTotal,
             ];
         }
 
@@ -483,51 +482,51 @@ class InvoiceService
     private function recordPayment(Invoice $invoice, array $paymentData, int $userId, string $traceId): Payment
     {
         $payment = $this->paymentService->createPayment(
-            invoice:   $invoice,
-            amount:    (float) $paymentData['amount'],
-            method:    (string) $paymentData['method'],
-            userId:    $userId,
-            traceId:   $traceId,
-            branchId:  $invoice->branch_id,
+            invoice: $invoice,
+            amount: (float) $paymentData['amount'],
+            method: (string) $paymentData['method'],
+            userId: $userId,
+            traceId: $traceId,
+            branchId: $invoice->branch_id,
             reference: $paymentData['reference'] ?? null,
         );
 
         $invoice->refresh();
 
         if ($paymentData['method'] === 'wallet' && $invoice->customer_id) {
-            $walletKey  = ($paymentData['idempotency_key'] ?? ($invoice->idempotency_key . '_wallet'));
-            $vehicleId  = $invoice->vehicle_id;
+            $walletKey = ($paymentData['idempotency_key'] ?? ($invoice->idempotency_key.'_wallet'));
+            $vehicleId = $invoice->vehicle_id;
             $traceIdStr = (string) $traceId;
 
             if ($vehicleId && $invoice->customer_type === 'b2b') {
                 $this->walletService->debitVehicleForInvoice(
-                    companyId:      $invoice->company_id,
-                    customerId:     $invoice->customer_id,
-                    vehicleId:      $vehicleId,
-                    amount:         (float) $payment->amount,
-                    invoiceId:      $invoice->id,
-                    paymentId:      $payment->id,
-                    userId:         $userId,
-                    traceId:        $traceIdStr,
+                    companyId: $invoice->company_id,
+                    customerId: $invoice->customer_id,
+                    vehicleId: $vehicleId,
+                    amount: (float) $payment->amount,
+                    invoiceId: $invoice->id,
+                    paymentId: $payment->id,
+                    userId: $userId,
+                    traceId: $traceIdStr,
                     idempotencyKey: $walletKey,
-                    branchId:       $invoice->branch_id,
-                    notes:          null,
-                    paymentMode:    'prepaid',
+                    branchId: $invoice->branch_id,
+                    notes: null,
+                    paymentMode: 'prepaid',
                 );
             } else {
                 $this->walletService->debitIndividualForInvoice(
-                    companyId:      $invoice->company_id,
-                    customerId:     $invoice->customer_id,
-                    vehicleId:      $vehicleId,
-                    amount:         (float) $payment->amount,
-                    invoiceId:      $invoice->id,
-                    paymentId:      $payment->id,
-                    userId:         $userId,
-                    traceId:        $traceIdStr,
+                    companyId: $invoice->company_id,
+                    customerId: $invoice->customer_id,
+                    vehicleId: $vehicleId,
+                    amount: (float) $payment->amount,
+                    invoiceId: $invoice->id,
+                    paymentId: $payment->id,
+                    userId: $userId,
+                    traceId: $traceIdStr,
                     idempotencyKey: $walletKey,
-                    branchId:       $invoice->branch_id,
-                    notes:          null,
-                    paymentMode:    'prepaid',
+                    branchId: $invoice->branch_id,
+                    notes: null,
+                    paymentMode: 'prepaid',
                 );
             }
         }
@@ -582,15 +581,15 @@ class InvoiceService
             }
 
             $this->inventoryService->deductStock(
-                companyId:     $companyId,
-                branchId:      $branchId,
-                productId:     $productId,
-                quantity:      (float) $item['quantity'],
-                userId:        $userId,
+                companyId: $companyId,
+                branchId: $branchId,
+                productId: $productId,
+                quantity: (float) $item['quantity'],
+                userId: $userId,
                 referenceType: Invoice::class,
-                referenceId:   $invoice->id,
-                traceId:       $traceId,
-                unitCost:      $item['cost_price'] ?? null,
+                referenceId: $invoice->id,
+                traceId: $traceId,
+                unitCost: $item['cost_price'] ?? null,
             );
         }
     }

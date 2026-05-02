@@ -22,13 +22,13 @@ final class ContractServiceItemPermissionsTest extends TestCase
         $t = $this->createTenant('staff');
 
         $contract = Contract::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $t['company']->id,
-            'title'      => 'Perm test',
+            'title' => 'Perm test',
             'party_name' => 'X',
             'start_date' => now()->subDay()->toDateString(),
-            'end_date'   => now()->addYear()->toDateString(),
-            'status'     => 'active',
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
             'created_by' => $t['user']->id,
         ]);
 
@@ -42,13 +42,13 @@ final class ContractServiceItemPermissionsTest extends TestCase
         $t = $this->createTenant('manager');
 
         $contract = Contract::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $t['company']->id,
-            'title'      => 'Perm test M',
+            'title' => 'Perm test M',
             'party_name' => 'Y',
             'start_date' => now()->subDay()->toDateString(),
-            'end_date'   => now()->addYear()->toDateString(),
-            'status'     => 'active',
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
             'created_by' => $t['user']->id,
         ]);
 

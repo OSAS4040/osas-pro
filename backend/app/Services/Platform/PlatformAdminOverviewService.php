@@ -14,6 +14,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\WorkOrder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -180,7 +181,7 @@ final class PlatformAdminOverviewService
             $latestAt = collect([$lastWo, $lastInv, $lastLog])->filter()->max();
             $days = 999;
             if (is_string($latestAt) && $latestAt !== '') {
-                $days = abs(now()->diffInDays(\Illuminate\Support\Carbon::parse($latestAt), false));
+                $days = abs(now()->diffInDays(Carbon::parse($latestAt), false));
             }
 
             $out[$companyId] = [
@@ -431,7 +432,7 @@ final class PlatformAdminOverviewService
                 $reasons[] = 'low_activity_7_14d';
             }
             if ($sub !== null && ($sub['status'] ?? '') === 'trial' && is_string($sub['ends_at']) && $sub['ends_at'] !== '') {
-                $days = now()->diffInDays(\Illuminate\Support\Carbon::parse($sub['ends_at']), false);
+                $days = now()->diffInDays(Carbon::parse($sub['ends_at']), false);
                 if ($days >= 0 && $days <= 3) {
                     $reasons[] = 'trial_ending';
                 }

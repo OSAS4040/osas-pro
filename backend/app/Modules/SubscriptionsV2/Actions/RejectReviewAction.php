@@ -41,7 +41,7 @@ final class RejectReviewAction
             ReconciliationMatch::query()
                 ->where('payment_order_id', $order->id)
                 ->update([
-                    'status'         => ReconciliationMatchStatus::Rejected,
+                    'status' => ReconciliationMatchStatus::Rejected,
                     'decision_notes' => $reason,
                 ]);
 

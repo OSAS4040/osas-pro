@@ -19,37 +19,42 @@ class WorkOrderLifecycleTest extends TestCase
     use RefreshDatabase;
 
     private Company $company;
+
     private Branch $branch;
+
     private User $user;
+
     private Customer $customer;
+
     private Vehicle $vehicle;
+
     private WorkOrderService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->company  = $this->createCompany();
-        $this->branch   = $this->createBranch($this->company);
-        $this->user     = $this->createUser($this->company, $this->branch);
+        $this->company = $this->createCompany();
+        $this->branch = $this->createBranch($this->company);
+        $this->user = $this->createUser($this->company, $this->branch);
         $this->customer = Customer::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->company->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
             'created_by_user_id' => $this->user->id,
-            'name'               => 'Test Customer',
-            'customer_type'      => 'individual',
-            'is_active'          => true,
+            'name' => 'Test Customer',
+            'customer_type' => 'individual',
+            'is_active' => true,
         ]);
-        $this->vehicle  = Vehicle::create([
-            'uuid'                 => Str::uuid(),
-            'company_id'           => $this->company->id,
-            'branch_id'            => $this->branch->id,
-            'customer_id'          => $this->customer->id,
-            'created_by_user_id'   => $this->user->id,
-            'plate_number'         => 'TEST-001',
-            'make'                 => 'Toyota',
-            'model'                => 'Camry',
-            'year'                 => 2022,
+        $this->vehicle = Vehicle::create([
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
+            'branch_id' => $this->branch->id,
+            'customer_id' => $this->customer->id,
+            'created_by_user_id' => $this->user->id,
+            'plate_number' => 'TEST-001',
+            'make' => 'Toyota',
+            'model' => 'Camry',
+            'year' => 2022,
         ]);
         $this->service = app(WorkOrderService::class);
     }
@@ -95,23 +100,23 @@ class WorkOrderLifecycleTest extends TestCase
         $retailBranch = $this->createBranch($retail);
         $retailUser = $this->createUser($retail, $retailBranch);
         $retailCustomer = Customer::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $retail->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $retail->id,
             'created_by_user_id' => $retailUser->id,
-            'name'               => 'Retail Customer',
-            'type'                 => 'individual',
-            'is_active'            => true,
+            'name' => 'Retail Customer',
+            'type' => 'individual',
+            'is_active' => true,
         ]);
         $retailVehicle = Vehicle::create([
-            'uuid'                 => Str::uuid(),
-            'company_id'           => $retail->id,
-            'branch_id'            => $retailBranch->id,
-            'customer_id'          => $retailCustomer->id,
-            'created_by_user_id'   => $retailUser->id,
-            'plate_number'         => 'RTL-001',
-            'make'                 => 'Toyota',
-            'model'                => 'Camry',
-            'year'                 => 2022,
+            'uuid' => Str::uuid(),
+            'company_id' => $retail->id,
+            'branch_id' => $retailBranch->id,
+            'customer_id' => $retailCustomer->id,
+            'created_by_user_id' => $retailUser->id,
+            'plate_number' => 'RTL-001',
+            'make' => 'Toyota',
+            'model' => 'Camry',
+            'year' => 2022,
         ]);
         $order = $this->service->create(
             [
@@ -129,7 +134,7 @@ class WorkOrderLifecycleTest extends TestCase
 
     public function test_pending_manager_can_transition_to_approved_then_in_progress(): void
     {
-        $order   = $this->createOrder();
+        $order = $this->createOrder();
         $updated = $this->pathToInProgress($order);
 
         $this->assertEquals(WorkOrderStatus::InProgress, $updated->status);
@@ -145,7 +150,7 @@ class WorkOrderLifecycleTest extends TestCase
 
         $updated = $this->service->transition($order, WorkOrderStatus::Completed, [
             'technician_notes' => 'Changed oil and filter.',
-            'mileage_out'      => 50000,
+            'mileage_out' => 50000,
         ]);
 
         $this->assertEquals(WorkOrderStatus::Completed, $updated->status);
@@ -160,7 +165,7 @@ class WorkOrderLifecycleTest extends TestCase
         $order->refresh();
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'Ready for delivery.',
-            'mileage_out'      => 50100,
+            'mileage_out' => 50100,
         ]);
         $this->service->transition($order, WorkOrderStatus::Completed);
         $order->refresh();
@@ -178,7 +183,7 @@ class WorkOrderLifecycleTest extends TestCase
         $order->refresh();
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'Delivered path.',
-            'mileage_out'      => 50200,
+            'mileage_out' => 50200,
         ]);
         $this->service->transition($order, WorkOrderStatus::Completed);
         $order->refresh();
@@ -205,23 +210,23 @@ class WorkOrderLifecycleTest extends TestCase
         $retailBranch = $this->createBranch($retail);
         $retailUser = $this->createUser($retail, $retailBranch);
         $retailCustomer = Customer::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $retail->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $retail->id,
             'created_by_user_id' => $retailUser->id,
-            'name'               => 'Retail Cancel',
-            'type'                 => 'individual',
-            'is_active'            => true,
+            'name' => 'Retail Cancel',
+            'type' => 'individual',
+            'is_active' => true,
         ]);
         $retailVehicle = Vehicle::create([
-            'uuid'                 => Str::uuid(),
-            'company_id'           => $retail->id,
-            'branch_id'            => $retailBranch->id,
-            'customer_id'          => $retailCustomer->id,
-            'created_by_user_id'   => $retailUser->id,
-            'plate_number'         => 'RTL-CXL',
-            'make'                 => 'Toyota',
-            'model'                => 'Camry',
-            'year'                 => 2022,
+            'uuid' => Str::uuid(),
+            'company_id' => $retail->id,
+            'branch_id' => $retailBranch->id,
+            'customer_id' => $retailCustomer->id,
+            'created_by_user_id' => $retailUser->id,
+            'plate_number' => 'RTL-CXL',
+            'make' => 'Toyota',
+            'model' => 'Camry',
+            'year' => 2022,
         ]);
         $order = $this->service->create(
             [
@@ -263,23 +268,23 @@ class WorkOrderLifecycleTest extends TestCase
         $retailUser = $this->createUser($retail, $retailBranch);
         $this->createActiveSubscription($retail);
         $retailCustomer = Customer::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $retail->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $retail->id,
             'created_by_user_id' => $retailUser->id,
-            'name'               => 'Retail Del',
-            'type'                 => 'individual',
-            'is_active'            => true,
+            'name' => 'Retail Del',
+            'type' => 'individual',
+            'is_active' => true,
         ]);
         $retailVehicle = Vehicle::create([
-            'uuid'                 => Str::uuid(),
-            'company_id'           => $retail->id,
-            'branch_id'            => $retailBranch->id,
-            'customer_id'          => $retailCustomer->id,
-            'created_by_user_id'   => $retailUser->id,
-            'plate_number'         => 'RTL-DEL',
-            'make'                 => 'Toyota',
-            'model'                => 'Camry',
-            'year'                 => 2022,
+            'uuid' => Str::uuid(),
+            'company_id' => $retail->id,
+            'branch_id' => $retailBranch->id,
+            'customer_id' => $retailCustomer->id,
+            'created_by_user_id' => $retailUser->id,
+            'plate_number' => 'RTL-DEL',
+            'make' => 'Toyota',
+            'model' => 'Camry',
+            'year' => 2022,
         ]);
 
         $queued = $this->service->create(

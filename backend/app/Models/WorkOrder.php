@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkOrder extends Model
 {
-    use HasFactory, SoftDeletes, HasTenantScope;
+    use HasFactory, HasTenantScope, SoftDeletes;
 
     protected $fillable = [
         'uuid', 'company_id', 'branch_id', 'customer_id', 'vehicle_id',
@@ -28,15 +28,15 @@ class WorkOrder extends Model
     ];
 
     protected $casts = [
-        'status'              => WorkOrderStatus::class,
-        'estimated_total'     => 'decimal:4',
-        'actual_total'        => 'decimal:4',
-        'started_at'          => 'datetime',
-        'completed_at'        => 'datetime',
-        'delivered_at'        => 'datetime',
-        'approved_at'         => 'datetime',
-        'fleet_approved_at'   => 'datetime',
-        'credit_authorized'   => 'boolean',
+        'status' => WorkOrderStatus::class,
+        'estimated_total' => 'decimal:4',
+        'actual_total' => 'decimal:4',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'fleet_approved_at' => 'datetime',
+        'credit_authorized' => 'boolean',
         'before_service_images' => 'array',
         'after_service_images' => 'array',
         'internal_service_images' => 'array',

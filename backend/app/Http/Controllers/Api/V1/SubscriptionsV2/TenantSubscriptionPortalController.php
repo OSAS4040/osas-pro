@@ -95,4 +95,3 @@ final class TenantSubscriptionPortalController extends Controller
         return response()->json(['data' => $rows, 'trace_id' => app('trace_id')]);
     }
 }
-

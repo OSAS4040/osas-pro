@@ -25,8 +25,8 @@ final class EnsurePlatformPermission
         $user = $request->user();
         if (! $user) {
             return response()->json([
-                'message'  => 'Unauthenticated.',
-                'code'     => 'UNAUTHENTICATED',
+                'message' => 'Unauthenticated.',
+                'code' => 'UNAUTHENTICATED',
                 'trace_id' => app('trace_id'),
             ], 401);
         }
@@ -48,8 +48,8 @@ final class EnsurePlatformPermission
 
         if (! $allowed) {
             return response()->json([
-                'message'  => 'لا تملك صلاحية المنصة المطلوبة لهذا الإجراء.',
-                'code'     => 'PLATFORM_PERMISSION_DENIED',
+                'message' => 'لا تملك صلاحية المنصة المطلوبة لهذا الإجراء.',
+                'code' => 'PLATFORM_PERMISSION_DENIED',
                 'trace_id' => app('trace_id'),
             ], 403);
         }

@@ -10,11 +10,12 @@ use App\Support\PlatformIntelligence\SignalEngine\PlatformSignalEngine;
 use App\Support\PlatformIntelligence\SignalEngine\Serialization\PlatformSignalContractSerializer;
 use App\Support\PlatformIntelligence\Trace\NullPlatformIntelligenceTraceRecorder;
 use Illuminate\Http\JsonResponse;
+
 final class PlatformIntelligenceSignalsController extends Controller
 {
     public function index(PlatformSignalEngine $engine): JsonResponse
     {
-        $trace = new NullPlatformIntelligenceTraceRecorder();
+        $trace = new NullPlatformIntelligenceTraceRecorder;
         $signals = $engine->build($trace);
 
         return response()->json([

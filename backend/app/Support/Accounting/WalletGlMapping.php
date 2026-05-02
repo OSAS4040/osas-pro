@@ -25,7 +25,7 @@ final class WalletGlMapping
             throw new \InvalidArgumentException('Wallet GL mapping requires a positive amount.');
         }
 
-        $debitDesc  = $descriptions['debit'] ?? null;
+        $debitDesc = $descriptions['debit'] ?? null;
         $creditDesc = $descriptions['credit'] ?? null;
 
         return match ($eventType) {

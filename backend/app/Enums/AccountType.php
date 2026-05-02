@@ -4,27 +4,27 @@ namespace App\Enums;
 
 enum AccountType: string
 {
-    case Asset     = 'asset';
+    case Asset = 'asset';
     case Liability = 'liability';
-    case Equity    = 'equity';
-    case Revenue   = 'revenue';
-    case Expense   = 'expense';
+    case Equity = 'equity';
+    case Revenue = 'revenue';
+    case Expense = 'expense';
 
     public function label(): string
     {
-        return match($this) {
-            self::Asset     => 'أصول',
+        return match ($this) {
+            self::Asset => 'أصول',
             self::Liability => 'التزامات',
-            self::Equity    => 'حقوق الملكية',
-            self::Revenue   => 'إيرادات',
-            self::Expense   => 'مصروفات',
+            self::Equity => 'حقوق الملكية',
+            self::Revenue => 'إيرادات',
+            self::Expense => 'مصروفات',
         };
     }
 
     public function normalBalance(): string
     {
-        return match($this) {
-            self::Asset, self::Expense   => 'debit',
+        return match ($this) {
+            self::Asset, self::Expense => 'debit',
             self::Liability, self::Equity, self::Revenue => 'credit',
         };
     }

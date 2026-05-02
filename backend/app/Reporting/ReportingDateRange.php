@@ -35,7 +35,7 @@ final class ReportingDateRange
     {
         return [
             'from' => $this->startsAt->toDateString(),
-            'to'   => $this->endsAt->toDateString(),
+            'to' => $this->endsAt->toDateString(),
         ];
     }
 }

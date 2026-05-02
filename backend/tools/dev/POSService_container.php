@@ -22,23 +22,23 @@ use Illuminate\Support\Str;
 class POSService
 {
     public function __construct(
-        private readonly InventoryService  $inventoryService,
-        private readonly WalletService     $walletService,
+        private readonly InventoryService $inventoryService,
+        private readonly WalletService $walletService,
         private readonly IdempotencyService $idempotency,
-        private readonly LedgerService     $ledger,
+        private readonly LedgerService $ledger,
     ) {}
 
     /**
      * Execute a POS fast-track sale.
      *
-     * @throws \DomainException  on idempotency payload mismatch
-     * @throws \DomainException  on insufficient stock
+     * @throws \DomainException on idempotency payload mismatch
+     * @throws \DomainException on insufficient stock
      */
     public function sale(
-        array  $data,
-        int    $companyId,
-        int    $branchId,
-        int    $userId,
+        array $data,
+        int $companyId,
+        int $branchId,
+        int $userId,
         string $idempotencyKey,
     ): Invoice {
         $traceId = trim((string) (app('trace_id') ?? '')) ?: Str::uuid()->toString();
@@ -51,42 +51,42 @@ class POSService
                 ->lockForUpdate()
                 ->first();
 
-            $counter       = ($previousInvoice?->invoice_counter ?? 0) + 1;
+            $counter = ($previousInvoice?->invoice_counter ?? 0) + 1;
             $invoiceNumber = sprintf('INV-%d-%06d', $companyId, $counter);
-            $previousHash  = $previousInvoice?->invoice_hash ?? hash('sha256', 'genesis');
+            $previousHash = $previousInvoice?->invoice_hash ?? hash('sha256', 'genesis');
 
             [$subtotal, $taxAmount, $itemsData] = $this->buildItems($data['items'], $companyId);
 
-            $discount   = (float) ($data['discount_amount'] ?? 0);
-            $total      = round($subtotal + $taxAmount - $discount, 4);
-            $invoiceHash = hash('sha256', $invoiceNumber . number_format($total, 4, '.', '') . $previousHash);
+            $discount = (float) ($data['discount_amount'] ?? 0);
+            $total = round($subtotal + $taxAmount - $discount, 4);
+            $invoiceHash = hash('sha256', $invoiceNumber.number_format($total, 4, '.', '').$previousHash);
 
             $invoice = Invoice::create([
-                'uuid'                  => Str::uuid(),
-                'company_id'            => $companyId,
-                'branch_id'             => $branchId,
-                'customer_id'           => $data['customer_id'] ?? null,
-                'vehicle_id'            => $data['vehicle_id'] ?? null,
-                'created_by_user_id'    => $userId,
-                'invoice_number'        => $invoiceNumber,
-                'type'                  => 'sale',
-                'source_type'           => $data['source_type'] ?? 'pos',
-                'source_id'             => $data['source_id'] ?? null,
-                'status'                => InvoiceStatus::Pending,
-                'customer_type'         => $data['customer_type'] ?? 'b2c',
-                'subtotal'              => $subtotal,
-                'discount_amount'       => $discount,
-                'tax_amount'            => $taxAmount,
-                'total'                 => $total,
-                'paid_amount'           => 0,
-                'due_amount'            => $total,
-                'currency'              => 'SAR',
-                'invoice_hash'          => $invoiceHash,
+                'uuid' => Str::uuid(),
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'customer_id' => $data['customer_id'] ?? null,
+                'vehicle_id' => $data['vehicle_id'] ?? null,
+                'created_by_user_id' => $userId,
+                'invoice_number' => $invoiceNumber,
+                'type' => 'sale',
+                'source_type' => $data['source_type'] ?? 'pos',
+                'source_id' => $data['source_id'] ?? null,
+                'status' => InvoiceStatus::Pending,
+                'customer_type' => $data['customer_type'] ?? 'b2c',
+                'subtotal' => $subtotal,
+                'discount_amount' => $discount,
+                'tax_amount' => $taxAmount,
+                'total' => $total,
+                'paid_amount' => 0,
+                'due_amount' => $total,
+                'currency' => 'SAR',
+                'invoice_hash' => $invoiceHash,
                 'previous_invoice_hash' => $previousHash,
-                'invoice_counter'       => $counter,
-                'trace_id'              => $traceId,
-                'notes'                 => $data['notes'] ?? null,
-                'issued_at'             => now(),
+                'invoice_counter' => $counter,
+                'trace_id' => $traceId,
+                'notes' => $data['notes'] ?? null,
+                'issued_at' => now(),
             ]);
 
             foreach ($itemsData as $item) {
@@ -98,49 +98,49 @@ class POSService
             $this->deductInventory($data['items'], $companyId, $branchId, $userId, $invoice, $traceId);
 
             if ($data['payment']['method'] === 'wallet' && $invoice->customer_id) {
-                $walletIdempotencyKey = $data['idempotency_key'] . '_wallet_debit';
-                $vehicleId            = $data['vehicle_id'] ?? null;
-                $customerType         = $data['customer_type'] ?? 'b2c';
+                $walletIdempotencyKey = $data['idempotency_key'].'_wallet_debit';
+                $vehicleId = $data['vehicle_id'] ?? null;
+                $customerType = $data['customer_type'] ?? 'b2c';
 
                 if ($vehicleId && $customerType === 'b2b') {
                     $this->walletService->debitVehicleForInvoice(
-                        companyId:      $companyId,
-                        customerId:     $invoice->customer_id,
-                        vehicleId:      $vehicleId,
-                        amount:         (float) $payment->amount,
-                        invoiceId:      $invoice->id,
-                        paymentId:      $payment->id,
-                        userId:         $userId,
-                        traceId:        $traceId,
+                        companyId: $companyId,
+                        customerId: $invoice->customer_id,
+                        vehicleId: $vehicleId,
+                        amount: (float) $payment->amount,
+                        invoiceId: $invoice->id,
+                        paymentId: $payment->id,
+                        userId: $userId,
+                        traceId: $traceId,
                         idempotencyKey: $walletIdempotencyKey,
-                        branchId:       $branchId,
-                        notes:          null,
-                        paymentMode:    'prepaid',
+                        branchId: $branchId,
+                        notes: null,
+                        paymentMode: 'prepaid',
                     );
                 } else {
                     $this->walletService->debitIndividualForInvoice(
-                        companyId:      $companyId,
-                        customerId:     $invoice->customer_id,
-                        vehicleId:      $vehicleId,
-                        amount:         (float) $payment->amount,
-                        invoiceId:      $invoice->id,
-                        paymentId:      $payment->id,
-                        userId:         $userId,
-                        traceId:        $traceId,
+                        companyId: $companyId,
+                        customerId: $invoice->customer_id,
+                        vehicleId: $vehicleId,
+                        amount: (float) $payment->amount,
+                        invoiceId: $invoice->id,
+                        paymentId: $payment->id,
+                        userId: $userId,
+                        traceId: $traceId,
                         idempotencyKey: $walletIdempotencyKey,
-                        branchId:       $branchId,
-                        notes:          null,
-                        paymentMode:    'prepaid',
+                        branchId: $branchId,
+                        notes: null,
+                        paymentMode: 'prepaid',
                     );
                 }
             }
 
             Log::info('pos.sale.completed', [
-                'invoice_id'     => $invoice->id,
+                'invoice_id' => $invoice->id,
                 'invoice_number' => $invoice->invoice_number,
-                'total'          => $total,
-                'company_id'     => $companyId,
-                'trace_id'       => $traceId,
+                'total' => $total,
+                'company_id' => $companyId,
+                'trace_id' => $traceId,
             ]);
 
             $this->postPosLedger($invoice, $traceId);
@@ -159,56 +159,56 @@ class POSService
             $this->ledger->post(
                 companyId: $invoice->company_id,
                 data: [
-                    'type'        => JournalEntryType::Sale->value,
+                    'type' => JournalEntryType::Sale->value,
                     'description' => "POS Sale {$invoice->invoice_number}",
                     'source_type' => Invoice::class,
-                    'source_id'   => $invoice->id,
-                    'entry_date'  => now()->toDateString(),
-                    'lines'       => $lines,
-                    'trace_id'    => $traceId,
+                    'source_id' => $invoice->id,
+                    'entry_date' => now()->toDateString(),
+                    'lines' => $lines,
+                    'trace_id' => $traceId,
                 ],
                 branchId: $invoice->branch_id,
-                userId:   $invoice->created_by_user_id,
+                userId: $invoice->created_by_user_id,
             );
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('pos.ledger.post.failed', [
+            Log::error('pos.ledger.post.failed', [
                 'invoice_id' => $invoice->id,
-                'error'      => $e->getMessage(),
-                'trace_id'   => $traceId,
+                'error' => $e->getMessage(),
+                'trace_id' => $traceId,
             ]);
         }
     }
 
     private function buildItems(array $items, int $companyId): array
     {
-        $subtotal  = 0;
+        $subtotal = 0;
         $taxAmount = 0;
         $itemsData = [];
 
         foreach ($items as $item) {
-            $lineSubtotal = round((float)$item['quantity'] * (float)$item['unit_price'] - (float)($item['discount_amount'] ?? 0), 4);
-            $lineTax      = round($lineSubtotal * ((float)($item['tax_rate'] ?? 15) / 100), 4);
-            $lineTotal    = $lineSubtotal + $lineTax;
+            $lineSubtotal = round((float) $item['quantity'] * (float) $item['unit_price'] - (float) ($item['discount_amount'] ?? 0), 4);
+            $lineTax = round($lineSubtotal * ((float) ($item['tax_rate'] ?? 15) / 100), 4);
+            $lineTotal = $lineSubtotal + $lineTax;
 
-            $subtotal  += $lineSubtotal;
+            $subtotal += $lineSubtotal;
             $taxAmount += $lineTax;
 
             $itemsData[] = [
-                'company_id'      => $companyId,
-                'product_id'      => $item['product_id'] ?? null,
-                'service_id'      => $item['service_id'] ?? null,
-                'name'            => $item['name'],
-                'description'     => $item['description'] ?? null,
-                'sku'             => $item['sku'] ?? null,
-                'quantity'        => $item['quantity'],
-                'unit_price'      => $item['unit_price'],
-                'cost_price'      => $item['cost_price'] ?? null,
+                'company_id' => $companyId,
+                'product_id' => $item['product_id'] ?? null,
+                'service_id' => $item['service_id'] ?? null,
+                'name' => $item['name'],
+                'description' => $item['description'] ?? null,
+                'sku' => $item['sku'] ?? null,
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+                'cost_price' => $item['cost_price'] ?? null,
                 'discount_amount' => $item['discount_amount'] ?? 0,
-                'tax_rate'        => $item['tax_rate'] ?? 15,
-                'tax_amount'      => $lineTax,
-                'subtotal'        => $lineSubtotal,
-                'total'           => $lineTotal,
-                'line_total'      => $lineTotal,
+                'tax_rate' => $item['tax_rate'] ?? 15,
+                'tax_amount' => $lineTax,
+                'subtotal' => $lineSubtotal,
+                'total' => $lineTotal,
+                'line_total' => $lineTotal,
             ];
         }
 
@@ -218,39 +218,39 @@ class POSService
     private function processPayment(Invoice $invoice, array $paymentData, int $userId, string $traceId): Payment
     {
         $payment = Payment::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $invoice->company_id,
-            'branch_id'          => $invoice->branch_id,
-            'invoice_id'         => $invoice->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $invoice->company_id,
+            'branch_id' => $invoice->branch_id,
+            'invoice_id' => $invoice->id,
             'created_by_user_id' => $userId,
-            'method'             => $paymentData['method'],
-            'amount'             => $paymentData['amount'],
-            'currency'           => 'SAR',
-            'reference'          => $paymentData['reference'] ?? null,
-            'status'             => 'completed',
-            'trace_id'           => $traceId,
+            'method' => $paymentData['method'],
+            'amount' => $paymentData['amount'],
+            'currency' => 'SAR',
+            'reference' => $paymentData['reference'] ?? null,
+            'status' => 'completed',
+            'trace_id' => $traceId,
         ]);
 
-        $paidAmount = (float)$invoice->paid_amount + (float)$payment->amount;
-        $dueAmount  = (float)$invoice->total - $paidAmount;
-        $status     = $dueAmount <= 0.001 ? InvoiceStatus::Paid : InvoiceStatus::PartialPaid;
+        $paidAmount = (float) $invoice->paid_amount + (float) $payment->amount;
+        $dueAmount = (float) $invoice->total - $paidAmount;
+        $status = $dueAmount <= 0.001 ? InvoiceStatus::Paid : InvoiceStatus::PartialPaid;
 
         $invoice->update([
             'paid_amount' => $paidAmount,
-            'due_amount'  => max(0, $dueAmount),
-            'status'      => $status,
+            'due_amount' => max(0, $dueAmount),
+            'status' => $status,
         ]);
 
         return $payment;
     }
 
     private function deductInventory(
-        array   $items,
-        int     $companyId,
-        int     $branchId,
-        int     $userId,
+        array $items,
+        int $companyId,
+        int $branchId,
+        int $userId,
         Invoice $invoice,
-        string  $traceId,
+        string $traceId,
     ): void {
         foreach ($items as $item) {
             if (empty($item['product_id'])) {
@@ -258,15 +258,15 @@ class POSService
             }
 
             $this->inventoryService->deductStock(
-                companyId:     $companyId,
-                branchId:      $branchId,
-                productId:     (int) $item['product_id'],
-                quantity:      (float) $item['quantity'],
-                userId:        $userId,
+                companyId: $companyId,
+                branchId: $branchId,
+                productId: (int) $item['product_id'],
+                quantity: (float) $item['quantity'],
+                userId: $userId,
                 referenceType: Invoice::class,
-                referenceId:   $invoice->id,
-                traceId:       $traceId,
-                unitCost:      $item['cost_price'] ?? null,
+                referenceId: $invoice->id,
+                traceId: $traceId,
+                unitCost: $item['cost_price'] ?? null,
             );
         }
     }

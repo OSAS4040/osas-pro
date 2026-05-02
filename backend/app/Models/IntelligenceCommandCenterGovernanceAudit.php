@@ -23,11 +23,11 @@ class IntelligenceCommandCenterGovernanceAudit extends Model
     protected function casts(): array
     {
         return [
-            'window_from'           => 'datetime',
-            'window_to'             => 'datetime',
+            'window_from' => 'datetime',
+            'window_to' => 'datetime',
             'snapshot_generated_at' => 'datetime',
-            'client_context'        => 'array',
-            'created_at'            => 'datetime',
+            'client_context' => 'array',
+            'created_at' => 'datetime',
         ];
     }
 

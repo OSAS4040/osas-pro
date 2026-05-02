@@ -7,6 +7,7 @@ use App\Http\Requests\Role\StoreRoleRequest;
 use App\Http\Requests\Role\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -21,6 +22,7 @@ class RoleController extends Controller
      *     tags={"Roles"},
      *     summary="List all roles (system + company-scoped)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -30,7 +32,7 @@ class RoleController extends Controller
 
         $roles = Role::with('permissions')
             ->withoutGlobalScope('tenant')
-            ->where(fn($q) => $q
+            ->where(fn ($q) => $q
                 ->whereNull('company_id')
                 ->orWhere('company_id', $companyId)
             )
@@ -47,15 +49,19 @@ class RoleController extends Controller
      *     tags={"Roles"},
      *     summary="Create a custom company role",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"name"},
+     *
      *             @OA\Property(property="name", type="string", example="Senior Technician"),
      *             @OA\Property(property="description", type="string"),
      *             @OA\Property(property="permissions", type="array", @OA\Items(type="string"))
      *         )
      *     ),
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -64,11 +70,11 @@ class RoleController extends Controller
         $data = $request->validated();
 
         $role = Role::create([
-            'company_id'  => $request->user()->company_id,
-            'name'        => $data['name'],
-            'guard_name'  => 'sanctum',
+            'company_id' => $request->user()->company_id,
+            'name' => $data['name'],
+            'guard_name' => 'sanctum',
             'description' => $data['description'] ?? null,
-            'is_system'   => false,
+            'is_system' => false,
         ]);
 
         if (! empty($data['permissions'])) {
@@ -77,7 +83,7 @@ class RoleController extends Controller
         }
 
         return response()->json([
-            'data'     => $role->load('permissions'),
+            'data' => $role->load('permissions'),
             'trace_id' => app('trace_id'),
         ], 201);
     }
@@ -88,7 +94,9 @@ class RoleController extends Controller
      *     tags={"Roles"},
      *     summary="Get a role with its permissions",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -99,7 +107,7 @@ class RoleController extends Controller
         $role = Role::with('permissions')
             ->withoutGlobalScope('tenant')
             ->where('id', $id)
-            ->where(fn($q) => $q
+            ->where(fn ($q) => $q
                 ->whereNull('company_id')
                 ->orWhere('company_id', $companyId)
             )
@@ -114,7 +122,9 @@ class RoleController extends Controller
      *     tags={"Roles"},
      *     summary="Update a custom role",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -145,7 +155,9 @@ class RoleController extends Controller
      *     tags={"Roles"},
      *     summary="Delete a custom role",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -170,7 +182,9 @@ class RoleController extends Controller
      *     tags={"Roles"},
      *     summary="Assign a role to a user",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(required=true, @OA\JsonContent(required={"user_id"}, @OA\Property(property="user_id", type="integer"))),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -179,13 +193,13 @@ class RoleController extends Controller
         $request->validate(['user_id' => ['required', 'integer', 'exists:users,id']]);
 
         $companyId = $request->user()->company_id;
-        $targetUser = \App\Models\User::where('id', $request->user_id)
+        $targetUser = User::where('id', $request->user_id)
             ->where('company_id', $companyId)
             ->firstOrFail();
 
         $role = Role::withoutGlobalScope('tenant')
             ->where('id', $id)
-            ->where(fn($q) => $q->whereNull('company_id')->orWhere('company_id', $companyId))
+            ->where(fn ($q) => $q->whereNull('company_id')->orWhere('company_id', $companyId))
             ->firstOrFail();
 
         $targetUser->assignRole($role);

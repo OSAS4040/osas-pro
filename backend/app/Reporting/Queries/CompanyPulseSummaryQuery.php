@@ -6,6 +6,7 @@ namespace App\Reporting\Queries;
 
 use App\Reporting\ReportingContext;
 use App\Reporting\ReportingDateRange;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -26,13 +27,13 @@ final class CompanyPulseSummaryQuery
         $summary = $this->buildSummary($context, $range, $companyId, $branchIds, $includeFinancial);
 
         $breakdown = [
-            'by_branch'     => $this->breakdownByBranch($companyId, $branchIds, $range, $includeFinancial, $context->customerId),
-            'by_status'     => $this->breakdownByStatus($companyId, $branchIds, $range, $includeFinancial, $context->customerId),
-            'by_activity'   => $this->breakdownByActivity($companyId, $branchIds, $range, $context->customerId),
-            'by_time_period'=> [
+            'by_branch' => $this->breakdownByBranch($companyId, $branchIds, $range, $includeFinancial, $context->customerId),
+            'by_status' => $this->breakdownByStatus($companyId, $branchIds, $range, $includeFinancial, $context->customerId),
+            'by_activity' => $this->breakdownByActivity($companyId, $branchIds, $range, $context->customerId),
+            'by_time_period' => [
                 'granularity' => 'week',
                 'work_orders' => $this->weeklySeries('work_orders', 'created_at', $companyId, $branchIds, $range, $maxBuckets, $context->customerId),
-                'invoices'    => $includeFinancial
+                'invoices' => $includeFinancial
                     ? $this->weeklySeries('invoices', 'issued_at', $companyId, $branchIds, $range, $maxBuckets, $context->customerId)
                     : [],
             ],
@@ -134,21 +135,21 @@ final class CompanyPulseSummaryQuery
         }
 
         return [
-            'users_total'            => (int) $usersQ->count(),
-            'customers_total'        => (int) $customersQ->count(),
-            'branches_total'         => (int) $branchesQ->count(),
-            'work_orders_in_period'  => (int) $woPeriod->count(),
-            'invoices_in_period'     => $includeFinancial ? $invoicesPeriod : 0,
-            'payments_in_period'     => $includeFinancial ? $paymentsPeriod : 0,
-            'tickets_open'           => $ticketsOpen,
-            'tickets_overdue'        => $ticketsOverdue,
+            'users_total' => (int) $usersQ->count(),
+            'customers_total' => (int) $customersQ->count(),
+            'branches_total' => (int) $branchesQ->count(),
+            'work_orders_in_period' => (int) $woPeriod->count(),
+            'invoices_in_period' => $includeFinancial ? $invoicesPeriod : 0,
+            'payments_in_period' => $includeFinancial ? $paymentsPeriod : 0,
+            'tickets_open' => $ticketsOpen,
+            'tickets_overdue' => $ticketsOverdue,
         ];
     }
 
     /**
      * @param  list<int>|null  $branchIds
      */
-    private function applyBranchFilter(\Illuminate\Database\Query\Builder $q, string $column, ?array $branchIds): void
+    private function applyBranchFilter(Builder $q, string $column, ?array $branchIds): void
     {
         if ($branchIds !== null) {
             $q->whereIn($column, $branchIds);
@@ -193,9 +194,9 @@ final class CompanyPulseSummaryQuery
             }
 
             $out[] = [
-                'branch_id'               => (int) $bid,
-                'work_orders_in_period'   => $wo,
-                'invoices_in_period'      => $inv,
+                'branch_id' => (int) $bid,
+                'work_orders_in_period' => $wo,
+                'invoices_in_period' => $inv,
             ];
         }
 
@@ -269,8 +270,8 @@ final class CompanyPulseSummaryQuery
         }
 
         return [
-            'work_orders'   => $wo,
-            'invoices'      => $inv,
+            'work_orders' => $wo,
+            'invoices' => $inv,
             'support_tickets' => $tickets,
         ];
     }
@@ -307,7 +308,7 @@ final class CompanyPulseSummaryQuery
 
         return $q->orderBy('k')->get()->map(fn ($r) => [
             'status' => (string) $r->k,
-            'count'  => (int) $r->c,
+            'count' => (int) $r->c,
         ])->all();
     }
 
@@ -343,7 +344,7 @@ final class CompanyPulseSummaryQuery
         }
 
         return [
-            'users_created_in_period'     => (int) $usersNew->count(),
+            'users_created_in_period' => (int) $usersNew->count(),
             'customers_created_in_period' => (int) $custNew->count(),
             'work_orders_created_in_period' => (int) $woNew->count(),
         ];
@@ -392,7 +393,7 @@ final class CompanyPulseSummaryQuery
             $bucket = $row->bucket ?? null;
             $out[] = [
                 'period_start' => $bucket ? (string) $bucket : '',
-                'count'        => (int) ($row->c ?? 0),
+                'count' => (int) ($row->c ?? 0),
             ];
         }
 

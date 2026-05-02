@@ -9,4 +9,3 @@ Broadcast::channel('private-company-{companyId}', function ($user, int $companyI
 Broadcast::channel('private-admin', function ($user): bool {
     return (bool) ($user->is_platform_user ?? false);
 });
-

@@ -15,9 +15,9 @@ class RegisterPushDeviceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'fcm_token'    => ['required', 'string', 'min:10', 'max:512'],
-            'device_name'  => ['nullable', 'string', 'max:120'],
-            'device_type'  => ['nullable', 'string', Rule::in(['android', 'ios', 'ipados', 'unknown'])],
+            'fcm_token' => ['required', 'string', 'min:10', 'max:512'],
+            'device_name' => ['nullable', 'string', 'max:120'],
+            'device_type' => ['nullable', 'string', Rule::in(['android', 'ios', 'ipados', 'unknown'])],
         ];
     }
 

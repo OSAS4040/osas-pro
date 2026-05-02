@@ -44,6 +44,7 @@ class FinancialReconciliationCommand extends Command
                 $blocked->getMessage()
             );
             $this->error('RECONCILIATION_BLOCKED='.$blocked->getMessage());
+
             return self::FAILURE;
         }
 
@@ -93,6 +94,7 @@ class FinancialReconciliationCommand extends Command
             $this->error('RECONCILIATION_FAILED='.$e->getMessage());
             $this->error('RUN_ID='.$runId);
             $this->error('EXECUTION_STATUS=failed');
+
             return self::FAILURE;
         }
     }

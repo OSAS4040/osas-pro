@@ -87,4 +87,3 @@ class VerticalBehaviorResolverService
         return array_values(array_unique($markers));
     }
 }
-

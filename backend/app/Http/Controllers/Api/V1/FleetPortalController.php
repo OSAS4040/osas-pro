@@ -2,21 +2,24 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
 use App\Models\ContractServiceItem;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Vehicle;
+use App\Models\WalletTransaction;
 use App\Models\WorkOrder;
-use App\Services\WalletService;
 use App\Services\PlatformPricingApprovalGateService;
+use App\Services\WalletService;
 use App\Services\WorkOrderPricingResolverService;
-use Illuminate\Validation\Rule;
+use App\Services\WorkOrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * Fleet Portal Controller — واجهة الجهة العميلة
@@ -30,9 +33,7 @@ use Illuminate\Support\Str;
  */
 class FleetPortalController extends Controller
 {
-    public function __construct(private readonly WalletService $walletService)
-    {
-    }
+    public function __construct(private readonly WalletService $walletService) {}
 
     private function companyId(): int
     {
@@ -47,7 +48,7 @@ class FleetPortalController extends Controller
     private function assertFleetSide(): void
     {
         $user = $this->fleetUser();
-        if (!$user || !$user->role->isFleetSide()) {
+        if (! $user || ! $user->role->isFleetSide()) {
             abort(403, 'هذه العملية مخصصة للجهة العميلة فقط.');
         }
     }
@@ -55,7 +56,7 @@ class FleetPortalController extends Controller
     private function assertFleetManager(): void
     {
         $user = $this->fleetUser();
-        if (!$user || $user->role !== \App\Enums\UserRole::FleetManager) {
+        if (! $user || $user->role !== UserRole::FleetManager) {
             abort(403, 'اعتماد طلبات الائتمان يتطلب صلاحية Fleet Manager.');
         }
     }
@@ -67,11 +68,11 @@ class FleetPortalController extends Controller
     public function dashboard(Request $request): JsonResponse
     {
         $this->assertFleetSide();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
-        if (!$customerId) {
+        if (! $customerId) {
             return response()->json(['message' => 'حسابك غير مرتبط بجهة عميلة. تواصل مع مدير النظام.'], 422);
         }
 
@@ -87,9 +88,9 @@ class FleetPortalController extends Controller
 
         return response()->json([
             'data' => [
-                'customer_id'       => $customerId,
-                'wallets'           => $walletSummary,
-                'recent_orders'     => $recentWorkOrders,
+                'customer_id' => $customerId,
+                'wallets' => $walletSummary,
+                'recent_orders' => $recentWorkOrders,
             ],
         ]);
     }
@@ -101,8 +102,8 @@ class FleetPortalController extends Controller
     public function vehicles(Request $request): JsonResponse
     {
         $this->assertFleetSide();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
         $vehicles = Vehicle::where('company_id', $companyId)
@@ -120,7 +121,7 @@ class FleetPortalController extends Controller
     {
         $this->assertFleetSide();
         $companyId = $this->companyId();
-        $user      = $this->fleetUser();
+        $user = $this->fleetUser();
 
         $vehicleId = $request->filled('vehicle_id') ? $request->integer('vehicle_id') : null;
 
@@ -167,8 +168,8 @@ class FleetPortalController extends Controller
     public function previewWorkOrderLinePrice(Request $request): JsonResponse
     {
         $this->assertFleetSide();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
         if (! $customerId) {
@@ -236,8 +237,8 @@ class FleetPortalController extends Controller
     public function createWorkOrder(Request $request): JsonResponse
     {
         $this->assertFleetSide();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
         $data = $request->validate([
@@ -251,11 +252,11 @@ class FleetPortalController extends Controller
                 Rule::exists('services', 'id')->where(fn ($q) => $q->where('company_id', $companyId)->where('is_active', true)),
             ],
             'customer_complaint' => 'nullable|string|max:1000',
-            'mileage'            => 'nullable|integer|min:0',
-            'driver_name'        => 'nullable|string|max:255',
-            'driver_phone'       => 'nullable|string|max:30',
-            'use_credit'         => 'boolean',
-            'notes'              => 'nullable|string',
+            'mileage' => 'nullable|integer|min:0',
+            'driver_name' => 'nullable|string|max:255',
+            'driver_phone' => 'nullable|string|max:30',
+            'use_credit' => 'boolean',
+            'notes' => 'nullable|string',
         ]);
 
         // تحقق أن المركبة تنتمي للجهة العميلة
@@ -272,23 +273,23 @@ class FleetPortalController extends Controller
             ], 422);
         }
 
-        $useCredit    = !empty($data['use_credit']);
+        $useCredit = ! empty($data['use_credit']);
         $approvalStatus = $useCredit ? 'pending' : 'not_required';
 
-        $workOrderService = app(\App\Services\WorkOrderService::class);
+        $workOrderService = app(WorkOrderService::class);
 
         try {
             $workOrder = $workOrderService->create([
-                'customer_id'        => $customerId,
-                'vehicle_id'         => $vehicle->id,
+                'customer_id' => $customerId,
+                'vehicle_id' => $vehicle->id,
                 'customer_complaint' => $data['customer_complaint'] ?? null,
-                'odometer_reading'   => $data['mileage'] ?? null,
-                'driver_name'        => $data['driver_name'] ?? null,
-                'driver_phone'       => $data['driver_phone'] ?? null,
-                'notes'              => $data['notes'] ?? null,
-                'created_by_side'    => 'fleet',
-                'approval_status'    => $approvalStatus,
-                'items'              => [
+                'odometer_reading' => $data['mileage'] ?? null,
+                'driver_name' => $data['driver_name'] ?? null,
+                'driver_phone' => $data['driver_phone'] ?? null,
+                'notes' => $data['notes'] ?? null,
+                'created_by_side' => 'fleet',
+                'approval_status' => $approvalStatus,
+                'items' => [
                     [
                         'item_type' => 'service',
                         'service_id' => (int) $data['service_id'],
@@ -307,8 +308,8 @@ class FleetPortalController extends Controller
         ]);
 
         return response()->json([
-            'data'    => $workOrder->load('vehicle:id,plate_number,make,model'),
-            'message' => 'تم إنشاء طلب الخدمة بنجاح.' .
+            'data' => $workOrder->load('vehicle:id,plate_number,make,model'),
+            'message' => 'تم إنشاء طلب الخدمة بنجاح.'.
                 ($data['use_credit'] ?? false ? ' يرجى انتظار موافقة مدير الأسطول.' : ''),
         ], 201);
     }
@@ -320,8 +321,8 @@ class FleetPortalController extends Controller
     public function approveCredit(Request $request, int $id): JsonResponse
     {
         $this->assertFleetManager();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
         $workOrder = WorkOrder::where('company_id', $companyId)
@@ -332,7 +333,7 @@ class FleetPortalController extends Controller
 
         if ($workOrder->approval_status === 'approved' && $workOrder->credit_authorized) {
             return response()->json([
-                'data'    => $workOrder,
+                'data' => $workOrder,
                 'message' => 'هذا الطلب معتمد مسبقاً.',
                 'trace_id' => app('trace_id'),
             ]);
@@ -348,14 +349,14 @@ class FleetPortalController extends Controller
         }
 
         $workOrder->update([
-            'approval_status'          => 'approved',
-            'credit_authorized'        => true,
-            'fleet_approved_by_user_id'=> $user->id,
-            'fleet_approved_at'        => now(),
+            'approval_status' => 'approved',
+            'credit_authorized' => true,
+            'fleet_approved_by_user_id' => $user->id,
+            'fleet_approved_at' => now(),
         ]);
 
         return response()->json([
-            'data'    => $workOrder->fresh(),
+            'data' => $workOrder->fresh(),
             'message' => 'تم اعتماد طلب الائتمان. يمكن للمركبة الآن الدخول.',
             'trace_id' => app('trace_id'),
         ]);
@@ -368,8 +369,8 @@ class FleetPortalController extends Controller
     public function rejectCredit(Request $request, int $id): JsonResponse
     {
         $this->assertFleetManager();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
         $workOrder = WorkOrder::where('company_id', $companyId)
@@ -380,7 +381,7 @@ class FleetPortalController extends Controller
 
         if ($workOrder->approval_status === 'rejected') {
             return response()->json([
-                'data'    => $workOrder,
+                'data' => $workOrder,
                 'message' => 'تم رفض طلب الائتمان مسبقاً.',
                 'trace_id' => app('trace_id'),
             ]);
@@ -396,12 +397,12 @@ class FleetPortalController extends Controller
         }
 
         $workOrder->update([
-            'approval_status'   => 'rejected',
+            'approval_status' => 'rejected',
             'credit_authorized' => false,
         ]);
 
         return response()->json([
-            'data'    => $workOrder->fresh(),
+            'data' => $workOrder->fresh(),
             'message' => 'تم رفض طلب الائتمان.',
             'trace_id' => app('trace_id'),
         ]);
@@ -414,37 +415,37 @@ class FleetPortalController extends Controller
     public function topUp(Request $request): JsonResponse
     {
         $this->assertFleetSide();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
-        if (!$customerId) {
+        if (! $customerId) {
             return response()->json(['message' => 'حسابك غير مرتبط بجهة عميلة.'], 422);
         }
 
         $data = $request->validate([
-            'amount'          => 'required|numeric|min:1',
-            'wallet_type'     => 'nullable|in:fleet_main,vehicle_wallet',
-            'vehicle_id'      => 'nullable|integer',
+            'amount' => 'required|numeric|min:1',
+            'wallet_type' => 'nullable|in:fleet_main,vehicle_wallet',
+            'vehicle_id' => 'nullable|integer',
             'idempotency_key' => 'required|string|max:255',
-            'notes'           => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         $walletType = $data['wallet_type'] ?? 'fleet_main';
 
         if ($walletType === 'fleet_main') {
             $txn = $this->walletService->topUpFleet(
-                companyId:      $companyId,
-                customerId:     $customerId,
-                vehicleId:      null,
-                amount:         (float) $data['amount'],
-                invoiceId:      null,
-                paymentId:      null,
-                userId:         $user->id,
-                traceId:        $request->attributes->get('trace_id', (string) Str::uuid()),
+                companyId: $companyId,
+                customerId: $customerId,
+                vehicleId: null,
+                amount: (float) $data['amount'],
+                invoiceId: null,
+                paymentId: null,
+                userId: $user->id,
+                traceId: $request->attributes->get('trace_id', (string) Str::uuid()),
                 idempotencyKey: $data['idempotency_key'],
-                branchId:       $user->branch_id,
-                notes:          $data['notes'] ?? null,
+                branchId: $user->branch_id,
+                notes: $data['notes'] ?? null,
             );
         } else {
             // شحن محفظة مركبة بعينها — مع التحقق من ملكية المركبة
@@ -454,22 +455,22 @@ class FleetPortalController extends Controller
                 ->firstOrFail();
 
             $txn = $this->walletService->topUpFleet(
-                companyId:      $companyId,
-                customerId:     $customerId,
-                vehicleId:      (int) $vehicle->id,
-                amount:         (float) $data['amount'],
-                invoiceId:      null,
-                paymentId:      null,
-                userId:         $user->id,
-                traceId:        $request->attributes->get('trace_id', (string) Str::uuid()),
+                companyId: $companyId,
+                customerId: $customerId,
+                vehicleId: (int) $vehicle->id,
+                amount: (float) $data['amount'],
+                invoiceId: null,
+                paymentId: null,
+                userId: $user->id,
+                traceId: $request->attributes->get('trace_id', (string) Str::uuid()),
                 idempotencyKey: $data['idempotency_key'],
-                branchId:       $user->branch_id,
-                notes:          $data['notes'] ?? null,
+                branchId: $user->branch_id,
+                notes: $data['notes'] ?? null,
             );
         }
 
         return response()->json([
-            'data'    => $txn,
+            'data' => $txn,
             'message' => 'تم شحن الرصيد بنجاح.',
         ], 201);
     }
@@ -481,8 +482,8 @@ class FleetPortalController extends Controller
     public function walletSummary(Request $request): JsonResponse
     {
         $this->assertFleetSide();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
         $summary = $this->walletService->getBalanceSummary($companyId, $customerId ?? 0);
@@ -497,11 +498,11 @@ class FleetPortalController extends Controller
     public function transactions(Request $request): JsonResponse
     {
         $this->assertFleetSide();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
-        $txns = \App\Models\WalletTransaction::where('company_id', $companyId)
+        $txns = WalletTransaction::where('company_id', $companyId)
             ->whereHas('wallet', fn ($q) => $q->where('customer_id', $customerId))
             ->orderByDesc('created_at')
             ->paginate(50);
@@ -516,8 +517,8 @@ class FleetPortalController extends Controller
     public function pendingApproval(Request $request): JsonResponse
     {
         $this->assertFleetManager();
-        $user       = $this->fleetUser();
-        $companyId  = $this->companyId();
+        $user = $this->fleetUser();
+        $companyId = $this->companyId();
         $customerId = $user->customer_id;
 
         $orders = WorkOrder::where('company_id', $companyId)

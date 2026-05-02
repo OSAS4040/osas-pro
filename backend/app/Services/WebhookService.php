@@ -26,14 +26,14 @@ class WebhookService
 
         foreach ($endpoints as $endpoint) {
             $delivery = WebhookDelivery::create([
-                'company_id'          => $companyId,
+                'company_id' => $companyId,
                 'webhook_endpoint_id' => $endpoint->id,
-                'event'               => $event,
-                'payload'             => $payload,
-                'status'              => 'pending',
-                'attempt'             => 0,
-                'trace_id'            => $traceId,
-                'next_attempt_at'     => now(),
+                'event' => $event,
+                'payload' => $payload,
+                'status' => 'pending',
+                'attempt' => 0,
+                'trace_id' => $traceId,
+                'next_attempt_at' => now(),
             ]);
 
             DispatchWebhookJob::dispatch($delivery->id, $traceId)
@@ -41,9 +41,9 @@ class WebhookService
 
             Log::info('webhook.queued', [
                 'delivery_id' => $delivery->id,
-                'event'       => $event,
-                'endpoint'    => $endpoint->url,
-                'trace_id'    => $traceId,
+                'event' => $event,
+                'endpoint' => $endpoint->url,
+                'trace_id' => $traceId,
             ]);
         }
     }
@@ -54,9 +54,9 @@ class WebhookService
      */
     public static function sign(string $secret, array $payload, int $timestamp): string
     {
-        $body     = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $signed   = "{$timestamp}.{$body}";
-        $hmac     = hash_hmac('sha256', $signed, $secret);
+        $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $signed = "{$timestamp}.{$body}";
+        $hmac = hash_hmac('sha256', $signed, $secret);
 
         return "t={$timestamp},v1={$hmac}";
     }
@@ -81,8 +81,8 @@ class WebhookService
             return false;
         }
 
-        $body    = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        $signed  = "{$timestamp}.{$body}";
+        $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $signed = "{$timestamp}.{$body}";
         $expected = hash_hmac('sha256', $signed, $secret);
 
         return hash_equals($expected, $parts['v1']);

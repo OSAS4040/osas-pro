@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Branch;
 use App\Http\Middleware\GlobalTenantGuardMiddleware as TenantGuard;
+use App\Models\Branch;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,7 +35,7 @@ class BranchScopeMiddleware
                 ->exists();
             if (! $branchOk) {
                 return response()->json([
-                    'message'  => 'Invalid branch context for your company.',
+                    'message' => 'Invalid branch context for your company.',
                     'trace_id' => app('trace_id'),
                 ], 403);
             }
@@ -51,7 +51,7 @@ class BranchScopeMiddleware
 
             if (! $hasCrossBranchAccess) {
                 return response()->json([
-                    'message'  => 'Cross-branch access is not permitted for your account.',
+                    'message' => 'Cross-branch access is not permitted for your account.',
                     'trace_id' => app('trace_id'),
                 ], 403);
             }

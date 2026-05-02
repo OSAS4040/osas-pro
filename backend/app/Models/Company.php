@@ -31,8 +31,8 @@ class Company extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'settings'  => 'array',
-        'status'    => CompanyStatus::class,
+        'settings' => 'array',
+        'status' => CompanyStatus::class,
         'financial_model' => CompanyFinancialModel::class,
         'financial_model_status' => CompanyFinancialModelStatus::class,
         'credit_limit' => 'decimal:4',

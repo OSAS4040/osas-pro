@@ -19,11 +19,11 @@ class DomainEvent extends Model
     protected function casts(): array
     {
         return [
-            'payload_json'   => 'array',
-            'metadata_json'  => 'array',
-            'occurred_at'    => 'datetime',
-            'processed_at'   => 'datetime',
-            'event_version'  => 'integer',
+            'payload_json' => 'array',
+            'metadata_json' => 'array',
+            'occurred_at' => 'datetime',
+            'processed_at' => 'datetime',
+            'event_version' => 'integer',
         ];
     }
 

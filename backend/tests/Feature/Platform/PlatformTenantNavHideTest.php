@@ -17,10 +17,10 @@ final class PlatformTenantNavHideTest extends TestCase
     {
         $tenant = $this->createTenant('staff');
         PlatformTenantNavHide::query()->create([
-            'nav_key'     => StaffNavKey::forStaffHref('/vehicles'),
-            'scope'       => 'company',
-            'company_id'  => $tenant['company']->id,
-            'user_id'     => null,
+            'nav_key' => StaffNavKey::forStaffHref('/vehicles'),
+            'scope' => 'company',
+            'company_id' => $tenant['company']->id,
+            'user_id' => null,
             'customer_id' => null,
         ]);
 
@@ -34,10 +34,10 @@ final class PlatformTenantNavHideTest extends TestCase
     {
         $tenant = $this->createTenant('staff');
         PlatformTenantNavHide::query()->create([
-            'nav_key'     => StaffNavKey::forStaffHref('/pos'),
-            'scope'       => 'user',
-            'company_id'  => null,
-            'user_id'     => $tenant['user']->id,
+            'nav_key' => StaffNavKey::forStaffHref('/pos'),
+            'scope' => 'user',
+            'company_id' => null,
+            'user_id' => $tenant['user']->id,
             'customer_id' => null,
         ]);
 
@@ -51,24 +51,24 @@ final class PlatformTenantNavHideTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $customer = Customer::create([
-            'uuid'        => Str::uuid(),
-            'company_id'  => $tenant['company']->id,
-            'branch_id'   => $tenant['branch']->id,
-            'type'        => 'individual',
-            'name'        => 'Portal Customer',
-            'is_active'   => true,
+            'uuid' => Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'individual',
+            'name' => 'Portal Customer',
+            'is_active' => true,
         ]);
 
         $portalUser = $this->createUser($tenant['company'], $tenant['branch'], 'customer', [
             'customer_id' => $customer->id,
-            'email'       => 'cust_nav_'.$customer->id.'@test.sa',
+            'email' => 'cust_nav_'.$customer->id.'@test.sa',
         ]);
 
         PlatformTenantNavHide::query()->create([
-            'nav_key'     => StaffNavKey::forCustomerHref('/customer/pricing'),
-            'scope'       => 'customer',
-            'company_id'  => null,
-            'user_id'     => null,
+            'nav_key' => StaffNavKey::forCustomerHref('/customer/pricing'),
+            'scope' => 'customer',
+            'company_id' => null,
+            'user_id' => null,
             'customer_id' => $customer->id,
         ]);
 
@@ -87,8 +87,8 @@ final class PlatformTenantNavHideTest extends TestCase
         Sanctum::actingAs($platformUser);
 
         $this->postJson('/api/v1/platform/tenant-nav-hides', [
-            'scope'      => 'company',
-            'nav_key'    => StaffNavKey::forStaffHref('/crm/quotes'),
+            'scope' => 'company',
+            'nav_key' => StaffNavKey::forStaffHref('/crm/quotes'),
             'company_id' => $tenant['company']->id,
         ])->assertStatus(201);
 

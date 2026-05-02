@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Append-only suspicious auth telemetry (PR5). Read-only operational visibility.
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $user_agent_hash
  * @property string|null $trace_id
  * @property array<string, mixed>|null $payload
- * @property \Illuminate\Support\Carbon $created_at
+ * @property Carbon $created_at
  */
 class AuthSuspiciousLoginSignal extends Model
 {

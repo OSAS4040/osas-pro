@@ -49,7 +49,7 @@ final class TenantPaymentOrderController extends Controller
 
     public function store(StorePaymentOrderRequest $request, CreatePaymentOrderAction $action): JsonResponse
     {
-        $user  = $request->user();
+        $user = $request->user();
         $order = $action->execute((int) $user->company_id, (int) $request->validated('plan_id'), (int) $user->id);
 
         return response()->json(['data' => $order], 201);
@@ -57,7 +57,7 @@ final class TenantPaymentOrderController extends Controller
 
     public function submitTransfer(SubmitBankTransferRequest $request, int $id, SubmitBankTransferAction $action): JsonResponse
     {
-        $user  = $request->user();
+        $user = $request->user();
         $order = PaymentOrder::query()->whereKey($id)->where('company_id', $user->company_id)->firstOrFail();
         try {
             $submission = $action->execute($order, $request->validated(), (int) $user->id);
@@ -70,7 +70,7 @@ final class TenantPaymentOrderController extends Controller
 
     public function uploadReceipt(UploadReceiptRequest $request, int $id, UploadReceiptAction $action): JsonResponse
     {
-        $user  = $request->user();
+        $user = $request->user();
         $order = PaymentOrder::query()->whereKey($id)->where('company_id', $user->company_id)->firstOrFail();
         try {
             $submission = $action->execute(

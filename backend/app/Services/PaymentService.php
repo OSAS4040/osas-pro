@@ -28,11 +28,11 @@ class PaymentService
      */
     public function createPayment(
         Invoice $invoice,
-        float   $amount,
-        string  $method,
-        int     $userId,
-        string  $traceId,
-        ?int    $branchId  = null,
+        float $amount,
+        string $method,
+        int $userId,
+        string $traceId,
+        ?int $branchId = null,
         ?string $reference = null,
     ): Payment {
         if ($amount <= 0) {
@@ -53,7 +53,7 @@ class PaymentService
                 throw new \DomainException('This invoice cannot accept a payment in its current status.');
             }
 
-            $dueBefore  = (float) $locked->due_amount;
+            $dueBefore = (float) $locked->due_amount;
             $paidBefore = (float) $locked->paid_amount;
 
             if ($dueBefore <= 0.0001) {
@@ -67,30 +67,30 @@ class PaymentService
             }
 
             $payment = Payment::create([
-                'uuid'                 => (string) Str::uuid(),
-                'company_id'           => $locked->company_id,
-                'branch_id'            => $branchId ?? $locked->branch_id,
-                'invoice_id'           => $locked->id,
-                'created_by_user_id'   => $userId,
-                'method'               => $method,
-                'payment_method'       => $method,
-                'amount'               => $amount,
-                'currency'             => $locked->currency ?? 'SAR',
-                'reference'            => $reference,
-                'status'               => 'completed',
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $locked->company_id,
+                'branch_id' => $branchId ?? $locked->branch_id,
+                'invoice_id' => $locked->id,
+                'created_by_user_id' => $userId,
+                'method' => $method,
+                'payment_method' => $method,
+                'amount' => $amount,
+                'currency' => $locked->currency ?? 'SAR',
+                'reference' => $reference,
+                'status' => 'completed',
                 'external_sync_status' => null,
-                'trace_id'             => $traceId,
-                'created_at'           => now(),
+                'trace_id' => $traceId,
+                'created_at' => now(),
             ]);
 
             // Remainder is derived from current due (not from total) so partial histories stay consistent.
             $newPaid = $paidBefore + $amount;
-            $newDue  = max(0, $dueBefore - $amount);
+            $newDue = max(0, $dueBefore - $amount);
 
             DB::table('invoices')->where('id', $locked->id)->update([
                 'paid_amount' => $newPaid,
-                'due_amount'  => $newDue,
-                'status'      => $newDue <= 0.0001
+                'due_amount' => $newDue,
+                'status' => $newDue <= 0.0001
                     ? InvoiceStatus::Paid->value
                     : InvoiceStatus::PartialPaid->value,
             ]);
@@ -98,9 +98,9 @@ class PaymentService
             Log::info('payment.created', [
                 'payment_id' => $payment->id,
                 'invoice_id' => $locked->id,
-                'method'     => $method,
-                'amount'     => $amount,
-                'trace_id'   => $traceId,
+                'method' => $method,
+                'amount' => $amount,
+                'trace_id' => $traceId,
                 'company_id' => $locked->company_id,
             ]);
 
@@ -135,11 +135,11 @@ class PaymentService
      * The caller must supply an idempotency_key for the credit operation.
      */
     public function refund(
-        int     $paymentId,
-        int     $userId,
-        string  $traceId,
-        string  $idempotencyKey,
-        ?float  $amount = null,
+        int $paymentId,
+        int $userId,
+        string $traceId,
+        string $idempotencyKey,
+        ?float $amount = null,
         ?string $reason = null,
     ): Payment {
         return DB::transaction(function () use (
@@ -168,58 +168,58 @@ class PaymentService
             if (in_array($original->method, ['wallet', 'prepaid'], true)) {
                 $invoice = Invoice::find($original->invoice_id);
                 if ($invoice?->customer_id) {
-                    $notes = "Refund for payment #{$original->id}" . ($reason ? ": {$reason}" : '');
+                    $notes = "Refund for payment #{$original->id}".($reason ? ": {$reason}" : '');
                     $ct = is_string($invoice->customer_type)
                         ? $invoice->customer_type
                         : (string) ($invoice->customer_type ?? '');
 
                     if ($invoice->vehicle_id && $ct === 'b2b') {
                         $this->walletService->refundVehicle(
-                            companyId:      $original->company_id,
-                            customerId:     $invoice->customer_id,
-                            vehicleId:      (int) $invoice->vehicle_id,
-                            amount:         $refundAmount,
-                            invoiceId:      $original->invoice_id,
-                            paymentId:      $original->id,
-                            userId:         $userId,
-                            traceId:        $traceId,
+                            companyId: $original->company_id,
+                            customerId: $invoice->customer_id,
+                            vehicleId: (int) $invoice->vehicle_id,
+                            amount: $refundAmount,
+                            invoiceId: $original->invoice_id,
+                            paymentId: $original->id,
+                            userId: $userId,
+                            traceId: $traceId,
                             idempotencyKey: $idempotencyKey,
-                            branchId:       $original->branch_id,
-                            notes:          $notes,
+                            branchId: $original->branch_id,
+                            notes: $notes,
                         );
                     } else {
                         $this->walletService->refundIndividual(
-                            companyId:      $original->company_id,
-                            customerId:     $invoice->customer_id,
-                            vehicleId:      $invoice->vehicle_id,
-                            amount:         $refundAmount,
-                            invoiceId:      $original->invoice_id,
-                            paymentId:      $original->id,
-                            userId:         $userId,
-                            traceId:        $traceId,
+                            companyId: $original->company_id,
+                            customerId: $invoice->customer_id,
+                            vehicleId: $invoice->vehicle_id,
+                            amount: $refundAmount,
+                            invoiceId: $original->invoice_id,
+                            paymentId: $original->id,
+                            userId: $userId,
+                            traceId: $traceId,
                             idempotencyKey: $idempotencyKey,
-                            branchId:       $original->branch_id,
-                            notes:          $notes,
+                            branchId: $original->branch_id,
+                            notes: $notes,
                         );
                     }
                 }
             }
 
             $refund = Payment::create([
-                'uuid'                => (string) Str::uuid(),
-                'company_id'          => $original->company_id,
-                'branch_id'           => $original->branch_id,
-                'invoice_id'          => $original->invoice_id,
-                'created_by_user_id'  => $userId,
-                'method'              => $original->method,
-                'payment_method'      => $original->payment_method ?? $original->method,
-                'amount'              => $refundAmount,
-                'currency'            => $original->currency,
-                'reference'           => $reason,
-                'status'              => 'refunded',
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $original->company_id,
+                'branch_id' => $original->branch_id,
+                'invoice_id' => $original->invoice_id,
+                'created_by_user_id' => $userId,
+                'method' => $original->method,
+                'payment_method' => $original->payment_method ?? $original->method,
+                'amount' => $refundAmount,
+                'currency' => $original->currency,
+                'reference' => $reason,
+                'status' => 'refunded',
                 'original_payment_id' => $original->id,
-                'trace_id'            => $traceId,
-                'created_at'          => now(),
+                'trace_id' => $traceId,
+                'created_at' => now(),
             ]);
 
             DB::table('payments')
@@ -230,14 +230,14 @@ class PaymentService
                 $inv = Invoice::where('id', $original->invoice_id)->lockForUpdate()->first();
                 if ($inv) {
                     $paidBefore = (float) $inv->paid_amount;
-                    $dueBefore  = (float) $inv->due_amount;
-                    $newPaid    = max(0, $paidBefore - $refundAmount);
-                    $newDue     = max(0, $dueBefore + $refundAmount);
+                    $dueBefore = (float) $inv->due_amount;
+                    $newPaid = max(0, $paidBefore - $refundAmount);
+                    $newDue = max(0, $dueBefore + $refundAmount);
 
                     DB::table('invoices')->where('id', $inv->id)->update([
                         'paid_amount' => $newPaid,
-                        'due_amount'  => $newDue,
-                        'status'      => $newPaid <= 0.0001
+                        'due_amount' => $newDue,
+                        'status' => $newPaid <= 0.0001
                             ? InvoiceStatus::Pending->value
                             : InvoiceStatus::PartialPaid->value,
                     ]);
@@ -246,10 +246,10 @@ class PaymentService
 
             Log::info('payment.refunded', [
                 'original_id' => $original->id,
-                'refund_id'   => $refund->id,
-                'amount'      => $refundAmount,
-                'trace_id'    => $traceId,
-                'company_id'  => $original->company_id,
+                'refund_id' => $refund->id,
+                'amount' => $refundAmount,
+                'trace_id' => $traceId,
+                'company_id' => $original->company_id,
             ]);
 
             return $refund;

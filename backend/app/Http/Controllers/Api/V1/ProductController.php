@@ -23,26 +23,28 @@ class ProductController extends Controller
      *     tags={"Products"},
      *     summary="List products",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="search", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="product_type", in="query", @OA\Schema(type="string", enum={"physical","service","consumable","labor"})),
      *     @OA\Parameter(name="category_id", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="is_active", in="query", @OA\Schema(type="boolean")),
      *     @OA\Parameter(name="track_inventory", in="query", @OA\Schema(type="boolean")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/PaginatedResponse")
      * )
      */
     public function index(Request $request): JsonResponse
     {
         $products = Product::with(['category', 'unit', 'purchaseUnit'])
-            ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
+            ->when($request->search, fn ($q) => $q->where(function ($q) use ($request) {
                 $q->where('name', 'ilike', "%{$request->search}%")
-                  ->orWhere('barcode', $request->search)
-                  ->orWhere('sku', $request->search);
+                    ->orWhere('barcode', $request->search)
+                    ->orWhere('sku', $request->search);
             }))
-            ->when($request->product_type, fn($q) => $q->where('product_type', $request->product_type))
-            ->when($request->category_id, fn($q) => $q->where('category_id', $request->category_id))
-            ->when($request->has('is_active'), fn($q) => $q->where('is_active', $request->boolean('is_active')))
-            ->when($request->has('track_inventory'), fn($q) => $q->where('track_inventory', $request->boolean('track_inventory')))
+            ->when($request->product_type, fn ($q) => $q->where('product_type', $request->product_type))
+            ->when($request->category_id, fn ($q) => $q->where('category_id', $request->category_id))
+            ->when($request->has('is_active'), fn ($q) => $q->where('is_active', $request->boolean('is_active')))
+            ->when($request->has('track_inventory'), fn ($q) => $q->where('track_inventory', $request->boolean('track_inventory')))
             ->orderBy('name')
             ->paginate($request->per_page ?? 25);
 
@@ -55,10 +57,13 @@ class ProductController extends Controller
      *     tags={"Products"},
      *     summary="Create a product",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"name","sale_price"},
+     *
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="product_type", type="string", enum={"physical","service","consumable","labor"}),
      *             @OA\Property(property="unit_id", type="integer"),
@@ -71,13 +76,14 @@ class ProductController extends Controller
      *             @OA\Property(property="track_inventory", type="boolean")
      *         )
      *     ),
+     *
      *     @OA\Response(response=201, ref="#/components/schemas/ApiResponse")
      * )
      */
     public function store(StoreProductRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        if (!isset($validated['track_inventory']) && $request->has('track_stock')) {
+        if (! isset($validated['track_inventory']) && $request->has('track_stock')) {
             $validated['track_inventory'] = $request->boolean('track_stock');
         }
 
@@ -95,8 +101,8 @@ class ProductController extends Controller
         $product = Product::create(array_merge(
             $validated,
             [
-                'uuid'               => Str::uuid(),
-                'company_id'         => $tenantCompanyId,
+                'uuid' => Str::uuid(),
+                'company_id' => $tenantCompanyId,
                 'created_by_user_id' => $request->user()->id,
             ]
         ));
@@ -112,16 +118,16 @@ class ProductController extends Controller
             Inventory::firstOrCreate(
                 ['company_id' => $product->company_id, 'product_id' => $product->id],
                 [
-                    'branch_id'         => $inventoryBranchId,
-                    'quantity'          => $initialQty,
+                    'branch_id' => $inventoryBranchId,
+                    'quantity' => $initialQty,
                     'reserved_quantity' => 0,
-                    'reorder_point'     => $request->input('reorder_point', 0),
+                    'reorder_point' => $request->input('reorder_point', 0),
                 ]
             );
         }
 
         return response()->json([
-            'data'     => $product->load(['category', 'unit', 'purchaseUnit']),
+            'data' => $product->load(['category', 'unit', 'purchaseUnit']),
             'trace_id' => app('trace_id'),
         ], 201);
     }
@@ -132,7 +138,9 @@ class ProductController extends Controller
      *     tags={"Products"},
      *     summary="Get a product",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -149,7 +157,9 @@ class ProductController extends Controller
      *     tags={"Products"},
      *     summary="Update a product",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -160,7 +170,7 @@ class ProductController extends Controller
         $product->increment('version');
 
         return response()->json([
-            'data'     => $product->fresh(['category', 'unit']),
+            'data' => $product->fresh(['category', 'unit']),
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -171,7 +181,9 @@ class ProductController extends Controller
      *     tags={"Products"},
      *     summary="Delete a product (soft delete)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */

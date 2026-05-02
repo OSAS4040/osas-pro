@@ -21,4 +21,3 @@ return new class extends Migration
         DB::statement('DROP INDEX IF EXISTS wallet_transactions_company_id_wave2_idx');
     }
 };
-

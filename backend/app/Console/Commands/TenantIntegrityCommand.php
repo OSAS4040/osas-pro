@@ -21,8 +21,8 @@ class TenantIntegrityCommand extends Command
         $fix = (bool) $this->option('fix-branches');
 
         $badCompany = 0;
-        $badBranch  = 0;
-        $repaired   = 0;
+        $badBranch = 0;
+        $repaired = 0;
 
         User::query()->withoutGlobalScope('tenant')->orderBy('id')->chunkById(200, function ($users) use (&$badCompany, &$badBranch, &$repaired, $fix): void {
             foreach ($users as $user) {

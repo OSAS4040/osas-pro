@@ -35,7 +35,7 @@ final class PlatformTenantNavHideController extends Controller
         $rows = $q->limit(500)->get();
 
         return response()->json([
-            'data'     => $rows,
+            'data' => $rows,
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -47,9 +47,9 @@ final class PlatformTenantNavHideController extends Controller
 
         $attrs = [
             'nav_key' => $navKey,
-            'scope'   => $scope,
-            'company_id'  => null,
-            'user_id'     => null,
+            'scope' => $scope,
+            'company_id' => null,
+            'user_id' => null,
             'customer_id' => null,
         ];
         if ($scope === 'company') {
@@ -73,8 +73,8 @@ final class PlatformTenantNavHideController extends Controller
         $existing = $q->first();
         if ($existing !== null) {
             return response()->json([
-                'data'     => $existing,
-                'message'  => 'القاعدة موجودة مسبقاً',
+                'data' => $existing,
+                'message' => 'القاعدة موجودة مسبقاً',
                 'trace_id' => app('trace_id'),
             ]);
         }
@@ -82,8 +82,8 @@ final class PlatformTenantNavHideController extends Controller
         $row = PlatformTenantNavHide::query()->create($attrs);
 
         return response()->json([
-            'data'     => $row,
-            'message'  => 'تم إنشاء قاعدة الإخفاء',
+            'data' => $row,
+            'message' => 'تم إنشاء قاعدة الإخفاء',
             'trace_id' => app('trace_id'),
         ], 201);
     }
@@ -93,7 +93,7 @@ final class PlatformTenantNavHideController extends Controller
         $deleted = PlatformTenantNavHide::query()->whereKey($id)->delete();
 
         return response()->json([
-            'deleted'  => (bool) $deleted,
+            'deleted' => (bool) $deleted,
             'trace_id' => app('trace_id'),
         ]);
     }

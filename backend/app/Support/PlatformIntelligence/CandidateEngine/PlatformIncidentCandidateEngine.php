@@ -41,7 +41,7 @@ final class PlatformIncidentCandidateEngine
      */
     public function buildFromSignals(array $signals, ?PlatformIntelligenceTraceRecorderInterface $trace = null): array
     {
-        $trace ??= new NullPlatformIntelligenceTraceRecorder();
+        $trace ??= new NullPlatformIntelligenceTraceRecorder;
         $correlationId = (string) Str::uuid();
         $traceId = null;
         if (app()->bound('trace_id')) {

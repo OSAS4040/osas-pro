@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\Vehicle;
-use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
-use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 use OpenSpout\Common\Entity\Row;
+use OpenSpout\Reader\XLSX\Reader as XlsxReader;
 use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 
 class ImportController extends Controller
@@ -19,16 +20,17 @@ class ImportController extends Controller
     {
         $request->validate(['file' => 'required|file|mimes:xlsx|max:5120']);
 
-        $company  = auth()->user()->company_id;
+        $company = auth()->user()->company_id;
         $userId = auth()->id();
-        $rows     = $this->parseXlsx($request->file('file'));
+        $rows = $this->parseXlsx($request->file('file'));
         $imported = 0;
-        $errors   = [];
+        $errors = [];
 
         foreach ($rows as $i => $row) {
             $name = trim((string) ($row['name'] ?? $row['الاسم'] ?? ''));
             if ($name === '') {
-                $errors[] = "السطر " . ($i + 2) . ": اسم المنتج مطلوب";
+                $errors[] = 'السطر '.($i + 2).': اسم المنتج مطلوب';
+
                 continue;
             }
 
@@ -36,12 +38,15 @@ class ImportController extends Controller
                 $sku = trim((string) ($row['sku'] ?? $row['SKU'] ?? ''));
                 $barcode = trim((string) ($row['barcode'] ?? $row['الباركود'] ?? ''));
                 $productType = strtolower(trim((string) ($row['product_type'] ?? 'physical')));
-                if (!in_array($productType, ['physical', 'service', 'consumable', 'labor'], true)) {
+                if (! in_array($productType, ['physical', 'service', 'consumable', 'labor'], true)) {
                     $productType = 'physical';
                 }
                 $lookup = ['company_id' => $company, 'name' => $name];
-                if ($sku !== '') $lookup['sku'] = $sku;
-                elseif ($barcode !== '') $lookup['barcode'] = $barcode;
+                if ($sku !== '') {
+                    $lookup['sku'] = $sku;
+                } elseif ($barcode !== '') {
+                    $lookup['barcode'] = $barcode;
+                }
 
                 Product::updateOrCreate(
                     $lookup,
@@ -60,14 +65,14 @@ class ImportController extends Controller
                 );
                 $imported++;
             } catch (\Throwable $e) {
-                $errors[] = "السطر " . ($i + 2) . ": " . $e->getMessage();
+                $errors[] = 'السطر '.($i + 2).': '.$e->getMessage();
             }
         }
 
         return response()->json([
             'imported' => $imported,
-            'errors'   => $errors,
-            'message'  => "تم استيراد {$imported} منتج بنجاح" . (count($errors) ? " مع " . count($errors) . " خطأ" : ""),
+            'errors' => $errors,
+            'message' => "تم استيراد {$imported} منتج بنجاح".(count($errors) ? ' مع '.count($errors).' خطأ' : ''),
         ]);
     }
 
@@ -89,7 +94,7 @@ class ImportController extends Controller
         foreach ($rows as $i => $row) {
             $name = trim((string) ($row['name'] ?? $row['الاسم'] ?? ''));
             if ($name === '') {
-                $errors[] = 'السطر ' . ($i + 2) . ': اسم الخدمة مطلوب';
+                $errors[] = 'السطر '.($i + 2).': اسم الخدمة مطلوب';
 
                 continue;
             }
@@ -129,14 +134,14 @@ class ImportController extends Controller
                 }
                 $imported++;
             } catch (\Throwable $e) {
-                $errors[] = 'السطر ' . ($i + 2) . ': ' . $e->getMessage();
+                $errors[] = 'السطر '.($i + 2).': '.$e->getMessage();
             }
         }
 
         return response()->json([
             'imported' => $imported,
             'errors' => $errors,
-            'message' => "تم استيراد {$imported} خدمة بنجاح" . (count($errors) ? ' مع ' . count($errors) . ' خطأ' : ''),
+            'message' => "تم استيراد {$imported} خدمة بنجاح".(count($errors) ? ' مع '.count($errors).' خطأ' : ''),
         ]);
     }
 
@@ -144,37 +149,41 @@ class ImportController extends Controller
     {
         $request->validate(['file' => 'required|file|mimes:xlsx|max:5120']);
 
-        $company  = auth()->user()->company_id;
-        $rows     = $this->parseXlsx($request->file('file'));
+        $company = auth()->user()->company_id;
+        $rows = $this->parseXlsx($request->file('file'));
         $imported = 0;
-        $errors   = [];
+        $errors = [];
 
         foreach ($rows as $i => $row) {
             $plate = strtoupper(trim($row['plate_number'] ?? $row['رقم اللوحة'] ?? ''));
-            if (!$plate) { $errors[] = "السطر " . ($i + 2) . ": رقم اللوحة مطلوب"; continue; }
+            if (! $plate) {
+                $errors[] = 'السطر '.($i + 2).': رقم اللوحة مطلوب';
+
+                continue;
+            }
 
             try {
                 Vehicle::updateOrCreate(
                     ['plate_number' => $plate, 'company_id' => $company],
                     [
-                        'make'       => $row['make']  ?? $row['الشركة'] ?? null,
-                        'model'      => $row['model'] ?? $row['الموديل'] ?? null,
-                        'year'       => (int) ($row['year'] ?? $row['السنة'] ?? date('Y')),
-                        'color'      => $row['color'] ?? $row['اللون'] ?? null,
-                        'vin'        => $row['vin']   ?? $row['رقم الهيكل'] ?? null,
+                        'make' => $row['make'] ?? $row['الشركة'] ?? null,
+                        'model' => $row['model'] ?? $row['الموديل'] ?? null,
+                        'year' => (int) ($row['year'] ?? $row['السنة'] ?? date('Y')),
+                        'color' => $row['color'] ?? $row['اللون'] ?? null,
+                        'vin' => $row['vin'] ?? $row['رقم الهيكل'] ?? null,
                         'company_id' => $company,
                     ]
                 );
                 $imported++;
             } catch (\Throwable $e) {
-                $errors[] = "السطر " . ($i + 2) . ": " . $e->getMessage();
+                $errors[] = 'السطر '.($i + 2).': '.$e->getMessage();
             }
         }
 
         return response()->json([
             'imported' => $imported,
-            'errors'   => $errors,
-            'message'  => "تم استيراد {$imported} مركبة بنجاح" . (count($errors) ? " مع " . count($errors) . " خطأ" : ""),
+            'errors' => $errors,
+            'message' => "تم استيراد {$imported} مركبة بنجاح".(count($errors) ? ' مع '.count($errors).' خطأ' : ''),
         ]);
     }
 
@@ -182,14 +191,18 @@ class ImportController extends Controller
     {
         $request->validate(['file' => 'required|file|mimes:xlsx|max:5120']);
 
-        $company  = auth()->user()->company_id;
-        $rows     = $this->parseXlsx($request->file('file'));
+        $company = auth()->user()->company_id;
+        $rows = $this->parseXlsx($request->file('file'));
         $imported = 0;
-        $errors   = [];
+        $errors = [];
 
         foreach ($rows as $i => $row) {
             $name = trim($row['name'] ?? $row['الاسم'] ?? '');
-            if (!$name) { $errors[] = "السطر " . ($i + 2) . ": الاسم مطلوب"; continue; }
+            if (! $name) {
+                $errors[] = 'السطر '.($i + 2).': الاسم مطلوب';
+
+                continue;
+            }
 
             try {
                 $nid = trim((string) ($row['national_id'] ?? $row['رقم الهوية'] ?? ''));
@@ -199,27 +212,27 @@ class ImportController extends Controller
                 Employee::updateOrCreate(
                     ['national_id' => $nid, 'company_id' => $company],
                     [
-                        'name'        => $name,
-                        'position'    => $row['position'] ?? $row['role'] ?? $row['الوظيفة'] ?? $row['التخصص'] ?? null,
-                        'phone'       => $row['phone'] ?? $row['الجوال'] ?? null,
-                        'email'       => $row['email'] ?? $row['البريد'] ?? null,
-                        'department'  => $row['department'] ?? $row['القسم'] ?? null,
+                        'name' => $name,
+                        'position' => $row['position'] ?? $row['role'] ?? $row['الوظيفة'] ?? $row['التخصص'] ?? null,
+                        'phone' => $row['phone'] ?? $row['الجوال'] ?? null,
+                        'email' => $row['email'] ?? $row['البريد'] ?? null,
+                        'department' => $row['department'] ?? $row['القسم'] ?? null,
                         'base_salary' => (float) ($row['base_salary'] ?? $row['salary'] ?? $row['الراتب'] ?? 0),
-                        'hire_date'   => $row['hire_date'] ?? $row['تاريخ التعيين'] ?? now()->toDateString(),
-                        'status'      => 'active',
-                        'company_id'  => $company,
+                        'hire_date' => $row['hire_date'] ?? $row['تاريخ التعيين'] ?? now()->toDateString(),
+                        'status' => 'active',
+                        'company_id' => $company,
                     ]
                 );
                 $imported++;
             } catch (\Throwable $e) {
-                $errors[] = "السطر " . ($i + 2) . ": " . $e->getMessage();
+                $errors[] = 'السطر '.($i + 2).': '.$e->getMessage();
             }
         }
 
         return response()->json([
             'imported' => $imported,
-            'errors'   => $errors,
-            'message'  => "تم استيراد {$imported} موظف بنجاح",
+            'errors' => $errors,
+            'message' => "تم استيراد {$imported} موظف بنجاح",
         ]);
     }
 
@@ -242,7 +255,7 @@ class ImportController extends Controller
     private function streamXlsxTemplate(string $filename, array $rows)
     {
         return response()->streamDownload(function () use ($rows): void {
-            $writer = new XlsxWriter();
+            $writer = new XlsxWriter;
             $writer->openToFile('php://output');
             foreach ($rows as $row) {
                 $writer->addRow(Row::fromValues($row));
@@ -253,27 +266,34 @@ class ImportController extends Controller
         ]);
     }
 
-    private function parseXlsx(\Illuminate\Http\UploadedFile $file): array
+    private function parseXlsx(UploadedFile $file): array
     {
         $path = $file->getRealPath();
-        if (!$path) return [];
-        $reader = new XlsxReader();
+        if (! $path) {
+            return [];
+        }
+        $reader = new XlsxReader;
         $reader->open($path);
         $rows = [];
         $headers = [];
         foreach ($reader->getSheetIterator() as $sheet) {
             foreach ($sheet->getRowIterator() as $sheetRow) {
                 $cells = array_map(static fn ($c) => trim((string) $c->getValue()), $sheetRow->getCells());
-                if (!$headers) {
+                if (! $headers) {
                     $headers = array_values(array_filter($cells, static fn ($v) => $v !== ''));
+
                     continue;
                 }
-                if (!$headers) continue;
+                if (! $headers) {
+                    continue;
+                }
                 $row = [];
                 $hasAny = false;
                 foreach ($headers as $k => $h) {
                     $value = $cells[$k] ?? '';
-                    if ($value !== '') $hasAny = true;
+                    if ($value !== '') {
+                        $hasAny = true;
+                    }
                     $row[$h] = $value;
                 }
                 if ($hasAny) {
@@ -283,6 +303,7 @@ class ImportController extends Controller
             break;
         }
         $reader->close();
+
         return $rows;
     }
 }

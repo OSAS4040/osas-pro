@@ -17,15 +17,15 @@ class StoreUnitRequest extends FormRequest
         $companyId = $this->user()->company_id;
 
         return [
-            'name'      => ['required', 'string', 'max:80'],
-            'name_ar'   => ['nullable', 'string', 'max:80'],
-            'symbol'    => [
+            'name' => ['required', 'string', 'max:80'],
+            'name_ar' => ['nullable', 'string', 'max:80'],
+            'symbol' => [
                 'required', 'string', 'max:20',
                 Rule::unique('units', 'symbol')->where('company_id', $companyId),
             ],
             'symbol_ar' => ['nullable', 'string', 'max:20'],
-            'type'      => ['nullable', 'string', 'in:quantity,weight,volume,length,time'],
-            'is_base'   => ['nullable', 'boolean'],
+            'type' => ['nullable', 'string', 'in:quantity,weight,volume,length,time'],
+            'is_base' => ['nullable', 'boolean'],
         ];
     }
 }

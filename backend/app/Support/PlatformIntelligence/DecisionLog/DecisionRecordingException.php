@@ -6,6 +6,4 @@ namespace App\Support\PlatformIntelligence\DecisionLog;
 
 use RuntimeException;
 
-final class DecisionRecordingException extends RuntimeException
-{
-}
+final class DecisionRecordingException extends RuntimeException {}

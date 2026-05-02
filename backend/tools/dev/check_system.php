@@ -1,4 +1,5 @@
 <?php
+
 require '/var/www/vendor/autoload.php';
 $app = require '/var/www/bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
@@ -18,16 +19,16 @@ if ($count > 0) {
 // Check products
 echo "\n=== Products check ===\n";
 $prods = DB::table('products')->where('is_active', true)->limit(5)->get(['id', 'name', 'product_type', 'sale_price']);
-echo "Active products: " . count($prods) . "\n";
+echo 'Active products: '.count($prods)."\n";
 foreach ($prods as $p) {
     echo "  id={$p->id} name={$p->name} type={$p->product_type} price={$p->sale_price}\n";
 }
 
 // Check payments table
 echo "\n=== Payments table check ===\n";
-echo "Columns: ";
+echo 'Columns: ';
 $cols = DB::select("SELECT column_name FROM information_schema.columns WHERE table_name='payments' AND table_schema='public' ORDER BY ordinal_position");
-echo implode(', ', array_column($cols, 'column_name')) . "\n";
+echo implode(', ', array_column($cols, 'column_name'))."\n";
 
 // Check reports route
 echo "\n=== Checking reports issue ===\n";
@@ -41,6 +42,6 @@ try {
         ->selectRaw('COUNT(*) as invoice_count, SUM(total) as total_sales')
         ->first();
     echo "Sales query OK: count={$r->invoice_count} total={$r->total_sales}\n";
-} catch (\Throwable $e) {
-    echo "Sales query ERROR: " . $e->getMessage() . "\n";
+} catch (Throwable $e) {
+    echo 'Sales query ERROR: '.$e->getMessage()."\n";
 }

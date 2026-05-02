@@ -37,7 +37,7 @@ class ReconcilePosLedgerCommand extends Command
 
         $this->info("missing_total={$missingTotal}");
         $this->info("processing_limit={$toProcess}");
-        $this->info("dry_run=".($dryRun ? 'true' : 'false'));
+        $this->info('dry_run='.($dryRun ? 'true' : 'false'));
 
         if ($toProcess === 0 || $dryRun) {
             return self::SUCCESS;
@@ -58,4 +58,3 @@ class ReconcilePosLedgerCommand extends Command
         return self::SUCCESS;
     }
 }
-

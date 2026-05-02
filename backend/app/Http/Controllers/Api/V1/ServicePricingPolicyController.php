@@ -8,6 +8,7 @@ use App\Models\ServicePricingPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ServicePricingPolicyController extends Controller
 {
@@ -86,13 +87,13 @@ class ServicePricingPolicyController extends Controller
         $type = ServicePricingPolicyType::from($data['policy_type']);
         match ($type) {
             ServicePricingPolicyType::CustomerSpecific => empty($data['customer_id'])
-                ? throw \Illuminate\Validation\ValidationException::withMessages(['customer_id' => 'مطلوب لسياسة عميل محدد.'])
+                ? throw ValidationException::withMessages(['customer_id' => 'مطلوب لسياسة عميل محدد.'])
                 : null,
             ServicePricingPolicyType::CustomerGroup => empty($data['customer_group_id'])
-                ? throw \Illuminate\Validation\ValidationException::withMessages(['customer_group_id' => 'مطلوب لسياسة مجموعة.'])
+                ? throw ValidationException::withMessages(['customer_group_id' => 'مطلوب لسياسة مجموعة.'])
                 : null,
             ServicePricingPolicyType::Contract => empty($data['contract_id'])
-                ? throw \Illuminate\Validation\ValidationException::withMessages(['contract_id' => 'مطلوب لسياسة عقد.'])
+                ? throw ValidationException::withMessages(['contract_id' => 'مطلوب لسياسة عقد.'])
                 : null,
             ServicePricingPolicyType::General => null,
         };

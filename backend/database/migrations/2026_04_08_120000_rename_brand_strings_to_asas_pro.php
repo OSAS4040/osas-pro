@@ -13,15 +13,15 @@ return new class extends Migration
     {
         if (Schema::hasTable('companies')) {
             DB::table('companies')->whereIn('name', ['OSAS Platform', 'Asas Platform'])->update([
-                'name'    => 'Osas Pro',
+                'name' => 'Osas Pro',
                 'name_ar' => 'أسس برو',
             ]);
             DB::table('companies')->where('name_ar', 'منصة أواس')->update([
-                'name'    => 'Osas Pro',
+                'name' => 'Osas Pro',
                 'name_ar' => 'أسس برو',
             ]);
             DB::table('companies')->where('email', 'hq@osas.sa')->update([
-                'name'    => 'Osas Pro',
+                'name' => 'Osas Pro',
                 'name_ar' => 'أسس برو',
             ]);
         }

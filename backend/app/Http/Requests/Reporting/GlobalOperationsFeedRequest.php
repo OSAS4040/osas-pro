@@ -23,21 +23,21 @@ final class GlobalOperationsFeedRequest extends FormRequest
         $maxPer = (int) config('reporting.global_feed_max_per_page', 100);
 
         return [
-            'from'                => ['required', 'date_format:Y-m-d'],
-            'to'                  => ['required', 'date_format:Y-m-d'],
-            'company_id'          => ['nullable', 'integer', 'min:1'],
-            'branch_id'           => ['nullable', 'integer', 'min:1'],
-            'customer_id'         => ['nullable', 'integer', 'min:1'],
-            'user_id'             => ['nullable', 'integer', 'min:1'],
-            'type'                => ['nullable', 'string', 'in:work_order,invoice,payment,ticket'],
-            'types'               => ['nullable', 'array'],
-            'types.*'             => ['string', 'in:work_order,invoice,payment,ticket'],
-            'statuses'            => ['nullable', 'array'],
-            'statuses.*'          => ['string', 'max:64'],
-            'attention_level'     => ['nullable', 'string', 'in:normal,watch,important,critical'],
-            'include_financial'   => ['nullable', 'boolean'],
-            'page'                => ['nullable', 'integer', 'min:1'],
-            'per_page'            => ['nullable', 'integer', 'min:1', 'max:'.$maxPer],
+            'from' => ['required', 'date_format:Y-m-d'],
+            'to' => ['required', 'date_format:Y-m-d'],
+            'company_id' => ['nullable', 'integer', 'min:1'],
+            'branch_id' => ['nullable', 'integer', 'min:1'],
+            'customer_id' => ['nullable', 'integer', 'min:1'],
+            'user_id' => ['nullable', 'integer', 'min:1'],
+            'type' => ['nullable', 'string', 'in:work_order,invoice,payment,ticket'],
+            'types' => ['nullable', 'array'],
+            'types.*' => ['string', 'in:work_order,invoice,payment,ticket'],
+            'statuses' => ['nullable', 'array'],
+            'statuses.*' => ['string', 'max:64'],
+            'attention_level' => ['nullable', 'string', 'in:normal,watch,important,critical'],
+            'include_financial' => ['nullable', 'boolean'],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:'.$maxPer],
         ];
     }
 

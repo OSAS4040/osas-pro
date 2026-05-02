@@ -1,11 +1,12 @@
 <?php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Plugin;
-use App\Models\TenantPlugin;
 use App\Models\PluginLog;
+use App\Models\TenantPlugin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,16 +20,18 @@ class PluginController extends Controller
         $plugins = Plugin::where('is_active', true)
             ->orderBy('recommended_rank')
             ->orderBy('name_ar')
-            ->withCount(['tenantInstalls as is_installed' => function($q) use ($companyId) {
+            ->withCount(['tenantInstalls as is_installed' => function ($q) use ($companyId) {
                 $q->where('company_id', $companyId)->where('is_enabled', true);
             }])
             ->get()
-            ->map(function($p) use ($companyId) {
+            ->map(function ($p) use ($companyId) {
                 $tenant = TenantPlugin::where('company_id', $companyId)->where('plugin_key', $p->plugin_key)->first();
-                $p->is_installed = (bool)$tenant?->is_enabled;
+                $p->is_installed = (bool) $tenant?->is_enabled;
                 $p->tenant_config = $tenant?->config;
+
                 return $p;
             });
+
         return response()->json(['data' => $plugins]);
     }
 
@@ -38,8 +41,9 @@ class PluginController extends Controller
         $this->seedDefaultsIfEmpty();
         $plugin = Plugin::where('plugin_key', $key)->firstOrFail();
         $tenant = TenantPlugin::where('company_id', $request->user()->company_id)->where('plugin_key', $key)->first();
-        $plugin->is_installed = (bool)$tenant?->is_enabled;
+        $plugin->is_installed = (bool) $tenant?->is_enabled;
         $plugin->tenant_config = $tenant?->config;
+
         return response()->json(['data' => $plugin]);
     }
 
@@ -49,14 +53,15 @@ class PluginController extends Controller
         $this->seedDefaultsIfEmpty();
         $plugin = Plugin::where('plugin_key', $key)->where('is_active', true)->firstOrFail();
         $companyId = $request->user()->company_id;
-        
+
         $tenant = TenantPlugin::updateOrCreate(
             ['company_id' => $companyId, 'plugin_key' => $key],
             ['is_enabled' => true, 'enabled_at' => now(), 'config' => $plugin->config_schema ?? []]
         );
         $plugin->increment('install_count');
-        
+
         $this->log($key, $companyId, 'activated');
+
         return response()->json(['data' => $tenant, 'message' => "تم تثبيت {$plugin->name_ar} بنجاح."], 201);
     }
 
@@ -67,6 +72,7 @@ class PluginController extends Controller
         TenantPlugin::where('company_id', $companyId)->where('plugin_key', $key)
             ->update(['is_enabled' => false, 'disabled_at' => now()]);
         $this->log($key, $companyId, 'deactivated');
+
         return response()->json(['message' => 'تم إلغاء تثبيت الإضافة.']);
     }
 
@@ -76,6 +82,7 @@ class PluginController extends Controller
         $companyId = $request->user()->company_id;
         $data = $request->validate(['config' => 'required|array']);
         TenantPlugin::where('company_id', $companyId)->where('plugin_key', $key)->update(['config' => $data['config']]);
+
         return response()->json(['message' => 'تم حفظ الإعدادات.']);
     }
 
@@ -84,15 +91,17 @@ class PluginController extends Controller
     {
         $start = microtime(true);
         $companyId = $request->user()->company_id;
-        
+
         $tenant = TenantPlugin::where('company_id', $companyId)->where('plugin_key', $key)->where('is_enabled', true)->first();
-        if (!$tenant) return response()->json(['message' => 'الإضافة غير مثبتة.'], 403);
-        
+        if (! $tenant) {
+            return response()->json(['message' => 'الإضافة غير مثبتة.'], 403);
+        }
+
         $context = $request->input('context', []);
         $result = $this->runPlugin($key, $context, $companyId);
-        $ms = (int)((microtime(true) - $start) * 1000);
+        $ms = (int) ((microtime(true) - $start) * 1000);
         $this->log($key, $companyId, 'executed', ['context_keys' => array_keys($context), 'ms' => $ms], 'success', $ms);
-        
+
         return response()->json(['data' => $result, 'execution_ms' => $ms]);
     }
 
@@ -104,6 +113,7 @@ class PluginController extends Controller
             ->where('is_enabled', true)
             ->with('plugin')
             ->get();
+
         return response()->json(['data' => $installed]);
     }
 
@@ -111,12 +121,12 @@ class PluginController extends Controller
     {
         return match ($key) {
             'ai_advanced_diagnostics' => $this->runDiagnostics($context, $companyId),
-            'ai_pricing_engine'       => $this->runPricing($context, $companyId),
-            'ai_fraud_detection'      => $this->runFraud($context, $companyId),
-            'int_qiwa_workforce'      => $this->runHrQiwaReport($companyId),
-            'int_gosi_payroll'        => $this->runHrGosiReport($companyId),
-            'int_e_contract'          => $this->runHrEContractReport($companyId),
-            'int_mudad_payroll'       => $this->runMudadInfoReport($companyId),
+            'ai_pricing_engine' => $this->runPricing($context, $companyId),
+            'ai_fraud_detection' => $this->runFraud($context, $companyId),
+            'int_qiwa_workforce' => $this->runHrQiwaReport($companyId),
+            'int_gosi_payroll' => $this->runHrGosiReport($companyId),
+            'int_e_contract' => $this->runHrEContractReport($companyId),
+            'int_mudad_payroll' => $this->runMudadInfoReport($companyId),
             default => ['status' => 'ok', 'plugin' => $key, 'message' => 'تم تنفيذ الإضافة بنجاح.'],
         };
     }
@@ -130,6 +140,7 @@ class PluginController extends Controller
             ['issue' => 'ضعف بطارية التشغيل', 'confidence' => 0.72, 'severity' => 'medium', 'estimated_cost' => 350],
             ['issue' => 'تآكل طوارئ الفرامل', 'confidence' => 0.65, 'severity' => 'low', 'estimated_cost' => 180],
         ];
+
         return ['diagnostics' => $diagnostics, 'vehicle_make' => $make, 'analyzed_at' => now()->toISOString(), 'ai_confidence' => 0.91];
     }
 
@@ -137,6 +148,7 @@ class PluginController extends Controller
     {
         $service = $ctx['service'] ?? 'general';
         $base = $ctx['base_price'] ?? 100;
+
         return ['recommended_price' => $base * 1.15, 'margin' => 0.15, 'market_avg' => $base * 1.08, 'demand_factor' => 1.2, 'suggestion' => 'السعر الحالي أقل من متوسط السوق بنسبة 7%'];
     }
 
@@ -155,13 +167,13 @@ class PluginController extends Controller
         $withRef = $rows->filter(fn (Employee $e) => $this->hrString($e->hr_integrations, 'qiwa.employee_ref') !== '')->count();
 
         return [
-            'integration'          => 'qiwa',
-            'employees_total'      => $total,
-            'with_qiwa_ref'        => $withRef,
-            'missing_qiwa_ref'     => max(0, $total - $withRef),
-            'live_api_sync'        => false,
-            'message'              => 'تم تقييم المراجع المحفوظة في ملفات الموظفين. المزامنة المباشرة مع قوى تتطلب مفاتيح واعتمدًا رسميًا في إعدادات الإضافة.',
-            'generated_at'         => now()->toIso8601String(),
+            'integration' => 'qiwa',
+            'employees_total' => $total,
+            'with_qiwa_ref' => $withRef,
+            'missing_qiwa_ref' => max(0, $total - $withRef),
+            'live_api_sync' => false,
+            'message' => 'تم تقييم المراجع المحفوظة في ملفات الموظفين. المزامنة المباشرة مع قوى تتطلب مفاتيح واعتمدًا رسميًا في إعدادات الإضافة.',
+            'generated_at' => now()->toIso8601String(),
         ];
     }
 
@@ -172,13 +184,13 @@ class PluginController extends Controller
         $withSub = $rows->filter(fn (Employee $e) => $this->hrString($e->hr_integrations, 'gosi.subscription_number') !== '')->count();
 
         return [
-            'integration'          => 'gosi',
-            'employees_total'      => $total,
+            'integration' => 'gosi',
+            'employees_total' => $total,
             'with_subscription_no' => $withSub,
             'missing_subscription' => max(0, $total - $withSub),
-            'live_api_sync'        => false,
-            'message'              => 'تم تقييم أرقام الاشتراك المخزّنة يدويًا. مطابقة أجور GOSI الفعلية تتطلب تكاملًا معتمدًا بعد تفعيل اتصال المزود.',
-            'generated_at'         => now()->toIso8601String(),
+            'live_api_sync' => false,
+            'message' => 'تم تقييم أرقام الاشتراك المخزّنة يدويًا. مطابقة أجور GOSI الفعلية تتطلب تكاملًا معتمدًا بعد تفعيل اتصال المزود.',
+            'generated_at' => now()->toIso8601String(),
         ];
     }
 
@@ -189,24 +201,24 @@ class PluginController extends Controller
         $withId = $rows->filter(fn (Employee $e) => $this->hrString($e->hr_integrations, 'e_contract.contract_id') !== '')->count();
 
         return [
-            'integration'     => 'e_contract',
+            'integration' => 'e_contract',
             'employees_total' => $total,
             'with_contract_id' => $withId,
             'missing_contract_ref' => max(0, $total - $withId),
-            'live_api_sync'   => false,
-            'message'         => 'ملخص مراجع العقود الإلكتروني من حقول الموظف. التوقيع المباشر عبر المزوّد يُضاف لاحقًا عند ربط API.',
-            'generated_at'    => now()->toIso8601String(),
+            'live_api_sync' => false,
+            'message' => 'ملخص مراجع العقود الإلكتروني من حقول الموظف. التوقيع المباشر عبر المزوّد يُضاف لاحقًا عند ربط API.',
+            'generated_at' => now()->toIso8601String(),
         ];
     }
 
     private function runMudadInfoReport(int $companyId): array
     {
         return [
-            'integration'   => 'mudad',
+            'integration' => 'mudad',
             'live_api_sync' => false,
-            'message'       => 'لا يوجد ملف أجور مُصدَّر تلقائيًا بعد. بعد اعتماد التكامل، يمكن توليد ملفات مودد من بيانات الرواتب والحضور.',
+            'message' => 'لا يوجد ملف أجور مُصدَّر تلقائيًا بعد. بعد اعتماد التكامل، يمكن توليد ملفات مودد من بيانات الرواتب والحضور.',
             'employees_total' => Employee::where('company_id', $companyId)->count(),
-            'generated_at'  => now()->toIso8601String(),
+            'generated_at' => now()->toIso8601String(),
         ];
     }
 
@@ -220,8 +232,9 @@ class PluginController extends Controller
     private function log(string $key, int $companyId, string $event, array $payload = [], string $status = 'success', int $ms = 0): void
     {
         try {
-            \App\Models\PluginLog::create(['plugin_key' => $key, 'company_id' => $companyId, 'event_type' => $event, 'payload' => $payload, 'status' => $status, 'execution_ms' => $ms ?: null]);
-        } catch (\Throwable) {}
+            PluginLog::create(['plugin_key' => $key, 'company_id' => $companyId, 'event_type' => $event, 'payload' => $payload, 'status' => $status, 'execution_ms' => $ms ?: null]);
+        } catch (\Throwable) {
+        }
     }
 
     /**

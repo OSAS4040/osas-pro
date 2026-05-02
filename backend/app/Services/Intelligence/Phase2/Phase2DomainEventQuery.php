@@ -27,7 +27,7 @@ final class Phase2DomainEventQuery
     }
 
     /**
-     * @return array{0: \Carbon\Carbon, 1: \Carbon\Carbon}
+     * @return array{0: Carbon, 1: Carbon}
      */
     public function resolveWindow(Request $request): array
     {

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\SubscriptionsV2;
 
 use App\Models\Plan;
-use App\Modules\SubscriptionsV2\Enums\PaymentOrderStatus;
 use App\Modules\SubscriptionsV2\Models\BankTransaction;
 use App\Modules\SubscriptionsV2\Models\PaymentOrder;
 use App\Modules\SubscriptionsV2\Models\RealtimeEvent;
@@ -41,19 +40,19 @@ final class SubscriptionRealtimeEventsTest extends TestCase
 
         $this->actingAs($tenant['user'], 'sanctum')
             ->postJson('/api/v1/subscriptions/payment-orders/'.$order->id.'/submit-transfer', [
-                'amount'        => (float) $order->total,
+                'amount' => (float) $order->total,
                 'transfer_date' => now()->toDateString(),
-                'bank_name'     => 'Test Bank',
+                'bank_name' => 'Test Bank',
             ])
             ->assertOk();
 
         $tx = BankTransaction::query()->create([
             'import_batch_uuid' => (string) Str::uuid(),
-            'transaction_date'  => now()->toDateString(),
-            'amount'            => $order->total,
-            'currency'          => 'SAR',
-            'description'       => (string) $order->reference_code,
-            'is_matched'        => false,
+            'transaction_date' => now()->toDateString(),
+            'amount' => $order->total,
+            'currency' => 'SAR',
+            'description' => (string) $order->reference_code,
+            'is_matched' => false,
         ]);
         $platform = $this->createStandalonePlatformOperator('rt-admin-'.Str::random(5).'@platform.test');
         $this->actingAs($platform, 'sanctum')
@@ -75,4 +74,3 @@ final class SubscriptionRealtimeEventsTest extends TestCase
         $this->assertContains('transfer_approved', $companyEvents);
     }
 }
-

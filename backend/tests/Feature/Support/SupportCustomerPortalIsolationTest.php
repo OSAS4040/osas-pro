@@ -44,19 +44,19 @@ final class SupportCustomerPortalIsolationTest extends TestCase
     public function test_customer_cannot_list_other_users_tickets_by_created_by(): void
     {
         $company = $this->makeCompany();
-        $staff   = $this->staffUser($company);
-        $custA   = $this->customerUser($company);
-        $custB   = $this->customerUser($company);
+        $staff = $this->staffUser($company);
+        $custA = $this->customerUser($company);
+        $custB = $this->customerUser($company);
 
         $tB = SupportTicket::create([
-            'uuid'            => (string) \Illuminate\Support\Str::uuid(),
-            'ticket_number'   => 'T-9001',
-            'company_id'      => $company->id,
-            'created_by'      => $custB->id,
-            'subject'         => 'B only',
-            'description'     => 'x',
-            'status'          => 'open',
-            'priority'        => 'low',
+            'uuid' => (string) Str::uuid(),
+            'ticket_number' => 'T-9001',
+            'company_id' => $company->id,
+            'created_by' => $custB->id,
+            'subject' => 'B only',
+            'description' => 'x',
+            'status' => 'open',
+            'priority' => 'low',
         ]);
 
         Sanctum::actingAs($custA);
@@ -69,18 +69,18 @@ final class SupportCustomerPortalIsolationTest extends TestCase
     public function test_customer_cannot_view_foreign_ticket(): void
     {
         $company = $this->makeCompany();
-        $custA   = $this->customerUser($company);
-        $custB   = $this->customerUser($company);
+        $custA = $this->customerUser($company);
+        $custB = $this->customerUser($company);
 
         $tB = SupportTicket::create([
-            'uuid'            => (string) \Illuminate\Support\Str::uuid(),
-            'ticket_number'   => 'T-9002',
-            'company_id'      => $company->id,
-            'created_by'      => $custB->id,
-            'subject'         => 'B only',
-            'description'     => 'x',
-            'status'          => 'open',
-            'priority'        => 'low',
+            'uuid' => (string) Str::uuid(),
+            'ticket_number' => 'T-9002',
+            'company_id' => $company->id,
+            'created_by' => $custB->id,
+            'subject' => 'B only',
+            'description' => 'x',
+            'status' => 'open',
+            'priority' => 'low',
         ]);
 
         Sanctum::actingAs($custA);
@@ -90,7 +90,7 @@ final class SupportCustomerPortalIsolationTest extends TestCase
     public function test_stats_for_customer_excludes_top_agents(): void
     {
         $company = $this->makeCompany();
-        $user    = $this->customerUser($company);
+        $user = $this->customerUser($company);
         Sanctum::actingAs($user);
         $res = $this->getJson('/api/v1/support/stats');
         $res->assertOk();

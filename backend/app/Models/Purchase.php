@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Purchase extends Model
 {
-    use HasFactory, SoftDeletes, HasTenantScope;
+    use HasFactory, HasTenantScope, SoftDeletes;
 
     protected $fillable = [
         'uuid', 'company_id', 'branch_id', 'supplier_id', 'created_by_user_id',
@@ -23,14 +23,14 @@ class Purchase extends Model
 
     protected $casts = [
         'document_attachments' => 'array',
-        'status'          => PurchaseStatus::class,
-        'subtotal'        => 'decimal:4',
+        'status' => PurchaseStatus::class,
+        'subtotal' => 'decimal:4',
         'discount_amount' => 'decimal:4',
-        'tax_amount'      => 'decimal:4',
-        'total'           => 'decimal:4',
-        'paid_amount'     => 'decimal:4',
-        'expected_at'     => 'datetime',
-        'received_at'     => 'datetime',
+        'tax_amount' => 'decimal:4',
+        'total' => 'decimal:4',
+        'paid_amount' => 'decimal:4',
+        'expected_at' => 'datetime',
+        'received_at' => 'datetime',
     ];
 
     public function supplier()

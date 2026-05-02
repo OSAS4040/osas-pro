@@ -25,26 +25,26 @@ class StateTransitionGuardsTest extends TestCase
         $tenant = $this->createTenant();
 
         $invoice = Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'invoice_number'     => 'INV-TST-' . Str::upper(Str::random(6)),
-            'status'             => 'pending',
-            'type'               => 'sale',
-            'customer_type'      => 'b2c',
-            'subtotal'           => 100,
-            'tax_amount'         => 15,
-            'total'              => 115,
-            'paid_amount'        => 50,
-            'due_amount'         => 65,
-            'currency'           => 'SAR',
-            'issued_at'          => now(),
-            'trace_id'           => 'trace-test-invoice-transition',
+            'invoice_number' => 'INV-TST-'.Str::upper(Str::random(6)),
+            'status' => 'pending',
+            'type' => 'sale',
+            'customer_type' => 'b2c',
+            'subtotal' => 100,
+            'tax_amount' => 15,
+            'total' => 115,
+            'paid_amount' => 50,
+            'due_amount' => 65,
+            'currency' => 'SAR',
+            'issued_at' => now(),
+            'trace_id' => 'trace-test-invoice-transition',
         ]);
 
         $response = $this->actingAsUser($tenant['user'])
-            ->withHeaders(['Idempotency-Key' => 'idem-' . Str::lower(Str::random(16))])
+            ->withHeaders(['Idempotency-Key' => 'idem-'.Str::lower(Str::random(16))])
             ->putJson("/api/v1/invoices/{$invoice->id}", [
                 'status' => 'draft',
             ]);
@@ -59,27 +59,27 @@ class StateTransitionGuardsTest extends TestCase
         $tenant = $this->createTenant();
 
         $invoice = Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'invoice_number'     => 'INV-TST-' . Str::upper(Str::random(6)),
-            'status'             => 'partial_paid',
-            'type'               => 'sale',
-            'customer_type'      => 'b2c',
-            'subtotal'           => 100,
-            'tax_amount'         => 15,
-            'total'              => 115,
-            'paid_amount'        => 50,
-            'due_amount'         => 65,
-            'currency'           => 'SAR',
-            'notes'              => 'stable-before-reject',
-            'issued_at'          => now(),
-            'trace_id'           => 'trace-test-invoice-transition-reject',
+            'invoice_number' => 'INV-TST-'.Str::upper(Str::random(6)),
+            'status' => 'partial_paid',
+            'type' => 'sale',
+            'customer_type' => 'b2c',
+            'subtotal' => 100,
+            'tax_amount' => 15,
+            'total' => 115,
+            'paid_amount' => 50,
+            'due_amount' => 65,
+            'currency' => 'SAR',
+            'notes' => 'stable-before-reject',
+            'issued_at' => now(),
+            'trace_id' => 'trace-test-invoice-transition-reject',
         ]);
 
         $response = $this->actingAsUser($tenant['user'])
-            ->withHeaders(['Idempotency-Key' => 'idem-' . Str::lower(Str::random(16))])
+            ->withHeaders(['Idempotency-Key' => 'idem-'.Str::lower(Str::random(16))])
             ->putJson("/api/v1/invoices/{$invoice->id}", [
                 'status' => 'draft',
                 'notes' => 'should-not-change',
@@ -98,61 +98,61 @@ class StateTransitionGuardsTest extends TestCase
         $tenant = $this->createTenant();
 
         $unit = Unit::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'name'       => 'Each',
-            'symbol'     => 'ea',
-            'is_active'  => true,
+            'name' => 'Each',
+            'symbol' => 'ea',
+            'is_active' => true,
         ]);
 
         $product = Product::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'name'               => 'Transition Guard Product',
-            'sku'                => 'TGP-' . Str::upper(Str::random(4)),
-            'product_type'       => 'physical',
-            'unit_id'            => $unit->id,
-            'sale_price'         => 30,
-            'cost_price'         => 20,
-            'track_inventory'    => true,
-            'is_active'          => true,
+            'name' => 'Transition Guard Product',
+            'sku' => 'TGP-'.Str::upper(Str::random(4)),
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => 30,
+            'cost_price' => 20,
+            'track_inventory' => true,
+            'is_active' => true,
         ]);
 
         $supplier = Supplier::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'name'               => 'Transition Guard Supplier',
-            'is_active'          => true,
-            'status'             => 'active',
+            'name' => 'Transition Guard Supplier',
+            'is_active' => true,
+            'status' => 'active',
         ]);
 
         $purchase = Purchase::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'supplier_id'        => $supplier->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'supplier_id' => $supplier->id,
             'created_by_user_id' => $tenant['user']->id,
-            'reference_number'   => 'PO-TST-' . Str::upper(Str::random(6)),
-            'status'             => 'ordered',
-            'subtotal'           => 100,
-            'tax_amount'         => 15,
-            'total'              => 115,
-            'currency'           => 'SAR',
+            'reference_number' => 'PO-TST-'.Str::upper(Str::random(6)),
+            'status' => 'ordered',
+            'subtotal' => 100,
+            'tax_amount' => 15,
+            'total' => 115,
+            'currency' => 'SAR',
         ]);
 
         $item = PurchaseItem::create([
-            'company_id'        => $tenant['company']->id,
-            'purchase_id'       => $purchase->id,
-            'product_id'        => $product->id,
-            'name'              => 'Transition Guard Product',
-            'quantity'          => 5,
+            'company_id' => $tenant['company']->id,
+            'purchase_id' => $purchase->id,
+            'product_id' => $product->id,
+            'name' => 'Transition Guard Product',
+            'quantity' => 5,
             'received_quantity' => 0,
-            'unit_cost'         => 20,
-            'tax_rate'          => 15,
-            'tax_amount'        => 15,
-            'total'             => 115,
+            'unit_cost' => 20,
+            'tax_rate' => 15,
+            'tax_amount' => 15,
+            'total' => 115,
         ]);
 
         $response = $this->actingAsUser($tenant['user'])
@@ -174,61 +174,61 @@ class StateTransitionGuardsTest extends TestCase
         $tenant = $this->createTenant();
 
         $unit = Unit::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'name'       => 'Each',
-            'symbol'     => 'ea',
-            'is_active'  => true,
+            'name' => 'Each',
+            'symbol' => 'ea',
+            'is_active' => true,
         ]);
 
         $product = Product::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'name'               => 'Transition Guard Product 2',
-            'sku'                => 'TGP-' . Str::upper(Str::random(4)),
-            'product_type'       => 'physical',
-            'unit_id'            => $unit->id,
-            'sale_price'         => 30,
-            'cost_price'         => 20,
-            'track_inventory'    => true,
-            'is_active'          => true,
+            'name' => 'Transition Guard Product 2',
+            'sku' => 'TGP-'.Str::upper(Str::random(4)),
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => 30,
+            'cost_price' => 20,
+            'track_inventory' => true,
+            'is_active' => true,
         ]);
 
         $supplier = Supplier::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'name'               => 'Transition Guard Supplier 2',
-            'is_active'          => true,
-            'status'             => 'active',
+            'name' => 'Transition Guard Supplier 2',
+            'is_active' => true,
+            'status' => 'active',
         ]);
 
         $purchase = Purchase::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'supplier_id'        => $supplier->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'supplier_id' => $supplier->id,
             'created_by_user_id' => $tenant['user']->id,
-            'reference_number'   => 'PO-TST-' . Str::upper(Str::random(6)),
-            'status'             => 'received',
-            'subtotal'           => 100,
-            'tax_amount'         => 15,
-            'total'              => 115,
-            'currency'           => 'SAR',
+            'reference_number' => 'PO-TST-'.Str::upper(Str::random(6)),
+            'status' => 'received',
+            'subtotal' => 100,
+            'tax_amount' => 15,
+            'total' => 115,
+            'currency' => 'SAR',
         ]);
 
         $item = PurchaseItem::create([
-            'company_id'        => $tenant['company']->id,
-            'purchase_id'       => $purchase->id,
-            'product_id'        => $product->id,
-            'name'              => 'Transition Guard Product 2',
-            'quantity'          => 5,
+            'company_id' => $tenant['company']->id,
+            'purchase_id' => $purchase->id,
+            'product_id' => $product->id,
+            'name' => 'Transition Guard Product 2',
+            'quantity' => 5,
             'received_quantity' => 5,
-            'unit_cost'         => 20,
-            'tax_rate'          => 15,
-            'tax_amount'        => 15,
-            'total'             => 115,
+            'unit_cost' => 20,
+            'tax_rate' => 15,
+            'tax_amount' => 15,
+            'total' => 115,
         ]);
 
         $response = $this->actingAsUser($tenant['user'])
@@ -252,17 +252,17 @@ class StateTransitionGuardsTest extends TestCase
         $tenant = $this->createTenant();
 
         $ticket = SupportTicket::create([
-            'uuid'          => (string) Str::uuid(),
-            'ticket_number' => 'TKT-TST-' . Str::upper(Str::random(6)),
-            'company_id'    => $tenant['company']->id,
-            'branch_id'     => $tenant['branch']->id,
-            'created_by'    => $tenant['user']->id,
-            'subject'       => 'Transition guard validation',
-            'description'   => 'Validate open ticket can move to in progress.',
-            'priority'      => 'medium',
-            'status'        => 'open',
-            'channel'       => 'portal',
-            'sla_due_at'    => now()->addDay(),
+            'uuid' => (string) Str::uuid(),
+            'ticket_number' => 'TKT-TST-'.Str::upper(Str::random(6)),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'created_by' => $tenant['user']->id,
+            'subject' => 'Transition guard validation',
+            'description' => 'Validate open ticket can move to in progress.',
+            'priority' => 'medium',
+            'status' => 'open',
+            'channel' => 'portal',
+            'sla_due_at' => now()->addDay(),
         ]);
 
         $response = $this->actingAsUser($tenant['user'])
@@ -280,18 +280,18 @@ class StateTransitionGuardsTest extends TestCase
         $tenant = $this->createTenant();
 
         $ticket = SupportTicket::create([
-            'uuid'          => (string) Str::uuid(),
-            'ticket_number' => 'TKT-TST-' . Str::upper(Str::random(6)),
-            'company_id'    => $tenant['company']->id,
-            'branch_id'     => $tenant['branch']->id,
-            'created_by'    => $tenant['user']->id,
-            'subject'       => 'Transition guard validation',
-            'description'   => 'Validate closed ticket cannot move back.',
-            'priority'      => 'medium',
-            'status'        => 'closed',
-            'closed_at'     => now(),
-            'channel'       => 'portal',
-            'sla_due_at'    => now()->addDay(),
+            'uuid' => (string) Str::uuid(),
+            'ticket_number' => 'TKT-TST-'.Str::upper(Str::random(6)),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'created_by' => $tenant['user']->id,
+            'subject' => 'Transition guard validation',
+            'description' => 'Validate closed ticket cannot move back.',
+            'priority' => 'medium',
+            'status' => 'closed',
+            'closed_at' => now(),
+            'channel' => 'portal',
+            'sla_due_at' => now()->addDay(),
         ]);
 
         $response = $this->actingAsUser($tenant['user'])
@@ -312,42 +312,42 @@ class StateTransitionGuardsTest extends TestCase
         $tenant = $this->createTenant();
 
         $invoice = Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'invoice_number'     => 'INV-TST-' . Str::upper(Str::random(6)),
-            'status'             => 'partial_paid',
-            'type'               => 'sale',
-            'customer_type'      => 'b2c',
-            'subtotal'           => 100,
-            'tax_amount'         => 15,
-            'total'              => 115,
-            'paid_amount'        => 50,
-            'due_amount'         => 65,
-            'currency'           => 'SAR',
-            'issued_at'          => now(),
+            'invoice_number' => 'INV-TST-'.Str::upper(Str::random(6)),
+            'status' => 'partial_paid',
+            'type' => 'sale',
+            'customer_type' => 'b2c',
+            'subtotal' => 100,
+            'tax_amount' => 15,
+            'total' => 115,
+            'paid_amount' => 50,
+            'due_amount' => 65,
+            'currency' => 'SAR',
+            'issued_at' => now(),
         ]);
 
         $invoiceMsg = (string) $this->actingAsUser($tenant['user'])
-            ->withHeaders(['Idempotency-Key' => 'idem-' . Str::lower(Str::random(16))])
+            ->withHeaders(['Idempotency-Key' => 'idem-'.Str::lower(Str::random(16))])
             ->putJson("/api/v1/invoices/{$invoice->id}", ['status' => 'draft'])
             ->json('message');
         $this->assertStringEndsWith('is not allowed.', $invoiceMsg);
 
         $ticket = SupportTicket::create([
-            'uuid'          => (string) Str::uuid(),
-            'ticket_number' => 'TKT-TST-' . Str::upper(Str::random(6)),
-            'company_id'    => $tenant['company']->id,
-            'branch_id'     => $tenant['branch']->id,
-            'created_by'    => $tenant['user']->id,
-            'subject'       => 'Transition guard validation',
-            'description'   => 'Validate message consistency.',
-            'priority'      => 'medium',
-            'status'        => 'closed',
-            'closed_at'     => now(),
-            'channel'       => 'portal',
-            'sla_due_at'    => now()->addDay(),
+            'uuid' => (string) Str::uuid(),
+            'ticket_number' => 'TKT-TST-'.Str::upper(Str::random(6)),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'created_by' => $tenant['user']->id,
+            'subject' => 'Transition guard validation',
+            'description' => 'Validate message consistency.',
+            'priority' => 'medium',
+            'status' => 'closed',
+            'closed_at' => now(),
+            'channel' => 'portal',
+            'sla_due_at' => now()->addDay(),
         ]);
 
         $supportMsg = (string) $this->actingAsUser($tenant['user'])
@@ -356,61 +356,61 @@ class StateTransitionGuardsTest extends TestCase
         $this->assertStringEndsWith('is not allowed.', $supportMsg);
 
         $unit = Unit::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'name'       => 'Each',
-            'symbol'     => 'ea',
-            'is_active'  => true,
+            'name' => 'Each',
+            'symbol' => 'ea',
+            'is_active' => true,
         ]);
 
         $product = Product::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'name'               => 'Transition Guard Product 3',
-            'sku'                => 'TGP-' . Str::upper(Str::random(4)),
-            'product_type'       => 'physical',
-            'unit_id'            => $unit->id,
-            'sale_price'         => 30,
-            'cost_price'         => 20,
-            'track_inventory'    => true,
-            'is_active'          => true,
+            'name' => 'Transition Guard Product 3',
+            'sku' => 'TGP-'.Str::upper(Str::random(4)),
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => 30,
+            'cost_price' => 20,
+            'track_inventory' => true,
+            'is_active' => true,
         ]);
 
         $supplier = Supplier::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'name'               => 'Transition Guard Supplier 3',
-            'is_active'          => true,
-            'status'             => 'active',
+            'name' => 'Transition Guard Supplier 3',
+            'is_active' => true,
+            'status' => 'active',
         ]);
 
         $purchase = Purchase::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'supplier_id'        => $supplier->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'supplier_id' => $supplier->id,
             'created_by_user_id' => $tenant['user']->id,
-            'reference_number'   => 'PO-TST-' . Str::upper(Str::random(6)),
-            'status'             => 'received',
-            'subtotal'           => 100,
-            'tax_amount'         => 15,
-            'total'              => 115,
-            'currency'           => 'SAR',
+            'reference_number' => 'PO-TST-'.Str::upper(Str::random(6)),
+            'status' => 'received',
+            'subtotal' => 100,
+            'tax_amount' => 15,
+            'total' => 115,
+            'currency' => 'SAR',
         ]);
 
         $item = PurchaseItem::create([
-            'company_id'        => $tenant['company']->id,
-            'purchase_id'       => $purchase->id,
-            'product_id'        => $product->id,
-            'name'              => 'Transition Guard Product 3',
-            'quantity'          => 5,
+            'company_id' => $tenant['company']->id,
+            'purchase_id' => $purchase->id,
+            'product_id' => $product->id,
+            'name' => 'Transition Guard Product 3',
+            'quantity' => 5,
             'received_quantity' => 5,
-            'unit_cost'         => 20,
-            'tax_rate'          => 15,
-            'tax_amount'        => 15,
-            'total'             => 115,
+            'unit_cost' => 20,
+            'tax_rate' => 15,
+            'tax_amount' => 15,
+            'total' => 115,
         ]);
 
         $purchaseMsg = (string) $this->actingAsUser($tenant['user'])
@@ -428,25 +428,25 @@ class StateTransitionGuardsTest extends TestCase
         $tenant = $this->createTenant();
 
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'STG Customer',
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2c',
+            'name' => 'STG Customer',
+            'is_active' => true,
         ]);
 
         $vehicle = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $tenant['user']->id,
-            'plate_number'       => 'STG-' . Str::upper(Str::random(5)),
-            'make'               => 'X',
-            'model'              => 'Y',
-            'year'               => 2024,
-            'is_active'          => true,
+            'plate_number' => 'STG-'.Str::upper(Str::random(5)),
+            'make' => 'X',
+            'model' => 'Y',
+            'year' => 2024,
+            'is_active' => true,
         ]);
 
         $order = app(WorkOrderService::class)->create(
@@ -465,7 +465,7 @@ class StateTransitionGuardsTest extends TestCase
 
         $ok = $this->actingAsUser($tenant['user'])
             ->patchJson("/api/v1/work-orders/{$order->id}/status", [
-                'status'  => 'in_progress',
+                'status' => 'in_progress',
                 'version' => $order->version,
             ]);
         $ok->assertOk();
@@ -474,7 +474,7 @@ class StateTransitionGuardsTest extends TestCase
 
         $bad = $this->actingAsUser($tenant['user'])
             ->patchJson("/api/v1/work-orders/{$order->id}/status", [
-                'status'  => 'delivered',
+                'status' => 'delivered',
                 'version' => $order->version,
             ]);
         $bad->assertStatus(409);
@@ -547,10 +547,10 @@ class StateTransitionGuardsTest extends TestCase
 
         $bay = Bay::create([
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'code'       => 'STG-B1',
-            'name'       => 'Bay STG',
-            'status'     => 'available',
+            'branch_id' => $tenant['branch']->id,
+            'code' => 'STG-B1',
+            'name' => 'Bay STG',
+            'status' => 'available',
         ]);
 
         $ok = $this->actingAsUser($tenant['user'])
@@ -572,9 +572,9 @@ class StateTransitionGuardsTest extends TestCase
 
         $task = Task::create([
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'title'      => 'STG Task',
-            'status'     => 'pending',
+            'branch_id' => $tenant['branch']->id,
+            'title' => 'STG Task',
+            'status' => 'pending',
         ]);
 
         $ok = $this->actingAsUser($tenant['user'])
@@ -596,20 +596,20 @@ class StateTransitionGuardsTest extends TestCase
 
         $bay = Bay::create([
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'code'       => 'STG-BK',
-            'name'       => 'Booking bay',
-            'status'     => 'available',
+            'branch_id' => $tenant['branch']->id,
+            'code' => 'STG-BK',
+            'name' => 'Booking bay',
+            'status' => 'available',
         ]);
 
         $booking = Booking::create([
-            'company_id'       => $tenant['company']->id,
-            'branch_id'        => $tenant['branch']->id,
-            'bay_id'           => $bay->id,
-            'starts_at'        => now()->addHour(),
-            'ends_at'          => now()->addHours(2),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'bay_id' => $bay->id,
+            'starts_at' => now()->addHour(),
+            'ends_at' => now()->addHours(2),
             'duration_minutes' => 60,
-            'status'           => 'pending',
+            'status' => 'pending',
         ]);
 
         $r = $this->actingAsUser($tenant['user'])
@@ -625,20 +625,20 @@ class StateTransitionGuardsTest extends TestCase
 
         $bay = Bay::create([
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'code'       => 'STG-BK2',
-            'name'       => 'Booking bay 2',
-            'status'     => 'available',
+            'branch_id' => $tenant['branch']->id,
+            'code' => 'STG-BK2',
+            'name' => 'Booking bay 2',
+            'status' => 'available',
         ]);
 
         $booking = Booking::create([
-            'company_id'       => $tenant['company']->id,
-            'branch_id'        => $tenant['branch']->id,
-            'bay_id'           => $bay->id,
-            'starts_at'        => now()->addHour(),
-            'ends_at'          => now()->addHours(2),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'bay_id' => $bay->id,
+            'starts_at' => now()->addHour(),
+            'ends_at' => now()->addHours(2),
             'duration_minutes' => 60,
-            'status'           => 'pending',
+            'status' => 'pending',
         ]);
 
         $res = $this->actingAsUser($tenant['user'])

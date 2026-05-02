@@ -2,23 +2,22 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Services\ApprovalWorkflowService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class SalaryController extends Controller
 {
-    public function __construct(private readonly ApprovalWorkflowService $approvalWorkflowService)
-    {
-    }
+    public function __construct(private readonly ApprovalWorkflowService $approvalWorkflowService) {}
 
     public function index(Request $request): JsonResponse
     {
         $companyId = $request->user()->company_id;
 
-        if (!DB::getSchemaBuilder()->hasTable('salaries')) {
+        if (! DB::getSchemaBuilder()->hasTable('salaries')) {
             return response()->json(['data' => [], 'meta' => ['total' => 0]]);
         }
 
@@ -47,18 +46,18 @@ class SalaryController extends Controller
     {
         $companyId = $request->user()->company_id;
 
-        if (!DB::getSchemaBuilder()->hasTable('salaries')) {
+        if (! DB::getSchemaBuilder()->hasTable('salaries')) {
             return response()->json(['message' => 'Salaries module not enabled'], 503);
         }
 
         $validated = $request->validate([
-            'employee_id'   => 'required|integer',
-            'month'         => 'required|string|regex:/^\d{4}-\d{2}$/',
-            'base_salary'   => 'required|numeric|min:0',
-            'allowances'    => 'nullable|numeric|min:0',
-            'deductions'    => 'nullable|numeric|min:0',
-            'commissions'   => 'nullable|numeric|min:0',
-            'notes'         => 'nullable|string|max:1000',
+            'employee_id' => 'required|integer',
+            'month' => 'required|string|regex:/^\d{4}-\d{2}$/',
+            'base_salary' => 'required|numeric|min:0',
+            'allowances' => 'nullable|numeric|min:0',
+            'deductions' => 'nullable|numeric|min:0',
+            'commissions' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         // Check for duplicate
@@ -73,18 +72,18 @@ class SalaryController extends Controller
         }
 
         $id = DB::table('salaries')->insertGetId([
-            'uuid'         => (string) \Illuminate\Support\Str::uuid(),
-            'company_id'   => $companyId,
-            'employee_id'  => $validated['employee_id'],
-            'month'        => $validated['month'],
-            'base_salary'  => $validated['base_salary'],
-            'allowances'   => $validated['allowances'] ?? 0,
-            'deductions'   => $validated['deductions'] ?? 0,
-            'commissions'  => $validated['commissions'] ?? 0,
-            'status'       => 'draft',
-            'notes'        => $validated['notes'] ?? null,
-            'created_at'   => now(),
-            'updated_at'   => now(),
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $companyId,
+            'employee_id' => $validated['employee_id'],
+            'month' => $validated['month'],
+            'base_salary' => $validated['base_salary'],
+            'allowances' => $validated['allowances'] ?? 0,
+            'deductions' => $validated['deductions'] ?? 0,
+            'commissions' => $validated['commissions'] ?? 0,
+            'status' => 'draft',
+            'notes' => $validated['notes'] ?? null,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $salary = DB::table('salaries')->find($id);
@@ -99,6 +98,7 @@ class SalaryController extends Controller
             ['module' => 'salaries'],
             1
         );
+
         return response()->json(['data' => $salary, 'message' => 'Salary record created'], 201);
     }
 
@@ -106,7 +106,7 @@ class SalaryController extends Controller
     {
         $companyId = $request->user()->company_id;
 
-        if (!DB::getSchemaBuilder()->hasTable('salaries')) {
+        if (! DB::getSchemaBuilder()->hasTable('salaries')) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
@@ -150,7 +150,7 @@ class SalaryController extends Controller
     {
         $companyId = $request->user()->company_id;
 
-        if (!DB::getSchemaBuilder()->hasTable('salaries')) {
+        if (! DB::getSchemaBuilder()->hasTable('salaries')) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
@@ -167,7 +167,7 @@ class SalaryController extends Controller
         $companyId = $request->user()->company_id;
         $month = $request->input('month', now()->format('Y-m'));
 
-        if (!DB::getSchemaBuilder()->hasTable('salaries')) {
+        if (! DB::getSchemaBuilder()->hasTable('salaries')) {
             return response()->json(['data' => ['total_net' => 0, 'total_employees' => 0, 'paid' => 0, 'pending' => 0]]);
         }
 

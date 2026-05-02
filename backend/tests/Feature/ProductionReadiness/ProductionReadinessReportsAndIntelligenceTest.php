@@ -21,7 +21,7 @@ final class ProductionReadinessReportsAndIntelligenceTest extends TestCase
     {
         return [
             'from' => now()->subDays(7)->toDateString(),
-            'to'   => now()->addDay()->toDateString(),
+            'to' => now()->addDay()->toDateString(),
         ];
     }
 

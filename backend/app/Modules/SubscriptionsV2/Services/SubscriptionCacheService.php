@@ -40,4 +40,3 @@ final class SubscriptionCacheService
         Cache::forget($this->adminOverviewKey());
     }
 }
-

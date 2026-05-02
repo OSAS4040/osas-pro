@@ -11,7 +11,7 @@ trait HasTenantScope
     {
         static::addGlobalScope('tenant', function (Builder $query) {
             if (app()->has('tenant_company_id')) {
-                $query->where($query->getModel()->getTable() . '.company_id', app('tenant_company_id'));
+                $query->where($query->getModel()->getTable().'.company_id', app('tenant_company_id'));
             }
         });
 
@@ -28,11 +28,11 @@ trait HasTenantScope
     public function scopeForCompany(Builder $query, int $companyId): Builder
     {
         return $query->withoutGlobalScope('tenant')
-            ->where($this->getTable() . '.company_id', $companyId);
+            ->where($this->getTable().'.company_id', $companyId);
     }
 
     public function scopeForBranch(Builder $query, int $branchId): Builder
     {
-        return $query->where($this->getTable() . '.branch_id', $branchId);
+        return $query->where($this->getTable().'.branch_id', $branchId);
     }
 }

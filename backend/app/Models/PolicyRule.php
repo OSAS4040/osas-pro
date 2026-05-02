@@ -15,7 +15,7 @@ class PolicyRule extends Model
     ];
 
     protected $casts = [
-        'value'     => 'array',
+        'value' => 'array',
         'is_active' => 'boolean',
     ];
 

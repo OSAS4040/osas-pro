@@ -39,8 +39,8 @@ class NotifyCustomerWorkOrderWhatsAppJob implements ShouldQueue
         if (! config('whatsapp_work_order_notifications.enabled')) {
             Log::info('whatsapp.work_order.skipped_feature_disabled', [
                 'work_order_id' => $this->workOrderId,
-                'company_id'    => $this->companyId,
-                'kind'          => $this->kind,
+                'company_id' => $this->companyId,
+                'kind' => $this->kind,
             ]);
 
             return;
@@ -55,8 +55,8 @@ class NotifyCustomerWorkOrderWhatsAppJob implements ShouldQueue
         if (! $workOrder || (int) $workOrder->company_id !== $this->companyId) {
             Log::warning('whatsapp.work_order.job_invalid_order', [
                 'work_order_id' => $this->workOrderId,
-                'company_id'    => $this->companyId,
-                'kind'          => $this->kind,
+                'company_id' => $this->companyId,
+                'kind' => $this->kind,
             ]);
 
             return;
@@ -69,9 +69,9 @@ class NotifyCustomerWorkOrderWhatsAppJob implements ShouldQueue
     {
         Log::error('whatsapp.work_order.job_failed', [
             'work_order_id' => $this->workOrderId,
-            'company_id'    => $this->companyId,
-            'kind'          => $this->kind,
-            'error'         => $e?->getMessage(),
+            'company_id' => $this->companyId,
+            'kind' => $this->kind,
+            'error' => $e?->getMessage(),
         ]);
     }
 }

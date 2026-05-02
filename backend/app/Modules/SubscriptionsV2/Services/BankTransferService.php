@@ -39,19 +39,19 @@ final class BankTransferService
         }
 
         $submission = BankTransferSubmission::query()->create([
-            'payment_order_id'        => $order->id,
-            'submitted_by'            => $submittedByUserId,
-            'amount'                  => $data['amount'],
-            'transfer_date'           => $data['transfer_date'],
-            'transfer_time'           => $data['transfer_time'] ?? null,
-            'bank_name'               => $data['bank_name'],
-            'sender_name'             => $data['sender_name'] ?? null,
-            'sender_account_masked'   => $data['sender_account_masked'] ?? null,
-            'bank_reference'          => $data['bank_reference'] ?? null,
-            'receipt_path'            => $data['receipt_path'] ?? null,
-            'receipt_original_name'   => $data['receipt_original_name'] ?? null,
-            'status'                  => BankTransferReviewStatus::UnderReview,
-            'notes'                   => $data['notes'] ?? null,
+            'payment_order_id' => $order->id,
+            'submitted_by' => $submittedByUserId,
+            'amount' => $data['amount'],
+            'transfer_date' => $data['transfer_date'],
+            'transfer_time' => $data['transfer_time'] ?? null,
+            'bank_name' => $data['bank_name'],
+            'sender_name' => $data['sender_name'] ?? null,
+            'sender_account_masked' => $data['sender_account_masked'] ?? null,
+            'bank_reference' => $data['bank_reference'] ?? null,
+            'receipt_path' => $data['receipt_path'] ?? null,
+            'receipt_original_name' => $data['receipt_original_name'] ?? null,
+            'status' => BankTransferReviewStatus::UnderReview,
+            'notes' => $data['notes'] ?? null,
         ]);
 
         $this->paymentOrderService->markAwaitingReview($order->fresh() ?? $order);

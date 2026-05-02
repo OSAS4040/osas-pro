@@ -58,7 +58,7 @@ final class PlatformSignalEngineComponentsTest extends TestCase
             ],
             'definitions' => ['a' => 'b'],
         ]);
-        $detector = new OverviewBasedSignalDetector();
+        $detector = new OverviewBasedSignalDetector;
         $drafts = $detector->detect($norm);
         $this->assertNotEmpty($drafts);
         foreach ($drafts as $d) {
@@ -72,7 +72,7 @@ final class PlatformSignalEngineComponentsTest extends TestCase
 
     public function test_severity_scorer_respects_queue_pressure(): void
     {
-        $scorer = new SeverityScorer();
+        $scorer = new SeverityScorer;
         $draft = new SignalDraft(
             'k',
             PlatformSignalType::MetricThreshold,
@@ -86,7 +86,7 @@ final class PlatformSignalEngineComponentsTest extends TestCase
             [],
             ['queue_pressure' => true, 'supporting_factor_count' => 2],
             null,
-            new DateTimeImmutable(),
+            new DateTimeImmutable,
         );
         $sev = $scorer->score($draft);
         $this->assertContains(
@@ -97,7 +97,7 @@ final class PlatformSignalEngineComponentsTest extends TestCase
 
     public function test_confidence_scorer_penalizes_sparse_metrics(): void
     {
-        $scorer = new ConfidenceScorer();
+        $scorer = new ConfidenceScorer;
         $norm = new OverviewSnapshotNormalizer(['generated_at' => '2026-01-01T00:00:00Z', 'kpis' => []]);
         $draft = new SignalDraft(
             'k',
@@ -112,7 +112,7 @@ final class PlatformSignalEngineComponentsTest extends TestCase
             [],
             ['scheduler_stale' => true, 'sparse_metrics' => true],
             null,
-            new DateTimeImmutable(),
+            new DateTimeImmutable,
         );
         $c = $scorer->score($draft, $norm);
         $this->assertLessThan(0.75, $c);
@@ -120,7 +120,7 @@ final class PlatformSignalEngineComponentsTest extends TestCase
 
     public function test_dedupe_merges_identical_fingerprints(): void
     {
-        $dedupe = new SignalDedupeService();
+        $dedupe = new SignalDedupeService;
         $t = new DateTimeImmutable('2026-01-01T00:00:00Z');
         $a = new PlatformSignalContract(
             'sig.duplicate',
@@ -170,8 +170,8 @@ final class PlatformSignalEngineComponentsTest extends TestCase
 
     public function test_explainability_appends_interpretation_lines(): void
     {
-        $composer = new SignalExplainabilityComposer();
-        $t = new DateTimeImmutable();
+        $composer = new SignalExplainabilityComposer;
+        $t = new DateTimeImmutable;
         $s = new PlatformSignalContract(
             'sig.x',
             PlatformSignalType::Trend,
@@ -199,7 +199,7 @@ final class PlatformSignalEngineComponentsTest extends TestCase
 
     public function test_recommended_next_step_policy_returns_advisory_only(): void
     {
-        $p = new RecommendedNextStepPolicy();
+        $p = new RecommendedNextStepPolicy;
         $text = $p->forSignalKey('sig.platform.tenant.inactive_cluster');
         $this->assertStringContainsString('راقب', $text);
         $this->assertStringContainsString('مرشح', $text);

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Employee;
 use App\Models\Task;
-use Illuminate\Support\Collection;
 
 class TaskEngine
 {
@@ -17,11 +16,11 @@ class TaskEngine
         $employee = $this->findBestEmployee($companyId, $branchId, $skill);
 
         $task = Task::create(array_merge($taskData, [
-            'company_id'  => $companyId,
-            'branch_id'   => $branchId,
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
             'assigned_to' => $employee?->id,
             'assigned_by' => auth()->id(),
-            'status'      => $employee ? 'assigned' : 'pending',
+            'status' => $employee ? 'assigned' : 'pending',
         ]));
 
         return $task;
@@ -31,25 +30,28 @@ class TaskEngine
     {
         $task->update([
             'assigned_to' => $employeeId,
-            'status'      => 'assigned',
+            'status' => 'assigned',
         ]);
+
         return $task->fresh();
     }
 
     public function start(Task $task): Task
     {
         $task->update(['status' => 'in_progress', 'started_at' => now()]);
+
         return $task->fresh();
     }
 
-    public function complete(Task $task, string $notes = '', int $actualMinutes = null): Task
+    public function complete(Task $task, string $notes = '', ?int $actualMinutes = null): Task
     {
         $task->update([
-            'status'           => 'completed',
-            'completed_at'     => now(),
+            'status' => 'completed',
+            'completed_at' => now(),
             'completion_notes' => $notes,
-            'actual_minutes'   => $actualMinutes,
+            'actual_minutes' => $actualMinutes,
         ]);
+
         return $task->fresh();
     }
 
@@ -60,12 +62,16 @@ class TaskEngine
             ->where('status', 'active')
             ->get();
 
-        if ($employees->isEmpty()) return null;
+        if ($employees->isEmpty()) {
+            return null;
+        }
 
         // Filter by skill if specified
         if ($skill) {
             $skilled = $employees->filter(fn ($e) => in_array($skill, $e->skills ?? []));
-            if ($skilled->isNotEmpty()) $employees = $skilled;
+            if ($skilled->isNotEmpty()) {
+                $employees = $skilled;
+            }
         }
 
         // Pick the one with fewest active tasks
@@ -76,18 +82,20 @@ class TaskEngine
         })->first();
     }
 
-    public function stats(int $companyId, int $branchId = null): array
+    public function stats(int $companyId, ?int $branchId = null): array
     {
         $q = Task::where('company_id', $companyId);
-        if ($branchId) $q->where('branch_id', $branchId);
+        if ($branchId) {
+            $q->where('branch_id', $branchId);
+        }
 
         return [
-            'pending'     => (clone $q)->where('status', 'pending')->count(),
-            'assigned'    => (clone $q)->where('status', 'assigned')->count(),
+            'pending' => (clone $q)->where('status', 'pending')->count(),
+            'assigned' => (clone $q)->where('status', 'assigned')->count(),
             'in_progress' => (clone $q)->where('status', 'in_progress')->count(),
-            'completed'   => (clone $q)->where('status', 'completed')->count(),
-            'overdue'     => (clone $q)->whereIn('status', ['pending','assigned','in_progress'])
-                                ->whereNotNull('due_at')->where('due_at', '<', now())->count(),
+            'completed' => (clone $q)->where('status', 'completed')->count(),
+            'overdue' => (clone $q)->whereIn('status', ['pending', 'assigned', 'in_progress'])
+                ->whereNotNull('due_at')->where('due_at', '<', now())->count(),
             'at_risk_sla' => (clone $q)->whereIn('status', ['pending', 'assigned', 'in_progress'])
                 ->whereNotNull('due_at')
                 ->whereBetween('due_at', [now(), now()->copy()->addHours(24)])

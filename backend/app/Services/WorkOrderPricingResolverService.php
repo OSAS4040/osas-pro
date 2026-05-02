@@ -9,14 +9,15 @@ use App\Enums\WorkOrderPricingSource;
 use App\Models\Contract;
 use App\Models\ContractServiceItem;
 use App\Models\Customer;
-use App\Models\PlatformCustomerPriceVersion;
 use App\Models\Plan;
+use App\Models\PlatformCustomerPriceVersion;
 use App\Models\Service;
 use App\Models\ServicePricingPolicy;
 use App\Models\Subscription;
 use App\Models\WorkOrderItem;
 use App\Services\WorkOrderPricing\ResolvedWorkOrderLinePrice;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -240,7 +241,7 @@ class WorkOrderPricingResolverService
         return (bool) ($plan->features['work_order_advanced_pricing'] ?? false);
     }
 
-    private function basePolicyQuery(int $companyId, int $serviceId, string $onDateStr, ?int $branchId): \Illuminate\Database\Eloquent\Builder
+    private function basePolicyQuery(int $companyId, int $serviceId, string $onDateStr, ?int $branchId): Builder
     {
         return ServicePricingPolicy::query()
             ->where('company_id', $companyId)

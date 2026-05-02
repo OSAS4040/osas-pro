@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Unit extends Model
@@ -16,7 +15,7 @@ class Unit extends Model
     ];
 
     protected $casts = [
-        'is_base'   => 'boolean',
+        'is_base' => 'boolean',
         'is_active' => 'boolean',
         'is_system' => 'boolean',
     ];

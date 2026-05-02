@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\WorkOrder;
 
-use App\Models\Company;
 use App\Enums\WorkOrderStatus;
+use App\Models\Branch;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\OrgUnit;
 use App\Models\User;
@@ -359,7 +360,7 @@ class WorkOrderOrderNumberSequenceTest extends TestCase
     }
 
     /**
-     * @return array{company: Company, branch: \App\Models\Branch, user: User, customer: Customer, vehicle: Vehicle}
+     * @return array{company: Company, branch: Branch, user: User, customer: Customer, vehicle: Vehicle}
      */
     private function setupTenant(string $suffix): array
     {

@@ -5,31 +5,32 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Actions\Auth\ResolveLoginContextAction;
 use App\Enums\CompanyStatus;
 use App\Enums\LoginPrincipalKind;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
-use App\Services\Platform\PlatformAuditLogger;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterPushDeviceRequest;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Jobs\SyncUserPushDeviceJob;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Subscription;
+use App\Models\User;
+use App\Models\UserPushDevice;
 use App\Services\Auth\AuthLoginEventRecorder;
 use App\Services\Auth\AuthSecurityTelemetryService;
 use App\Services\Auth\AuthSessionMetadataWriter;
 use App\Services\Auth\LoginBootstrapService;
 use App\Services\Auth\LoginOtpNotifier;
 use App\Services\NavigationVisibilityService;
+use App\Services\Platform\PlatformAuditLogger;
 use App\Services\Platform\StaffNavHideResolver;
-use App\Support\Auth\PhoneNormalizer;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Requests\Auth\RegisterPushDeviceRequest;
-use App\Http\Requests\Auth\RegisterRequest;
-use App\Jobs\SyncUserPushDeviceJob;
-use App\Http\Requests\Auth\ResetPasswordRequest;
-use App\Models\Branch;
-use App\Models\Company;
-use App\Models\UserPushDevice;
-use App\Models\Subscription;
-use App\Models\User;
 use App\Support\Auth\LoginContextResolution;
-use App\Support\TenantBusinessFeatures;
+use App\Support\Auth\PhoneNormalizer;
 use App\Support\PlatformIntelligence\PlatformRolePermissionResolver;
 use App\Support\SubscriptionAccessEvaluator;
+use App\Support\TenantBusinessFeatures;
 use Database\Seeders\DemoPlatformAdminSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -38,8 +39,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * @OA\Tag(name="Auth", description="Authentication endpoints")
@@ -65,10 +66,13 @@ class AuthController extends Controller
      *     path="/api/v1/auth/login",
      *     tags={"Auth"},
      *     summary="Login (email or unified identifier) and get Bearer token + bootstrap",
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"password"},
+     *
      *             @OA\Property(property="email", type="string", format="email", description="SPA: email + password"),
      *             @OA\Property(property="identifier", type="string", description="Mobile: email or phone + device fields"),
      *             @OA\Property(property="password", type="string"),
@@ -79,10 +83,13 @@ class AuthController extends Controller
      *             @OA\Property(property="otp_challenge", type="string", nullable=true)
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Login successful",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="token", type="string"),
      *             @OA\Property(property="token_type", type="string", example="Bearer"),
      *             @OA\Property(property="user", type="object"),
@@ -95,6 +102,7 @@ class AuthController extends Controller
      *             @OA\Property(property="trace_id", type="string")
      *         )
      *     ),
+     *
      *     @OA\Response(response=422, description="Invalid credentials")
      * )
      */
@@ -108,14 +116,14 @@ class AuthController extends Controller
             report($e);
 
             return response()->json([
-                'message'  => $this->tokenOrDbFailureMessage($e),
+                'message' => $this->tokenOrDbFailureMessage($e),
                 'trace_id' => app('trace_id'),
             ], 503);
         } catch (\Throwable $e) {
             report($e);
 
             return response()->json([
-                'message'  => config('app.debug')
+                'message' => config('app.debug')
                     ? $e->getMessage().' ['.basename($e->getFile()).':'.$e->getLine().']'
                     : 'Login failed. Check laravel.log and database connectivity.',
                 'trace_id' => app('trace_id'),
@@ -134,11 +142,11 @@ class AuthController extends Controller
         $user = $this->resolveUserMatchingPassword($request, $plain);
         if (! $user) {
             Log::info('auth.login.failed', [
-                'reason'     => 'bad_credentials',
-                'ip'         => $request->ip(),
-                'has_email'  => $request->filled('email'),
+                'reason' => 'bad_credentials',
+                'ip' => $request->ip(),
+                'has_email' => $request->filled('email'),
                 'identifier' => $request->filled('identifier'),
-                'trace_id'   => app('trace_id'),
+                'trace_id' => app('trace_id'),
             ]);
 
             $this->authLoginEventRecorder->loginDenied(null, 'invalid_credentials', 'password', $request);
@@ -159,9 +167,9 @@ class AuthController extends Controller
         }
 
         Log::info('auth.login.success', [
-            'user_id'     => $user->id,
+            'user_id' => $user->id,
             'device_type' => $request->input('device_type'),
-            'trace_id'    => app('trace_id'),
+            'trace_id' => app('trace_id'),
         ]);
 
         return $this->issueAuthTokenResponse($user, $request);
@@ -244,7 +252,7 @@ class AuthController extends Controller
             $token = Str::random(64);
             $ttl = (int) config('saas.password_reset_ttl_seconds', 3600);
             Cache::put('pwd_reset:'.$token, [
-                'user_id'    => $user->id,
+                'user_id' => $user->id,
                 'email_norm' => $emailNorm,
             ], now()->addSeconds($ttl));
 
@@ -264,19 +272,19 @@ class AuthController extends Controller
                 );
             } catch (\Throwable $e) {
                 Log::warning('auth.forgot_password.mail_failed', [
-                    'error'    => $e->getMessage(),
+                    'error' => $e->getMessage(),
                     'trace_id' => app('trace_id'),
                 ]);
             }
         } elseif ($users->count() > 1) {
             Log::info('auth.forgot_password.ambiguous_email', [
                 'email_suffix' => substr($emailNorm, 0, 3).'***',
-                'trace_id'     => app('trace_id'),
+                'trace_id' => app('trace_id'),
             ]);
         }
 
         return response()->json([
-            'message'  => 'إن وُجد حساب مرتبط بهذا البريد، ستصلك تعليمات إعادة التعيين قريباً.',
+            'message' => 'إن وُجد حساب مرتبط بهذا البريد، ستصلك تعليمات إعادة التعيين قريباً.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -289,7 +297,7 @@ class AuthController extends Controller
         $payload = Cache::pull('pwd_reset:'.$token);
         if (! is_array($payload) || ($payload['email_norm'] ?? '') !== $emailNorm || empty($payload['user_id'])) {
             return response()->json([
-                'message'  => 'رابط إعادة التعيين غير صالح أو منتهٍ. اطلب رابطاً جديداً.',
+                'message' => 'رابط إعادة التعيين غير صالح أو منتهٍ. اطلب رابطاً جديداً.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -297,7 +305,7 @@ class AuthController extends Controller
         $user = User::withoutGlobalScope('tenant')->find((int) $payload['user_id']);
         if (! $user || Str::lower(trim($user->email)) !== $emailNorm) {
             return response()->json([
-                'message'  => 'تعذّر إكمال العملية. اطلب رابطاً جديداً.',
+                'message' => 'تعذّر إكمال العملية. اطلب رابطاً جديداً.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -311,7 +319,7 @@ class AuthController extends Controller
         $user->save();
 
         return response()->json([
-            'message'  => 'تم تحديث كلمة المرور. يمكنك تسجيل الدخول الآن.',
+            'message' => 'تم تحديث كلمة المرور. يمكنك تسجيل الدخول الآن.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -327,7 +335,7 @@ class AuthController extends Controller
         if ($this->devPasswordlessLoginAllowed($emailNorm) && $candidates->isNotEmpty()) {
             Log::warning('auth.dev_passwordless_login', [
                 'email_suffix' => substr($emailNorm, 0, 4).'***',
-                'trace_id'     => app()->bound('trace_id') ? (string) app('trace_id') : null,
+                'trace_id' => app()->bound('trace_id') ? (string) app('trace_id') : null,
             ]);
 
             return $candidates->first();
@@ -372,10 +380,10 @@ class AuthController extends Controller
             : 'بيانات الدخول غير صحيحة.';
 
         $payload = [
-            'message'      => $resolved,
-            'reason_code'  => 'INVALID_CREDENTIALS',
-            'message_key'  => 'auth.login.invalid_credentials',
-            'trace_id'     => app('trace_id'),
+            'message' => $resolved,
+            'reason_code' => 'INVALID_CREDENTIALS',
+            'message_key' => 'auth.login.invalid_credentials',
+            'trace_id' => app('trace_id'),
         ];
 
         $hint = $this->localLoginDiagnostics($request);
@@ -458,9 +466,9 @@ class AuthController extends Controller
             $count = User::withoutGlobalScope('tenant')->count();
 
             $out = [
-                'users_in_db'    => $count,
+                'users_in_db' => $count,
                 'vite_proxy_tip' => 'Vite on :5173 + Docker API on port 80 → frontend/.env: VITE_DEV_PROXY_TARGET=http://127.0.0.1',
-                'seed_command'   => 'docker compose exec app php artisan workshop:seed-demo',
+                'seed_command' => 'docker compose exec app php artisan workshop:seed-demo',
                 'portal_journey_resync' => 'docker compose exec app php artisan dev:seed-portal-journeys (local only; idempotent)',
             ];
 
@@ -493,14 +501,14 @@ class AuthController extends Controller
             return $out;
         } catch (\Throwable) {
             return [
-                'users_in_db'     => null,
+                'users_in_db' => null,
                 'database_error' => true,
             ];
         }
     }
 
     /**
-     * @return JsonResponse|null  JSON error or null if OK
+     * @return JsonResponse|null JSON error or null if OK
      */
     private function loginPreTokenGuards(User $user, Request $request): ?JsonResponse
     {
@@ -511,11 +519,11 @@ class AuthController extends Controller
 
         if (! $resolution->eligibility->allowed) {
             Log::info('auth.login.denied_eligibility', [
-                'user_id'     => $user->id,
+                'user_id' => $user->id,
                 'reason_code' => $resolution->eligibility->reasonCode,
                 'message_key' => $resolution->eligibility->messageKey,
-                'ip'          => $request->ip(),
-                'trace_id'    => app('trace_id'),
+                'ip' => $request->ip(),
+                'trace_id' => app('trace_id'),
             ]);
 
             $this->authLoginEventRecorder->loginDenied(
@@ -529,16 +537,16 @@ class AuthController extends Controller
         }
 
         if (! $user->company_id) {
-            if ($resolution->accountContext?->principalKind === \App\Enums\LoginPrincipalKind::PlatformEmployee) {
+            if ($resolution->accountContext?->principalKind === LoginPrincipalKind::PlatformEmployee) {
                 return null;
             }
 
-            if ((string) $user->getRawOriginal('role') === \App\Enums\UserRole::PhoneOnboarding->value) {
+            if ((string) $user->getRawOriginal('role') === UserRole::PhoneOnboarding->value) {
                 return null;
             }
 
             return response()->json([
-                'message'  => 'لا يمكن ربط هذا الحساب بشركة صالحة. تواصل مع الدعم.',
+                'message' => 'لا يمكن ربط هذا الحساب بشركة صالحة. تواصل مع الدعم.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -546,19 +554,19 @@ class AuthController extends Controller
         $company = Company::withTrashed()->find($user->company_id);
         if (! $company) {
             return response()->json([
-                'message'  => 'لا يمكن ربط هذا الحساب بشركة صالحة. تواصل مع الدعم.',
+                'message' => 'لا يمكن ربط هذا الحساب بشركة صالحة. تواصل مع الدعم.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
         if ($company->trashed()) {
             return response()->json([
-                'message'  => 'سجل الشركة غير متاح. تواصل مع الدعم.',
+                'message' => 'سجل الشركة غير متاح. تواصل مع الدعم.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
         if ($company->status === CompanyStatus::Suspended) {
             return response()->json([
-                'message'  => 'حساب الشركة موقوف حالياً.',
+                'message' => 'حساب الشركة موقوف حالياً.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -571,7 +579,7 @@ class AuthController extends Controller
                 ->first();
             if (! $branch || $branch->trashed()) {
                 return response()->json([
-                    'message'  => 'لا يمكن ربط هذا الحساب بفرع صالح. تواصل مع المسؤول.',
+                    'message' => 'لا يمكن ربط هذا الحساب بفرع صالح. تواصل مع المسؤول.',
                     'trace_id' => app('trace_id'),
                 ], 403);
             }
@@ -581,7 +589,7 @@ class AuthController extends Controller
             $subBlock = SubscriptionAccessEvaluator::evaluate((int) $user->company_id, $request, true);
             if ($subBlock !== null) {
                 return response()->json([
-                    'message'  => $subBlock['message'],
+                    'message' => $subBlock['message'],
                     'trace_id' => app('trace_id'),
                 ], $subBlock['code']);
             }
@@ -625,11 +633,11 @@ class AuthController extends Controller
         }
 
         return response()->json(array_merge([
-            'token'       => $token,
-            'token_type'  => 'Bearer',
-            'user'        => $this->formatUser($user),
+            'token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $this->formatUser($user),
             'permissions' => $permissions,
-            'trace_id'    => app('trace_id'),
+            'trace_id' => app('trace_id'),
         ], $bootstrap, $accountContextPayload));
     }
 
@@ -640,16 +648,16 @@ class AuthController extends Controller
         $ttl = (int) config('saas.login_otp_ttl_seconds', 300);
 
         Cache::put('login_otp:'.$challengeId, [
-            'user_id'    => $user->id,
+            'user_id' => $user->id,
             'email_norm' => $emailNorm,
-            'code_hash'  => Hash::make($code),
-            'attempts'   => 0,
+            'code_hash' => Hash::make($code),
+            'attempts' => 0,
         ], now()->addSeconds($ttl));
 
         Log::info('login.otp_issued', [
-            'user_id'         => $user->id,
-            'challenge_suffix'=> substr($challengeId, -8),
-            'trace_id'        => app('trace_id'),
+            'user_id' => $user->id,
+            'challenge_suffix' => substr($challengeId, -8),
+            'trace_id' => app('trace_id'),
         ]);
 
         if (config('app.debug') && app()->environment(['local', 'testing'])) {
@@ -660,11 +668,11 @@ class AuthController extends Controller
         $deliveryMessage = $this->loginOtpNotifier->describeDelivery($sent['sms'], $sent['email']);
 
         return response()->json([
-            'otp_required'  => true,
-            'challenge_id'  => $challengeId,
-            'expires_in'    => $ttl,
-            'message'       => $deliveryMessage,
-            'trace_id'      => app('trace_id'),
+            'otp_required' => true,
+            'challenge_id' => $challengeId,
+            'expires_in' => $ttl,
+            'message' => $deliveryMessage,
+            'trace_id' => app('trace_id'),
         ]);
     }
 
@@ -677,7 +685,7 @@ class AuthController extends Controller
         $expectedUserId = (int) ($row['user_id'] ?? 0);
         if (! is_array($row) || $expectedUserId < 1) {
             return response()->json([
-                'message'  => 'جلسة التحقق غير صالحة. أعد تسجيل الدخول من البداية.',
+                'message' => 'جلسة التحقق غير صالحة. أعد تسجيل الدخول من البداية.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -687,7 +695,7 @@ class AuthController extends Controller
             Cache::forget($cacheKey);
 
             return response()->json([
-                'message'  => 'تجاوزت عدد المحاولات. أعد تسجيل الدخول.',
+                'message' => 'تجاوزت عدد المحاولات. أعد تسجيل الدخول.',
                 'trace_id' => app('trace_id'),
             ], 429);
         }
@@ -698,7 +706,7 @@ class AuthController extends Controller
             $this->authSecurityTelemetry->recordInvalidPasswordLogin($request);
 
             return response()->json([
-                'message'  => 'رمز التحقق غير صحيح.',
+                'message' => 'رمز التحقق غير صحيح.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -710,7 +718,7 @@ class AuthController extends Controller
             Cache::forget($cacheKey);
 
             return response()->json([
-                'message'  => 'جلسة التحقق غير صالحة. أعد تسجيل الدخول من البداية.',
+                'message' => 'جلسة التحقق غير صالحة. أعد تسجيل الدخول من البداية.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -754,10 +762,13 @@ class AuthController extends Controller
      *     path="/api/v1/auth/register",
      *     tags={"Auth"},
      *     summary="Register a new company and owner",
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"company_name","name","email","phone","password","password_confirmation"},
+     *
      *             @OA\Property(property="company_name", type="string", example="My Auto Center"),
      *             @OA\Property(property="name", type="string", example="John Owner"),
      *             @OA\Property(property="email", type="string", format="email"),
@@ -767,6 +778,7 @@ class AuthController extends Controller
      *             @OA\Property(property="timezone", type="string", example="Asia/Riyadh")
      *         )
      *     ),
+     *
      *     @OA\Response(response=201, description="Registered successfully")
      * )
      */
@@ -775,50 +787,50 @@ class AuthController extends Controller
         $data = $request->validated();
 
         $company = Company::create([
-            'uuid'       => Str::uuid(),
-            'name'       => $data['company_name'],
-            'currency'   => 'SAR',
-            'timezone'   => $data['timezone'] ?? 'Asia/Riyadh',
-            'status'     => 'active',
-            'is_active'  => true,
-            'cr_number'  => $data['cr_number'] ?? null,
+            'uuid' => Str::uuid(),
+            'name' => $data['company_name'],
+            'currency' => 'SAR',
+            'timezone' => $data['timezone'] ?? 'Asia/Riyadh',
+            'status' => 'active',
+            'is_active' => true,
+            'cr_number' => $data['cr_number'] ?? null,
             'tax_number' => $data['tax_number'] ?? null,
         ]);
 
         $branch = Branch::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $company->id,
-            'name'       => 'Main Branch',
-            'name_ar'    => 'الفرع الرئيسي',
-            'code'       => 'MAIN',
-            'status'     => 'active',
-            'is_main'    => true,
-            'is_active'  => true,
+            'name' => 'Main Branch',
+            'name_ar' => 'الفرع الرئيسي',
+            'code' => 'MAIN',
+            'status' => 'active',
+            'is_main' => true,
+            'is_active' => true,
         ]);
 
         $user = User::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $company->id,
-            'branch_id'  => $branch->id,
-            'name'       => $data['name'],
-            'email'      => $data['email'],
-            'password'   => $data['password'],
-            'phone'      => PhoneNormalizer::normalizeForStorage((string) $data['phone']),
-            'role'       => 'owner',
-            'status'     => 'active',
-            'is_active'  => true,
+            'branch_id' => $branch->id,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => $data['password'],
+            'phone' => PhoneNormalizer::normalizeForStorage((string) $data['phone']),
+            'role' => 'owner',
+            'status' => 'active',
+            'is_active' => true,
         ]);
 
         Subscription::create([
-            'uuid'        => Str::uuid(),
-            'company_id'  => $company->id,
-            'plan'        => 'trial',
-            'status'      => 'active',
-            'starts_at'   => now(),
-            'ends_at'     => now()->addDays(14),
-            'amount'      => 0,
-            'max_branches'=> 1,
-            'max_users'   => 3,
+            'uuid' => Str::uuid(),
+            'company_id' => $company->id,
+            'plan' => 'trial',
+            'status' => 'active',
+            'starts_at' => now(),
+            'ends_at' => now()->addDays(14),
+            'amount' => 0,
+            'max_branches' => 1,
+            'max_users' => 3,
         ]);
 
         $newAccessToken = $user->createToken('auth_token');
@@ -830,10 +842,10 @@ class AuthController extends Controller
         $resolution = ($this->resolveLoginContext)($user);
 
         $payload = [
-            'token'       => $token,
-            'user'        => $this->formatUser($user),
+            'token' => $token,
+            'user' => $this->formatUser($user),
             'permissions' => $this->resolveEffectivePermissionsSnapshot($user, (string) $user->getRawOriginal('role')),
-            'trace_id'    => app('trace_id'),
+            'trace_id' => app('trace_id'),
         ];
         if ($resolution->eligibility->allowed && $resolution->accountContext !== null) {
             $payload['account_context'] = $resolution->accountContext->toArray();
@@ -848,12 +860,16 @@ class AuthController extends Controller
      *     tags={"Auth"},
      *     summary="Logout and revoke token",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(
      *         required=false,
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="fcm_token", type="string", description="When sent, removes matching user_push_devices row for this user")
      *         )
      *     ),
+     *
      *     @OA\Response(response=200, description="Logged out")
      * )
      */
@@ -882,7 +898,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message'  => 'تم تسجيل الخروج من هذا الجهاز.',
+            'message' => 'تم تسجيل الخروج من هذا الجهاز.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -893,6 +909,7 @@ class AuthController extends Controller
      *     tags={"Auth"},
      *     summary="Revoke all Sanctum tokens for the current user",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(response=200, description="All sessions revoked")
      * )
      */
@@ -906,7 +923,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message'  => 'تم تسجيل الخروج من جميع الأجهزة.',
+            'message' => 'تم تسجيل الخروج من جميع الأجهزة.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -917,15 +934,19 @@ class AuthController extends Controller
      *     tags={"Auth"},
      *     summary="Register or refresh FCM token for push (queued persistence)",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"fcm_token"},
+     *
      *             @OA\Property(property="fcm_token", type="string"),
      *             @OA\Property(property="device_name", type="string", nullable=true),
      *             @OA\Property(property="device_type", type="string", enum={"android","ios","ipados","unknown"}, nullable=true)
      *         )
      *     ),
+     *
      *     @OA\Response(response=200, description="Queued / accepted")
      * )
      */
@@ -941,7 +962,7 @@ class AuthController extends Controller
         );
 
         return response()->json([
-            'message'  => 'تم قبول تسجيل الجهاز للإشعارات.',
+            'message' => 'تم قبول تسجيل الجهاز للإشعارات.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -952,6 +973,7 @@ class AuthController extends Controller
      *     tags={"Auth"},
      *     summary="Get authenticated user with permissions",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -963,9 +985,9 @@ class AuthController extends Controller
         $resolution = ($this->resolveLoginContext)($user, $permissions);
 
         $payload = [
-            'data'        => $this->formatUser($user),
+            'data' => $this->formatUser($user),
             'permissions' => $permissions,
-            'trace_id'    => app('trace_id'),
+            'trace_id' => app('trace_id'),
         ];
 
         if ($resolution->eligibility->allowed && $resolution->accountContext !== null) {
@@ -980,23 +1002,23 @@ class AuthController extends Controller
         $platformRoleRaw = $user->getRawOriginal('platform_role');
 
         return [
-            'id'          => $user->id,
-            'uuid'        => $user->uuid,
-            'name'        => $user->name,
-            'email'       => $user->email,
-            'phone'       => $user->phone,
-            'role'        => $user->getRawOriginal('role'),
-            'status'      => $user->getRawOriginal('status'),
-            'company_id'  => $user->company_id,
-            'branch_id'   => $user->branch_id,
+            'id' => $user->id,
+            'uuid' => $user->uuid,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'role' => $user->getRawOriginal('role'),
+            'status' => $user->getRawOriginal('status'),
+            'company_id' => $user->company_id,
+            'branch_id' => $user->branch_id,
             'customer_id' => $user->customer_id,
-            'is_active'   => $user->is_active,
+            'is_active' => $user->is_active,
             'is_platform_user' => (bool) ($user->is_platform_user ?? false),
-            'platform_role'    => is_string($platformRoleRaw) && $platformRoleRaw !== '' ? $platformRoleRaw : null,
-            'account_type'       => $user->account_type,
+            'platform_role' => is_string($platformRoleRaw) && $platformRoleRaw !== '' ? $platformRoleRaw : null,
+            'account_type' => $user->account_type,
             'registration_stage' => $user->registration_stage,
-            'company'     => $user->relationLoaded('company') ? $user->company : null,
-            'branch'      => $user->relationLoaded('branch') ? $user->branch : null,
+            'company' => $user->relationLoaded('company') ? $user->company : null,
+            'branch' => $user->relationLoaded('branch') ? $user->branch : null,
             'subscription' => $user->company_id ? $this->subscriptionBillingSummary((int) $user->company_id) : null,
             'navigation_visibility' => $this->navigationVisibility->effectiveForUser($user),
             'hidden_staff_nav_keys' => $this->staffNavHideResolver->hiddenKeysForStaffUser($user),
@@ -1019,24 +1041,24 @@ class AuthController extends Controller
 
         if ($row === null) {
             return [
-                'plan'            => null,
-                'status'          => null,
-                'ends_at'         => null,
-                'grace_ends_at'   => null,
-                'billing_state'   => 'none',
-                'max_branches'    => null,
-                'max_users'       => null,
+                'plan' => null,
+                'status' => null,
+                'ends_at' => null,
+                'grace_ends_at' => null,
+                'billing_state' => 'none',
+                'max_branches' => null,
+                'max_users' => null,
                 'grace_read_only' => false,
             ];
         }
 
         $status = $row->status instanceof \BackedEnum ? $row->status->value : (string) $row->status;
-        $now    = now();
+        $now = now();
         $endsAt = $row->ends_at;
-        $grace  = $row->grace_ends_at;
+        $grace = $row->grace_ends_at;
 
-        $expiredByTime   = $endsAt !== null && $endsAt->lt($now);
-        $inGraceWindow   = $expiredByTime && $grace !== null && $now->lt($grace);
+        $expiredByTime = $endsAt !== null && $endsAt->lt($now);
+        $inGraceWindow = $expiredByTime && $grace !== null && $now->lt($grace);
 
         if ($status === 'suspended') {
             $billingState = 'suspended';
@@ -1049,22 +1071,22 @@ class AuthController extends Controller
         }
 
         return [
-            'plan'            => $row->plan,
-            'status'          => $status,
-            'ends_at'         => $row->ends_at?->toIso8601String(),
-            'grace_ends_at'   => $row->grace_ends_at?->toIso8601String(),
-            'billing_state'   => $billingState,
-            'max_branches'    => (int) ($row->max_branches ?? 1),
-            'max_users'       => (int) ($row->max_users ?? 5),
+            'plan' => $row->plan,
+            'status' => $status,
+            'ends_at' => $row->ends_at?->toIso8601String(),
+            'grace_ends_at' => $row->grace_ends_at?->toIso8601String(),
+            'billing_state' => $billingState,
+            'max_branches' => (int) ($row->max_branches ?? 1),
+            'max_users' => (int) ($row->max_users ?? 5),
             'grace_read_only' => $billingState === 'grace',
         ];
     }
 
-    private function getUserPermissions(string|\App\Enums\UserRole $role): array
+    private function getUserPermissions(string|UserRole $role): array
     {
-        $roleKey     = $role instanceof \App\Enums\UserRole ? $role->value : $role;
+        $roleKey = $role instanceof UserRole ? $role->value : $role;
         $permissions = config('permissions.roles', []);
-        $perms       = $permissions[$roleKey] ?? [];
+        $perms = $permissions[$roleKey] ?? [];
 
         if (in_array('*', $perms)) {
             return config('permissions.all_permissions', []);

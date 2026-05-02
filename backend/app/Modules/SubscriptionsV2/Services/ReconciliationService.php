@@ -74,13 +74,13 @@ final class ReconciliationService
                 return;
             }
 
-            $best    = null;
+            $best = null;
             $bestScore = -1.0;
             foreach ($this->candidateTransactions($locked) as $tx) {
                 $s = $this->scoreMatch($locked, $tx);
                 if ($s >= self::AUTO_CONFIRM_MIN && $s > $bestScore) {
                     $bestScore = $s;
-                    $best      = $tx;
+                    $best = $tx;
                 }
             }
 
@@ -109,13 +109,13 @@ final class ReconciliationService
 
                 try {
                     ReconciliationMatch::query()->create([
-                        'payment_order_id'    => $locked->id,
+                        'payment_order_id' => $locked->id,
                         'bank_transaction_id' => $tx->id,
-                        'score'               => $s,
-                        'match_type'          => ReconciliationMatchType::Auto,
-                        'status'              => ReconciliationMatchStatus::Pending,
-                        'matched_by'          => null,
-                        'decision_notes'      => null,
+                        'score' => $s,
+                        'match_type' => ReconciliationMatchType::Auto,
+                        'status' => ReconciliationMatchStatus::Pending,
+                        'matched_by' => null,
+                        'decision_notes' => null,
                     ]);
                 } catch (\Throwable) {
                     continue;
@@ -152,21 +152,21 @@ final class ReconciliationService
             ->where('status', ReconciliationMatchStatus::Pending)
             ->where('bank_transaction_id', '!=', $tx->id)
             ->update([
-                'status'         => ReconciliationMatchStatus::Rejected,
+                'status' => ReconciliationMatchStatus::Rejected,
                 'decision_notes' => 'superseded_by_selection',
             ]);
 
         /** @var ReconciliationMatch $match */
         $match = ReconciliationMatch::query()->updateOrCreate(
             [
-                'payment_order_id'    => $order->id,
+                'payment_order_id' => $order->id,
                 'bank_transaction_id' => $tx->id,
             ],
             [
-                'score'          => $score,
-                'match_type'     => $type,
-                'status'         => ReconciliationMatchStatus::Confirmed,
-                'matched_by'     => $matchedByUserId,
+                'score' => $score,
+                'match_type' => $type,
+                'status' => ReconciliationMatchStatus::Confirmed,
+                'matched_by' => $matchedByUserId,
                 'decision_notes' => $auditContext,
             ],
         );
@@ -186,10 +186,10 @@ final class ReconciliationService
             $match->id,
             null,
             [
-                'payment_order_id'    => $order->id,
+                'payment_order_id' => $order->id,
                 'bank_transaction_id' => $tx->id,
-                'score'               => (string) $score,
-                'type'                => $type->value,
+                'score' => (string) $score,
+                'type' => $type->value,
             ],
             ['context' => $auditContext],
         );
@@ -238,7 +238,7 @@ final class ReconciliationService
     private function scoreReference(PaymentOrder $order, BankTransaction $tx): float
     {
         $needle = strtoupper($order->reference_code);
-        $hay    = strtoupper(implode(' ', array_filter([
+        $hay = strtoupper(implode(' ', array_filter([
             (string) $tx->reference_extracted,
             (string) $tx->bank_reference,
             (string) $tx->description,

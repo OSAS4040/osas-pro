@@ -15,7 +15,7 @@ class WebhookDelivery extends Model
     ];
 
     protected $casts = [
-        'payload'        => 'array',
+        'payload' => 'array',
         'next_attempt_at' => 'datetime',
     ];
 

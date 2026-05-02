@@ -27,8 +27,8 @@ final class EnsurePlatformAdmin
 
         if (! SaasPlatformAccess::isPlatformOperator($request->user())) {
             return response()->json([
-                'message'  => 'هذه الواجهة لمشغّلي المنصة المستقلين فقط (حساب بلا شركة + بريد أو جوال مضبوط في إعدادات المنصة).',
-                'code'     => 'PLATFORM_ACCESS_ONLY',
+                'message' => 'هذه الواجهة لمشغّلي المنصة المستقلين فقط (حساب بلا شركة + بريد أو جوال مضبوط في إعدادات المنصة).',
+                'code' => 'PLATFORM_ACCESS_ONLY',
                 'trace_id' => app('trace_id'),
             ], 403);
         }

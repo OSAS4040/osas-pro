@@ -21,17 +21,17 @@ class DemoCompanySeeder extends Seeder
         $company = Company::firstOrCreate(
             ['name' => 'Demo Auto Center'],
             [
-                'uuid'     => Str::uuid(),
-                'name'     => 'Demo Auto Center',
-                'name_ar'  => 'مركز ديمو للسيارات',
-                'email'    => 'demo@autocenter.sa',
-                'phone'    => '+966500000000',
-                'city'     => 'Riyadh',
-                'country'  => 'SAU',
+                'uuid' => Str::uuid(),
+                'name' => 'Demo Auto Center',
+                'name_ar' => 'مركز ديمو للسيارات',
+                'email' => 'demo@autocenter.sa',
+                'phone' => '+966500000000',
+                'city' => 'Riyadh',
+                'country' => 'SAU',
                 'currency' => 'SAR',
                 'timezone' => 'Asia/Riyadh',
-                'status'   => 'active',
-                'is_active'=> true,
+                'status' => 'active',
+                'is_active' => true,
             ]
         );
 
@@ -44,55 +44,55 @@ class DemoCompanySeeder extends Seeder
         $branch = Branch::firstOrCreate(
             ['company_id' => $company->id, 'is_main' => true],
             [
-                'uuid'      => Str::uuid(),
-                'name'      => 'Main Branch',
-                'name_ar'   => 'الفرع الرئيسي',
-                'code'      => 'MAIN',
-                'status'    => 'active',
+                'uuid' => Str::uuid(),
+                'name' => 'Main Branch',
+                'name_ar' => 'الفرع الرئيسي',
+                'code' => 'MAIN',
+                'status' => 'active',
                 'is_active' => true,
             ]
         );
 
         $users = [
             [
-                'name'  => 'Demo Owner',
+                'name' => 'Demo Owner',
                 'email' => 'owner@demo.sa',
-                'role'  => 'owner',
+                'role' => 'owner',
             ],
             [
-                'name'  => 'Demo Manager',
+                'name' => 'Demo Manager',
                 'email' => 'manager@demo.sa',
-                'role'  => 'manager',
+                'role' => 'manager',
             ],
             [
-                'name'  => 'Demo Staff',
+                'name' => 'Demo Staff',
                 'email' => 'staff@demo.sa',
-                'role'  => 'staff',
+                'role' => 'staff',
             ],
             [
-                'name'  => 'Demo Cashier',
+                'name' => 'Demo Cashier',
                 'email' => 'cashier@demo.sa',
-                'role'  => 'cashier',
+                'role' => 'cashier',
             ],
             [
-                'name'  => 'Demo Technician',
+                'name' => 'Demo Technician',
                 'email' => 'tech@demo.sa',
-                'role'  => 'technician',
+                'role' => 'technician',
             ],
             [
-                'name'  => 'Fleet Contact',
+                'name' => 'Fleet Contact',
                 'email' => 'fleet.contact@demo.sa',
-                'role'  => 'fleet_contact',
+                'role' => 'fleet_contact',
             ],
             [
-                'name'  => 'Fleet Manager',
+                'name' => 'Fleet Manager',
                 'email' => 'fleet.manager@demo.sa',
-                'role'  => 'fleet_manager',
+                'role' => 'fleet_manager',
             ],
             [
-                'name'  => 'Demo Customer',
+                'name' => 'Demo Customer',
                 'email' => 'customer@demo.sa',
-                'role'  => 'customer',
+                'role' => 'customer',
             ],
         ];
 
@@ -107,18 +107,18 @@ class DemoCompanySeeder extends Seeder
             User::withoutGlobalScope('tenant')->updateOrCreate(
                 [
                     'company_id' => $company->id,
-                    'email'      => $userData['email'],
+                    'email' => $userData['email'],
                 ],
                 [
-                    'branch_id'            => $branch->id,
-                    'name'                 => $userData['name'],
-                    'password'             => $userPassword,
-                    'phone'                => $phone,
-                    'phone_verified_at'    => now(),
-                    'registration_stage'   => 'phone_verified',
-                    'role'                 => UserRole::from($userData['role']),
-                    'status'               => UserStatus::Active,
-                    'is_active'            => true,
+                    'branch_id' => $branch->id,
+                    'name' => $userData['name'],
+                    'password' => $userPassword,
+                    'phone' => $phone,
+                    'phone_verified_at' => now(),
+                    'registration_stage' => 'phone_verified',
+                    'role' => UserRole::from($userData['role']),
+                    'status' => UserStatus::Active,
+                    'is_active' => true,
                 ]
             );
         }
@@ -126,15 +126,15 @@ class DemoCompanySeeder extends Seeder
         Subscription::firstOrCreate(
             ['company_id' => $company->id],
             [
-                'uuid'       => Str::uuid(),
-                'plan'       => 'professional',
-                'status'     => 'active',
-                'starts_at'  => now(),
-                'ends_at'    => now()->addYear(),
-                'amount'     => 4990,
-                'currency'   => 'SAR',
+                'uuid' => Str::uuid(),
+                'plan' => 'professional',
+                'status' => 'active',
+                'starts_at' => now(),
+                'ends_at' => now()->addYear(),
+                'amount' => 4990,
+                'currency' => 'SAR',
                 'max_branches' => 5,
-                'max_users'    => 20,
+                'max_users' => 20,
             ]
         );
 

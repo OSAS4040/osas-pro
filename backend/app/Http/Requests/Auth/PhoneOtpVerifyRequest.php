@@ -17,7 +17,7 @@ class PhoneOtpVerifyRequest extends FormRequest
     {
         return [
             'phone' => ['required', 'string', 'max:32'],
-            'otp'   => ['required', 'string', 'min:4', 'max:8'],
+            'otp' => ['required', 'string', 'min:4', 'max:8'],
         ];
     }
 }

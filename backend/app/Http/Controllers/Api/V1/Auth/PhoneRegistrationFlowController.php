@@ -26,7 +26,7 @@ class PhoneRegistrationFlowController extends Controller
         }
 
         return response()->json([
-            'data'     => $this->completeRegistrationProfileService->registrationStatus($user),
+            'data' => $this->completeRegistrationProfileService->registrationStatus($user),
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -37,8 +37,8 @@ class PhoneRegistrationFlowController extends Controller
         $this->completeRegistrationProfileService->completeAccountType($user, (string) $request->validated('account_type'));
 
         return response()->json([
-            'data'     => $this->completeRegistrationProfileService->registrationStatus($user->fresh()),
-            'message'  => 'تم حفظ نوع الحساب.',
+            'data' => $this->completeRegistrationProfileService->registrationStatus($user->fresh()),
+            'message' => 'تم حفظ نوع الحساب.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -49,8 +49,8 @@ class PhoneRegistrationFlowController extends Controller
         $this->completeRegistrationProfileService->completeIndividualProfile($user, (string) $request->validated('full_name'));
 
         return response()->json([
-            'data'     => $this->completeRegistrationProfileService->registrationStatus($user->fresh()),
-            'message'  => 'تم حفظ البيانات.',
+            'data' => $this->completeRegistrationProfileService->registrationStatus($user->fresh()),
+            'message' => 'تم حفظ البيانات.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -66,8 +66,8 @@ class PhoneRegistrationFlowController extends Controller
         );
 
         return response()->json([
-            'data'     => $this->completeRegistrationProfileService->registrationStatus($user->fresh()),
-            'message'  => 'تم إرسال الطلب للمراجعة.',
+            'data' => $this->completeRegistrationProfileService->registrationStatus($user->fresh()),
+            'message' => 'تم إرسال الطلب للمراجعة.',
             'trace_id' => app('trace_id'),
         ]);
     }

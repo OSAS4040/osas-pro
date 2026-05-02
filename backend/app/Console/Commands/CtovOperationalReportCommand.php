@@ -22,9 +22,9 @@ class CtovOperationalReportCommand extends Command
     public function handle(): int
     {
         $projectRoot = dirname(__DIR__, 4);
-        $ops    = max(100, min(50_000, (int) $this->option('stress-ops')));
+        $ops = max(100, min(50_000, (int) $this->option('stress-ops')));
         $workers = max(2, min(60, (int) $this->option('race-workers')));
-        $email  = (string) $this->option('email');
+        $email = (string) $this->option('email');
         $outOpt = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string) $this->option('output'));
         $reportPath = str_starts_with($outOpt, DIRECTORY_SEPARATOR) || preg_match('#^[A-Za-z]:[\\\\/]#', $outOpt)
             ? $outOpt

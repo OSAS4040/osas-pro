@@ -6,19 +6,21 @@ use App\Enums\ReservationStatus;
 use App\Models\Inventory;
 use App\Models\InventoryReservation;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 
-class ExpireInventoryReservationsJob implements ShouldQueue, ShouldBeUnique
+class ExpireInventoryReservationsJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 10;
+
     public int $timeout = 300;
+
     public int $uniqueFor = 1200;
 
     /** @var list<int> */
@@ -64,6 +66,7 @@ class ExpireInventoryReservationsJob implements ShouldQueue, ShouldBeUnique
 
                                 if (! $inv) {
                                     $locked->update(['status' => ReservationStatus::Expired]);
+
                                     return;
                                 }
 

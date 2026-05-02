@@ -3,10 +3,13 @@
 namespace Tests\Feature\Invoices;
 
 use App\Enums\PurchaseStatus;
+use App\Models\Branch;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Purchase;
 use App\Models\Supplier;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -16,7 +19,7 @@ class ExecutionPartnerBillingIsolationTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function enablePlatformExecutionPartner(\App\Models\Company $company): void
+    private function enablePlatformExecutionPartner(Company $company): void
     {
         $settings = is_array($company->settings) ? $company->settings : [];
         $profile = is_array($settings['business_profile'] ?? null) ? $settings['business_profile'] : [];
@@ -31,7 +34,7 @@ class ExecutionPartnerBillingIsolationTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function baseInvoiceRow(\App\Models\Company $c, \App\Models\Branch $b, \App\Models\User $u, string $number, ?string $billingFlow, ?int $customerId): array
+    private function baseInvoiceRow(Company $c, Branch $b, User $u, string $number, ?string $billingFlow, ?int $customerId): array
     {
         return [
             'uuid' => (string) Str::uuid(),

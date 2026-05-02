@@ -24,20 +24,20 @@ final class PaymentOrderService
         $plan = Plan::query()->whereKey($planId)->where('is_active', true)->firstOrFail();
 
         $amountExVat = (float) $plan->price_monthly;
-        $vat         = round($amountExVat * self::VAT_RATE, 2);
-        $total       = round($amountExVat + $vat, 2);
+        $vat = round($amountExVat * self::VAT_RATE, 2);
+        $total = round($amountExVat + $vat, 2);
 
         $order = PaymentOrder::query()->create([
-            'company_id'     => $companyId,
-            'plan_id'        => $plan->id,
-            'amount'         => $amountExVat,
-            'vat'            => $vat,
-            'total'          => $total,
-            'currency'       => (string) $plan->currency,
+            'company_id' => $companyId,
+            'plan_id' => $plan->id,
+            'amount' => $amountExVat,
+            'vat' => $vat,
+            'total' => $total,
+            'currency' => (string) $plan->currency,
             'reference_code' => $this->uniqueReferenceCode(),
-            'status'         => PaymentOrderStatus::PendingTransfer,
-            'expires_at'     => now()->addDays(7),
-            'created_by'     => $createdByUserId,
+            'status' => PaymentOrderStatus::PendingTransfer,
+            'expires_at' => now()->addDays(7),
+            'created_by' => $createdByUserId,
         ]);
 
         $this->auditLogService->log(

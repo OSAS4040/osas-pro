@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use App\Enums\WorkOrderStatus;
+use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\Product;
 use App\Models\Task;
 use App\Models\WorkOrder;
 use App\Support\TenantBusinessFeatures;
@@ -92,33 +91,33 @@ class ReportController extends Controller
         }
 
         $from = $request->input('from', now()->startOfMonth()->toDateString());
-        $to   = $request->input('to',   now()->endOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
         $fromEnd = $request->from.' 00:00:00';
-        $toEnd   = $request->to.' 23:59:59';
+        $toEnd = $request->to.' 23:59:59';
 
         $companyId = app('tenant_company_id');
 
         $summaryRow = Invoice::where('company_id', $companyId)
             ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
-            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->selectRaw('COUNT(*) as invoice_count, SUM(total) as total_sales, SUM(tax_amount) as total_tax, SUM(discount_amount) as total_discount')
             ->first();
 
         $summary = $summaryRow ? [
-            'invoice_count'  => (int) $summaryRow->invoice_count,
-            'count'          => (int) $summaryRow->invoice_count,
-            'total_sales'    => round((float) $summaryRow->total_sales, 2),
-            'total_tax'      => round((float) $summaryRow->total_tax, 2),
+            'invoice_count' => (int) $summaryRow->invoice_count,
+            'count' => (int) $summaryRow->invoice_count,
+            'total_sales' => round((float) $summaryRow->total_sales, 2),
+            'total_tax' => round((float) $summaryRow->total_tax, 2),
             'total_discount' => round((float) $summaryRow->total_discount, 2),
         ] : null;
 
         $byBranch = Invoice::where('company_id', $companyId)
             ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
-            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->selectRaw('branch_id, COUNT(*) as invoice_count, SUM(total) as total_sales')
             ->groupBy('branch_id')
@@ -126,7 +125,7 @@ class ReportController extends Controller
             ->get();
 
         return response()->json([
-            'data'     => compact('summary', 'byBranch'),
+            'data' => compact('summary', 'byBranch'),
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -138,16 +137,16 @@ class ReportController extends Controller
         }
 
         $from = $request->input('from', now()->startOfMonth()->toDateString());
-        $to   = $request->input('to',   now()->endOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
         $fromEnd = $request->from.' 00:00:00';
-        $toEnd   = $request->to.' 23:59:59';
+        $toEnd = $request->to.' 23:59:59';
         $companyId = app('tenant_company_id');
 
         $data = Invoice::where('company_id', $companyId)
             ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
-            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->whereNotNull('customer_id')
             ->selectRaw('customer_id, COUNT(*) as invoice_count, SUM(total) as total_sales, SUM(tax_amount) as total_tax')
@@ -167,12 +166,12 @@ class ReportController extends Controller
         }
 
         $from = $request->input('from', now()->startOfMonth()->toDateString());
-        $to   = $request->input('to',   now()->endOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
         $companyId = app('tenant_company_id');
 
         $fromEnd = $request->from.' 00:00:00';
-        $toEnd   = $request->to.' 23:59:59';
+        $toEnd = $request->to.' 23:59:59';
 
         $data = DB::table('invoice_items')
             ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
@@ -183,7 +182,7 @@ class ReportController extends Controller
                     ->orWhere('invoices.billing_flow_type', '!=', 'provider_to_platform');
             })
             ->whereBetween('invoices.issued_at', [$fromEnd, $toEnd])
-            ->when($request->filled('branch_id'), fn($q) => $q->where('invoices.branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('invoices.branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('invoices.status', ['cancelled', 'draft'])
             ->selectRaw('products.name as product_name, products.sku, SUM(invoice_items.quantity) as total_qty, SUM(invoice_items.total) as total_sales, SUM(invoice_items.total) as total_revenue')
             ->groupBy('products.id', 'products.name', 'products.sku')
@@ -191,10 +190,10 @@ class ReportController extends Controller
             ->limit(50)
             ->get()
             ->map(fn ($r) => [
-                'product_name'  => $r->product_name,
-                'sku'           => $r->sku,
-                'total_qty'     => round((float) $r->total_qty, 4),
-                'total_sales'   => round((float) $r->total_sales, 2),
+                'product_name' => $r->product_name,
+                'sku' => $r->sku,
+                'total_qty' => round((float) $r->total_qty, 4),
+                'total_sales' => round((float) $r->total_sales, 2),
                 'total_revenue' => round((float) $r->total_revenue, 2),
             ]);
 
@@ -211,7 +210,7 @@ class ReportController extends Controller
 
         $data = Invoice::where('company_id', $companyId)
             ->excludingProviderPlatformSettlement()
-            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereIn('status', ['pending', 'partial_paid'])
             ->where('due_at', '<', now())
             ->with('customer:id,name,phone')
@@ -231,12 +230,12 @@ class ReportController extends Controller
     public function workOrders(Request $request): JsonResponse
     {
         $from = $request->input('from', now()->startOfMonth()->toDateString());
-        $to   = $request->input('to',   now()->endOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
         $companyId = app('tenant_company_id');
 
         $fromEnd = $request->from.' 00:00:00';
-        $toEnd   = $request->to.' 23:59:59';
+        $toEnd = $request->to.' 23:59:59';
 
         $summary = WorkOrder::where('company_id', $companyId)
             ->whereBetween('created_at', [$fromEnd, $toEnd])
@@ -254,37 +253,38 @@ class ReportController extends Controller
     public function kpi(Request $request): JsonResponse
     {
         $from = $request->input('from', now()->startOfMonth()->toDateString());
-        $to   = $request->input('to',   now()->endOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
         $companyId = app('tenant_company_id');
 
         $fromEnd = $request->from.' 00:00:00';
-        $toEnd   = $request->to.' 23:59:59';
+        $toEnd = $request->to.' 23:59:59';
 
         $epKpi = $this->executionPartnerTenantBlocksFinancialReporting();
         $cacheKey = "kpi:{$companyId}:{$request->from}:{$request->to}:v4".($epKpi ? ':ep' : '');
         $ttl = now()->diffInHours(now()->endOfDay()) < 2 ? 300 : 1800;
-        $data = \Illuminate\Support\Facades\Cache::get($cacheKey);
+        $data = Cache::get($cacheKey);
         if ($data === null) {
             $lockKey = "lock:{$cacheKey}";
-            $lock = \Illuminate\Support\Facades\Cache::lock($lockKey, 15);
+            $lock = Cache::lock($lockKey, 15);
             $computed = null;
 
             try {
                 $lock->block(5, function () use (&$computed, $cacheKey, $ttl, $companyId, $fromEnd, $toEnd, $request, $epKpi) {
-                    $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+                    $cached = Cache::get($cacheKey);
                     if ($cached !== null) {
                         $computed = $cached;
+
                         return;
                     }
 
                     $computed = $epKpi
                         ? $this->buildExecutionPartnerKpiPayload($companyId, $fromEnd, $toEnd, $request)
                         : $this->buildKpiPayload($companyId, $fromEnd, $toEnd, $request);
-                    \Illuminate\Support\Facades\Cache::put($cacheKey, $computed, $ttl);
+                    Cache::put($cacheKey, $computed, $ttl);
                 });
             } catch (\Throwable) {
-                $computed = \Illuminate\Support\Facades\Cache::get($cacheKey)
+                $computed = Cache::get($cacheKey)
                     ?? ($epKpi
                         ? $this->buildExecutionPartnerKpiPayload($companyId, $fromEnd, $toEnd, $request)
                         : $this->buildKpiPayload($companyId, $fromEnd, $toEnd, $request));
@@ -310,7 +310,7 @@ class ReportController extends Controller
 
         $totalRevenue = (clone $invoiceScope)->sum('total');
         $invoiceCount = (clone $invoiceScope)->count();
-        $totalVat     = (clone $invoiceScope)->sum('tax_amount');
+        $totalVat = (clone $invoiceScope)->sum('tax_amount');
 
         $totalCollected = Payment::where('company_id', $companyId)
             ->whereBetween('created_at', [$fromEnd, $toEnd])
@@ -346,29 +346,29 @@ class ReportController extends Controller
             ->orderBy('day')
             ->get()
             ->map(fn ($r) => [
-                'day'   => (string) $r->day,
+                'day' => (string) $r->day,
                 'total' => round((float) $r->total, 2),
             ]);
 
         $collectionRate = $totalRevenue > 0 ? round(($totalCollected / $totalRevenue) * 100, 1) : 0;
 
         return [
-            'total_revenue'        => round((float) $totalRevenue, 2),
-            'total_sales'          => round((float) $totalRevenue, 2),
-            'total_collected'      => round((float) $totalCollected, 2),
-            'total_paid'           => round((float) $totalCollected, 2),
-            'collection_rate'      => $collectionRate,
-            'invoice_count'        => (int) $invoiceCount,
-            'total_vat'            => round((float) $totalVat, 2),
-            'total_due'            => round((float) $outstandingDue, 2),
-            'new_customers'        => $newCustomers,
-            'wo_completed'         => $woCompleted,
-            'wo_total'             => $woTotal,
-            'work_order_count'     => $woTotal,
-            'wo_completion_rate'   => $woTotal > 0 ? round(($woCompleted / $woTotal) * 100, 1) : 0,
-            'avg_invoice_value'    => round((float) $avgInvoiceValue, 2),
-            'daily_revenue'        => $dailyRevenue,
-            'period'               => ['from' => $request->from, 'to' => $request->to],
+            'total_revenue' => round((float) $totalRevenue, 2),
+            'total_sales' => round((float) $totalRevenue, 2),
+            'total_collected' => round((float) $totalCollected, 2),
+            'total_paid' => round((float) $totalCollected, 2),
+            'collection_rate' => $collectionRate,
+            'invoice_count' => (int) $invoiceCount,
+            'total_vat' => round((float) $totalVat, 2),
+            'total_due' => round((float) $outstandingDue, 2),
+            'new_customers' => $newCustomers,
+            'wo_completed' => $woCompleted,
+            'wo_total' => $woTotal,
+            'work_order_count' => $woTotal,
+            'wo_completion_rate' => $woTotal > 0 ? round(($woCompleted / $woTotal) * 100, 1) : 0,
+            'avg_invoice_value' => round((float) $avgInvoiceValue, 2),
+            'daily_revenue' => $dailyRevenue,
+            'period' => ['from' => $request->from, 'to' => $request->to],
         ];
     }
 
@@ -415,16 +415,16 @@ class ReportController extends Controller
         }
 
         $from = $request->input('from', now()->startOfMonth()->toDateString());
-        $to   = $request->input('to',   now()->endOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
         $fromEnd = $request->from.' 00:00:00';
-        $toEnd   = $request->to.' 23:59:59';
+        $toEnd = $request->to.' 23:59:59';
         $companyId = app('tenant_company_id');
 
         $row = Invoice::where('company_id', $companyId)
             ->excludingProviderPlatformSettlement()
             ->whereBetween('issued_at', [$fromEnd, $toEnd])
-            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('status', ['cancelled', 'draft'])
             ->selectRaw('
                 COUNT(*) as invoice_count,
@@ -435,14 +435,14 @@ class ReportController extends Controller
             ->first();
 
         $base = $row ? [
-            'invoice_count'  => (int) $row->invoice_count,
+            'invoice_count' => (int) $row->invoice_count,
             'taxable_amount' => round((float) $row->taxable_amount, 2),
-            'vat_collected'  => round((float) $row->vat_collected, 2),
+            'vat_collected' => round((float) $row->vat_collected, 2),
             'total_with_vat' => round((float) $row->total_with_vat, 2),
         ] : [
-            'invoice_count'  => 0,
+            'invoice_count' => 0,
             'taxable_amount' => 0,
-            'vat_collected'  => 0,
+            'vat_collected' => 0,
             'total_with_vat' => 0,
         ];
 
@@ -455,25 +455,25 @@ class ReportController extends Controller
                     ->orWhere('invoices.billing_flow_type', '!=', 'provider_to_platform');
             })
             ->whereBetween('invoices.issued_at', [$fromEnd, $toEnd])
-            ->when($request->filled('branch_id'), fn($q) => $q->where('invoices.branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('invoices.branch_id', (int) $request->integer('branch_id')))
             ->whereNotIn('invoices.status', ['cancelled', 'draft'])
             ->selectRaw('invoice_items.tax_rate, SUM(invoice_items.subtotal) as taxable_amount, SUM(invoice_items.tax_amount) as tax_amount')
             ->groupBy('invoice_items.tax_rate')
             ->orderBy('invoice_items.tax_rate')
             ->get()
             ->map(fn ($r) => [
-                'tax_rate'       => round((float) $r->tax_rate, 2),
+                'tax_rate' => round((float) $r->tax_rate, 2),
                 'taxable_amount' => round((float) $r->taxable_amount, 2),
-                'tax_amount'     => round((float) $r->tax_amount, 2),
+                'tax_amount' => round((float) $r->tax_amount, 2),
             ])
             ->values()
             ->all();
 
         $data = array_merge($base, [
-            'total_tax'   => round((float) ($base['vat_collected'] ?? 0), 2),
-            'net_sales'   => round((float) ($base['taxable_amount'] ?? 0), 2),
+            'total_tax' => round((float) ($base['vat_collected'] ?? 0), 2),
+            'net_sales' => round((float) ($base['taxable_amount'] ?? 0), 2),
             'gross_sales' => round((float) ($base['total_with_vat'] ?? 0), 2),
-            'by_rate'     => $byRate,
+            'by_rate' => $byRate,
         ]);
 
         return response()->json(['data' => $data, 'trace_id' => app('trace_id')]);
@@ -496,7 +496,7 @@ class ReportController extends Controller
                 DB::raw('inventory.quantity - inventory.reserved_quantity as available_quantity'),
                 'inventory.reorder_point'
             )
-            ->when($request->low_stock, fn($q) => $q->whereRaw('inventory.quantity - inventory.reserved_quantity <= inventory.reorder_point'))
+            ->when($request->low_stock, fn ($q) => $q->whereRaw('inventory.quantity - inventory.reserved_quantity <= inventory.reorder_point'))
             ->paginate(50);
 
         return response()->json(['data' => $data, 'trace_id' => app('trace_id')]);
@@ -509,12 +509,12 @@ class ReportController extends Controller
         }
 
         $from = $request->input('from', now()->startOfMonth()->toDateString());
-        $to   = $request->input('to',   now()->endOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
         $companyId = app('tenant_company_id');
 
         $fromEnd = $request->from.' 00:00:00';
-        $toEnd   = $request->to.' 23:59:59';
+        $toEnd = $request->to.' 23:59:59';
 
         $payments = Payment::where('company_id', $companyId)
             ->whereBetween('created_at', [$fromEnd, $toEnd])
@@ -524,7 +524,7 @@ class ReportController extends Controller
             ->get();
 
         return response()->json([
-            'data'     => ['payments_by_method' => $payments],
+            'data' => ['payments_by_method' => $payments],
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -543,7 +543,7 @@ class ReportController extends Controller
 
         $incoming = Payment::where('company_id', $companyId)
             ->whereBetween('created_at', [$fromEnd, $toEnd])
-            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->where('status', 'completed')
             ->selectRaw('DATE(created_at) as day, COALESCE(SUM(amount),0) as incoming')
             ->groupBy(DB::raw('DATE(created_at)'))
@@ -555,8 +555,8 @@ class ReportController extends Controller
         if (Schema::hasTable('purchases')) {
             $outgoingByDay = DB::table('purchases')
                 ->where('company_id', $companyId)
-                ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
-                ->when($request->filled('supplier_id'), fn($q) => $q->where('supplier_id', (int) $request->integer('supplier_id')))
+                ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+                ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', (int) $request->integer('supplier_id')))
                 ->whereNull('deleted_at')
                 ->whereBetween('created_at', [$fromEnd, $toEnd])
                 ->selectRaw('DATE(created_at) as day, COALESCE(SUM(total),0) as outgoing')
@@ -573,6 +573,7 @@ class ReportController extends Controller
         $rows = $days->map(function (string $day) use ($incoming, $outgoingByDay) {
             $in = (float) ($incoming[$day]->incoming ?? 0);
             $out = (float) ($outgoingByDay[$day]->outgoing ?? 0);
+
             return [
                 'day' => $day,
                 'incoming' => round($in, 2),
@@ -606,14 +607,14 @@ class ReportController extends Controller
         $fromEnd = $from.' 00:00:00';
         $toEnd = $to.' 23:59:59';
 
-        if (!Schema::hasTable('purchases')) {
+        if (! Schema::hasTable('purchases')) {
             return response()->json(['data' => ['summary' => ['count' => 0, 'total' => 0], 'by_supplier' => []], 'trace_id' => app('trace_id')]);
         }
 
         $summary = DB::table('purchases')
             ->where('company_id', $companyId)
-            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
-            ->when($request->filled('supplier_id'), fn($q) => $q->where('supplier_id', (int) $request->integer('supplier_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('supplier_id'), fn ($q) => $q->where('supplier_id', (int) $request->integer('supplier_id')))
             ->whereNull('deleted_at')
             ->whereBetween('created_at', [$fromEnd, $toEnd])
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(total),0) as total')
@@ -622,8 +623,8 @@ class ReportController extends Controller
         $bySupplier = DB::table('purchases')
             ->leftJoin('suppliers', 'suppliers.id', '=', 'purchases.supplier_id')
             ->where('purchases.company_id', $companyId)
-            ->when($request->filled('branch_id'), fn($q) => $q->where('purchases.branch_id', (int) $request->integer('branch_id')))
-            ->when($request->filled('supplier_id'), fn($q) => $q->where('purchases.supplier_id', (int) $request->integer('supplier_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('purchases.branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('supplier_id'), fn ($q) => $q->where('purchases.supplier_id', (int) $request->integer('supplier_id')))
             ->whereNull('purchases.deleted_at')
             ->whereBetween('purchases.created_at', [$fromEnd, $toEnd])
             ->selectRaw(
@@ -665,7 +666,7 @@ class ReportController extends Controller
 
         $rows = Invoice::where('company_id', $companyId)
             ->excludingProviderPlatformSettlement()
-            ->when($request->filled('branch_id'), fn($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
+            ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', (int) $request->integer('branch_id')))
             ->whereIn('status', ['pending', 'partial_paid'])
             ->whereNotNull('due_at')
             ->select('id', 'invoice_number', 'customer_id', 'due_amount', 'due_at')
@@ -685,11 +686,17 @@ class ReportController extends Controller
         $lines = $rows->map(function ($inv) use (&$buckets) {
             $days = max(0, now()->diffInDays($inv->due_at, false) * -1);
             $due = (float) $inv->due_amount;
-            if ($days === 0) $buckets['current'] += $due;
-            elseif ($days <= 30) $buckets['1_30'] += $due;
-            elseif ($days <= 60) $buckets['31_60'] += $due;
-            elseif ($days <= 90) $buckets['61_90'] += $due;
-            else $buckets['90_plus'] += $due;
+            if ($days === 0) {
+                $buckets['current'] += $due;
+            } elseif ($days <= 30) {
+                $buckets['1_30'] += $due;
+            } elseif ($days <= 60) {
+                $buckets['31_60'] += $due;
+            } elseif ($days <= 90) {
+                $buckets['61_90'] += $due;
+            } else {
+                $buckets['90_plus'] += $due;
+            }
 
             return [
                 'invoice_number' => $inv->invoice_number,
@@ -723,14 +730,14 @@ class ReportController extends Controller
         }
 
         $from = $request->input('from', now()->startOfMonth()->toDateString());
-        $to   = $request->input('to', now()->endOfMonth()->toDateString());
+        $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
         $companyId = app('tenant_company_id');
-        $fromEnd   = $request->from.' 00:00:00';
-        $toEnd     = $request->to.' 23:59:59';
+        $fromEnd = $request->from.' 00:00:00';
+        $toEnd = $request->to.' 23:59:59';
 
         $cacheKey = "reports:bi:analytics:{$companyId}:{$request->from}:{$request->to}:v1";
-        $data     = Cache::remember($cacheKey, 600, function () use ($companyId, $fromEnd, $toEnd, $request) {
+        $data = Cache::remember($cacheKey, 600, function () use ($companyId, $fromEnd, $toEnd, $request) {
             $invoiceRows = DB::table('invoices')
                 ->where('company_id', $companyId)
                 ->where(function ($q): void {
@@ -744,9 +751,9 @@ class ReportController extends Controller
                 ->orderByDesc('total_amount')
                 ->get()
                 ->map(fn ($r) => [
-                    'status'        => (string) $r->status,
-                    'count'         => (int) $r->count,
-                    'total_amount'  => round((float) $r->total_amount, 2),
+                    'status' => (string) $r->status,
+                    'count' => (int) $r->count,
+                    'total_amount' => round((float) $r->total_amount, 2),
                 ])->values()->all();
 
             $agg = DB::table('invoices')
@@ -768,9 +775,9 @@ class ReportController extends Controller
 
             $subtotalSum = (float) ($agg->subtotal_sum ?? 0);
             $discountSum = (float) ($agg->discount_sum ?? 0);
-            $totalSum    = (float) ($agg->total_sum ?? 0);
+            $totalSum = (float) ($agg->total_sum ?? 0);
             $grossBeforeDiscount = $subtotalSum + $discountSum;
-            $discount_ratio_pct  = $grossBeforeDiscount > 0
+            $discount_ratio_pct = $grossBeforeDiscount > 0
                 ? round(($discountSum / $grossBeforeDiscount) * 100, 2)
                 : 0.0;
 
@@ -782,7 +789,7 @@ class ReportController extends Controller
 
             $paymentCount = (int) ($payAgg->payment_count ?? 0);
             $paymentTotal = (float) ($payAgg->payment_total ?? 0);
-            $avg_payment  = $paymentCount > 0 ? round($paymentTotal / $paymentCount, 2) : 0.0;
+            $avg_payment = $paymentCount > 0 ? round($paymentTotal / $paymentCount, 2) : 0.0;
 
             $overdue = DB::table('invoices')
                 ->where('company_id', $companyId)
@@ -805,7 +812,7 @@ class ReportController extends Controller
                 ->get()
                 ->map(fn ($r) => [
                     'status' => (string) $r->status,
-                    'count'  => (int) $r->count,
+                    'count' => (int) $r->count,
                 ])->values()->all();
 
             $woTotal = array_sum(array_column($woRows, 'count'));
@@ -821,7 +828,7 @@ class ReportController extends Controller
                     ->get()
                     ->map(fn ($r) => [
                         'status' => (string) $r->status,
-                        'count'  => (int) $r->count,
+                        'count' => (int) $r->count,
                     ])->values()->all();
             }
 
@@ -851,33 +858,33 @@ class ReportController extends Controller
             }
 
             $financial = [
-                'invoice_by_status'   => $invoiceRows,
-                'subtotal_sum'        => round($subtotalSum, 2),
-                'discount_sum'        => round($discountSum, 2),
-                'tax_sum'             => round((float) ($agg->tax_sum ?? 0), 2),
+                'invoice_by_status' => $invoiceRows,
+                'subtotal_sum' => round($subtotalSum, 2),
+                'discount_sum' => round($discountSum, 2),
+                'tax_sum' => round((float) ($agg->tax_sum ?? 0), 2),
                 'total_sales_in_period' => round($totalSum, 2),
                 'invoice_count_period' => (int) ($agg->invoice_count ?? 0),
-                'discount_ratio_pct'  => $discount_ratio_pct,
-                'payment_count'       => $paymentCount,
-                'payment_total'       => round($paymentTotal, 2),
-                'avg_payment'         => $avg_payment,
-                'overdue_count'       => (int) ($overdue->overdue_count ?? 0),
-                'overdue_amount'      => round((float) ($overdue->overdue_amount ?? 0), 2),
+                'discount_ratio_pct' => $discount_ratio_pct,
+                'payment_count' => $paymentCount,
+                'payment_total' => round($paymentTotal, 2),
+                'avg_payment' => $avg_payment,
+                'overdue_count' => (int) ($overdue->overdue_count ?? 0),
+                'overdue_amount' => round((float) ($overdue->overdue_amount ?? 0), 2),
             ];
 
             $operational = [
                 'work_orders_by_status' => $woRows,
                 'work_orders_created_total' => $woTotal,
-                'bookings_by_status'    => $bookingRows,
+                'bookings_by_status' => $bookingRows,
                 'bookings_created_total' => array_sum(array_column($bookingRows, 'count')),
-                'purchases'             => $purchasesPeriod,
-                'low_stock_row_count'   => $low_stock_skus,
+                'purchases' => $purchasesPeriod,
+                'low_stock_row_count' => $low_stock_skus,
             ];
 
             return [
-                'financial'   => $financial,
+                'financial' => $financial,
                 'operational' => $operational,
-                'period'      => ['from' => $request->from, 'to' => $request->to],
+                'period' => ['from' => $request->from, 'to' => $request->to],
             ];
         });
 
@@ -967,7 +974,7 @@ class ReportController extends Controller
                     ['key' => 'employees_total', 'label' => 'إجمالي الموظفين', 'formula' => 'COUNT(employees)'],
                     ['key' => 'employees_active', 'label' => 'الموظفون النشطون', 'formula' => "COUNT(status='active')"],
                     ['key' => 'new_hires', 'label' => 'تعيينات جديدة', 'formula' => 'COUNT(hire_date in period)'],
-                    ['key' => 'overdue_tasks', 'label' => 'مهام متأخرة', 'formula' => "COUNT(tasks where due_at < now and status open)"],
+                    ['key' => 'overdue_tasks', 'label' => 'مهام متأخرة', 'formula' => 'COUNT(tasks where due_at < now and status open)'],
                 ],
             ],
             'trace_id' => app('trace_id'),
@@ -1045,7 +1052,7 @@ class ReportController extends Controller
                 'workload' => $workload,
                 'kpi_dictionary' => [
                     ['key' => 'work_orders_completion_rate', 'label' => 'معدل إكمال أوامر العمل', 'formula' => 'completed / total * 100'],
-                    ['key' => 'tasks_overdue', 'label' => 'المهام المتأخرة', 'formula' => "COUNT(open tasks with due_at < now())"],
+                    ['key' => 'tasks_overdue', 'label' => 'المهام المتأخرة', 'formula' => 'COUNT(open tasks with due_at < now())'],
                     ['key' => 'bookings_total', 'label' => 'إجمالي الحجوزات', 'formula' => 'SUM(bookings by status)'],
                 ],
             ],
@@ -1088,6 +1095,7 @@ class ReportController extends Controller
                 ->whereNotNull('due_at')
                 ->where('due_at', '<', now())
                 ->count();
+
             return compact('sales', 'collected', 'wo', 'overdueTasks');
         };
 
@@ -1098,6 +1106,7 @@ class ReportController extends Controller
             if ((float) $previousValue === 0.0) {
                 return (float) $currentValue > 0 ? 100.0 : 0.0;
             }
+
             return round((((float) $currentValue - (float) $previousValue) / (float) $previousValue) * 100, 1);
         };
 
@@ -1237,7 +1246,7 @@ class ReportController extends Controller
             }
 
             $dueDateRaw = $item['due_date'] ?? null;
-            if (!empty($dueDateRaw) && in_array($state, ['draft', 'submitted', 'under_review', 'sent'], true)) {
+            if (! empty($dueDateRaw) && in_array($state, ['draft', 'submitted', 'under_review', 'sent'], true)) {
                 try {
                     if (Carbon::parse((string) $dueDateRaw)->endOfDay()->lt(now())) {
                         $overdue++;
@@ -1265,8 +1274,8 @@ class ReportController extends Controller
                 'signature_completed' => $signatureCompleted,
                 'archived_rate' => $total > 0 ? round(($archived / $total) * 100, 1) : 0.0,
             ],
-            'by_state' => collect($byStateMap)->map(fn($count, $state) => ['state' => $state, 'count' => (int) $count])->values()->all(),
-            'by_destination' => collect($byDestinationMap)->take(10)->map(fn($count, $dest) => ['destination' => $dest, 'count' => (int) $count])->values()->all(),
+            'by_state' => collect($byStateMap)->map(fn ($count, $state) => ['state' => $state, 'count' => (int) $count])->values()->all(),
+            'by_destination' => collect($byDestinationMap)->take(10)->map(fn ($count, $dest) => ['destination' => $dest, 'count' => (int) $count])->values()->all(),
         ];
     }
 
@@ -1321,8 +1330,8 @@ class ReportController extends Controller
                 'completed_in_period' => (int) $completed->count(),
                 'avg_cycle_hours' => $avgCycleHours,
             ],
-            'by_status' => $statusRows->map(fn($r) => ['status' => (string) $r->status, 'count' => (int) $r->count])->values()->all(),
-            'by_priority' => $priorityRows->map(fn($r) => ['priority' => (string) $r->priority, 'count' => (int) $r->count])->values()->all(),
+            'by_status' => $statusRows->map(fn ($r) => ['status' => (string) $r->status, 'count' => (int) $r->count])->values()->all(),
+            'by_priority' => $priorityRows->map(fn ($r) => ['priority' => (string) $r->priority, 'count' => (int) $r->count])->values()->all(),
         ];
     }
 }

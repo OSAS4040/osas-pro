@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contract extends Model
 {
-    use HasFactory, SoftDeletes, HasTenantScope;
+    use HasFactory, HasTenantScope, SoftDeletes;
 
     protected $fillable = [
         'uuid', 'company_id', 'title', 'party_name', 'party_type',
@@ -22,15 +22,26 @@ class Contract extends Model
 
     protected $casts = [
         'payment_terms' => 'array',
-        'metadata'      => 'array',
-        'start_date'    => 'date',
-        'end_date'      => 'date',
-        'value'         => 'decimal:2',
+        'metadata' => 'array',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'value' => 'decimal:2',
     ];
 
-    public function company()       { return $this->belongsTo(Company::class); }
-    public function creator()       { return $this->belongsTo(User::class, 'created_by'); }
-    public function notifications() { return $this->hasMany(\App\Models\ContractNotification::class); }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(ContractNotification::class);
+    }
 
     public function serviceItems()
     {

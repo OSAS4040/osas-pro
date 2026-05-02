@@ -16,7 +16,7 @@ class WebhookEndpoint extends Model
     protected $hidden = ['secret_hash'];
 
     protected $casts = [
-        'events'    => 'array',
+        'events' => 'array',
         'is_active' => 'boolean',
     ];
 

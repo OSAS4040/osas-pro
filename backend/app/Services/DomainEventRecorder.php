@@ -42,24 +42,24 @@ class DomainEventRecorder
 
     private function doRecord(DomainEventInterface $event): void
     {
-        $traceId       = TraceContext::traceIdForEvent();
+        $traceId = TraceContext::traceIdForEvent();
         $correlationId = TraceContext::correlationId();
-        $meta          = $event->metadata();
-        $payload       = $event->payload();
+        $meta = $event->metadata();
+        $payload = $event->payload();
 
         $companyId = $meta['company_id'] ?? null;
-        $branchId  = $meta['branch_id'] ?? null;
-        $userId    = $meta['caused_by_user_id'] ?? null;
+        $branchId = $meta['branch_id'] ?? null;
+        $userId = $meta['caused_by_user_id'] ?? null;
 
         $logPayload = [
-            'event_name'      => $event->name(),
-            'aggregate_type'  => $event->aggregateType(),
-            'aggregate_id'    => $event->aggregateId(),
-            'company_id'      => $companyId,
-            'trace_id'        => $traceId,
-            'correlation_id'  => $correlationId,
+            'event_name' => $event->name(),
+            'aggregate_type' => $event->aggregateType(),
+            'aggregate_id' => $event->aggregateId(),
+            'company_id' => $companyId,
+            'trace_id' => $traceId,
+            'correlation_id' => $correlationId,
             'caused_by_user_id' => $userId,
-            'result'          => 'recorded',
+            'result' => 'recorded',
         ];
 
         if (config('intelligent.observability.enabled')) {
@@ -71,39 +71,39 @@ class DomainEventRecorder
         }
 
         DomainEventModel::create([
-            'uuid'              => (string) Str::uuid(),
-            'company_id'        => $companyId,
-            'branch_id'         => $branchId,
-            'aggregate_type'    => $event->aggregateType(),
-            'aggregate_id'      => $event->aggregateId(),
-            'event_name'        => $event->name(),
-            'event_version'     => $event->eventVersion(),
-            'payload_json'      => $payload,
-            'metadata_json'     => array_merge($meta, [
-                'trace_id'       => $traceId,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
+            'aggregate_type' => $event->aggregateType(),
+            'aggregate_id' => $event->aggregateId(),
+            'event_name' => $event->name(),
+            'event_version' => $event->eventVersion(),
+            'payload_json' => $payload,
+            'metadata_json' => array_merge($meta, [
+                'trace_id' => $traceId,
                 'correlation_id' => $correlationId,
             ]),
-            'trace_id'          => $traceId,
-            'correlation_id'    => $correlationId,
+            'trace_id' => $traceId,
+            'correlation_id' => $correlationId,
             'caused_by_user_id' => $userId,
-            'caused_by_type'    => isset($userId) ? 'user' : null,
-            'source_context'    => $meta['source_context'] ?? null,
+            'caused_by_type' => isset($userId) ? 'user' : null,
+            'source_context' => $meta['source_context'] ?? null,
             'processing_status' => 'recorded',
-            'occurred_at'       => now(),
+            'occurred_at' => now(),
         ]);
     }
 
     private function handleFailure(DomainEventInterface $event, \Throwable $e): void
     {
         Log::error('intelligent.domain_event.failed', [
-            'event_name'     => $event->name(),
+            'event_name' => $event->name(),
             'aggregate_type' => $event->aggregateType(),
-            'aggregate_id'   => $event->aggregateId(),
-            'company_id'     => $event->metadata()['company_id'] ?? null,
-            'trace_id'       => TraceContext::traceIdForEvent(),
-            'exception'      => $e::class,
-            'message'        => $e->getMessage(),
-            'result'         => 'failed',
+            'aggregate_id' => $event->aggregateId(),
+            'company_id' => $event->metadata()['company_id'] ?? null,
+            'trace_id' => TraceContext::traceIdForEvent(),
+            'exception' => $e::class,
+            'message' => $e->getMessage(),
+            'result' => 'failed',
         ]);
 
         if (! config('intelligent.record_failures.enabled')) {
@@ -112,14 +112,14 @@ class DomainEventRecorder
 
         try {
             EventRecordFailure::create([
-                'event_name'     => $event->name(),
+                'event_name' => $event->name(),
                 'aggregate_type' => $event->aggregateType(),
-                'aggregate_id'   => $event->aggregateId(),
-                'company_id'     => $event->metadata()['company_id'] ?? null,
-                'trace_id'       => TraceContext::traceIdForEvent(),
-                'error_message'  => $e->getMessage(),
-                'payload_json'   => $event->payload(),
-                'created_at'     => now(),
+                'aggregate_id' => $event->aggregateId(),
+                'company_id' => $event->metadata()['company_id'] ?? null,
+                'trace_id' => TraceContext::traceIdForEvent(),
+                'error_message' => $e->getMessage(),
+                'payload_json' => $event->payload(),
+                'created_at' => now(),
             ]);
         } catch (\Throwable $inner) {
             Log::error('intelligent.event_record_failure.persist_failed', [

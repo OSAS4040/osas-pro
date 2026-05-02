@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\PlatformIntelligence\IncidentLifecycle;
 
 use App\Support\PlatformIntelligence\Enums\PlatformIncidentStatus;
-use App\Support\PlatformIntelligence\IncidentLifecycle\IncidentLifecyclePolicy;
 use App\Support\PlatformIntelligence\IncidentLifecycle\IncidentLifecycleException;
+use App\Support\PlatformIntelligence\IncidentLifecycle\IncidentLifecyclePolicy;
 use PHPUnit\Framework\TestCase;
 
 final class IncidentLifecyclePolicyTest extends TestCase

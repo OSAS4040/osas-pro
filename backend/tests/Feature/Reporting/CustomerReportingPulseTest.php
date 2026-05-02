@@ -27,7 +27,7 @@ class CustomerReportingPulseTest extends TestCase
     {
         return [
             'from' => now()->subDays(7)->toDateString(),
-            'to'   => now()->addDay()->toDateString(),
+            'to' => now()->addDay()->toDateString(),
         ];
     }
 
@@ -43,12 +43,12 @@ class CustomerReportingPulseTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'Pulse Cust',
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2c',
+            'name' => 'Pulse Cust',
+            'is_active' => true,
         ]);
 
         $this->actingAsUser($tenant['user'])
@@ -83,12 +83,12 @@ class CustomerReportingPulseTest extends TestCase
     {
         $tenant = $this->createTenant('technician');
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'T Cust',
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2c',
+            'name' => 'T Cust',
+            'is_active' => true,
         ]);
 
         $this->actingAsUser($tenant['user'])
@@ -102,12 +102,12 @@ class CustomerReportingPulseTest extends TestCase
         $b = $this->createTenant('owner');
 
         $foreign = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $b['company']->id,
-            'branch_id'  => $b['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'Foreign',
-            'is_active'  => true,
+            'branch_id' => $b['branch']->id,
+            'type' => 'b2c',
+            'name' => 'Foreign',
+            'is_active' => true,
         ]);
 
         $this->actingAsUser($a['user'])
@@ -136,68 +136,68 @@ class CustomerReportingPulseTest extends TestCase
         $staff = $this->createUser($company, $b1, 'staff');
 
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $company->id,
-            'branch_id'  => $b1->id,
-            'type'       => 'b2c',
-            'name'       => 'C',
-            'is_active'  => true,
+            'branch_id' => $b1->id,
+            'type' => 'b2c',
+            'name' => 'C',
+            'is_active' => true,
         ]);
 
         $v1 = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $b1->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $b1->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $staff->id,
-            'plate_number'       => 'P1-'.Str::upper(Str::random(4)),
-            'make'               => 'A',
-            'model'              => 'B',
-            'year'               => 2023,
-            'is_active'          => true,
+            'plate_number' => 'P1-'.Str::upper(Str::random(4)),
+            'make' => 'A',
+            'model' => 'B',
+            'year' => 2023,
+            'is_active' => true,
         ]);
 
         $v2 = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $b2->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $b2->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $staff->id,
-            'plate_number'       => 'P2-'.Str::upper(Str::random(4)),
-            'make'               => 'A',
-            'model'              => 'B',
-            'year'               => 2023,
-            'is_active'          => true,
+            'plate_number' => 'P2-'.Str::upper(Str::random(4)),
+            'make' => 'A',
+            'model' => 'B',
+            'year' => 2023,
+            'is_active' => true,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $b1->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $v1->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $b1->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $v1->id,
             'created_by_user_id' => $staff->id,
-            'order_number'       => 'WO-C1-'.Str::upper(Str::random(4)),
-            'status'             => WorkOrderStatus::Draft,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-C1-'.Str::upper(Str::random(4)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $b2->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $v2->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $b2->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $v2->id,
             'created_by_user_id' => $staff->id,
-            'order_number'       => 'WO-C2-'.Str::upper(Str::random(4)),
-            'status'             => WorkOrderStatus::Draft,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-C2-'.Str::upper(Str::random(4)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         $n = (int) $this->actingAsUser($staff)
@@ -217,33 +217,33 @@ class CustomerReportingPulseTest extends TestCase
     {
         $tenant = $this->createTenant('viewer');
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'V Cust',
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2c',
+            'name' => 'V Cust',
+            'is_active' => true,
         ]);
 
         Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'customer_id'        => $customer->id,
-            'invoice_number'     => 'INV-PR10-'.Str::upper(Str::random(4)),
-            'invoice_hash'       => hash('sha256', Str::random(16)),
-            'invoice_counter'    => 1,
-            'source_type'        => 'pos',
-            'source_id'          => 0,
-            'subtotal'           => 100,
-            'tax_amount'         => 15,
-            'total'              => 115,
-            'paid_amount'        => 0,
-            'due_amount'         => 115,
-            'status'             => 'pending',
-            'currency'           => 'SAR',
-            'issued_at'          => now(),
+            'customer_id' => $customer->id,
+            'invoice_number' => 'INV-PR10-'.Str::upper(Str::random(4)),
+            'invoice_hash' => hash('sha256', Str::random(16)),
+            'invoice_counter' => 1,
+            'source_type' => 'pos',
+            'source_id' => 0,
+            'subtotal' => 100,
+            'tax_amount' => 15,
+            'total' => 115,
+            'paid_amount' => 0,
+            'due_amount' => 115,
+            'status' => 'pending',
+            'currency' => 'SAR',
+            'issued_at' => now(),
         ]);
 
         $this->actingAsUser($tenant['user'])
@@ -259,47 +259,47 @@ class CustomerReportingPulseTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'Pay Cust',
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2c',
+            'name' => 'Pay Cust',
+            'is_active' => true,
         ]);
 
         $invoice = Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'customer_id'        => $customer->id,
-            'invoice_number'     => 'INV-PR10P-'.Str::upper(Str::random(4)),
-            'invoice_hash'       => hash('sha256', Str::random(16)),
-            'invoice_counter'    => 1,
-            'source_type'        => 'pos',
-            'source_id'          => 0,
-            'subtotal'           => 50,
-            'tax_amount'         => 0,
-            'total'              => 50,
-            'paid_amount'        => 0,
-            'due_amount'         => 50,
-            'status'             => 'pending',
-            'currency'           => 'SAR',
-            'issued_at'          => now(),
+            'customer_id' => $customer->id,
+            'invoice_number' => 'INV-PR10P-'.Str::upper(Str::random(4)),
+            'invoice_hash' => hash('sha256', Str::random(16)),
+            'invoice_counter' => 1,
+            'source_type' => 'pos',
+            'source_id' => 0,
+            'subtotal' => 50,
+            'tax_amount' => 0,
+            'total' => 50,
+            'paid_amount' => 0,
+            'due_amount' => 50,
+            'status' => 'pending',
+            'currency' => 'SAR',
+            'issued_at' => now(),
         ]);
 
         Payment::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'invoice_id'         => $invoice->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'invoice_id' => $invoice->id,
             'created_by_user_id' => $tenant['user']->id,
-            'method'             => 'cash',
-            'amount'             => 50,
-            'currency'           => 'SAR',
-            'status'             => 'completed',
-            'trace_id'           => (string) Str::uuid(),
-            'created_at'         => now(),
+            'method' => 'cash',
+            'amount' => 50,
+            'currency' => 'SAR',
+            'status' => 'completed',
+            'trace_id' => (string) Str::uuid(),
+            'created_at' => now(),
         ]);
 
         $res = $this->actingAsUser($tenant['user'])
@@ -316,40 +316,40 @@ class CustomerReportingPulseTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'WO Cust',
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2c',
+            'name' => 'WO Cust',
+            'is_active' => true,
         ]);
 
         $vehicle = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $tenant['user']->id,
-            'plate_number'       => 'WO-'.Str::upper(Str::random(4)),
-            'make'               => 'X',
-            'model'              => 'Y',
-            'year'               => 2022,
-            'is_active'          => true,
+            'plate_number' => 'WO-'.Str::upper(Str::random(4)),
+            'make' => 'X',
+            'model' => 'Y',
+            'year' => 2022,
+            'is_active' => true,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $vehicle->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
             'created_by_user_id' => $tenant['user']->id,
-            'order_number'       => 'WO-PR10-'.Str::upper(Str::random(4)),
-            'status'             => WorkOrderStatus::InProgress,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-PR10-'.Str::upper(Str::random(4)),
+            'status' => WorkOrderStatus::InProgress,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         $res = $this->actingAsUser($tenant['user'])

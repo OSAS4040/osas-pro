@@ -37,8 +37,8 @@ class BankTransaction extends Model
 
     protected $casts = [
         'transaction_date' => 'date',
-        'amount'           => 'decimal:2',
-        'is_matched'       => 'boolean',
+        'amount' => 'decimal:2',
+        'is_matched' => 'boolean',
     ];
 
     public function reconciliationMatches(): HasMany

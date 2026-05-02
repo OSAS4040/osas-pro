@@ -42,11 +42,11 @@ final class CommandCenterGovernanceRef
         string $severitySnapshot,
     ): string {
         $payload = [
-            'v'  => self::VERSION,
-            'c'  => $companyId,
-            'z'  => $zone,
-            's'  => $source,
-            'i'  => $itemId,
+            'v' => self::VERSION,
+            'c' => $companyId,
+            'z' => $zone,
+            's' => $source,
+            'i' => $itemId,
             'wf' => $windowFrom,
             'wt' => $windowTo,
             'fp' => $signalFingerprint,
@@ -54,7 +54,7 @@ final class CommandCenterGovernanceRef
             'se' => Str::limit($severitySnapshot, 32, ''),
         ];
         $json = json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
-        $sig  = hash_hmac('sha256', $json, self::key(), true);
+        $sig = hash_hmac('sha256', $json, self::key(), true);
 
         return 'v1.'.self::b64urlEncode($json).'.'.self::b64urlEncode($sig);
     }
@@ -68,14 +68,14 @@ final class CommandCenterGovernanceRef
             return null;
         }
         $rest = substr($token, 3);
-        $dot  = strrpos($rest, '.');
+        $dot = strrpos($rest, '.');
         if ($dot === false) {
             return null;
         }
         $b64Payload = substr($rest, 0, $dot);
-        $b64Sig     = substr($rest, $dot + 1);
-        $json       = self::b64urlDecode($b64Payload);
-        $sig        = self::b64urlDecode($b64Sig);
+        $b64Sig = substr($rest, $dot + 1);
+        $json = self::b64urlDecode($b64Payload);
+        $sig = self::b64urlDecode($b64Sig);
         if ($json === '' || $sig === '') {
             return null;
         }
@@ -110,7 +110,7 @@ final class CommandCenterGovernanceRef
     private static function b64urlDecode(string $b64): string
     {
         $padded = strtr($b64, '-_', '+/');
-        $pad    = strlen($padded) % 4;
+        $pad = strlen($padded) % 4;
         if ($pad > 0) {
             $padded .= str_repeat('=', 4 - $pad);
         }

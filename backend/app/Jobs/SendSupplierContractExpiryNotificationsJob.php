@@ -53,7 +53,7 @@ class SendSupplierContractExpiryNotificationsJob implements ShouldQueue
                             }
 
                             $settings = is_array($company->settings) ? $company->settings : [];
-                            $cfg      = is_array($settings['supplier_contract_notifications'] ?? null)
+                            $cfg = is_array($settings['supplier_contract_notifications'] ?? null)
                                 ? $settings['supplier_contract_notifications']
                                 : [];
                             /** @var list<int> $reminderDays */
@@ -67,7 +67,7 @@ class SendSupplierContractExpiryNotificationsJob implements ShouldQueue
                             }
 
                             $expDate = $contract->expires_at->copy()->startOfDay();
-                            $diff    = $today->diffInDays($expDate, false);
+                            $diff = $today->diffInDays($expDate, false);
 
                             if (! in_array($diff, $reminderDays, true) && $diff >= 0) {
                                 continue;
@@ -77,8 +77,8 @@ class SendSupplierContractExpiryNotificationsJob implements ShouldQueue
                             }
 
                             $supplierName = $contract->supplier?->name ?? 'مورد';
-                            $title        = (string) $contract->title;
-                            $message      = $diff < 0
+                            $title = (string) $contract->title;
+                            $message = $diff < 0
                                 ? "انتهى عقد المورد «{$supplierName}»: {$title}"
                                 : "تنبيه عقد مورد: «{$title}» لـ «{$supplierName}» ينتهي بعد {$diff} يوم";
 
@@ -132,7 +132,7 @@ class SendSupplierContractExpiryNotificationsJob implements ShouldQueue
                                     if ($url !== '') {
                                         try {
                                             Http::timeout(6)->post($url, [
-                                                'to'      => $phone,
+                                                'to' => $phone,
                                                 'message' => $message,
                                                 'api_key' => (string) ($wa['custom_api_key'] ?? ''),
                                             ]);

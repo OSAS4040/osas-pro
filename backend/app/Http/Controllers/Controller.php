@@ -12,7 +12,9 @@ use Illuminate\Routing\Controller as BaseController;
  *     version="1.0.0",
  *     title="SaaS Automotive Platform API",
  *     description="Production-grade SaaS for automotive service centers and fleet management.",
+ *
  *     @OA\Contact(email="api@autocenter.sa"),
+ *
  *     @OA\License(name="Proprietary")
  * )
  *
@@ -27,12 +29,14 @@ use Illuminate\Routing\Controller as BaseController;
  *
  * @OA\Schema(
  *     schema="ApiResponse",
+ *
  *     @OA\Property(property="data", type="object"),
  *     @OA\Property(property="trace_id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000")
  * )
  *
  * @OA\Schema(
  *     schema="PaginatedResponse",
+ *
  *     @OA\Property(property="data", type="object",
  *         @OA\Property(property="data", type="array", @OA\Items(type="object")),
  *         @OA\Property(property="current_page", type="integer"),
@@ -45,6 +49,7 @@ use Illuminate\Routing\Controller as BaseController;
  *
  * @OA\Schema(
  *     schema="Company",
+ *
  *     @OA\Property(property="id", type="integer"),
  *     @OA\Property(property="uuid", type="string", format="uuid"),
  *     @OA\Property(property="name", type="string"),
@@ -57,6 +62,7 @@ use Illuminate\Routing\Controller as BaseController;
  *
  * @OA\Schema(
  *     schema="Branch",
+ *
  *     @OA\Property(property="id", type="integer"),
  *     @OA\Property(property="uuid", type="string", format="uuid"),
  *     @OA\Property(property="company_id", type="integer"),
@@ -70,6 +76,7 @@ use Illuminate\Routing\Controller as BaseController;
  *
  * @OA\Schema(
  *     schema="User",
+ *
  *     @OA\Property(property="id", type="integer"),
  *     @OA\Property(property="uuid", type="string", format="uuid"),
  *     @OA\Property(property="company_id", type="integer"),
@@ -83,6 +90,7 @@ use Illuminate\Routing\Controller as BaseController;
  *
  * @OA\Schema(
  *     schema="Role",
+ *
  *     @OA\Property(property="id", type="integer"),
  *     @OA\Property(property="company_id", type="integer", nullable=true, description="null = system role"),
  *     @OA\Property(property="name", type="string"),
@@ -93,6 +101,7 @@ use Illuminate\Routing\Controller as BaseController;
  *
  * @OA\Schema(
  *     schema="Subscription",
+ *
  *     @OA\Property(property="id", type="integer"),
  *     @OA\Property(property="company_id", type="integer"),
  *     @OA\Property(property="plan", type="string", example="professional"),
@@ -104,6 +113,7 @@ use Illuminate\Routing\Controller as BaseController;
  *
  * @OA\Schema(
  *     schema="Plan",
+ *
  *     @OA\Property(property="slug", type="string", example="professional"),
  *     @OA\Property(property="name", type="string"),
  *     @OA\Property(property="price_monthly", type="number", format="float"),
@@ -115,6 +125,7 @@ use Illuminate\Routing\Controller as BaseController;
  *
  * @OA\Schema(
  *     schema="ErrorResponse",
+ *
  *     @OA\Property(property="message", type="string"),
  *     @OA\Property(property="trace_id", type="string", format="uuid"),
  *     @OA\Property(property="errors", type="object", description="Field validation errors")

@@ -5,6 +5,7 @@ namespace App\Services\Intelligence\Phase7;
 use App\Models\IntelligenceCommandCenterGovernanceAudit;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -46,8 +47,8 @@ final class CommandCenterGovernanceService
         foreach ($rows as $row) {
             $out[$row->governance_ref] = [
                 'action' => (string) $row->action,
-                'at'     => $row->created_at ? $row->created_at->toIso8601String() : null,
-                'by'     => $row->user?->name ? (string) $row->user->name : null,
+                'at' => $row->created_at ? $row->created_at->toIso8601String() : null,
+                'by' => $row->user?->name ? (string) $row->user->name : null,
             ];
         }
 
@@ -80,28 +81,28 @@ final class CommandCenterGovernanceService
         $note = $this->sanitizeNote($note);
 
         $audit = IntelligenceCommandCenterGovernanceAudit::create([
-            'uuid'                  => (string) Str::uuid(),
-            'company_id'            => (int) $user->company_id,
-            'user_id'               => (int) $user->id,
-            'governance_ref'        => $governanceRef,
-            'item_source'           => (string) ($payload['s'] ?? ''),
-            'item_id'               => (string) ($payload['i'] ?? ''),
-            'item_title_snapshot'   => Str::limit((string) ($payload['ti'] ?? ''), 512, ''),
-            'severity_snapshot'     => Str::limit((string) ($payload['se'] ?? ''), 32, ''),
-            'window_from'           => Carbon::parse((string) ($payload['wf'] ?? '')),
-            'window_to'             => Carbon::parse((string) ($payload['wt'] ?? '')),
+            'uuid' => (string) Str::uuid(),
+            'company_id' => (int) $user->company_id,
+            'user_id' => (int) $user->id,
+            'governance_ref' => $governanceRef,
+            'item_source' => (string) ($payload['s'] ?? ''),
+            'item_id' => (string) ($payload['i'] ?? ''),
+            'item_title_snapshot' => Str::limit((string) ($payload['ti'] ?? ''), 512, ''),
+            'severity_snapshot' => Str::limit((string) ($payload['se'] ?? ''), 32, ''),
+            'window_from' => Carbon::parse((string) ($payload['wf'] ?? '')),
+            'window_to' => Carbon::parse((string) ($payload['wt'] ?? '')),
             'snapshot_generated_at' => now(),
-            'action'                => $action,
-            'note'                  => $note,
-            'client_context'        => $clientContext,
-            'trace_id'              => app()->bound('trace_id') ? (string) app('trace_id') : null,
+            'action' => $action,
+            'note' => $note,
+            'client_context' => $clientContext,
+            'trace_id' => app()->bound('trace_id') ? (string) app('trace_id') : null,
         ]);
 
         return ['audit' => $audit];
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, IntelligenceCommandCenterGovernanceAudit>
+     * @return Collection<int, IntelligenceCommandCenterGovernanceAudit>
      */
     public function historyForRef(int $companyId, string $governanceRef, int $limit = 50)
     {

@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use App\Services\LedgerService;
 use App\Support\Accounting\LedgerSqlDiagnostics;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -43,24 +44,24 @@ final class LedgerPostingFailedException extends \RuntimeException
         $d = $this->diagnostics ?? [];
 
         $payload = [
-            'code'               => self::ERROR_CODE,
-            'posting_service'    => \App\Services\LedgerService::class,
-            'source'             => $this->source,
-            'operation_type'     => $d['operation_type'] ?? $this->source,
-            'company_id'         => $this->companyId,
-            'invoice_id'         => $this->invoiceId,
-            'payment_id'         => $this->paymentId,
-            'journal_id'         => $d['journal_id'] ?? null,
+            'code' => self::ERROR_CODE,
+            'posting_service' => LedgerService::class,
+            'source' => $this->source,
+            'operation_type' => $d['operation_type'] ?? $this->source,
+            'company_id' => $this->companyId,
+            'invoice_id' => $this->invoiceId,
+            'payment_id' => $this->paymentId,
+            'journal_id' => $d['journal_id'] ?? null,
             'posting_idempotency_key' => $d['posting_idempotency_key'] ?? null,
-            'trace_id'           => app()->bound('trace_id') ? app('trace_id') : null,
-            'request_id'         => app()->bound('request_id') ? app('request_id') : null,
-            'account_codes'      => $d['account_codes'] ?? null,
-            'gl_total_debit'     => $d['gl_total_debit'] ?? null,
-            'gl_total_credit'    => $d['gl_total_credit'] ?? null,
-            'gl_line_count'      => $d['gl_line_count'] ?? null,
-            'gl_balanced'        => $d['gl_balanced'] ?? null,
-            'previous_class'     => $prev ? $prev::class : null,
-            'previous_message'   => $prev ? mb_substr($prev->getMessage(), 0, 2000) : null,
+            'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
+            'request_id' => app()->bound('request_id') ? app('request_id') : null,
+            'account_codes' => $d['account_codes'] ?? null,
+            'gl_total_debit' => $d['gl_total_debit'] ?? null,
+            'gl_total_credit' => $d['gl_total_credit'] ?? null,
+            'gl_line_count' => $d['gl_line_count'] ?? null,
+            'gl_balanced' => $d['gl_balanced'] ?? null,
+            'previous_class' => $prev ? $prev::class : null,
+            'previous_message' => $prev ? mb_substr($prev->getMessage(), 0, 2000) : null,
             'previous_root_message' => $this->deepestMessage($prev),
         ];
 

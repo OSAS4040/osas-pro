@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Platform;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Config;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
@@ -21,7 +22,7 @@ final class PlatformIntelligenceSignalsApiTest extends TestCase
         $user = $this->createStandalonePlatformOperator('no-intel@platform.test', [
             'platform_role' => 'auditor',
         ]);
-        /** @var \App\Models\User $fresh */
+        /** @var User $fresh */
         $fresh = $user->fresh();
         $this->actingAsUser($fresh)
             ->getJson('/api/v1/platform/intelligence/signals')
@@ -44,7 +45,7 @@ final class PlatformIntelligenceSignalsApiTest extends TestCase
             'platform_role' => 'platform_admin',
         ]);
 
-        $res = $this->actingAsUser(\App\Models\User::where('email', 'sig-api@platform.test')->firstOrFail())
+        $res = $this->actingAsUser(User::where('email', 'sig-api@platform.test')->firstOrFail())
             ->getJson('/api/v1/platform/intelligence/signals');
 
         $res->assertSuccessful()

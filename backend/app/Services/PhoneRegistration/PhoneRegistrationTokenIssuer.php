@@ -39,11 +39,11 @@ final class PhoneRegistrationTokenIssuer
         $bootstrap = $this->loginBootstrap->build($user, $permissions);
 
         return array_merge([
-            'token'       => $token,
-            'token_type'  => 'Bearer',
-            'user'        => $this->formatUser($user),
+            'token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $this->formatUser($user),
             'permissions' => $permissions,
-            'trace_id'    => app('trace_id'),
+            'trace_id' => app('trace_id'),
         ], $bootstrap);
     }
 
@@ -68,22 +68,22 @@ final class PhoneRegistrationTokenIssuer
     private function formatUser(User $user): array
     {
         return [
-            'id'                 => $user->id,
-            'uuid'               => $user->uuid,
-            'name'               => $user->name,
-            'email'              => $user->email,
-            'phone'              => $user->phone,
-            'role'               => $user->getRawOriginal('role'),
-            'status'             => $user->getRawOriginal('status'),
-            'company_id'         => $user->company_id,
-            'branch_id'          => $user->branch_id,
-            'customer_id'        => $user->customer_id,
-            'is_active'          => $user->is_active,
-            'account_type'       => $user->account_type,
+            'id' => $user->id,
+            'uuid' => $user->uuid,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'role' => $user->getRawOriginal('role'),
+            'status' => $user->getRawOriginal('status'),
+            'company_id' => $user->company_id,
+            'branch_id' => $user->branch_id,
+            'customer_id' => $user->customer_id,
+            'is_active' => $user->is_active,
+            'account_type' => $user->account_type,
             'registration_stage' => $user->registration_stage,
-            'company'            => $user->relationLoaded('company') ? $user->company : null,
-            'branch'             => $user->relationLoaded('branch') ? $user->branch : null,
-            'subscription'       => $user->company_id ? $this->subscriptionBillingSummary((int) $user->company_id) : null,
+            'company' => $user->relationLoaded('company') ? $user->company : null,
+            'branch' => $user->relationLoaded('branch') ? $user->branch : null,
+            'subscription' => $user->company_id ? $this->subscriptionBillingSummary((int) $user->company_id) : null,
         ];
     }
 
@@ -99,24 +99,24 @@ final class PhoneRegistrationTokenIssuer
 
         if ($row === null) {
             return [
-                'plan'            => null,
-                'status'          => null,
-                'ends_at'         => null,
-                'grace_ends_at'   => null,
-                'billing_state'   => 'none',
-                'max_branches'    => null,
-                'max_users'       => null,
+                'plan' => null,
+                'status' => null,
+                'ends_at' => null,
+                'grace_ends_at' => null,
+                'billing_state' => 'none',
+                'max_branches' => null,
+                'max_users' => null,
                 'grace_read_only' => false,
             ];
         }
 
         $status = $row->status instanceof \BackedEnum ? $row->status->value : (string) $row->status;
-        $now    = now();
+        $now = now();
         $endsAt = $row->ends_at;
-        $grace  = $row->grace_ends_at;
+        $grace = $row->grace_ends_at;
 
         $expiredByTime = $endsAt !== null && $endsAt->lt($now);
-        $inGraceWindow  = $expiredByTime && $grace !== null && $now->lt($grace);
+        $inGraceWindow = $expiredByTime && $grace !== null && $now->lt($grace);
 
         if ($status === 'suspended') {
             $billingState = 'suspended';
@@ -129,13 +129,13 @@ final class PhoneRegistrationTokenIssuer
         }
 
         return [
-            'plan'            => $row->plan,
-            'status'          => $status,
-            'ends_at'         => $row->ends_at?->toIso8601String(),
-            'grace_ends_at'   => $row->grace_ends_at?->toIso8601String(),
-            'billing_state'   => $billingState,
-            'max_branches'    => (int) ($row->max_branches ?? 1),
-            'max_users'       => (int) ($row->max_users ?? 5),
+            'plan' => $row->plan,
+            'status' => $status,
+            'ends_at' => $row->ends_at?->toIso8601String(),
+            'grace_ends_at' => $row->grace_ends_at?->toIso8601String(),
+            'billing_state' => $billingState,
+            'max_branches' => (int) ($row->max_branches ?? 1),
+            'max_users' => (int) ($row->max_users ?? 5),
             'grace_read_only' => $billingState === 'grace',
         ];
     }

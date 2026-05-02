@@ -35,7 +35,7 @@ class PlatformPhoneRegistrationReviewController extends Controller
         $this->approvePhoneCompanyRegistrationService->approve($profile, $request->user());
 
         return response()->json([
-            'message'  => 'تم اعتماد الطلب وإنشاء المنشأة.',
+            'message' => 'تم اعتماد الطلب وإنشاء المنشأة.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -50,7 +50,7 @@ class PlatformPhoneRegistrationReviewController extends Controller
         $this->approvePhoneCompanyRegistrationService->reject($profile, $request->user(), $data['notes'] ?? null);
 
         return response()->json([
-            'message'  => 'تم رفض الطلب.',
+            'message' => 'تم رفض الطلب.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -65,7 +65,7 @@ class PlatformPhoneRegistrationReviewController extends Controller
         $this->approvePhoneCompanyRegistrationService->requestMoreInfo($profile, $request->user(), $data['notes']);
 
         return response()->json([
-            'message'  => 'تم طلب معلومات إضافية.',
+            'message' => 'تم طلب معلومات إضافية.',
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -80,7 +80,7 @@ class PlatformPhoneRegistrationReviewController extends Controller
         $this->approvePhoneCompanyRegistrationService->suspend($profile, $request->user(), $data['notes'] ?? null);
 
         return response()->json([
-            'message'  => 'تم تعليق الطلب.',
+            'message' => 'تم تعليق الطلب.',
             'trace_id' => app('trace_id'),
         ]);
     }

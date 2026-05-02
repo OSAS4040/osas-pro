@@ -81,4 +81,3 @@ class ConfigSettingsSeeder extends Seeder
         );
     }
 }
-

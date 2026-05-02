@@ -17,25 +17,25 @@ class StoreBundleRequest extends FormRequest
         $companyId = $this->user()->company_id;
 
         return [
-            'name'                  => ['required', 'string', 'max:200'],
-            'name_ar'               => ['nullable', 'string', 'max:200'],
-            'code'                  => [
+            'name' => ['required', 'string', 'max:200'],
+            'name_ar' => ['nullable', 'string', 'max:200'],
+            'code' => [
                 'nullable', 'string', 'max:50',
                 Rule::unique('bundles', 'code')->where('company_id', $companyId),
             ],
-            'description'           => ['nullable', 'string'],
-            'base_price'            => ['nullable', 'numeric', 'min:0'],
-            'override_item_prices'  => ['nullable', 'boolean'],
-            'is_active'             => ['nullable', 'boolean'],
-            'branch_id'             => ['nullable', 'integer', 'exists:branches,id'],
-            'items'                 => ['nullable', 'array', 'min:1'],
-            'items.*.item_type'     => ['required', 'in:service,product'],
-            'items.*.service_id'    => ['nullable', 'integer', 'exists:services,id'],
-            'items.*.product_id'    => ['nullable', 'integer', 'exists:products,id'],
-            'items.*.quantity'      => ['required', 'numeric', 'min:0.001'],
+            'description' => ['nullable', 'string'],
+            'base_price' => ['nullable', 'numeric', 'min:0'],
+            'override_item_prices' => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
+            'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
+            'items' => ['nullable', 'array', 'min:1'],
+            'items.*.item_type' => ['required', 'in:service,product'],
+            'items.*.service_id' => ['nullable', 'integer', 'exists:services,id'],
+            'items.*.product_id' => ['nullable', 'integer', 'exists:products,id'],
+            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
             'items.*.unit_price_override' => ['nullable', 'numeric', 'min:0'],
-            'items.*.notes'         => ['nullable', 'string'],
-            'items.*.sort_order'    => ['nullable', 'integer', 'min:0'],
+            'items.*.notes' => ['nullable', 'string'],
+            'items.*.sort_order' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

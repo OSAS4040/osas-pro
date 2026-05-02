@@ -40,9 +40,9 @@ final class FinancialGlMapping
 
         $lines = [[
             'account_code' => $receivableCode,
-            'type'         => 'debit',
-            'amount'       => (float) $invoice->total,
-            'description'  => "Invoice {$invoice->invoice_number}",
+            'type' => 'debit',
+            'amount' => (float) $invoice->total,
+            'description' => "Invoice {$invoice->invoice_number}",
         ]];
 
         $netRevenue = max(0.0, (float) $invoice->subtotal - (float) $invoice->discount_amount);
@@ -50,18 +50,18 @@ final class FinancialGlMapping
         if ($netRevenue > 0.0001) {
             $lines[] = [
                 'account_code' => '4100',
-                'type'         => 'credit',
-                'amount'       => $netRevenue,
-                'description'  => "Revenue (net) - {$invoice->invoice_number}",
+                'type' => 'credit',
+                'amount' => $netRevenue,
+                'description' => "Revenue (net) - {$invoice->invoice_number}",
             ];
         }
 
         if ((float) $invoice->tax_amount > 0.0001) {
             $lines[] = [
                 'account_code' => '2300',
-                'type'         => 'credit',
-                'amount'       => (float) $invoice->tax_amount,
-                'description'  => "VAT Output - {$invoice->invoice_number}",
+                'type' => 'credit',
+                'amount' => (float) $invoice->tax_amount,
+                'description' => "VAT Output - {$invoice->invoice_number}",
             ];
         }
 
@@ -77,9 +77,9 @@ final class FinancialGlMapping
     {
         $lines = [[
             'account_code' => '1010',
-            'type'         => 'debit',
-            'amount'       => (float) $invoice->total,
-            'description'  => "POS Sale {$invoice->invoice_number}",
+            'type' => 'debit',
+            'amount' => (float) $invoice->total,
+            'description' => "POS Sale {$invoice->invoice_number}",
         ]];
 
         $netRevenue = max(0.0, (float) $invoice->subtotal - (float) $invoice->discount_amount);
@@ -87,18 +87,18 @@ final class FinancialGlMapping
         if ($netRevenue > 0.0001) {
             $lines[] = [
                 'account_code' => '4100',
-                'type'         => 'credit',
-                'amount'       => $netRevenue,
-                'description'  => "Revenue (net) - {$invoice->invoice_number}",
+                'type' => 'credit',
+                'amount' => $netRevenue,
+                'description' => "Revenue (net) - {$invoice->invoice_number}",
             ];
         }
 
         if ((float) $invoice->tax_amount > 0.0001) {
             $lines[] = [
                 'account_code' => '2300',
-                'type'         => 'credit',
-                'amount'       => (float) $invoice->tax_amount,
-                'description'  => "VAT Output - {$invoice->invoice_number}",
+                'type' => 'credit',
+                'amount' => (float) $invoice->tax_amount,
+                'description' => "VAT Output - {$invoice->invoice_number}",
             ];
         }
 

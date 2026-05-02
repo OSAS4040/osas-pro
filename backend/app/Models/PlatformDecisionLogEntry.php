@@ -10,6 +10,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property string $decision_id
@@ -23,7 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $expected_outcome
  * @property list<string> $evidence_refs
  * @property bool $follow_up_required
- * @property \Illuminate\Support\Carbon $created_at
+ * @property Carbon $created_at
  */
 final class PlatformDecisionLogEntry extends Model
 {
@@ -85,7 +86,6 @@ final class PlatformDecisionLogEntry extends Model
     }
 
     /**
-     * @param  mixed  $value
      * @return list<string>
      */
     private function normalizeStringList(mixed $value): array

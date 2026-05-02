@@ -105,10 +105,10 @@ final class DemoIntegratedPortalJourneySeeder extends Seeder
         return Branch::withoutGlobalScope('tenant')->firstOrCreate(
             ['company_id' => $company->id, 'code' => 'DEMO-WEST'],
             [
-                'uuid'      => (string) Str::uuid(),
-                'name'      => 'فرع غرب الرياض — تجريبي',
-                'name_ar'   => 'فرع غرب الرياض — تجريبي',
-                'status'    => 'active',
+                'uuid' => (string) Str::uuid(),
+                'name' => 'فرع غرب الرياض — تجريبي',
+                'name_ar' => 'فرع غرب الرياض — تجريبي',
+                'status' => 'active',
                 'is_active' => true,
             ]
         );
@@ -125,17 +125,17 @@ final class DemoIntegratedPortalJourneySeeder extends Seeder
             Product::query()->firstOrCreate(
                 ['company_id' => $company->id, 'sku' => $row['sku']],
                 [
-                    'uuid'               => (string) Str::uuid(),
-                    'company_id'         => $company->id,
+                    'uuid' => (string) Str::uuid(),
+                    'company_id' => $company->id,
                     'created_by_user_id' => $owner->id,
-                    'name'               => $row['name'],
-                    'name_ar'            => $row['name'],
-                    'sale_price'         => $row['price'],
-                    'cost_price'         => round($row['price'] * 0.55, 2),
-                    'product_type'       => $row['type'],
-                    'tax_rate'           => 15,
-                    'is_active'          => true,
-                    'track_inventory'    => false,
+                    'name' => $row['name'],
+                    'name_ar' => $row['name'],
+                    'sale_price' => $row['price'],
+                    'cost_price' => round($row['price'] * 0.55, 2),
+                    'product_type' => $row['type'],
+                    'tax_rate' => 15,
+                    'is_active' => true,
+                    'track_inventory' => false,
                 ]
             );
         }
@@ -158,16 +158,16 @@ final class DemoIntegratedPortalJourneySeeder extends Seeder
         $customer = Customer::query()->firstOrCreate(
             [
                 'company_id' => $company->id,
-                'email'      => 'portal.journey@demo.local',
+                'email' => 'portal.journey@demo.local',
             ],
             [
-                'uuid'       => (string) Str::uuid(),
-                'branch_id'  => $mainBranch?->id,
-                'name'       => 'عميل بوابة — رحلة متكاملة',
-                'name_ar'    => 'عميل بوابة — رحلة متكاملة',
-                'phone'      => '+966509998877',
-                'type'       => 'b2c',
-                'is_active'  => true,
+                'uuid' => (string) Str::uuid(),
+                'branch_id' => $mainBranch?->id,
+                'name' => 'عميل بوابة — رحلة متكاملة',
+                'name_ar' => 'عميل بوابة — رحلة متكاملة',
+                'phone' => '+966509998877',
+                'type' => 'b2c',
+                'is_active' => true,
             ]
         );
 
@@ -177,19 +177,19 @@ final class DemoIntegratedPortalJourneySeeder extends Seeder
 
         Vehicle::query()->firstOrCreate(
             [
-                'company_id'   => $company->id,
+                'company_id' => $company->id,
                 'plate_number' => 'ر ح ي 2030',
             ],
             [
-                'uuid'               => (string) Str::uuid(),
-                'branch_id'          => $mainBranch?->id,
-                'customer_id'        => $customer->id,
+                'uuid' => (string) Str::uuid(),
+                'branch_id' => $mainBranch?->id,
+                'customer_id' => $customer->id,
                 'created_by_user_id' => $owner->id,
-                'make'               => 'Toyota',
-                'model'              => 'Camry',
-                'year'               => 2024,
-                'color'              => 'أبيض لؤلؤي',
-                'is_active'          => true,
+                'make' => 'Toyota',
+                'model' => 'Camry',
+                'year' => 2024,
+                'color' => 'أبيض لؤلؤي',
+                'is_active' => true,
             ]
         );
 
@@ -320,25 +320,25 @@ final class DemoIntegratedPortalJourneySeeder extends Seeder
             $wo = WorkOrder::query()->firstOrCreate(
                 ['company_id' => $company->id, 'order_number' => $orderNumber],
                 [
-                    'uuid'                   => (string) Str::uuid(),
-                    'branch_id'              => $sc['branch']->id,
-                    'customer_id'            => $customer->id,
-                    'vehicle_id'             => $vehicle->id,
-                    'created_by_user_id'     => $owner->id,
+                    'uuid' => (string) Str::uuid(),
+                    'branch_id' => $sc['branch']->id,
+                    'customer_id' => $customer->id,
+                    'vehicle_id' => $vehicle->id,
+                    'created_by_user_id' => $owner->id,
                     'assigned_technician_id' => $tech?->id,
-                    'order_number'           => $orderNumber,
-                    'status'                 => $sc['status'],
-                    'priority'               => 'normal',
-                    'customer_complaint'       => 'رحلة تجريبية متكاملة — '.$lineProduct->name,
-                    'estimated_total'        => (float) $lineProduct->sale_price,
-                    'actual_total'           => in_array($sc['status'], [WorkOrderStatus::Completed, WorkOrderStatus::Delivered], true)
+                    'order_number' => $orderNumber,
+                    'status' => $sc['status'],
+                    'priority' => 'normal',
+                    'customer_complaint' => 'رحلة تجريبية متكاملة — '.$lineProduct->name,
+                    'estimated_total' => (float) $lineProduct->sale_price,
+                    'actual_total' => in_array($sc['status'], [WorkOrderStatus::Completed, WorkOrderStatus::Delivered], true)
                         ? (float) $lineProduct->sale_price
                         : 0,
-                    'started_at'             => $sc['status'] === WorkOrderStatus::Draft ? null : now()->subDays($sc['days']),
-                    'completed_at'           => in_array($sc['status'], [WorkOrderStatus::Completed, WorkOrderStatus::Delivered], true)
+                    'started_at' => $sc['status'] === WorkOrderStatus::Draft ? null : now()->subDays($sc['days']),
+                    'completed_at' => in_array($sc['status'], [WorkOrderStatus::Completed, WorkOrderStatus::Delivered], true)
                         ? now()->subDays(max(0, $sc['days'] - 1))
                         : null,
-                    'delivered_at'           => $sc['status'] === WorkOrderStatus::Delivered
+                    'delivered_at' => $sc['status'] === WorkOrderStatus::Delivered
                         ? now()->subDays(max(0, $sc['days'] - 2))
                         : null,
                 ]
@@ -353,19 +353,19 @@ final class DemoIntegratedPortalJourneySeeder extends Seeder
                 $taxAmt = round($subtotal * ($taxRate / 100), 2);
 
                 WorkOrderItem::query()->create([
-                    'company_id'    => $company->id,
+                    'company_id' => $company->id,
                     'work_order_id' => $wo->id,
-                    'product_id'    => $lineProduct->id,
-                    'item_type'     => WorkOrderItemType::Service,
-                    'name'          => $lineProduct->name,
-                    'sku'           => $lineProduct->sku,
-                    'quantity'      => $qty,
-                    'unit_price'    => $unit,
+                    'product_id' => $lineProduct->id,
+                    'item_type' => WorkOrderItemType::Service,
+                    'name' => $lineProduct->name,
+                    'sku' => $lineProduct->sku,
+                    'quantity' => $qty,
+                    'unit_price' => $unit,
                     'discount_amount' => 0,
-                    'tax_rate'      => $taxRate,
-                    'tax_amount'    => $taxAmt,
-                    'subtotal'      => $subtotal,
-                    'total'         => round($subtotal + $taxAmt, 2),
+                    'tax_rate' => $taxRate,
+                    'tax_amount' => $taxAmt,
+                    'subtotal' => $subtotal,
+                    'total' => round($subtotal + $taxAmt, 2),
                 ]);
             }
         }

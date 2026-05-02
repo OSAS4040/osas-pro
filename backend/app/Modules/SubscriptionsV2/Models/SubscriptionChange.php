@@ -22,7 +22,7 @@ class SubscriptionChange extends Model
 
     protected $casts = [
         'proration_amount' => 'decimal:2',
-        'effective_at'      => 'datetime',
+        'effective_at' => 'datetime',
     ];
 
     public function subscription(): BelongsTo

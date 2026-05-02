@@ -17,8 +17,8 @@ final class ProductionReadinessCustomerCrudTest extends TestCase
 
         $create = $this->actingAsUser($tenant['user'])
             ->postJson('/api/v1/customers', [
-                'type'  => 'b2b',
-                'name'  => 'Gate Customer Co',
+                'type' => 'b2b',
+                'name' => 'Gate Customer Co',
                 'phone' => '0500999001',
             ]);
 

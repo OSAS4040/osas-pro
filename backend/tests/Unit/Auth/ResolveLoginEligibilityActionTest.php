@@ -30,7 +30,7 @@ class ResolveLoginEligibilityActionTest extends TestCase
     public function test_active_and_is_active_true_is_allowed(): void
     {
         $user = new User([
-            'status'    => UserStatus::Active,
+            'status' => UserStatus::Active,
             'is_active' => true,
         ]);
         $user->syncOriginal();
@@ -43,7 +43,7 @@ class ResolveLoginEligibilityActionTest extends TestCase
     public function test_blocked_takes_precedence_over_disabled_flag(): void
     {
         $user = new User([
-            'status'    => UserStatus::Blocked,
+            'status' => UserStatus::Blocked,
             'is_active' => false,
         ]);
         $user->syncOriginal();
@@ -79,5 +79,4 @@ class ResolveLoginEligibilityActionTest extends TestCase
         $r = ($this->action)($user);
         $this->assertSame(LoginEligibilityResult::REASON_ACCOUNT_DISABLED, $r->reasonCode);
     }
-
 }

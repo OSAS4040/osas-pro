@@ -33,4 +33,3 @@ return new class extends Migration
         // Keep per-company sequences to avoid accidental invoice counter regression.
     }
 };
-

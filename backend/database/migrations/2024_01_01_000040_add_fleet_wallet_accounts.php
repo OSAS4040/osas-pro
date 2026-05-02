@@ -9,24 +9,24 @@ return new class extends Migration
     {
         $accounts = [
             [
-                'code'       => '2410',
-                'name'       => 'Fleet Main Wallet Deposits',
-                'name_ar'    => 'ودائع محفظة الأسطول الرئيسية',
-                'type'       => 'liability',
-                'sub_type'   => 'wallet',
+                'code' => '2410',
+                'name' => 'Fleet Main Wallet Deposits',
+                'name_ar' => 'ودائع محفظة الأسطول الرئيسية',
+                'type' => 'liability',
+                'sub_type' => 'wallet',
                 'sort_order' => 55,
-                'is_system'  => true,
-                'is_active'  => true,
+                'is_system' => true,
+                'is_active' => true,
             ],
             [
-                'code'       => '2420',
-                'name'       => 'Vehicle Wallet Deposits',
-                'name_ar'    => 'ودائع محافظ المركبات',
-                'type'       => 'liability',
-                'sub_type'   => 'wallet',
+                'code' => '2420',
+                'name' => 'Vehicle Wallet Deposits',
+                'name_ar' => 'ودائع محافظ المركبات',
+                'type' => 'liability',
+                'sub_type' => 'wallet',
                 'sort_order' => 56,
-                'is_system'  => true,
-                'is_active'  => true,
+                'is_system' => true,
+                'is_active' => true,
             ],
         ];
 

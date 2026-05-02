@@ -7,10 +7,12 @@ use App\Models\Bay;
 use App\Models\Booking;
 use App\Models\Branch;
 use App\Models\Company;
-use App\Services\BookingService;
 use App\Services\AuditLogger;
+use App\Services\BookingService;
 use App\Services\Config\ConfigResolverService;
 use App\Support\BranchOpeningHours;
+use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,8 +28,9 @@ class BayController extends Controller
         $user = $request->user();
         $bays = Bay::where('company_id', $user->company_id)
             ->when($request->query('branch_id'), fn ($q, $v) => $q->where('branch_id', $v))
-            ->when($request->query('status'),    fn ($q, $v) => $q->where('status', $v))
+            ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
             ->get();
+
         return response()->json(['data' => $bays]);
     }
 
@@ -35,23 +38,23 @@ class BayController extends Controller
     {
         $user = $request->user();
         $data = $request->validate([
-            'code'         => 'required|string|max:20',
-            'name'         => 'required|string|max:80',
-            'type'         => 'nullable|string|in:lift,bay,wash,alignment',
-            'capacity'     => 'nullable|integer|min:1',
+            'code' => 'required|string|max:20',
+            'name' => 'required|string|max:80',
+            'type' => 'nullable|string|in:lift,bay,wash,alignment',
+            'capacity' => 'nullable|integer|min:1',
             'capabilities' => 'nullable|array',
-            'branch_id'    => 'nullable|integer',
+            'branch_id' => 'nullable|integer',
         ]);
 
         try {
             $bay = Bay::create(array_merge($data, [
                 'company_id' => $user->company_id,
-                'branch_id'  => $data['branch_id'] ?? $user->branch_id,
-                'status'     => 'available',
+                'branch_id' => $data['branch_id'] ?? $user->branch_id,
+                'status' => 'available',
             ]));
         } catch (UniqueConstraintViolationException $e) {
             return response()->json(['message' => 'منطقة العمل موجودة مسبقاً (مكرر).'], 422);
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if (str_contains($e->getMessage(), 'duplicate') || str_contains($e->getMessage(), 'unique')) {
                 return response()->json(['message' => 'منطقة العمل موجودة مسبقاً (مكرر).'], 422);
             }
@@ -65,30 +68,30 @@ class BayController extends Controller
 
     public function updateStatus(Request $request, int $id): JsonResponse
     {
-        $user   = $request->user();
-        $bay    = Bay::where('company_id', $user->company_id)->findOrFail($id);
+        $user = $request->user();
+        $bay = Bay::where('company_id', $user->company_id)->findOrFail($id);
         $before = ['status' => $bay->status];
 
         $data = $request->validate([
             'status' => 'required|string|in:available,reserved,in_use,maintenance,out_of_service',
-            'notes'  => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         $current = (string) $bay->status;
-        $target  = (string) $data['status'];
+        $target = (string) $data['status'];
         $allowedTransitions = [
-            'available'      => ['available', 'reserved', 'in_use', 'maintenance', 'out_of_service'],
-            'reserved'       => ['reserved', 'available', 'in_use', 'maintenance', 'out_of_service'],
-            'in_use'         => ['in_use', 'available', 'maintenance', 'out_of_service'],
-            'maintenance'    => ['maintenance', 'available', 'out_of_service'],
+            'available' => ['available', 'reserved', 'in_use', 'maintenance', 'out_of_service'],
+            'reserved' => ['reserved', 'available', 'in_use', 'maintenance', 'out_of_service'],
+            'in_use' => ['in_use', 'available', 'maintenance', 'out_of_service'],
+            'maintenance' => ['maintenance', 'available', 'out_of_service'],
             'out_of_service' => ['out_of_service', 'maintenance', 'available'],
         ];
         $allowed = $allowedTransitions[$current] ?? [];
         if ($target !== $current && ! in_array($target, $allowed, true)) {
             return response()->json([
-                'message'  => "Bay status transition {$current} -> {$target} is not allowed.",
-                'code'     => 'TRANSITION_NOT_ALLOWED',
-                'status'   => 409,
+                'message' => "Bay status transition {$current} -> {$target} is not allowed.",
+                'code' => 'TRANSITION_NOT_ALLOWED',
+                'status' => 409,
                 'trace_id' => app('trace_id'),
             ], 409);
         }
@@ -112,7 +115,7 @@ class BayController extends Controller
         }
 
         $user = $request->user();
-        $per  = min(200, max(10, (int) $request->query('per_page', 30)));
+        $per = min(200, max(10, (int) $request->query('per_page', 30)));
 
         $bookings = Booking::where('company_id', $user->company_id)
             ->when($request->query('date'), fn ($q, $v) => $q->whereDate('starts_at', $v))
@@ -134,26 +137,26 @@ class BayController extends Controller
 
         $user = $request->user();
         $data = $request->validate([
-            'bay_id'           => 'required|integer',
-            'starts_at'        => 'required|date',
+            'bay_id' => 'required|integer',
+            'starts_at' => 'required|date',
             'duration_minutes' => 'required|integer|min:15|max:480',
-            'customer_id'      => 'nullable|integer',
-            'vehicle_id'       => 'nullable|integer',
-            'service_type'     => 'nullable|string|max:80',
-            'notes'            => 'nullable|string',
-            'source'           => 'nullable|string|in:manual,fleet_portal,online',
+            'customer_id' => 'nullable|integer',
+            'vehicle_id' => 'nullable|integer',
+            'service_type' => 'nullable|string|max:80',
+            'notes' => 'nullable|string',
+            'source' => 'nullable|string|in:manual,fleet_portal,online',
         ]);
 
         Bay::where('company_id', $user->company_id)->findOrFail($data['bay_id']);
 
-        $start = \Carbon\Carbon::parse($data['starts_at']);
-        $end   = $start->copy()->addMinutes($data['duration_minutes']);
+        $start = Carbon::parse($data['starts_at']);
+        $end = $start->copy()->addMinutes($data['duration_minutes']);
 
         $booking = app(BookingService::class)->book(array_merge($data, [
             'company_id' => $user->company_id,
-            'branch_id'  => $user->branch_id,
-            'ends_at'    => $end,
-            'status'     => 'confirmed',
+            'branch_id' => $user->branch_id,
+            'ends_at' => $end,
+            'status' => 'confirmed',
             'created_by' => $user->id,
         ]));
 
@@ -166,7 +169,7 @@ class BayController extends Controller
             return response()->json(['message' => 'Bookings are disabled by configuration.', 'trace_id' => app('trace_id')], 403);
         }
 
-        $user    = $request->user();
+        $user = $request->user();
         $booking = Booking::where('company_id', $user->company_id)->findOrFail($id);
         $request->validate([
             'action' => 'nullable|string|in:confirm,start,complete,cancel',
@@ -176,7 +179,7 @@ class BayController extends Controller
 
         if ($request->filled('action') && $request->filled('status')) {
             return response()->json([
-                'message'  => 'Send either action or status, not both.',
+                'message' => 'Send either action or status, not both.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -185,24 +188,24 @@ class BayController extends Controller
         if (! is_string($resolvedAction) || $resolvedAction === '') {
             if ($request->filled('status')) {
                 $resolvedAction = match ((string) $request->input('status')) {
-                    'confirmed'   => 'confirm',
+                    'confirmed' => 'confirm',
                     'in_progress' => 'start',
-                    'completed'   => 'complete',
-                    'cancelled'   => 'cancel',
-                    default       => null,
+                    'completed' => 'complete',
+                    'cancelled' => 'cancel',
+                    default => null,
                 };
             }
         }
 
         if (! is_string($resolvedAction) || $resolvedAction === '' || ! in_array($resolvedAction, ['confirm', 'start', 'complete', 'cancel'], true)) {
             return response()->json([
-                'message'  => 'Booking update requires action (confirm, start, complete, cancel) or a target status (confirmed, in_progress, completed, cancelled).',
+                'message' => 'Booking update requires action (confirm, start, complete, cancel) or a target status (confirmed, in_progress, completed, cancelled).',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
 
         $action = $resolvedAction;
-        $svc    = app(BookingService::class);
+        $svc = app(BookingService::class);
 
         $current = (string) $booking->status;
 
@@ -213,9 +216,9 @@ class BayController extends Controller
                 $result = $svc->confirm($id);
             } else {
                 return response()->json([
-                    'message'  => "Booking status transition {$current} -> confirm is not allowed.",
-                    'code'     => 'TRANSITION_NOT_ALLOWED',
-                    'status'   => 409,
+                    'message' => "Booking status transition {$current} -> confirm is not allowed.",
+                    'code' => 'TRANSITION_NOT_ALLOWED',
+                    'status' => 409,
                     'trace_id' => app('trace_id'),
                 ], 409);
             }
@@ -226,9 +229,9 @@ class BayController extends Controller
                 $result = $svc->start($id);
             } else {
                 return response()->json([
-                    'message'  => "Booking status transition {$current} -> start is not allowed.",
-                    'code'     => 'TRANSITION_NOT_ALLOWED',
-                    'status'   => 409,
+                    'message' => "Booking status transition {$current} -> start is not allowed.",
+                    'code' => 'TRANSITION_NOT_ALLOWED',
+                    'status' => 409,
                     'trace_id' => app('trace_id'),
                 ], 409);
             }
@@ -239,9 +242,9 @@ class BayController extends Controller
                 $result = $svc->complete($id);
             } else {
                 return response()->json([
-                    'message'  => "Booking status transition {$current} -> complete is not allowed.",
-                    'code'     => 'TRANSITION_NOT_ALLOWED',
-                    'status'   => 409,
+                    'message' => "Booking status transition {$current} -> complete is not allowed.",
+                    'code' => 'TRANSITION_NOT_ALLOWED',
+                    'status' => 409,
                     'trace_id' => app('trace_id'),
                 ], 409);
             }
@@ -252,9 +255,9 @@ class BayController extends Controller
                 $result = $svc->cancel($id, $user->id, (string) $request->input('reason', ''));
             } else {
                 return response()->json([
-                    'message'  => "Booking status transition {$current} -> cancel is not allowed.",
-                    'code'     => 'TRANSITION_NOT_ALLOWED',
-                    'status'   => 409,
+                    'message' => "Booking status transition {$current} -> cancel is not allowed.",
+                    'code' => 'TRANSITION_NOT_ALLOWED',
+                    'status' => 409,
                     'trace_id' => app('trace_id'),
                 ], 409);
             }
@@ -271,14 +274,14 @@ class BayController extends Controller
     {
         $user = $request->user();
         $data = $request->validate([
-            'branch_id'        => 'required|integer',
-            'starts_at'        => 'required|date',
+            'branch_id' => 'required|integer',
+            'starts_at' => 'required|date',
             'duration_minutes' => 'required|integer|min:15',
-            'capability'       => 'nullable|string',
+            'capability' => 'nullable|string',
         ]);
 
-        $start = \Carbon\Carbon::parse($data['starts_at']);
-        $end   = $start->copy()->addMinutes($data['duration_minutes']);
+        $start = Carbon::parse($data['starts_at']);
+        $end = $start->copy()->addMinutes($data['duration_minutes']);
 
         $branch = Branch::query()
             ->where('company_id', $user->company_id)
@@ -288,8 +291,8 @@ class BayController extends Controller
         if (! $branch) {
             return response()->json([
                 'available' => false,
-                'bay'       => null,
-                'reason'    => 'branch_not_found',
+                'bay' => null,
+                'reason' => 'branch_not_found',
             ]);
         }
 
@@ -307,15 +310,15 @@ class BayController extends Controller
 
         return response()->json([
             'available' => (bool) $bay,
-            'bay'       => $bay,
-            'reason'    => $outsideHours ? 'outside_hours' : ($bay ? null : 'no_work_area'),
+            'bay' => $bay,
+            'reason' => $outsideHours ? 'outside_hours' : ($bay ? null : 'no_work_area'),
         ]);
     }
 
     public function heatmap(Request $request): JsonResponse
     {
-        $user   = $request->user();
-        $date   = $request->query('date', today()->toDateString());
+        $user = $request->user();
+        $date = $request->query('date', today()->toDateString());
         $branch = $request->query('branch_id', $user->branch_id);
 
         if ($branch === null || $branch === '') {

@@ -2,13 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\AuthPersonalAccessToken;
 use App\Queue\Failed\DedupingDatabaseUuidFailedJobProvider;
 use App\Queue\Listeners\LogIncidentScopeQueueExceptions;
 use App\Support\Auth\PhoneNormalizer;
 use App\Support\Observability\LedgerAlertWebhookNotifier;
-use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -41,7 +42,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Sanctum::usePersonalAccessTokenModel(\App\Models\AuthPersonalAccessToken::class);
+        Sanctum::usePersonalAccessTokenModel(AuthPersonalAccessToken::class);
 
         $this->configureAuthRateLimiters();
 

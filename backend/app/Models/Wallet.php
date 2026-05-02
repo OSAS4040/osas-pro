@@ -14,7 +14,7 @@ class Wallet extends Model
     ];
 
     protected $casts = [
-        'balance'      => 'decimal:4',
+        'balance' => 'decimal:4',
         'credit_limit' => 'decimal:4',
     ];
 

@@ -1,6 +1,10 @@
 <?php
+
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Facades\Schema;
+
 require '/var/www/vendor/autoload.php';
 $app = require_once '/var/www/bootstrap/app.php';
-$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-$cols = \Illuminate\Support\Facades\Schema::getColumnListing('customer_wallets');
-echo "customer_wallets columns: " . implode(', ', $cols) . "\n";
+$app->make(Kernel::class)->bootstrap();
+$cols = Schema::getColumnListing('customer_wallets');
+echo 'customer_wallets columns: '.implode(', ', $cols)."\n";

@@ -19,4 +19,3 @@ class AssignVerticalProfileRequest extends FormRequest
         ];
     }
 }
-

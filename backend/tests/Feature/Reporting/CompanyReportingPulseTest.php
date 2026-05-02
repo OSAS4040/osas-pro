@@ -29,7 +29,7 @@ class CompanyReportingPulseTest extends TestCase
     {
         return [
             'from' => now()->subDays(7)->toDateString(),
-            'to'   => now()->addDay()->toDateString(),
+            'to' => now()->addDay()->toDateString(),
         ];
     }
 
@@ -84,15 +84,15 @@ class CompanyReportingPulseTest extends TestCase
             ->json('data.summary.users_total');
 
         User::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $b['company']->id,
-            'branch_id'  => $b['branch']->id,
-            'name'       => 'Other Co User',
-            'email'      => 'extra_'.Str::random(8).'@other.sa',
-            'password'   => bcrypt('Password123!'),
-            'role'       => 'staff',
-            'status'     => UserStatus::Active,
-            'is_active'  => true,
+            'branch_id' => $b['branch']->id,
+            'name' => 'Other Co User',
+            'email' => 'extra_'.Str::random(8).'@other.sa',
+            'password' => bcrypt('Password123!'),
+            'role' => 'staff',
+            'status' => UserStatus::Active,
+            'is_active' => true,
         ]);
 
         $after = (int) $this->actingAsUser($a['user'])
@@ -112,68 +112,68 @@ class CompanyReportingPulseTest extends TestCase
         $staff = $this->createUser($company, $b1, 'staff');
 
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $company->id,
-            'branch_id'  => $b1->id,
-            'type'       => 'b2c',
-            'name'       => 'C',
-            'is_active'  => true,
+            'branch_id' => $b1->id,
+            'type' => 'b2c',
+            'name' => 'C',
+            'is_active' => true,
         ]);
 
         $v1 = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $b1->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $b1->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $staff->id,
-            'plate_number'       => 'P1-'.Str::upper(Str::random(4)),
-            'make'               => 'A',
-            'model'              => 'B',
-            'year'               => 2023,
-            'is_active'          => true,
+            'plate_number' => 'P1-'.Str::upper(Str::random(4)),
+            'make' => 'A',
+            'model' => 'B',
+            'year' => 2023,
+            'is_active' => true,
         ]);
 
         $v2 = Vehicle::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $b2->id,
-            'customer_id'        => $customer->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $b2->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $staff->id,
-            'plate_number'       => 'P2-'.Str::upper(Str::random(4)),
-            'make'               => 'A',
-            'model'              => 'B',
-            'year'               => 2023,
-            'is_active'          => true,
+            'plate_number' => 'P2-'.Str::upper(Str::random(4)),
+            'make' => 'A',
+            'model' => 'B',
+            'year' => 2023,
+            'is_active' => true,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $b1->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $v1->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $b1->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $v1->id,
             'created_by_user_id' => $staff->id,
-            'order_number'       => 'WO-C1-'.Str::upper(Str::random(4)),
-            'status'             => WorkOrderStatus::Draft,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-C1-'.Str::upper(Str::random(4)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         WorkOrder::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $b2->id,
-            'customer_id'        => $customer->id,
-            'vehicle_id'         => $v2->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $b2->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $v2->id,
             'created_by_user_id' => $staff->id,
-            'order_number'       => 'WO-C2-'.Str::upper(Str::random(4)),
-            'status'             => WorkOrderStatus::Draft,
-            'priority'           => 'normal',
-            'estimated_total'    => 0,
-            'actual_total'       => 0,
-            'version'            => 0,
+            'order_number' => 'WO-C2-'.Str::upper(Str::random(4)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
         ]);
 
         $n = (int) $this->actingAsUser($staff)
@@ -213,33 +213,33 @@ class CompanyReportingPulseTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $tenant['company']->id,
-            'branch_id'  => $tenant['branch']->id,
-            'type'       => 'b2c',
-            'name'       => 'Inv Cust',
-            'is_active'  => true,
+            'branch_id' => $tenant['branch']->id,
+            'type' => 'b2c',
+            'name' => 'Inv Cust',
+            'is_active' => true,
         ]);
 
         Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $tenant['company']->id,
-            'branch_id'          => $tenant['branch']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant['company']->id,
+            'branch_id' => $tenant['branch']->id,
             'created_by_user_id' => $tenant['user']->id,
-            'customer_id'        => $customer->id,
-            'invoice_number'     => 'INV-PR9-'.Str::upper(Str::random(4)),
-            'invoice_hash'       => hash('sha256', Str::random(16)),
-            'invoice_counter'    => 1,
-            'source_type'        => 'pos',
-            'source_id'          => 0,
-            'subtotal'           => 100,
-            'tax_amount'         => 15,
-            'total'              => 115,
-            'paid_amount'        => 0,
-            'due_amount'         => 115,
-            'status'             => 'pending',
-            'currency'           => 'SAR',
-            'issued_at'          => now(),
+            'customer_id' => $customer->id,
+            'invoice_number' => 'INV-PR9-'.Str::upper(Str::random(4)),
+            'invoice_hash' => hash('sha256', Str::random(16)),
+            'invoice_counter' => 1,
+            'source_type' => 'pos',
+            'source_id' => 0,
+            'subtotal' => 100,
+            'tax_amount' => 15,
+            'total' => 115,
+            'paid_amount' => 0,
+            'due_amount' => 115,
+            'status' => 'pending',
+            'currency' => 'SAR',
+            'issued_at' => now(),
         ]);
 
         $n = (int) $this->actingAsUser($tenant['user'])

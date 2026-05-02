@@ -22,7 +22,7 @@ final class ManualMatchAction
     {
         DB::transaction(function () use ($paymentOrderId, $bankTransactionId, $adminUserId): void {
             $order = PaymentOrder::query()->whereKey($paymentOrderId)->lockForUpdate()->firstOrFail();
-            $tx     = BankTransaction::query()->whereKey($bankTransactionId)->lockForUpdate()->firstOrFail();
+            $tx = BankTransaction::query()->whereKey($bankTransactionId)->lockForUpdate()->firstOrFail();
 
             $score = $this->reconciliationService->scoreMatch($order, $tx);
 

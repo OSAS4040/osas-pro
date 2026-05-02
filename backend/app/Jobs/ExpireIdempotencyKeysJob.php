@@ -4,18 +4,20 @@ namespace App\Jobs;
 
 use App\Models\IdempotencyKey;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class ExpireIdempotencyKeysJob implements ShouldQueue, ShouldBeUnique
+class ExpireIdempotencyKeysJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 10;
+
     public int $timeout = 300;
+
     public int $uniqueFor = 3600;
 
     /** @var list<int> */

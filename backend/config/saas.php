@@ -48,16 +48,16 @@ return [
     'login_otp_channel' => $loginOtpChannel,
 
     'twilio_account_sid' => (string) env('TWILIO_ACCOUNT_SID', ''),
-    'twilio_auth_token'  => (string) env('TWILIO_AUTH_TOKEN', ''),
-    'twilio_sms_from'    => (string) env('TWILIO_SMS_FROM', ''),
+    'twilio_auth_token' => (string) env('TWILIO_AUTH_TOKEN', ''),
+    'twilio_sms_from' => (string) env('TWILIO_SMS_FROM', ''),
 
     /** OTP مسار الجوال (تسجيل/دخول بدون كلمة مرور) */
-    'phone_otp_ttl_seconds'       => max(60, min(600, (int) env('PHONE_OTP_TTL', 300))),
-    'phone_otp_max_attempts'      => max(3, min(12, (int) env('PHONE_OTP_MAX_ATTEMPTS', 8))),
+    'phone_otp_ttl_seconds' => max(60, min(600, (int) env('PHONE_OTP_TTL', 300))),
+    'phone_otp_max_attempts' => max(3, min(12, (int) env('PHONE_OTP_MAX_ATTEMPTS', 8))),
     'phone_otp_send_max_per_phone_window' => max(1, min(20, (int) env('PHONE_OTP_SEND_MAX_PHONE', 5))),
-    'phone_otp_send_max_per_ip_window'    => max(5, min(100, (int) env('PHONE_OTP_SEND_MAX_IP', 30))),
+    'phone_otp_send_max_per_ip_window' => max(5, min(100, (int) env('PHONE_OTP_SEND_MAX_IP', 30))),
     /** عند التعيين في غير الإنتاج: يُسجّل الرمز في السجل (لا يُعاد في JSON للإنتاج) */
-    'phone_otp_fake_plaintext'    => $phoneOtpFakePlaintext,
+    'phone_otp_fake_plaintext' => $phoneOtpFakePlaintext,
 
     'login_otp_ttl_seconds' => max(60, min(900, (int) env('SAAS_LOGIN_OTP_TTL', 300))),
 

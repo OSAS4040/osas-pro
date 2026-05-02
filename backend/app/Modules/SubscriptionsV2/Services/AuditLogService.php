@@ -23,12 +23,12 @@ final class AuditLogService
         ?array $context = null,
     ): AuditLog {
         return AuditLog::query()->create([
-            'actor_id'     => $actorId,
-            'action'       => $action,
-            'entity_type'  => $entityType,
-            'entity_id'    => $entityId,
-            'before_json'  => $before,
-            'after_json'   => $after,
+            'actor_id' => $actorId,
+            'action' => $action,
+            'entity_type' => $entityType,
+            'entity_id' => $entityId,
+            'before_json' => $before,
+            'after_json' => $after,
             'context_json' => $context,
         ]);
     }

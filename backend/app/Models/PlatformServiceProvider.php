@@ -26,7 +26,7 @@ final class PlatformServiceProvider extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (self $m): void {
+        self::creating(function (self $m): void {
             if ($m->uuid === null || $m->uuid === '') {
                 $m->uuid = (string) Str::uuid();
             }

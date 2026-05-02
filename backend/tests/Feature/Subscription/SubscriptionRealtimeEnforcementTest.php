@@ -13,9 +13,9 @@ class SubscriptionRealtimeEnforcementTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $tenant['subscription']->update([
-            'ends_at'       => now()->subDay(),
+            'ends_at' => now()->subDay(),
             'grace_ends_at' => now()->subHour(),
-            'status'        => 'active',
+            'status' => 'active',
         ]);
 
         $this->actingAsUser($tenant['user'])
@@ -29,8 +29,8 @@ class SubscriptionRealtimeEnforcementTest extends TestCase
 
         $this->actingAsUser($tenant['user'])
             ->postJson('/api/v1/customers', [
-                'name'  => 'Realtime OK',
-                'type'  => 'b2c',
+                'name' => 'Realtime OK',
+                'type' => 'b2c',
                 'phone' => '+966500000099',
             ])
             ->assertSuccessful();
@@ -40,13 +40,13 @@ class SubscriptionRealtimeEnforcementTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $tenant['subscription']->update([
-            'ends_at'       => now()->subDay(),
+            'ends_at' => now()->subDay(),
             'grace_ends_at' => now()->addDays(5),
-            'status'        => 'active',
+            'status' => 'active',
         ]);
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ])->assertSuccessful();
     }
@@ -55,9 +55,9 @@ class SubscriptionRealtimeEnforcementTest extends TestCase
     {
         $tenant = $this->createTenant('owner');
         $tenant['subscription']->update([
-            'ends_at'       => now()->subDay(),
+            'ends_at' => now()->subDay(),
             'grace_ends_at' => now()->addDays(14),
-            'status'        => 'grace_period',
+            'status' => 'grace_period',
         ]);
 
         $this->actingAsUser($tenant['user'])
@@ -66,8 +66,8 @@ class SubscriptionRealtimeEnforcementTest extends TestCase
 
         $this->actingAsUser($tenant['user'])
             ->postJson('/api/v1/customers', [
-                'name'  => 'Grace Write Block',
-                'type'  => 'b2c',
+                'name' => 'Grace Write Block',
+                'type' => 'b2c',
                 'phone' => '+966500000088',
             ])
             ->assertStatus(423);

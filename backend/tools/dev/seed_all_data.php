@@ -1,23 +1,28 @@
 <?php
+
 /**
  * seed_all_data.php — ملف بذر البيانات التجريبية عبر API
  */
 $base = 'http://saas_nginx/api/v1';
 
-function req(string $method, string $url, array $body = [], array $headers = []): array {
+function req(string $method, string $url, array $body = [], array $headers = []): array
+{
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CUSTOMREQUEST  => strtoupper($method),
-        CURLOPT_HTTPHEADER     => array_merge(
+        CURLOPT_CUSTOMREQUEST => strtoupper($method),
+        CURLOPT_HTTPHEADER => array_merge(
             ['Content-Type: application/json', 'Accept: application/json'],
             $headers
         ),
     ]);
-    if ($body) curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
-    $raw  = curl_exec($ch);
+    if ($body) {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
+    }
+    $raw = curl_exec($ch);
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+
     return ['code' => $code, 'body' => json_decode($raw, true) ?? [], 'raw' => $raw];
 }
 
@@ -26,10 +31,12 @@ echo "=== بذر البيانات التجريبية ===\n\n";
 // 1. تسجيل الدخول
 $login = req('POST', "$base/auth/login", ['email' => 'owner@demo.sa', 'password' => 'Password123!']);
 if ($login['code'] !== 200) {
-    die("❌ تعذّر تسجيل الدخول: " . $login['raw'] . "\n");
+    exit('❌ تعذّر تسجيل الدخول: '.$login['raw']."\n");
 }
 $token = $login['body']['token'] ?? $login['body']['data']['token'] ?? null;
-if (!$token) die("❌ لم يتم العثور على التوكن\n");
+if (! $token) {
+    exit("❌ لم يتم العثور على التوكن\n");
+}
 echo "✅ تسجيل الدخول: نجح\n";
 $auth = ["Authorization: Bearer $token"];
 
@@ -56,7 +63,7 @@ foreach ($services as $svc) {
     } elseif ($r['code'] === 422) {
         // قد يكون موجوداً مسبقاً - جلبه
         $list = req('GET', "$base/products?search={$svc['sku']}", [], $auth);
-        $id   = $list['body']['data'][0]['id'] ?? null;
+        $id = $list['body']['data'][0]['id'] ?? null;
         $productIds[$svc['sku']] = $id;
         echo "  ♻️  {$svc['name']} موجود مسبقاً (#{$id})\n";
     } else {
@@ -82,19 +89,19 @@ foreach ($customersData as $cust) {
         $customerIds[] = $id;
         echo "  ✅ {$cust['name']} (#{$id})\n";
     } elseif ($r['code'] === 422) {
-        $list = req('GET', "$base/customers?search=" . urlencode($cust['phone']), [], $auth);
-        $id   = $list['body']['data'][0]['id'] ?? null;
+        $list = req('GET', "$base/customers?search=".urlencode($cust['phone']), [], $auth);
+        $id = $list['body']['data'][0]['id'] ?? null;
         $customerIds[] = $id;
         echo "  ♻️  {$cust['name']} موجود (#{$id})\n";
     } else {
-        echo "  ❌ {$cust['name']}: HTTP {$r['code']} — " . substr($r['raw'], 0, 100) . "\n";
+        echo "  ❌ {$cust['name']}: HTTP {$r['code']} — ".substr($r['raw'], 0, 100)."\n";
     }
 }
 
 // 4. إنشاء المركبات
 $vehiclesData = [
     ['plate_number' => 'أبج1234', 'make' => 'Toyota',  'model' => 'Camry',       'year' => 2022, 'color' => 'أبيض', 'customer_idx' => 0],
-    ['plate_number' => 'ده و5678','make' => 'Nissan',  'model' => 'Altima',      'year' => 2021, 'color' => 'فضي',  'customer_idx' => 1],
+    ['plate_number' => 'ده و5678', 'make' => 'Nissan',  'model' => 'Altima',      'year' => 2021, 'color' => 'فضي',  'customer_idx' => 1],
     ['plate_number' => 'زحط9012', 'make' => 'Hyundai', 'model' => 'Sonata',      'year' => 2023, 'color' => 'أسود', 'customer_idx' => 2],
     ['plate_number' => 'يكل3456', 'make' => 'Toyota',  'model' => 'LandCruiser', 'year' => 2020, 'color' => 'أبيض', 'customer_idx' => 3],
     ['plate_number' => 'منس7890', 'make' => 'Ford',    'model' => 'F-150',       'year' => 2022, 'color' => 'أحمر', 'customer_idx' => 4],
@@ -104,7 +111,11 @@ $vehicleIds = [];
 echo "\n--- المركبات ---\n";
 foreach ($vehiclesData as $veh) {
     $custId = $customerIds[$veh['customer_idx']] ?? null;
-    if (!$custId) { echo "  ⚠️  لا يوجد عميل للمركبة {$veh['plate_number']}\n"; continue; }
+    if (! $custId) {
+        echo "  ⚠️  لا يوجد عميل للمركبة {$veh['plate_number']}\n";
+
+        continue;
+    }
     $payload = array_merge($veh, ['customer_id' => $custId]);
     unset($payload['customer_idx']);
     $r = req('POST', "$base/vehicles", $payload, $auth);
@@ -113,12 +124,12 @@ foreach ($vehiclesData as $veh) {
         $vehicleIds[] = $id;
         echo "  ✅ {$veh['make']} {$veh['model']} - {$veh['plate_number']} (#{$id})\n";
     } elseif ($r['code'] === 422) {
-        $list = req('GET', "$base/vehicles?search=" . urlencode($veh['plate_number']), [], $auth);
-        $id   = $list['body']['data'][0]['id'] ?? null;
+        $list = req('GET', "$base/vehicles?search=".urlencode($veh['plate_number']), [], $auth);
+        $id = $list['body']['data'][0]['id'] ?? null;
         $vehicleIds[] = $id;
         echo "  ♻️  {$veh['make']} {$veh['model']} موجود (#{$id})\n";
     } else {
-        echo "  ❌ {$veh['plate_number']}: HTTP {$r['code']} — " . substr($r['raw'], 0, 100) . "\n";
+        echo "  ❌ {$veh['plate_number']}: HTTP {$r['code']} — ".substr($r['raw'], 0, 100)."\n";
     }
 }
 
@@ -126,7 +137,7 @@ foreach ($vehiclesData as $veh) {
 $workOrdersData = [
     ['vehicle_idx' => 0, 'customer_idx' => 0, 'description' => 'تغيير زيت المحرك وفلتر الزيت',     'status' => 'completed', 'total' => 185],
     ['vehicle_idx' => 1, 'customer_idx' => 1, 'description' => 'فحص شامل للمركبة وصيانة دورية',    'status' => 'completed', 'total' => 345],
-    ['vehicle_idx' => 2, 'customer_idx' => 2, 'description' => 'صيانة نظام الفرامل الأمامي',       'status' => 'in_progress','total' => 600],
+    ['vehicle_idx' => 2, 'customer_idx' => 2, 'description' => 'صيانة نظام الفرامل الأمامي',       'status' => 'in_progress', 'total' => 600],
     ['vehicle_idx' => 3, 'customer_idx' => 3, 'description' => 'تبديل البطارية وفحص الكهرباء',    'status' => 'pending',    'total' => 450],
     ['vehicle_idx' => 4, 'customer_idx' => 4, 'description' => 'صيانة نظام تكييف الهواء',         'status' => 'completed', 'total' => 230],
 ];
@@ -134,16 +145,20 @@ $workOrdersData = [
 $workOrderIds = [];
 echo "\n--- أوامر العمل ---\n";
 foreach ($workOrdersData as $wo) {
-    $vid  = $vehicleIds[$wo['vehicle_idx']]  ?? null;
-    $cid  = $customerIds[$wo['customer_idx']] ?? null;
-    if (!$vid || !$cid) { echo "  ⚠️  بيانات ناقصة لأمر العمل\n"; continue; }
+    $vid = $vehicleIds[$wo['vehicle_idx']] ?? null;
+    $cid = $customerIds[$wo['customer_idx']] ?? null;
+    if (! $vid || ! $cid) {
+        echo "  ⚠️  بيانات ناقصة لأمر العمل\n";
+
+        continue;
+    }
     $payload = [
-        'vehicle_id'  => $vid,
+        'vehicle_id' => $vid,
         'customer_id' => $cid,
         'description' => $wo['description'],
-        'status'      => $wo['status'],
-        'total_amount'=> $wo['total'],
-        'priority'    => 'normal',
+        'status' => $wo['status'],
+        'total_amount' => $wo['total'],
+        'priority' => 'normal',
     ];
     $r = req('POST', "$base/work-orders", $payload, $auth);
     if (in_array($r['code'], [200, 201])) {
@@ -160,35 +175,37 @@ foreach ($workOrdersData as $wo) {
 echo "\n--- الفواتير ---\n";
 $invoiceStatuses = ['paid', 'paid', 'draft', 'pending', 'paid'];
 foreach ($workOrderIds as $i => $wo) {
-    if (!$wo) continue;
+    if (! $wo) {
+        continue;
+    }
     $subtotal = round($wo['total'] / 1.15, 2);
-    $tax      = round($wo['total'] - $subtotal, 2);
-    $status   = $invoiceStatuses[$i] ?? 'draft';
-    $payload  = [
-        'customer_id'   => $wo['customer_id'],
+    $tax = round($wo['total'] - $subtotal, 2);
+    $status = $invoiceStatuses[$i] ?? 'draft';
+    $payload = [
+        'customer_id' => $wo['customer_id'],
         'work_order_id' => $wo['id'],
-        'type'          => 'tax_invoice',
-        'status'        => $status,
-        'subtotal'      => $subtotal,
-        'tax_amount'    => $tax,
-        'total_amount'  => (float)$wo['total'],
-        'paid_amount'   => $status === 'paid' ? (float)$wo['total'] : 0,
-        'currency'      => 'SAR',
-        'items'         => [
-            ['description' => 'خدمة صيانة', 'quantity' => 1, 'unit_price' => $subtotal, 'tax_rate' => 15]
+        'type' => 'tax_invoice',
+        'status' => $status,
+        'subtotal' => $subtotal,
+        'tax_amount' => $tax,
+        'total_amount' => (float) $wo['total'],
+        'paid_amount' => $status === 'paid' ? (float) $wo['total'] : 0,
+        'currency' => 'SAR',
+        'items' => [
+            ['description' => 'خدمة صيانة', 'quantity' => 1, 'unit_price' => $subtotal, 'tax_rate' => 15],
         ],
     ];
     $r = req('POST', "$base/invoices", $payload, $auth);
     if (in_array($r['code'], [200, 201])) {
-        $id  = $r['body']['data']['id']             ?? $r['body']['id'] ?? null;
+        $id = $r['body']['data']['id'] ?? $r['body']['id'] ?? null;
         $num = $r['body']['data']['invoice_number'] ?? $r['body']['invoice_number'] ?? '?';
         echo "  ✅ فاتورة #{$num} - {$wo['total']} ر.س - {$status} (#{$id})\n";
     } else {
-        echo "  ❌ فاتورة: HTTP {$r['code']} — " . substr($r['raw'], 0, 150) . "\n";
+        echo "  ❌ فاتورة: HTTP {$r['code']} — ".substr($r['raw'], 0, 150)."\n";
     }
 }
 
 echo "\n=== اكتمل البذر ===\n";
-echo "العملاء: "  . count(array_filter($customerIds)) . "\n";
-echo "المركبات: " . count(array_filter($vehicleIds))  . "\n";
-echo "أوامر العمل: " . count(array_filter($workOrderIds)) . "\n";
+echo 'العملاء: '.count(array_filter($customerIds))."\n";
+echo 'المركبات: '.count(array_filter($vehicleIds))."\n";
+echo 'أوامر العمل: '.count(array_filter($workOrderIds))."\n";

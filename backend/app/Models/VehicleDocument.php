@@ -15,9 +15,16 @@ class VehicleDocument extends Model
 
     protected $casts = [
         'expiry_date' => 'date',
-        'alert_sent'  => 'boolean',
+        'alert_sent' => 'boolean',
     ];
 
-    public function vehicle(): BelongsTo    { return $this->belongsTo(Vehicle::class); }
-    public function uploader(): BelongsTo   { return $this->belongsTo(User::class, 'uploaded_by'); }
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class);
+    }
+
+    public function uploader(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
 }

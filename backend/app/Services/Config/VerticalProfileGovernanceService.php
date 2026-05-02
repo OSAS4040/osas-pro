@@ -78,6 +78,7 @@ class VerticalProfileGovernanceService
     private function normalizeCode(?string $value): ?string
     {
         $trimmed = $value !== null ? trim($value) : null;
+
         return $trimmed === '' ? null : $trimmed;
     }
 
@@ -127,4 +128,3 @@ class VerticalProfileGovernanceService
         return "vertical_profile.assignment.noop.{$target}";
     }
 }
-

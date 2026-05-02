@@ -28,8 +28,8 @@ class FinancialReconciliationController extends Controller
     public function runs(Request $request): JsonResponse
     {
         $runs = DB::table('financial_reconciliation_runs')
-            ->when($request->filled('from_date'), fn($q) => $q->whereDate('run_date', '>=', $request->string('from_date')->toString()))
-            ->when($request->filled('to_date'), fn($q) => $q->whereDate('run_date', '<=', $request->string('to_date')->toString()))
+            ->when($request->filled('from_date'), fn ($q) => $q->whereDate('run_date', '>=', $request->string('from_date')->toString()))
+            ->when($request->filled('to_date'), fn ($q) => $q->whereDate('run_date', '<=', $request->string('to_date')->toString()))
             ->orderByDesc('run_date')
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 20));
@@ -46,8 +46,8 @@ class FinancialReconciliationController extends Controller
 
         $findings = DB::table('financial_reconciliation_findings')
             ->where('company_id', $companyId)
-            ->when($request->filled('finding_type'), fn($q) => $q->where('finding_type', $request->string('finding_type')->toString()))
-            ->when($request->filled('status'), fn($q) => $q->where('status', $request->string('status')->toString()))
+            ->when($request->filled('finding_type'), fn ($q) => $q->where('finding_type', $request->string('finding_type')->toString()))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 50));
 

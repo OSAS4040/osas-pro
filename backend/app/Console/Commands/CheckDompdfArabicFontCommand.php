@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Support\DompdfArabicFontDiagnostics;
 use App\Support\DompdfArabicPdfSupport;
+use Barryvdh\DomPDF\PDF;
 use Illuminate\Console\Command;
 
 /**
@@ -19,7 +20,7 @@ final class CheckDompdfArabicFontCommand extends Command
 
     public function handle(): int
     {
-        /** @var \Barryvdh\DomPDF\PDF $pdf */
+        /** @var PDF $pdf */
         $pdf = app('dompdf.wrapper');
         $d = DompdfArabicFontDiagnostics::run($pdf);
 

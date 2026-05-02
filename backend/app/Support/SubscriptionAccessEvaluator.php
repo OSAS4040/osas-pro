@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Schema;
 final class SubscriptionAccessEvaluator
 {
     private const RESOLVED_SUBSCRIPTION_APP_KEY = 'resolved_subscription_row';
+
     private const SUBSCRIPTIONS_TABLE_EXISTS_KEY = 'subscriptions_table_exists';
 
     /**
@@ -48,7 +49,7 @@ final class SubscriptionAccessEvaluator
             return ['code' => 402, 'message' => 'Subscription suspended. Please renew to continue.'];
         }
 
-        $endsAt      = self::resolveEndsAt($row);
+        $endsAt = self::resolveEndsAt($row);
         $graceEndsAt = self::resolveGraceEndsAt($row);
 
         $now = now();
@@ -155,12 +156,12 @@ final class SubscriptionAccessEvaluator
 
         Log::info('subscription.access', [
             'company_id' => $companyId,
-            'decision'   => $decision,
-            'reason'     => $reason,
-            'http_code'  => $httpCode,
+            'decision' => $decision,
+            'reason' => $reason,
+            'http_code' => $httpCode,
             'auth_login' => $isLogin,
-            'status'     => $status,
-            'trace_id'   => app()->bound('trace_id') ? app('trace_id') : null,
+            'status' => $status,
+            'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
         ]);
     }
 }

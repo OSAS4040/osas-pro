@@ -94,9 +94,8 @@ $gate = [
 ];
 
 file_put_contents(
-    $outDir . '/multi-vertical-core-signoff-gate-final.json',
+    $outDir.'/multi-vertical-core-signoff-gate-final.json',
     json_encode($gate, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
 );
 
-echo 'MULTI_VERTICAL_GATE_READY=1' . PHP_EOL;
-
+echo 'MULTI_VERTICAL_GATE_READY=1'.PHP_EOL;

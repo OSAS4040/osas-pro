@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Customer extends Model
 {
-    use HasFactory, SoftDeletes, HasTenantScope;
+    use HasFactory, HasTenantScope, SoftDeletes;
 
     protected $fillable = [
         'uuid', 'company_id', 'branch_id', 'customer_group_id', 'pricing_contract_id',
@@ -20,7 +20,7 @@ class Customer extends Model
 
     protected $casts = [
         'credit_limit' => 'decimal:2',
-        'is_active'    => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function company(): BelongsTo

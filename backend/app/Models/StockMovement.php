@@ -23,12 +23,12 @@ class StockMovement extends Model
     ];
 
     protected $casts = [
-        'quantity'        => 'decimal:4',
-        'unit_cost'       => 'decimal:4',
+        'quantity' => 'decimal:4',
+        'unit_cost' => 'decimal:4',
         'quantity_before' => 'decimal:4',
-        'quantity_after'  => 'decimal:4',
-        'created_at'      => 'datetime',
-        'type'            => StockMovementType::class,
+        'quantity_after' => 'decimal:4',
+        'created_at' => 'datetime',
+        'type' => StockMovementType::class,
     ];
 
     protected static function boot(): void

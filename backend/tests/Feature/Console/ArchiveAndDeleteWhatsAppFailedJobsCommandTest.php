@@ -13,27 +13,27 @@ class ArchiveAndDeleteWhatsAppFailedJobsCommandTest extends TestCase
     {
         $uuid = (string) Str::uuid();
         DB::table('failed_jobs')->insert([
-            'uuid'        => $uuid,
-            'connection'  => 'redis',
-            'queue'       => 'default',
-            'payload'     => '{"displayName":"App\\\\Jobs\\\\NotifyCustomerWorkOrderWhatsAppJob","uuid":"'.$uuid.'"}',
-            'exception'   => 'test exception',
-            'failed_at'   => now(),
+            'uuid' => $uuid,
+            'connection' => 'redis',
+            'queue' => 'default',
+            'payload' => '{"displayName":"App\\\\Jobs\\\\NotifyCustomerWorkOrderWhatsAppJob","uuid":"'.$uuid.'"}',
+            'exception' => 'test exception',
+            'failed_at' => now(),
         ]);
 
         DB::table('failed_jobs')->insert([
-            'uuid'        => (string) Str::uuid(),
-            'connection'  => 'redis',
-            'queue'       => 'default',
-            'payload'     => '{"displayName":"App\\\\Jobs\\\\SomeOtherJob"}',
-            'exception'   => 'other',
-            'failed_at'   => now(),
+            'uuid' => (string) Str::uuid(),
+            'connection' => 'redis',
+            'queue' => 'default',
+            'payload' => '{"displayName":"App\\\\Jobs\\\\SomeOtherJob"}',
+            'exception' => 'other',
+            'failed_at' => now(),
         ]);
 
         $this->assertSame(2, (int) DB::table('failed_jobs')->count());
 
         Artisan::call('whatsapp:archive-and-delete-failed-jobs', [
-            '--apply'  => true,
+            '--apply' => true,
             '--reason' => 'whatsapp stale cleanup',
         ]);
 

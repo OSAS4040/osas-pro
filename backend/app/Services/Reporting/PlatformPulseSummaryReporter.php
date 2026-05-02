@@ -33,7 +33,7 @@ final class PlatformPulseSummaryReporter
             version: 1,
             period: $period,
             appliedFilters: [
-                'scope'    => 'platform',
+                'scope' => 'platform',
                 'actor_id' => $actor->id,
             ],
             data: $payload,

@@ -68,7 +68,7 @@ final class LoginOtpNotifier
             return true;
         } catch (\Throwable $e) {
             Log::warning('login.otp_mail_failed', [
-                'error'    => $e->getMessage(),
+                'error' => $e->getMessage(),
                 'trace_id' => app('trace_id'),
             ]);
 
@@ -81,7 +81,7 @@ final class LoginOtpNotifier
         $raw = trim((string) $user->phone);
         if ($raw === '') {
             Log::info('login.otp_sms_skipped_no_phone', [
-                'user_id'  => $user->id,
+                'user_id' => $user->id,
                 'trace_id' => app('trace_id'),
             ]);
 
@@ -100,7 +100,7 @@ final class LoginOtpNotifier
         $to = $this->toE164($raw);
         if ($to === null) {
             Log::warning('login.otp_sms_invalid_phone', [
-                'user_id'  => $user->id,
+                'user_id' => $user->id,
                 'trace_id' => app('trace_id'),
             ]);
 
@@ -112,13 +112,13 @@ final class LoginOtpNotifier
         try {
             $url = "https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json";
             $res = Http::asForm()->withBasicAuth($sid, $token)->timeout(15)->post($url, [
-                'To'   => $to,
+                'To' => $to,
                 'From' => $from,
                 'Body' => $msg,
             ]);
             if (! $res->successful()) {
                 Log::warning('login.otp_sms_http_error', [
-                    'status'   => $res->status(),
+                    'status' => $res->status(),
                     'trace_id' => app('trace_id'),
                 ]);
 
@@ -128,7 +128,7 @@ final class LoginOtpNotifier
             return true;
         } catch (\Throwable $e) {
             Log::warning('login.otp_sms_exception', [
-                'error'    => $e->getMessage(),
+                'error' => $e->getMessage(),
                 'trace_id' => app('trace_id'),
             ]);
 

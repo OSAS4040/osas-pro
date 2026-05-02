@@ -1,48 +1,54 @@
 #!/usr/bin/env php
 <?php
+
 /**
  * سكريبت اختبار شامل لجميع خصائص النظام
  */
-
 $base = 'http://saas_nginx/api/v1';
 $token = null;
 $results = [];
-$errors  = [];
+$errors = [];
 
-function req(string $method, string $url, array $data = [], string $token = null): array {
+function req(string $method, string $url, array $data = [], ?string $token = null): array
+{
     $ch = curl_init($url);
     $headers = ['Content-Type: application/json', 'Accept: application/json'];
-    if ($token) $headers[] = "Authorization: Bearer $token";
-    if (in_array(strtoupper($method), ['POST','PUT','PATCH'])) {
-        $headers[] = 'Idempotency-Key: test-' . uniqid('', true);
+    if ($token) {
+        $headers[] = "Authorization: Bearer $token";
+    }
+    if (in_array(strtoupper($method), ['POST', 'PUT', 'PATCH'])) {
+        $headers[] = 'Idempotency-Key: test-'.uniqid('', true);
     }
 
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CUSTOMREQUEST  => strtoupper($method),
-        CURLOPT_HTTPHEADER     => $headers,
-        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_CUSTOMREQUEST => strtoupper($method),
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_TIMEOUT => 15,
     ]);
-    if ($data && in_array(strtoupper($method), ['POST','PUT','PATCH'])) {
+    if ($data && in_array(strtoupper($method), ['POST', 'PUT', 'PATCH'])) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     }
-    $body   = curl_exec($ch);
+    $body = curl_exec($ch);
     $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error  = curl_error($ch);
+    $error = curl_error($ch);
     curl_close($ch);
+
     return ['status' => $status, 'body' => json_decode($body, true), 'error' => $error];
 }
 
-function pass(string $test): void {
+function pass(string $test): void
+{
     global $results;
     $results[] = ['status' => 'PASS', 'test' => $test];
     echo "\033[32m✅ PASS\033[0m  $test\n";
 }
 
-function fail(string $test, string $reason): void {
+function fail(string $test, string $reason): void
+{
     global $results, $errors;
     $results[] = ['status' => 'FAIL', 'test' => $test, 'reason' => $reason];
-    $errors[]  = $test;
+    $errors[] = $test;
     echo "\033[31m❌ FAIL\033[0m  $test — $reason\n";
 }
 
@@ -52,11 +58,11 @@ echo "========================================\n\n";
 
 // ─── 1. Health Check ─────────────────────────────
 echo "── 1. فحص الصحة ──\n";
-$r = req('GET', "http://nginx/api/v1/health");
+$r = req('GET', 'http://nginx/api/v1/health');
 if ($r['status'] === 200 && ($r['body']['status'] ?? '') === 'healthy') {
     pass('Health Check');
-    pass('Database Connection: ' . ($r['body']['checks']['database'] ?? '?'));
-    pass('Redis Connection: '    . ($r['body']['checks']['redis'] ?? '?'));
+    pass('Database Connection: '.($r['body']['checks']['database'] ?? '?'));
+    pass('Redis Connection: '.($r['body']['checks']['redis'] ?? '?'));
 } else {
     fail('Health Check', "HTTP {$r['status']}");
 }
@@ -68,8 +74,8 @@ $token = $r['body']['data']['token'] ?? $r['body']['token'] ?? null;
 if ($r['status'] === 200 && $token) {
     pass('تسجيل الدخول - owner@demo.sa');
 } else {
-    fail('تسجيل الدخول', "HTTP {$r['status']} — " . json_encode($r['body']));
-    die("\nلا يمكن المتابعة بدون Token.\n");
+    fail('تسجيل الدخول', "HTTP {$r['status']} — ".json_encode($r['body']));
+    exit("\nلا يمكن المتابعة بدون Token.\n");
 }
 
 // اختبار بيانات خاطئة
@@ -88,7 +94,7 @@ if ($r['status'] === 201 || $r['status'] === 200) {
     $productId = $r['body']['data']['id'] ?? null;
     pass("إنشاء منتج جديد (ID: $productId)");
 } else {
-    fail('إنشاء منتج', "HTTP {$r['status']} — " . json_encode($r['body']));
+    fail('إنشاء منتج', "HTTP {$r['status']} — ".json_encode($r['body']));
     $productId = null;
 }
 
@@ -113,10 +119,10 @@ $r['status'] === 200 ? pass('البحث في المنتجات') : fail('البح
 // ─── 4. المخزون ──────────────────────────────────
 echo "\n── 4. المخزون ──\n";
 $r = req('GET', "$base/inventory?per_page=5", [], $token);
-$r['status'] === 200 ? pass('قراءة المخزون') : fail('قراءة المخزون', "HTTP {$r['status']} — " . json_encode($r['body']['message'] ?? $r['body']));
+$r['status'] === 200 ? pass('قراءة المخزون') : fail('قراءة المخزون', "HTTP {$r['status']} — ".json_encode($r['body']['message'] ?? $r['body']));
 
 $r = req('GET', "$base/inventory?low_stock=1", [], $token);
-$r['status'] === 200 ? pass('فلتر المخزون المنخفض') : fail('فلتر المخزون المنخفض', "HTTP {$r['status']} — " . json_encode($r['body']['message'] ?? $r['body']));
+$r['status'] === 200 ? pass('فلتر المخزون المنخفض') : fail('فلتر المخزون المنخفض', "HTTP {$r['status']} — ".json_encode($r['body']['message'] ?? $r['body']));
 
 $r = req('GET', "$base/units", [], $token);
 $r['status'] === 200 ? pass('قراءة وحدات القياس') : fail('قراءة وحدات القياس', "HTTP {$r['status']}");
@@ -155,17 +161,17 @@ $firstProduct = $r['body']['data']['data'][0] ?? $r['body']['data'][0] ?? null;
 
 if ($firstProduct) {
     $salePayload = [
-        'customer_id'     => null,
-        'customer_type'   => 'b2c',
+        'customer_id' => null,
+        'customer_type' => 'b2c',
         'discount_amount' => 0,
-        'items'           => [[
-            'name'       => $firstProduct['name'],
-            'item_type'  => 'part',
+        'items' => [[
+            'name' => $firstProduct['name'],
+            'item_type' => 'part',
             'product_id' => $firstProduct['id'],
             'service_id' => null,
             'unit_price' => floatval($firstProduct['sale_price'] ?? $firstProduct['price'] ?? 10),
-            'tax_rate'   => floatval($firstProduct['tax_rate'] ?? 15),
-            'quantity'   => 1,
+            'tax_rate' => floatval($firstProduct['tax_rate'] ?? 15),
+            'quantity' => 1,
         ]],
         'payment' => ['method' => 'cash', 'amount' => floatval($firstProduct['sale_price'] ?? $firstProduct['price'] ?? 10) * 1.15],
     ];
@@ -181,7 +187,7 @@ if ($firstProduct) {
             $r2['status'] === 200 ? pass("عرض الفاتورة #$invoiceId") : fail("عرض الفاتورة #$invoiceId", "HTTP {$r2['status']}");
         }
     } else {
-        fail('عملية POS', "HTTP {$r['status']} — " . json_encode($r['body']));
+        fail('عملية POS', "HTTP {$r['status']} — ".json_encode($r['body']));
     }
 } else {
     fail('عملية POS', 'لا توجد منتجات نشطة للاختبار');
@@ -198,8 +204,8 @@ $r = req('POST', "$base/auth/logout", [], $token);
 ($r['status'] === 200 || $r['status'] === 204) ? pass('تسجيل الخروج') : fail('تسجيل الخروج', "HTTP {$r['status']}");
 
 // ─── ملخص النتائج ────────────────────────────────
-$total  = count($results);
-$passed = count(array_filter($results, fn($r) => $r['status'] === 'PASS'));
+$total = count($results);
+$passed = count(array_filter($results, fn ($r) => $r['status'] === 'PASS'));
 $failed = $total - $passed;
 
 echo "\n========================================\n";

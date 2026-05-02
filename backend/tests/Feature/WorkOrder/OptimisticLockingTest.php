@@ -19,40 +19,45 @@ class OptimisticLockingTest extends TestCase
     use RefreshDatabase;
 
     private Company $company;
+
     private Branch $branch;
+
     private User $user;
+
     private Customer $customer;
+
     private Vehicle $vehicle;
+
     private WorkOrderService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->company  = $this->createCompany();
-        $this->branch   = $this->createBranch($this->company);
-        $this->user     = $this->createUser($this->company, $this->branch);
+        $this->company = $this->createCompany();
+        $this->branch = $this->createBranch($this->company);
+        $this->user = $this->createUser($this->company, $this->branch);
         $this->createActiveSubscription($this->company);
 
         $this->customer = Customer::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->company->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
             'created_by_user_id' => $this->user->id,
-            'name'               => 'Locking Test Customer',
-            'customer_type'      => 'individual',
-            'is_active'          => true,
+            'name' => 'Locking Test Customer',
+            'customer_type' => 'individual',
+            'is_active' => true,
         ]);
 
         $this->vehicle = Vehicle::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->company->id,
-            'branch_id'          => $this->branch->id,
-            'customer_id'        => $this->customer->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
+            'branch_id' => $this->branch->id,
+            'customer_id' => $this->customer->id,
             'created_by_user_id' => $this->user->id,
-            'plate_number'       => 'LOCK-001',
-            'make'               => 'BMW',
-            'model'              => 'X5',
-            'year'               => 2020,
+            'plate_number' => 'LOCK-001',
+            'make' => 'BMW',
+            'model' => 'X5',
+            'year' => 2020,
         ]);
 
         $this->service = app(WorkOrderService::class);
@@ -96,23 +101,23 @@ class OptimisticLockingTest extends TestCase
         $this->createActiveSubscription($retail);
 
         $customer = Customer::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $retail->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $retail->id,
             'created_by_user_id' => $retailUser->id,
-            'name'               => 'Retail Optimistic',
-            'type'               => 'individual',
-            'is_active'          => true,
+            'name' => 'Retail Optimistic',
+            'type' => 'individual',
+            'is_active' => true,
         ]);
         $vehicle = Vehicle::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $retail->id,
-            'branch_id'          => $retailBranch->id,
-            'customer_id'        => $customer->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $retail->id,
+            'branch_id' => $retailBranch->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $retailUser->id,
-            'plate_number'       => 'RTL-OPT',
-            'make'               => 'Toyota',
-            'model'              => 'Camry',
-            'year'               => 2022,
+            'plate_number' => 'RTL-OPT',
+            'make' => 'Toyota',
+            'model' => 'Camry',
+            'year' => 2022,
         ]);
 
         $order = $this->service->create(
@@ -129,13 +134,13 @@ class OptimisticLockingTest extends TestCase
         $snapshot = clone $order;
 
         $this->service->update($order, [
-            'version'  => $order->version,
+            'version' => $order->version,
             'priority' => 'high',
         ]);
 
         $this->expectException(\RuntimeException::class);
         $this->service->update($snapshot, [
-            'version'  => $snapshot->version,
+            'version' => $snapshot->version,
             'priority' => 'urgent',
         ]);
     }
@@ -149,7 +154,7 @@ class OptimisticLockingTest extends TestCase
 
         $response = $this->actingAs($this->user, 'sanctum')
             ->patchJson("/api/v1/work-orders/{$order->id}/status", [
-                'status'  => 'on_hold',
+                'status' => 'on_hold',
                 'version' => 0,
             ]);
 
@@ -165,7 +170,7 @@ class OptimisticLockingTest extends TestCase
 
         $response = $this->actingAs($this->user, 'sanctum')
             ->patchJson("/api/v1/work-orders/{$order->id}/status", [
-                'status'  => 'delivered',
+                'status' => 'delivered',
                 'version' => $order->version,
             ]);
 
@@ -181,7 +186,7 @@ class OptimisticLockingTest extends TestCase
 
         $response = $this->actingAs($this->user, 'sanctum')
             ->patchJson("/api/v1/work-orders/{$order->id}/status", [
-                'status'  => 'in_progress',
+                'status' => 'in_progress',
                 'version' => $order->version,
             ]);
 

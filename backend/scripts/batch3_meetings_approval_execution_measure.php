@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 
 if (! is_dir(base_path('reports/institutional-capabilities'))) {

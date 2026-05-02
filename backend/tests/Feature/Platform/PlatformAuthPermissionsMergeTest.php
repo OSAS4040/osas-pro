@@ -27,7 +27,7 @@ final class PlatformAuthPermissionsMergeTest extends TestCase
         ]);
 
         $res = $this->postJson('/api/v1/auth/login', [
-            'email'    => 'intel-auditor-merge@platform.test',
+            'email' => 'intel-auditor-merge@platform.test',
             'password' => 'Password123!',
         ]);
 
@@ -53,7 +53,7 @@ final class PlatformAuthPermissionsMergeTest extends TestCase
         ]);
 
         $token = $this->postJson('/api/v1/auth/login', [
-            'email'    => 'intel-me-merge@platform.test',
+            'email' => 'intel-me-merge@platform.test',
             'password' => 'Password123!',
         ])->assertSuccessful()->json('token');
 
@@ -72,7 +72,7 @@ final class PlatformAuthPermissionsMergeTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $res = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 

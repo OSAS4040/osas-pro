@@ -2,6 +2,8 @@
 
 namespace App\Support\Accounting;
 
+use App\Services\LedgerService;
+
 /**
  * Structured context for ledger posting failures (POS / invoice / async repair).
  */
@@ -33,13 +35,13 @@ final class LedgerPostingDiagnostics
         }
 
         return array_merge([
-            'posting_service'  => \App\Services\LedgerService::class,
-            'operation_type'   => $operationType,
-            'gl_line_count'    => count($lines),
-            'account_codes'    => $codes,
-            'gl_total_debit'   => round($debit, 4),
-            'gl_total_credit'  => round($credit, 4),
-            'gl_balanced'      => abs($debit - $credit) < 0.0002,
+            'posting_service' => LedgerService::class,
+            'operation_type' => $operationType,
+            'gl_line_count' => count($lines),
+            'account_codes' => $codes,
+            'gl_total_debit' => round($debit, 4),
+            'gl_total_credit' => round($credit, 4),
+            'gl_balanced' => abs($debit - $credit) < 0.0002,
         ], $extra);
     }
 }

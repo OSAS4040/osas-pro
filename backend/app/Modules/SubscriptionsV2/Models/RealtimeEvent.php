@@ -21,4 +21,3 @@ final class RealtimeEvent extends Model
         'payload' => 'array',
     ];
 }
-

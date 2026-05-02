@@ -59,16 +59,16 @@ final class Phase2InsightsService
         return [
             'window' => [
                 'from' => $from->toIso8601String(),
-                'to'   => $to->toIso8601String(),
+                'to' => $to->toIso8601String(),
             ],
             'totals' => [
                 'events' => $total,
             ],
-            'by_event_name'       => $byEventName,
-            'by_aggregate_type'   => $byAggregateType,
-            'daily_counts'        => $daily,
-            'first_occurred_at'   => $earliestAt ? (string) $earliestAt : null,
-            'last_occurred_at'    => $latestAt ? (string) $latestAt : null,
+            'by_event_name' => $byEventName,
+            'by_aggregate_type' => $byAggregateType,
+            'daily_counts' => $daily,
+            'first_occurred_at' => $earliestAt ? (string) $earliestAt : null,
+            'last_occurred_at' => $latestAt ? (string) $latestAt : null,
         ];
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PublicWorkOrderCardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,5 +24,5 @@ Route::get('/landing', function () {
 });
 
 /** بطاقة عامة لأمر العمل (QR) — بيانات محدودة دون تسجيل دخول */
-Route::get('/public/work-orders/{uuid}', [\App\Http\Controllers\PublicWorkOrderCardController::class, 'show'])
+Route::get('/public/work-orders/{uuid}', [PublicWorkOrderCardController::class, 'show'])
     ->name('work-order.public.card');

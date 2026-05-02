@@ -18,7 +18,7 @@ class ApprovalWorkflow extends Model
     ];
 
     protected $casts = [
-        'meta'        => 'array',
+        'meta' => 'array',
         'resolved_at' => 'datetime',
         'acted_at' => 'datetime',
     ];

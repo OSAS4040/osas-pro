@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\InvoiceStatus;
+use App\Models\Company;
 use App\Models\Invoice;
 use App\Support\ArabicPdfText;
 use App\Support\BrandDisplayNames;
@@ -67,7 +68,7 @@ final class InvoicePdfService
         return $pdf->output();
     }
 
-    private function invoiceQrDataUri(Invoice $invoice, ?\App\Models\Company $company, string $issuerAr): string
+    private function invoiceQrDataUri(Invoice $invoice, ?Company $company, string $issuerAr): string
     {
         $stored = $invoice->getAttribute('zatca_qr_code');
         if (is_string($stored) && $stored !== '') {
@@ -75,6 +76,7 @@ final class InvoicePdfService
             if (str_starts_with($t, 'data:')) {
                 return $t;
             }
+
             // Assume raw base64 TLV payload
             return $this->tlvBase64ToQrDataUri($t);
         }
@@ -91,7 +93,7 @@ final class InvoicePdfService
             ->setMargin(6)
             ->setErrorCorrectionLevel(ErrorCorrectionLevel::Medium);
 
-        $svg = (new SvgWriter())->write($qr)->getString();
+        $svg = (new SvgWriter)->write($qr)->getString();
 
         return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }

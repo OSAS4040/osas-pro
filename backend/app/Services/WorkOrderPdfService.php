@@ -94,7 +94,7 @@ final class WorkOrderPdfService
             ->setMargin(6)
             ->setErrorCorrectionLevel(ErrorCorrectionLevel::Medium);
 
-        $svg = (new SvgWriter())->write($qr)->getString();
+        $svg = (new SvgWriter)->write($qr)->getString();
 
         return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }

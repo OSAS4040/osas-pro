@@ -76,7 +76,7 @@ class IntelligenceTelemetrySeeder extends Seeder
                 (string) $customer->id,
                 'CustomerCreated',
                 [
-                    'customer_id'   => $customer->id,
+                    'customer_id' => $customer->id,
                     'customer_uuid' => $customer->uuid,
                 ],
                 $base->copy()->addHours(1 + $i)
@@ -92,9 +92,9 @@ class IntelligenceTelemetrySeeder extends Seeder
                 (string) $vehicle->id,
                 'VehicleCreated',
                 [
-                    'vehicle_id'    => $vehicle->id,
-                    'customer_id'   => $vehicle->customer_id,
-                    'plate_number'  => $vehicle->plate_number,
+                    'vehicle_id' => $vehicle->id,
+                    'customer_id' => $vehicle->customer_id,
+                    'plate_number' => $vehicle->plate_number,
                 ],
                 $base->copy()->addHours(20 + $i)
             );
@@ -110,8 +110,8 @@ class IntelligenceTelemetrySeeder extends Seeder
                 'WorkOrderCreated',
                 [
                     'work_order_id' => $wo->id,
-                    'order_number'  => $wo->order_number,
-                    'status'        => $wo->status instanceof \BackedEnum ? $wo->status->value : (string) $wo->status,
+                    'order_number' => $wo->order_number,
+                    'status' => $wo->status instanceof \BackedEnum ? $wo->status->value : (string) $wo->status,
                 ],
                 $base->copy()->addHours(40 + $i)
             );
@@ -127,10 +127,10 @@ class IntelligenceTelemetrySeeder extends Seeder
                 (string) $invoice->id,
                 'InvoiceCreated',
                 [
-                    'invoice_id'     => $invoice->id,
+                    'invoice_id' => $invoice->id,
                     'invoice_number' => $invoice->invoice_number,
-                    'status'         => $status,
-                    'total'          => (float) $invoice->total,
+                    'status' => $status,
+                    'total' => (float) $invoice->total,
                 ],
                 $base->copy()->addHours(60 + $i)
             );
@@ -146,10 +146,10 @@ class IntelligenceTelemetrySeeder extends Seeder
                         (string) $invoice->id,
                         'InvoicePaid',
                         [
-                            'invoice_id'     => $invoice->id,
-                            'payment_id'     => $payment->id,
-                            'amount'         => (float) $payment->amount,
-                            'method'         => $payment->method,
+                            'invoice_id' => $invoice->id,
+                            'payment_id' => $payment->id,
+                            'amount' => (float) $payment->amount,
+                            'method' => $payment->method,
                             'invoice_status' => $status,
                         ],
                         $base->copy()->addHours(70 + $i)
@@ -179,19 +179,19 @@ class IntelligenceTelemetrySeeder extends Seeder
             }
 
             Payment::withoutGlobalScope('tenant')->create([
-                'uuid'               => (string) Str::uuid(),
-                'company_id'         => $companyId,
-                'branch_id'          => $branchId,
-                'invoice_id'         => $invoice->id,
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'invoice_id' => $invoice->id,
                 'created_by_user_id' => $uid,
-                'method'             => 'cash',
-                'payment_method'     => 'cash',
-                'amount'             => $invoice->paid_amount,
-                'currency'           => $invoice->currency ?? 'SAR',
-                'reference'          => 'SEED-'.Str::upper(Str::random(8)),
-                'status'             => 'completed',
-                'meta'               => ['seed' => self::SOURCE_CONTEXT],
-                'created_at'         => $invoice->issued_at ?? now(),
+                'method' => 'cash',
+                'payment_method' => 'cash',
+                'amount' => $invoice->paid_amount,
+                'currency' => $invoice->currency ?? 'SAR',
+                'reference' => 'SEED-'.Str::upper(Str::random(8)),
+                'status' => 'completed',
+                'meta' => ['seed' => self::SOURCE_CONTEXT],
+                'created_at' => $invoice->issued_at ?? now(),
             ]);
         }
     }
@@ -209,28 +209,28 @@ class IntelligenceTelemetrySeeder extends Seeder
         $trace = 'seed-'.Str::lower(Str::random(10));
 
         DomainEvent::create([
-            'uuid'              => (string) Str::uuid(),
-            'company_id'        => $companyId,
-            'branch_id'         => $branchId,
-            'aggregate_type'    => $aggregateType,
-            'aggregate_id'      => $aggregateId,
-            'event_name'        => $eventName,
-            'event_version'     => 1,
-            'payload_json'      => $payload,
-            'metadata_json'     => array_filter([
-                'company_id'        => $companyId,
-                'branch_id'         => $branchId,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
+            'aggregate_type' => $aggregateType,
+            'aggregate_id' => $aggregateId,
+            'event_name' => $eventName,
+            'event_version' => 1,
+            'payload_json' => $payload,
+            'metadata_json' => array_filter([
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
                 'caused_by_user_id' => $userId,
-                'trace_id'          => $trace,
-                'correlation_id'    => 'seed-intelligence-bundle',
+                'trace_id' => $trace,
+                'correlation_id' => 'seed-intelligence-bundle',
             ], fn ($v) => $v !== null),
-            'trace_id'          => $trace,
-            'correlation_id'    => 'seed-intelligence-bundle',
+            'trace_id' => $trace,
+            'correlation_id' => 'seed-intelligence-bundle',
             'caused_by_user_id' => $userId,
-            'caused_by_type'    => $userId ? 'user' : null,
-            'source_context'    => self::SOURCE_CONTEXT,
+            'caused_by_type' => $userId ? 'user' : null,
+            'source_context' => self::SOURCE_CONTEXT,
             'processing_status' => 'recorded',
-            'occurred_at'       => $occurredAt,
+            'occurred_at' => $occurredAt,
         ]);
     }
 }

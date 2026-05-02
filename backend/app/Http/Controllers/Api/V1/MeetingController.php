@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Services\ApprovalWorkflowService;
 use App\Http\Controllers\Controller;
+use App\Services\ApprovalWorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,9 +11,7 @@ use Illuminate\Support\Str;
 
 class MeetingController extends Controller
 {
-    public function __construct(private readonly ApprovalWorkflowService $approvalWorkflowService)
-    {
-    }
+    public function __construct(private readonly ApprovalWorkflowService $approvalWorkflowService) {}
 
     private array $transitions = [
         'draft' => ['scheduled', 'cancelled'],
@@ -142,6 +140,7 @@ class MeetingController extends Controller
                 'created_at' => now(),
             ]
         );
+
         return response()->json(['message' => 'Participant added.', 'trace_id' => app('trace_id')]);
     }
 
@@ -152,6 +151,7 @@ class MeetingController extends Controller
             ->where('id', $participantId)
             ->where('meeting_id', $id)
             ->delete();
+
         return response()->json(['message' => 'Participant removed.', 'trace_id' => app('trace_id')]);
     }
 
@@ -170,6 +170,7 @@ class MeetingController extends Controller
             'updated_at' => now(),
         ]);
         $this->audit($request, 'meeting.minutes_added', $meeting->id, [], ['content' => 'added']);
+
         return response()->json(['message' => 'Minutes added.', 'trace_id' => app('trace_id')], 201);
     }
 
@@ -177,6 +178,7 @@ class MeetingController extends Controller
     {
         $this->meetingForCompany($request, $id);
         $rows = DB::table('meeting_minutes')->where('meeting_id', $id)->orderByDesc('id')->get();
+
         return response()->json(['data' => $rows, 'trace_id' => app('trace_id')]);
     }
 
@@ -200,6 +202,7 @@ class MeetingController extends Controller
             'updated_at' => now(),
         ]);
         $this->audit($request, 'meeting.decision_added', $meeting->id, [], ['decision_id' => $decisionId]);
+
         return response()->json([
             'data' => DB::table('meeting_decisions')->where('id', $decisionId)->first(),
             'trace_id' => app('trace_id'),
@@ -284,6 +287,7 @@ class MeetingController extends Controller
         }
         DB::table('meeting_decisions')->where('id', $decisionId)->update(['approval_status' => (string) $workflow->status, 'updated_at' => now()]);
         $this->audit($request, 'meeting.decision.approved', $meeting->id, ['approval_status' => $decision->approval_status], ['approval_status' => $workflow->status]);
+
         return response()->json(['message' => 'Decision approved.', 'trace_id' => app('trace_id')]);
     }
 
@@ -306,6 +310,7 @@ class MeetingController extends Controller
         }
         DB::table('meeting_decisions')->where('id', $decisionId)->update(['approval_status' => (string) $workflow->status, 'updated_at' => now()]);
         $this->audit($request, 'meeting.decision.rejected', $meeting->id, ['approval_status' => $decision->approval_status], ['approval_status' => $workflow->status]);
+
         return response()->json(['message' => 'Decision rejected.', 'trace_id' => app('trace_id')]);
     }
 
@@ -338,6 +343,7 @@ class MeetingController extends Controller
             'updated_at' => now(),
         ]);
         $this->audit($request, 'meeting.action_added', $meeting->id, [], ['action' => 'added']);
+
         return response()->json(['message' => 'Action added.', 'trace_id' => app('trace_id')], 201);
     }
 
@@ -374,6 +380,7 @@ class MeetingController extends Controller
             'updated_at' => now(),
         ]);
         $this->audit($request, 'meeting.action.updated', $id, ['action_id' => $actionId, 'status' => $action->status], ['status' => $validated['status'] ?? $action->status]);
+
         return response()->json(['message' => 'Action updated.', 'trace_id' => app('trace_id')]);
     }
 
@@ -400,6 +407,7 @@ class MeetingController extends Controller
             'updated_at' => now(),
         ]);
         $this->audit($request, 'meeting.action.closed', $id, ['action_id' => $actionId, 'status' => $action->status], ['status' => 'done']);
+
         return response()->json(['message' => 'Action closed.', 'trace_id' => app('trace_id')]);
     }
 
@@ -415,6 +423,7 @@ class MeetingController extends Controller
             'updated_at' => now(),
         ]);
         $this->audit($request, 'meeting.closed', $id, ['status' => $meeting->status], ['status' => 'closed']);
+
         return response()->json(['message' => 'Meeting closed.', 'trace_id' => app('trace_id')]);
     }
 
@@ -456,6 +465,7 @@ class MeetingController extends Controller
             'done' => [],
             'cancelled' => [],
         ];
+
         return in_array($to, $map[$from] ?? [], true);
     }
 

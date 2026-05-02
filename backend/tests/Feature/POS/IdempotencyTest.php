@@ -18,28 +18,32 @@ class IdempotencyTest extends TestCase
 {
     use RefreshDatabase;
 
-    private Company  $company;
-    private Branch   $branch;
-    private User     $user;
+    private Company $company;
+
+    private Branch $branch;
+
+    private User $user;
+
     private Customer $customer;
-    private Product  $product;
+
+    private Product $product;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->company  = $this->createCompany();
-        $this->branch   = $this->createBranch($this->company);
-        $this->user     = $this->createUser($this->company, $this->branch);
+        $this->company = $this->createCompany();
+        $this->branch = $this->createBranch($this->company);
+        $this->user = $this->createUser($this->company, $this->branch);
         $this->createActiveSubscription($this->company);
 
         $this->customer = Customer::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->company->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
             'created_by_user_id' => $this->user->id,
-            'name'               => 'Idempotency Test Customer',
-            'customer_type'      => 'individual',
-            'is_active'          => true,
+            'name' => 'Idempotency Test Customer',
+            'customer_type' => 'individual',
+            'is_active' => true,
         ]);
 
         $unit = Unit::create([
@@ -50,40 +54,40 @@ class IdempotencyTest extends TestCase
         ]);
 
         $this->product = Product::create([
-            'uuid'            => Str::uuid(),
-            'company_id'      => $this->company->id,
-            'name'            => 'Filter',
-            'sku'             => 'FLT-001',
-            'product_type'    => 'physical',
-            'unit_id'         => $unit->id,
-            'sale_price'      => 20.00,
-            'cost_price'      => 10.00,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
+            'name' => 'Filter',
+            'sku' => 'FLT-001',
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => 20.00,
+            'cost_price' => 10.00,
             'track_inventory' => true,
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         app(InventoryService::class)->addStock(
             companyId: $this->company->id,
-            branchId:  $this->branch->id,
+            branchId: $this->branch->id,
             productId: $this->product->id,
-            quantity:  50,
-            userId:    $this->user->id,
-            type:      'manual_add',
-            traceId:   'setup',
+            quantity: 50,
+            userId: $this->user->id,
+            type: 'manual_add',
+            traceId: 'setup',
         );
     }
 
     private function salePayload(): array
     {
         return [
-            'customer_id'   => $this->customer->id,
+            'customer_id' => $this->customer->id,
             'customer_type' => 'b2c',
             'items' => [[
-                'name'       => $this->product->name,
+                'name' => $this->product->name,
                 'product_id' => $this->product->id,
-                'quantity'   => 1,
+                'quantity' => 1,
                 'unit_price' => 20.00,
-                'tax_rate'   => 15,
+                'tax_rate' => 15,
             ]],
             'payment' => ['method' => 'cash', 'amount' => 23.00],
         ];
@@ -135,12 +139,12 @@ class IdempotencyTest extends TestCase
 
     public function test_idempotency_service_stores_and_retrieves(): void
     {
-        $service     = app(IdempotencyService::class);
-        $companyId   = $this->company->id;
-        $key         = 'test-key-' . Str::random(8);
-        $endpoint    = 'test.endpoint';
-        $payload     = ['amount' => 100, 'product_id' => 5];
-        $hash        = $service->hashPayload($payload);
+        $service = app(IdempotencyService::class);
+        $companyId = $this->company->id;
+        $key = 'test-key-'.Str::random(8);
+        $endpoint = 'test.endpoint';
+        $payload = ['amount' => 100, 'product_id' => 5];
+        $hash = $service->hashPayload($payload);
 
         $cached = $service->check($companyId, $key, $endpoint, $hash);
         $this->assertNull($cached, 'No cached result expected before store');
@@ -154,10 +158,10 @@ class IdempotencyTest extends TestCase
 
     public function test_idempotency_service_throws_on_payload_mismatch(): void
     {
-        $service   = app(IdempotencyService::class);
+        $service = app(IdempotencyService::class);
         $companyId = $this->company->id;
-        $key       = 'mismatch-key-' . Str::random(8);
-        $endpoint  = 'test.endpoint';
+        $key = 'mismatch-key-'.Str::random(8);
+        $endpoint = 'test.endpoint';
 
         $hash1 = $service->hashPayload(['amount' => 100]);
         $service->store($companyId, $key, $endpoint, $hash1, ['invoice_id' => 1]);

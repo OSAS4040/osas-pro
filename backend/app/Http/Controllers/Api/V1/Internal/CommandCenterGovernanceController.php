@@ -36,13 +36,13 @@ class CommandCenterGovernanceController extends Controller
 
         return response()->json([
             'data' => [
-                'id'         => $audit->uuid,
+                'id' => $audit->uuid,
                 'created_at' => $audit->created_at?->toIso8601String(),
             ],
             'meta' => [
                 'read_only' => false,
-                'phase'     => 7,
-                'audit_only'=> true,
+                'phase' => 7,
+                'audit_only' => true,
             ],
             'trace_id' => app('trace_id'),
         ], 201);
@@ -72,19 +72,19 @@ class CommandCenterGovernanceController extends Controller
 
         $data = $rows->map(function ($row): array {
             return [
-                'id'         => $row->uuid,
-                'action'     => $row->action,
-                'note'       => $row->note,
-                'actor'      => $row->user?->name,
+                'id' => $row->uuid,
+                'action' => $row->action,
+                'note' => $row->note,
+                'actor' => $row->user?->name,
                 'created_at' => $row->created_at?->toIso8601String(),
             ];
         })->values()->all();
 
         return response()->json([
-            'data'     => $data,
-            'meta'     => [
+            'data' => $data,
+            'meta' => [
                 'read_only' => true,
-                'phase'     => 7,
+                'phase' => 7,
             ],
             'trace_id' => app('trace_id'),
         ]);

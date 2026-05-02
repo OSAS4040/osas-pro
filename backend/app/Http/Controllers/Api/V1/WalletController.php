@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\CustomerWallet;
 use App\Models\Payment;
 use App\Models\WalletTransaction;
-use App\Models\Company;
 use App\Services\BillingModelPolicyService;
 use App\Services\Config\ConfigResolverService;
 use App\Services\PaymentService;
@@ -33,6 +33,7 @@ class WalletController extends Controller
     private function branchId(): ?int
     {
         $bid = app()->bound('tenant_branch_id') ? app('tenant_branch_id') : null;
+
         return $bid ? (int) $bid : null;
     }
 
@@ -66,6 +67,7 @@ class WalletController extends Controller
         }
 
         $summary = $this->walletService->getBalanceSummary($this->companyId(), $customerId);
+
         return response()->json(['data' => $summary]);
     }
 
@@ -90,7 +92,7 @@ class WalletController extends Controller
 
         if ($resolvedWalletId === null && $customerId === null) {
             return response()->json([
-                'message'  => 'wallet_id or customer_id is required.',
+                'message' => 'wallet_id or customer_id is required.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -123,14 +125,14 @@ class WalletController extends Controller
         }
 
         $data = $request->validate([
-            'customer_id'     => 'required|integer',
-            'vehicle_id'      => 'nullable|integer',
-            'amount'          => 'required|numeric|min:0.01',
-            'target'          => 'required|in:individual,fleet',
-            'invoice_id'      => 'nullable|integer',
-            'payment_id'      => 'nullable|integer',
+            'customer_id' => 'required|integer',
+            'vehicle_id' => 'nullable|integer',
+            'amount' => 'required|numeric|min:0.01',
+            'target' => 'required|in:individual,fleet',
+            'invoice_id' => 'nullable|integer',
+            'payment_id' => 'nullable|integer',
             'idempotency_key' => 'nullable|string|max:255',
-            'notes'           => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         try {
@@ -142,7 +144,7 @@ class WalletController extends Controller
         $idem = $data['idempotency_key'] ?? $request->attributes->get('idempotency_key');
         if (! $idem) {
             return response()->json([
-                'message'  => 'idempotency_key is required in body or use Idempotency-Key header.',
+                'message' => 'idempotency_key is required in body or use Idempotency-Key header.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -151,34 +153,34 @@ class WalletController extends Controller
 
         if ($data['target'] === 'fleet') {
             $txn = $this->walletService->topUpFleet(
-                companyId:      $this->companyId(),
-                customerId:     $data['customer_id'],
-                vehicleId:      $data['vehicle_id'] ?? null,
-                amount:         (float) $data['amount'],
-                invoiceId:      $data['invoice_id'] ?? null,
-                paymentId:      $data['payment_id'] ?? null,
-                userId:         Auth::id(),
-                traceId:        $traceId,
+                companyId: $this->companyId(),
+                customerId: $data['customer_id'],
+                vehicleId: $data['vehicle_id'] ?? null,
+                amount: (float) $data['amount'],
+                invoiceId: $data['invoice_id'] ?? null,
+                paymentId: $data['payment_id'] ?? null,
+                userId: Auth::id(),
+                traceId: $traceId,
                 idempotencyKey: $idem,
-                branchId:       $this->branchId(),
-                notes:          $data['notes'] ?? null,
+                branchId: $this->branchId(),
+                notes: $data['notes'] ?? null,
             );
 
             return response()->json(['data' => $txn, 'message' => 'Fleet wallet top-up successful.', 'trace_id' => app('trace_id')], 201);
         }
 
         $txn = $this->walletService->topUpIndividual(
-            companyId:      $this->companyId(),
-            customerId:     $data['customer_id'],
-            vehicleId:      $data['vehicle_id'] ?? null,
-            amount:         (float) $data['amount'],
-            invoiceId:      $data['invoice_id'] ?? null,
-            paymentId:      $data['payment_id'] ?? null,
-            userId:         Auth::id(),
-            traceId:        $traceId,
+            companyId: $this->companyId(),
+            customerId: $data['customer_id'],
+            vehicleId: $data['vehicle_id'] ?? null,
+            amount: (float) $data['amount'],
+            invoiceId: $data['invoice_id'] ?? null,
+            paymentId: $data['payment_id'] ?? null,
+            userId: Auth::id(),
+            traceId: $traceId,
             idempotencyKey: $idem,
-            branchId:       $this->branchId(),
-            notes:          $data['notes'] ?? null,
+            branchId: $this->branchId(),
+            notes: $data['notes'] ?? null,
         );
 
         return response()->json(['data' => $txn, 'message' => 'Top-up successful.', 'trace_id' => app('trace_id')], 201);
@@ -194,13 +196,13 @@ class WalletController extends Controller
         }
 
         $data = $request->validate([
-            'customer_id'     => 'required|integer',
-            'vehicle_id'      => 'nullable|integer',
-            'amount'          => 'required|numeric|min:0.01',
-            'invoice_id'      => 'nullable|integer',
-            'payment_id'      => 'nullable|integer',
+            'customer_id' => 'required|integer',
+            'vehicle_id' => 'nullable|integer',
+            'amount' => 'required|numeric|min:0.01',
+            'invoice_id' => 'nullable|integer',
+            'payment_id' => 'nullable|integer',
             'idempotency_key' => 'required|string|max:255',
-            'notes'           => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         try {
@@ -210,17 +212,17 @@ class WalletController extends Controller
         }
 
         $txn = $this->walletService->topUpIndividual(
-            companyId:      $this->companyId(),
-            customerId:     $data['customer_id'],
-            vehicleId:      $data['vehicle_id'] ?? null,
-            amount:         (float) $data['amount'],
-            invoiceId:      $data['invoice_id'] ?? null,
-            paymentId:      $data['payment_id'] ?? null,
-            userId:         Auth::id(),
-            traceId:        trim((string) (app('trace_id') ?? '')) ?: (string) Str::uuid(),
+            companyId: $this->companyId(),
+            customerId: $data['customer_id'],
+            vehicleId: $data['vehicle_id'] ?? null,
+            amount: (float) $data['amount'],
+            invoiceId: $data['invoice_id'] ?? null,
+            paymentId: $data['payment_id'] ?? null,
+            userId: Auth::id(),
+            traceId: trim((string) (app('trace_id') ?? '')) ?: (string) Str::uuid(),
             idempotencyKey: $data['idempotency_key'],
-            branchId:       $this->branchId(),
-            notes:          $data['notes'] ?? null,
+            branchId: $this->branchId(),
+            notes: $data['notes'] ?? null,
         );
 
         return response()->json(['data' => $txn, 'message' => 'Top-up successful.'], 201);
@@ -236,13 +238,13 @@ class WalletController extends Controller
         }
 
         $data = $request->validate([
-            'customer_id'     => 'required|integer',
-            'vehicle_id'      => 'nullable|integer',
-            'amount'          => 'required|numeric|min:0.01',
-            'invoice_id'      => 'nullable|integer',
-            'payment_id'      => 'nullable|integer',
+            'customer_id' => 'required|integer',
+            'vehicle_id' => 'nullable|integer',
+            'amount' => 'required|numeric|min:0.01',
+            'invoice_id' => 'nullable|integer',
+            'payment_id' => 'nullable|integer',
             'idempotency_key' => 'required|string|max:255',
-            'notes'           => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         try {
@@ -252,17 +254,17 @@ class WalletController extends Controller
         }
 
         $txn = $this->walletService->topUpFleet(
-            companyId:      $this->companyId(),
-            customerId:     $data['customer_id'],
-            vehicleId:      $data['vehicle_id'] ?? null,
-            amount:         (float) $data['amount'],
-            invoiceId:      $data['invoice_id'] ?? null,
-            paymentId:      $data['payment_id'] ?? null,
-            userId:         Auth::id(),
-            traceId:        trim((string) (app('trace_id') ?? '')) ?: (string) Str::uuid(),
+            companyId: $this->companyId(),
+            customerId: $data['customer_id'],
+            vehicleId: $data['vehicle_id'] ?? null,
+            amount: (float) $data['amount'],
+            invoiceId: $data['invoice_id'] ?? null,
+            paymentId: $data['payment_id'] ?? null,
+            userId: Auth::id(),
+            traceId: trim((string) (app('trace_id') ?? '')) ?: (string) Str::uuid(),
             idempotencyKey: $data['idempotency_key'],
-            branchId:       $this->branchId(),
-            notes:          $data['notes'] ?? null,
+            branchId: $this->branchId(),
+            notes: $data['notes'] ?? null,
         );
 
         return response()->json(['data' => $txn, 'message' => 'Fleet wallet top-up successful.'], 201);
@@ -278,30 +280,30 @@ class WalletController extends Controller
         }
 
         $data = $request->validate([
-            'customer_id'     => 'required|integer',
-            'vehicle_id'      => 'required|integer',
-            'amount'          => 'required|numeric|min:0.01',
+            'customer_id' => 'required|integer',
+            'vehicle_id' => 'required|integer',
+            'amount' => 'required|numeric|min:0.01',
             'idempotency_key' => 'required|string|max:255',
-            'notes'           => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         $result = $this->walletService->transferToVehicle(
-            companyId:      $this->companyId(),
-            customerId:     $data['customer_id'],
-            vehicleId:      $data['vehicle_id'],
-            amount:         (float) $data['amount'],
-            invoiceId:      null,
-            paymentId:      null,
-            userId:         Auth::id(),
-            traceId:        trim((string) (app('trace_id') ?? '')) ?: (string) Str::uuid(),
+            companyId: $this->companyId(),
+            customerId: $data['customer_id'],
+            vehicleId: $data['vehicle_id'],
+            amount: (float) $data['amount'],
+            invoiceId: null,
+            paymentId: null,
+            userId: Auth::id(),
+            traceId: trim((string) (app('trace_id') ?? '')) ?: (string) Str::uuid(),
             idempotencyKey: $data['idempotency_key'],
-            branchId:       $this->branchId(),
-            notes:          $data['notes'] ?? null,
+            branchId: $this->branchId(),
+            notes: $data['notes'] ?? null,
         );
 
         return response()->json([
-            'data'     => $result,
-            'message'  => 'Transfer successful.',
+            'data' => $result,
+            'message' => 'Transfer successful.',
             'trace_id' => app('trace_id'),
         ], 201);
     }
@@ -316,13 +318,13 @@ class WalletController extends Controller
         }
 
         $data = $request->validate([
-            'transaction_id'  => 'required|integer',
+            'transaction_id' => 'required|integer',
             'idempotency_key' => 'required|string|max:255',
-            'notes'           => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         $companyId = $this->companyId();
-        $original  = WalletTransaction::where('company_id', $companyId)
+        $original = WalletTransaction::where('company_id', $companyId)
             ->where('id', $data['transaction_id'])
             ->firstOrFail();
         $wallet = CustomerWallet::where('company_id', $companyId)
@@ -330,17 +332,17 @@ class WalletController extends Controller
             ->firstOrFail();
 
         $reversal = $this->walletService->reverse(
-            companyId:              $companyId,
-            customerId:             $wallet->customer_id,
-            vehicleId:              $original->vehicle_id,
-            amount:                 (float) $original->amount,
-            invoiceId:              $original->invoice_id,
-            paymentId:              $original->payment_id,
-            userId:                 Auth::id(),
-            traceId:                trim((string) (app('trace_id') ?? '')) ?: (string) Str::uuid(),
-            idempotencyKey:         $data['idempotency_key'],
-            branchId:               $this->branchId(),
-            notes:                  $data['notes'] ?? null,
+            companyId: $companyId,
+            customerId: $wallet->customer_id,
+            vehicleId: $original->vehicle_id,
+            amount: (float) $original->amount,
+            invoiceId: $original->invoice_id,
+            paymentId: $original->payment_id,
+            userId: Auth::id(),
+            traceId: trim((string) (app('trace_id') ?? '')) ?: (string) Str::uuid(),
+            idempotencyKey: $data['idempotency_key'],
+            branchId: $this->branchId(),
+            notes: $data['notes'] ?? null,
             transactionIdToReverse: $original->id,
         );
 
@@ -362,14 +364,14 @@ class WalletController extends Controller
     {
         $data = $request->validate([
             'idempotency_key' => 'nullable|string|max:255',
-            'amount'          => 'nullable|numeric|min:0.01',
-            'reason'          => 'nullable|string|max:500',
+            'amount' => 'nullable|numeric|min:0.01',
+            'reason' => 'nullable|string|max:500',
         ]);
 
         $idem = $data['idempotency_key'] ?? $request->attributes->get('idempotency_key');
         if (! $idem) {
             return response()->json([
-                'message'  => 'idempotency_key in body or Idempotency-Key header is required.',
+                'message' => 'idempotency_key in body or Idempotency-Key header is required.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }

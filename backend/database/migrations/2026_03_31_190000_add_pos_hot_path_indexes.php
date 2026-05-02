@@ -28,7 +28,7 @@ return new class extends Migration
             Schema::table('invoices', function (Blueprint $table): void {
                 try {
                     $table->dropIndex('idx_invoices_company_counter_desc');
-                } catch (\Throwable) {
+                } catch (Throwable) {
                 }
             });
         }
@@ -37,7 +37,7 @@ return new class extends Migration
             Schema::table('inventory_reservations', function (Blueprint $table): void {
                 try {
                     $table->dropIndex('idx_inv_res_status_expires');
-                } catch (\Throwable) {
+                } catch (Throwable) {
                 }
             });
         }
@@ -53,4 +53,3 @@ return new class extends Migration
         return ! empty($existing);
     }
 };
-

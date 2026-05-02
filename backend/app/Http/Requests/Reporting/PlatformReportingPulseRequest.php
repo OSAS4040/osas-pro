@@ -22,7 +22,7 @@ final class PlatformReportingPulseRequest extends FormRequest
     {
         return [
             'from' => ['required', 'date_format:Y-m-d'],
-            'to'   => ['required', 'date_format:Y-m-d'],
+            'to' => ['required', 'date_format:Y-m-d'],
         ];
     }
 

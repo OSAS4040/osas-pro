@@ -6,6 +6,7 @@ use App\Models\OrgUnit;
 use App\Models\Supplier;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class OrgUnitAndSupplierContractTest extends TestCase
@@ -23,8 +24,8 @@ class OrgUnitAndSupplierContractTest extends TestCase
 
         $r2 = $this->actingAsUser($t['user'])->postJson('/api/v1/org-units', [
             'parent_id' => $sectorId,
-            'type'      => OrgUnit::TYPE_DEPARTMENT,
-            'name'      => 'Maintenance',
+            'type' => OrgUnit::TYPE_DEPARTMENT,
+            'name' => 'Maintenance',
         ]);
         $r2->assertStatus(201);
 
@@ -38,11 +39,11 @@ class OrgUnitAndSupplierContractTest extends TestCase
         $t = $this->createTenant('manager');
 
         $sector = OrgUnit::create([
-            'uuid'       => \Illuminate\Support\Str::uuid()->toString(),
+            'uuid' => Str::uuid()->toString(),
             'company_id' => $t['company']->id,
-            'parent_id'  => null,
-            'type'       => OrgUnit::TYPE_SECTOR,
-            'name'       => 'S1',
+            'parent_id' => null,
+            'type' => OrgUnit::TYPE_SECTOR,
+            'name' => 'S1',
         ]);
 
         $staff = $this->createUser($t['company'], $t['branch'], 'staff');
@@ -60,21 +61,21 @@ class OrgUnitAndSupplierContractTest extends TestCase
         $t = $this->createTenant('owner');
 
         $supplier = Supplier::create([
-            'uuid'                => \Illuminate\Support\Str::uuid()->toString(),
-            'company_id'          => $t['company']->id,
-            'created_by_user_id'  => $t['user']->id,
-            'name'                => 'Vendor A',
-            'is_active'           => true,
-            'status'              => 'active',
-            'version'             => 1,
+            'uuid' => Str::uuid()->toString(),
+            'company_id' => $t['company']->id,
+            'created_by_user_id' => $t['user']->id,
+            'name' => 'Vendor A',
+            'is_active' => true,
+            'status' => 'active',
+            'version' => 1,
         ]);
 
         $pdf = UploadedFile::fake()->create('contract.pdf', 200, 'application/pdf');
 
         $up = $this->actingAsUser($t['user'])->post('/api/v1/suppliers/'.$supplier->id.'/contracts', [
-            'title'      => 'Annual',
+            'title' => 'Annual',
             'expires_at' => now()->addMonth()->toDateString(),
-            'file'       => $pdf,
+            'file' => $pdf,
         ]);
         $up->assertStatus(201);
         $cid = $up->json('data.id');
@@ -95,8 +96,8 @@ class OrgUnitAndSupplierContractTest extends TestCase
         $t['company']->update([
             'settings' => [
                 'business_profile' => [
-                    'business_type'   => 'retail',
-                    'feature_matrix'  => [],
+                    'business_type' => 'retail',
+                    'feature_matrix' => [],
                 ],
             ],
         ]);
@@ -112,7 +113,7 @@ class OrgUnitAndSupplierContractTest extends TestCase
         $t['company']->update([
             'settings' => [
                 'business_profile' => [
-                    'business_type'  => 'retail',
+                    'business_type' => 'retail',
                     'feature_matrix' => ['org_structure' => true],
                 ],
             ],
@@ -132,28 +133,28 @@ class OrgUnitAndSupplierContractTest extends TestCase
         $t['company']->update([
             'settings' => [
                 'business_profile' => [
-                    'business_type'  => 'retail',
+                    'business_type' => 'retail',
                     'feature_matrix' => [],
                 ],
             ],
         ]);
 
         $supplier = Supplier::create([
-            'uuid'               => \Illuminate\Support\Str::uuid()->toString(),
-            'company_id'         => $t['company']->id,
+            'uuid' => Str::uuid()->toString(),
+            'company_id' => $t['company']->id,
             'created_by_user_id' => $t['user']->id,
-            'name'               => 'Vendor B',
-            'is_active'          => true,
-            'status'             => 'active',
-            'version'            => 1,
+            'name' => 'Vendor B',
+            'is_active' => true,
+            'status' => 'active',
+            'version' => 1,
         ]);
 
         $pdf = UploadedFile::fake()->create('c.pdf', 200, 'application/pdf');
 
         $blocked = $this->actingAsUser($t['user'])->post('/api/v1/suppliers/'.$supplier->id.'/contracts', [
-            'title'      => 'X',
+            'title' => 'X',
             'expires_at' => now()->addMonth()->toDateString(),
-            'file'       => $pdf,
+            'file' => $pdf,
         ]);
         $blocked->assertStatus(403);
         $blocked->assertJsonPath('code', 'business_feature_disabled');
@@ -162,7 +163,7 @@ class OrgUnitAndSupplierContractTest extends TestCase
         $t['company']->update([
             'settings' => [
                 'business_profile' => [
-                    'business_type'  => 'retail',
+                    'business_type' => 'retail',
                     'feature_matrix' => ['supplier_contract_mgmt' => true],
                 ],
             ],
@@ -170,9 +171,9 @@ class OrgUnitAndSupplierContractTest extends TestCase
 
         $pdf2 = UploadedFile::fake()->create('c2.pdf', 200, 'application/pdf');
         $ok = $this->actingAsUser($t['user'])->post('/api/v1/suppliers/'.$supplier->id.'/contracts', [
-            'title'      => 'Y',
+            'title' => 'Y',
             'expires_at' => now()->addMonth()->toDateString(),
-            'file'       => $pdf2,
+            'file' => $pdf2,
         ]);
         $ok->assertStatus(201);
     }
@@ -182,17 +183,17 @@ class OrgUnitAndSupplierContractTest extends TestCase
         $t = $this->createTenant('owner');
 
         $sector = OrgUnit::create([
-            'uuid'       => \Illuminate\Support\Str::uuid()->toString(),
+            'uuid' => Str::uuid()->toString(),
             'company_id' => $t['company']->id,
-            'parent_id'  => null,
-            'type'       => OrgUnit::TYPE_SECTOR,
-            'name'       => 'Legacy Sector',
+            'parent_id' => null,
+            'type' => OrgUnit::TYPE_SECTOR,
+            'name' => 'Legacy Sector',
         ]);
 
         $t['company']->update([
             'settings' => [
                 'business_profile' => [
-                    'business_type'  => 'service_center',
+                    'business_type' => 'service_center',
                     'feature_matrix' => ['org_structure' => false],
                 ],
             ],

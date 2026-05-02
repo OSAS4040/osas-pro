@@ -20,10 +20,10 @@ class ExternalInvoiceController extends Controller
         $data['idempotency_key'] = $request->header('Idempotency-Key');
 
         $invoice = $this->invoiceService->createInvoice(
-            data:      $data,
+            data: $data,
             companyId: $apiKey->company_id,
-            branchId:  $apiKey->branch_id ?? 1,
-            userId:    $apiKey->created_by_user_id,
+            branchId: $apiKey->branch_id ?? 1,
+            userId: $apiKey->created_by_user_id,
         );
 
         return response()->json(['data' => $invoice, 'trace_id' => app('trace_id')], 201);

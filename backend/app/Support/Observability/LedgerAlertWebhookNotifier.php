@@ -24,9 +24,9 @@ final class LedgerAlertWebhookNotifier
         }
 
         $payload = [
-            'event'     => self::LOG_MESSAGE,
+            'event' => self::LOG_MESSAGE,
             'timestamp' => now()->toIso8601String(),
-            'context'   => Arr::only($context, [
+            'context' => Arr::only($context, [
                 'code',
                 'source',
                 'company_id',
@@ -43,7 +43,7 @@ final class LedgerAlertWebhookNotifier
         }
 
         $headers = ['Content-Type' => 'application/json'];
-        $secret  = config('ledger_alerts.webhook_secret');
+        $secret = config('ledger_alerts.webhook_secret');
         if (is_string($secret) && $secret !== '') {
             $headers['X-Ledger-Alert-Signature'] = hash_hmac('sha256', $body, $secret);
         }

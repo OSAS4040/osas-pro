@@ -9,10 +9,10 @@ use App\Modules\SubscriptionsV2\Models\PaymentOrder;
 use App\Modules\SubscriptionsV2\Services\AuditLogService;
 use App\Modules\SubscriptionsV2\Services\InvoiceService;
 use App\Modules\SubscriptionsV2\Services\PaymentService;
-use App\Modules\SubscriptionsV2\Services\SubscriptionService;
-use App\Modules\SubscriptionsV2\Services\SubscriptionCacheService;
-use App\Modules\SubscriptionsV2\Services\SubscriptionWalletService;
 use App\Modules\SubscriptionsV2\Services\RealtimeNotificationService;
+use App\Modules\SubscriptionsV2\Services\SubscriptionCacheService;
+use App\Modules\SubscriptionsV2\Services\SubscriptionService;
+use App\Modules\SubscriptionsV2\Services\SubscriptionWalletService;
 use Illuminate\Support\Facades\DB;
 
 final class ApproveBankTransferAction
@@ -76,9 +76,9 @@ final class ApproveBankTransferAction
                 $payment->id,
                 null,
                 [
-                    'amount'   => (string) $payment->amount,
+                    'amount' => (string) $payment->amount,
                     'currency' => (string) $payment->currency,
-                    'status'   => (string) $payment->status,
+                    'status' => (string) $payment->status,
                 ],
                 ['payment_order_id' => $order->id],
             );
@@ -92,7 +92,7 @@ final class ApproveBankTransferAction
 
             $this->subscriptionService->activateFromPayment($order, $paymentFresh);
 
-            $order->status      = PaymentOrderStatus::Approved;
+            $order->status = PaymentOrderStatus::Approved;
             $order->approved_at = now();
             $order->approved_by = $adminUserId;
             $order->save();
@@ -147,7 +147,7 @@ final class ApproveBankTransferAction
             );
 
             return [
-                'order'      => $order->fresh() ?? $order,
+                'order' => $order->fresh() ?? $order,
                 'payment_id' => $payment->id,
                 'invoice_id' => $invoice->id,
             ];

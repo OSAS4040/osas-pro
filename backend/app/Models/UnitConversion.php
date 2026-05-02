@@ -14,7 +14,7 @@ class UnitConversion extends Model
     ];
 
     protected $casts = [
-        'factor'    => 'decimal:8',
+        'factor' => 'decimal:8',
         'is_active' => 'boolean',
     ];
 

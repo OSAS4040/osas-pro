@@ -16,10 +16,10 @@ final class TenantBusinessFeatures
     public static function effectiveMatrix(Company $company): array
     {
         $settings = is_array($company->settings) ? $company->settings : [];
-        $profile  = is_array($settings['business_profile'] ?? null) ? $settings['business_profile'] : [];
+        $profile = is_array($settings['business_profile'] ?? null) ? $settings['business_profile'] : [];
 
         $businessType = (string) ($profile['business_type'] ?? 'service_center');
-        $custom       = is_array($profile['feature_matrix'] ?? null) ? $profile['feature_matrix'] : [];
+        $custom = is_array($profile['feature_matrix'] ?? null) ? $profile['feature_matrix'] : [];
 
         $defaults = BusinessFeatureProfileDefaults::featureMatrixForType($businessType);
 

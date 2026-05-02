@@ -35,8 +35,8 @@ final class PlatformReviewQueueController extends Controller
         $data = $orders->getCollection()->map(function (PaymentOrder $order) use ($reconciliationService) {
             return [
                 'payment_order' => $order,
-                'matches'       => $order->reconciliationMatches,
-                'candidates'    => collect($reconciliationService->findMatches($order))->values(),
+                'matches' => $order->reconciliationMatches,
+                'candidates' => collect($reconciliationService->findMatches($order))->values(),
             ];
         });
         $orders->setCollection($data);

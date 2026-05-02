@@ -183,7 +183,7 @@ class MultiVerticalRuntimeBehaviorTest extends TestCase
             'branch_id' => $branchId,
             'customer_id' => $customerId,
             'created_by_user_id' => $userId,
-            'plate_number' => 'RT-' . random_int(100, 999),
+            'plate_number' => 'RT-'.random_int(100, 999),
             'make' => 'Toyota',
             'model' => 'Yaris',
             'year' => 2022,
@@ -208,4 +208,3 @@ class MultiVerticalRuntimeBehaviorTest extends TestCase
         ]);
     }
 }
-

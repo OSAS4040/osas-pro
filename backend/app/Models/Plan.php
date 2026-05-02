@@ -24,11 +24,11 @@ class Plan extends Model
     ];
 
     protected $casts = [
-        'price_monthly'    => 'decimal:2',
-        'price_yearly'     => 'decimal:2',
-        'features'         => 'array',
-        'feature_catalog'  => 'array',
-        'is_active'        => 'boolean',
+        'price_monthly' => 'decimal:2',
+        'price_yearly' => 'decimal:2',
+        'features' => 'array',
+        'feature_catalog' => 'array',
+        'is_active' => 'boolean',
     ];
 
     public static function findBySlug(string $slug): ?self
@@ -50,9 +50,10 @@ class Plan extends Model
     {
         $limits = [
             'max_branches' => $this->max_branches,
-            'max_users'    => $this->max_users,
+            'max_users' => $this->max_users,
             'max_products' => $this->max_products,
         ];
+
         return $limits[$key] ?? $default;
     }
 }

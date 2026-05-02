@@ -28,8 +28,8 @@ final class PlatformIncidentLifecycleController extends Controller
             'incident_key' => ['required', 'string', 'max:128'],
         ]);
 
-        $signals = $signalEngine->build(new NullPlatformIntelligenceTraceRecorder());
-        $candidates = $candidateEngine->buildFromSignals($signals, new NullPlatformIntelligenceTraceRecorder());
+        $signals = $signalEngine->build(new NullPlatformIntelligenceTraceRecorder);
+        $candidates = $candidateEngine->buildFromSignals($signals, new NullPlatformIntelligenceTraceRecorder);
         $match = null;
         foreach ($candidates as $c) {
             if ($c->incident_key === $validated['incident_key']) {

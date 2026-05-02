@@ -5,8 +5,8 @@ namespace App\Services\Finance;
 use App\Services\Finance\Exceptions\ReconciliationConcurrencyBlockedException;
 use App\Services\Finance\Exceptions\ReconciliationStuckRunException;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class FinancialReconciliationService
 {
@@ -65,6 +65,7 @@ class FinancialReconciliationService
                         'failure_class' => ReconciliationStuckRunException::class,
                         'updated_at' => now(),
                     ]);
+
                     continue;
                 }
 

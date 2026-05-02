@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Models\IdempotencyKey;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class IdempotencyMiddleware
@@ -16,13 +15,13 @@ class IdempotencyMiddleware
 
         if (! $key) {
             return response()->json([
-                'message'  => 'Idempotency-Key header is required.',
+                'message' => 'Idempotency-Key header is required.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
 
-        $companyId   = app('tenant_company_id');
-        $endpoint    = $request->path();
+        $companyId = app('tenant_company_id');
+        $endpoint = $request->path();
         $requestHash = hash('sha256', json_encode($request->all()));
 
         $existing = IdempotencyKey::where('company_id', $companyId)
@@ -32,7 +31,7 @@ class IdempotencyMiddleware
         if ($existing) {
             if ($existing->request_hash !== $requestHash) {
                 return response()->json([
-                    'message'  => 'Idempotency key already used with different payload.',
+                    'message' => 'Idempotency key already used with different payload.',
                     'trace_id' => app('trace_id'),
                 ], 422);
             }
@@ -49,10 +48,10 @@ class IdempotencyMiddleware
         IdempotencyKey::updateOrCreate(
             ['company_id' => $companyId, 'key' => $key],
             [
-                'endpoint'     => $endpoint,
-                'trace_id'     => app('trace_id'),
+                'endpoint' => $endpoint,
+                'trace_id' => app('trace_id'),
                 'request_hash' => $requestHash,
-                'expires_at'   => now()->addHours(24),
+                'expires_at' => now()->addHours(24),
             ]
         );
 

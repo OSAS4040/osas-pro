@@ -9,8 +9,9 @@ use App\Models\Company;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\WorkOrder;
-use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Str;
 
 abstract class TestCase extends BaseTestCase
@@ -36,11 +37,11 @@ abstract class TestCase extends BaseTestCase
     protected function createCompany(array $overrides = []): Company
     {
         return Company::create(array_merge([
-            'uuid'      => Str::uuid(),
-            'name'      => 'Test Company',
-            'currency'  => 'SAR',
-            'timezone'  => 'Asia/Riyadh',
-            'status'    => 'active',
+            'uuid' => Str::uuid(),
+            'name' => 'Test Company',
+            'currency' => 'SAR',
+            'timezone' => 'Asia/Riyadh',
+            'status' => 'active',
             'is_active' => true,
             // Default test tenants as platform-approved prepaid (billing gates).
             'financial_model' => 'prepaid',
@@ -53,7 +54,7 @@ abstract class TestCase extends BaseTestCase
      * @param  list<array<string, mixed>>|null  $lines
      */
     protected function obtainSensitivePreviewToken(
-        \Illuminate\Contracts\Auth\Authenticatable $user,
+        Authenticatable $user,
         string $operation,
         array $workOrderIds = [],
         ?array $lines = null,
@@ -99,12 +100,12 @@ abstract class TestCase extends BaseTestCase
     protected function createBranch(Company $company, array $overrides = []): Branch
     {
         return Branch::create(array_merge([
-            'uuid'      => Str::uuid(),
-            'company_id'=> $company->id,
-            'name'      => 'Main Branch',
-            'code'      => 'MAIN',
-            'status'    => 'active',
-            'is_main'   => true,
+            'uuid' => Str::uuid(),
+            'company_id' => $company->id,
+            'name' => 'Main Branch',
+            'code' => 'MAIN',
+            'status' => 'active',
+            'is_main' => true,
             'is_active' => true,
         ], $overrides));
     }
@@ -112,37 +113,37 @@ abstract class TestCase extends BaseTestCase
     protected function createUser(Company $company, Branch $branch, string $role = 'owner', array $overrides = []): User
     {
         return User::create(array_merge([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $company->id,
-            'branch_id'  => $branch->id,
-            'name'       => ucfirst($role) . ' User',
-            'email'      => $role . '_' . Str::random(6) . '@test.sa',
-            'password'   => bcrypt('Password123!'),
-            'role'       => $role,
-            'status'     => 'active',
-            'is_active'  => true,
+            'branch_id' => $branch->id,
+            'name' => ucfirst($role).' User',
+            'email' => $role.'_'.Str::random(6).'@test.sa',
+            'password' => bcrypt('Password123!'),
+            'role' => $role,
+            'status' => 'active',
+            'is_active' => true,
         ], $overrides));
     }
 
     protected function createActiveSubscription(Company $company, string $plan = 'professional'): Subscription
     {
         return Subscription::create([
-            'uuid'        => Str::uuid(),
-            'company_id'  => $company->id,
-            'plan'        => $plan,
-            'status'      => 'active',
-            'starts_at'   => now()->subDay(),
-            'ends_at'     => now()->addYear(),
-            'max_branches'=> 5,
-            'max_users'   => 20,
+            'uuid' => Str::uuid(),
+            'company_id' => $company->id,
+            'plan' => $plan,
+            'status' => 'active',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addYear(),
+            'max_branches' => 5,
+            'max_users' => 20,
         ]);
     }
 
     protected function createTenant(string $role = 'owner'): array
     {
-        $company      = $this->createCompany();
-        $branch       = $this->createBranch($company);
-        $user         = $this->createUser($company, $branch, $role);
+        $company = $this->createCompany();
+        $branch = $this->createBranch($company);
+        $user = $this->createUser($company, $branch, $role);
         $subscription = $this->createActiveSubscription($company);
 
         return compact('company', 'branch', 'user', 'subscription');
@@ -154,21 +155,21 @@ abstract class TestCase extends BaseTestCase
     protected function createStandalonePlatformOperator(string $email, array $overrides = []): User
     {
         return User::withoutGlobalScopes()->create(array_merge([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => null,
-            'branch_id'          => null,
-            'org_unit_id'        => null,
-            'customer_id'        => null,
-            'name'               => 'Platform Operator',
-            'email'              => $email,
-            'password'           => 'Password123!',
-            'phone'              => null,
-            'role'               => UserRole::Owner,
-            'status'             => UserStatus::Active,
-            'is_active'          => true,
-            'is_platform_user'   => true,
-            'platform_role'      => 'super_admin',
-            'account_type'       => null,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => null,
+            'branch_id' => null,
+            'org_unit_id' => null,
+            'customer_id' => null,
+            'name' => 'Platform Operator',
+            'email' => $email,
+            'password' => 'Password123!',
+            'phone' => null,
+            'role' => UserRole::Owner,
+            'status' => UserStatus::Active,
+            'is_active' => true,
+            'is_platform_user' => true,
+            'platform_role' => 'super_admin',
+            'account_type' => null,
             'registration_stage' => 'phone_verified',
         ], $overrides));
     }

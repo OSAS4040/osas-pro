@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
@@ -18,6 +19,7 @@ class SendDocumentExpiryNotificationsJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 5;
+
     public int $timeout = 300;
 
     /** @var list<int> */
@@ -52,24 +54,24 @@ class SendDocumentExpiryNotificationsJob implements ShouldQueue
                             }
 
                             try {
-                                $expDate = \Illuminate\Support\Carbon::parse($exp)->startOfDay();
+                                $expDate = Carbon::parse($exp)->startOfDay();
                             } catch (\Throwable) {
                                 continue;
                             }
 
                             $diff = $today->diffInDays($expDate, false);
-                            if (!in_array($diff, $reminderDays, true) && $diff >= 0) {
+                            if (! in_array($diff, $reminderDays, true) && $diff >= 0) {
                                 continue;
                             }
-                            if ($diff < 0 && !in_array(0, $reminderDays, true)) {
+                            if ($diff < 0 && ! in_array(0, $reminderDays, true)) {
                                 continue;
                             }
 
                             $title = (string) ($doc['title'] ?? 'مستند');
                             $reference = (string) ($doc['reference'] ?? '');
                             $message = $diff < 0
-                                ? "انتهت صلاحية المستند {$title}" . ($reference !== '' ? " ({$reference})" : '')
-                                : "تنبيه: المستند {$title} ينتهي بعد {$diff} يوم" . ($reference !== '' ? " ({$reference})" : '');
+                                ? "انتهت صلاحية المستند {$title}".($reference !== '' ? " ({$reference})" : '')
+                                : "تنبيه: المستند {$title} ينتهي بعد {$diff} يوم".($reference !== '' ? " ({$reference})" : '');
 
                             if (($cfg['in_app'] ?? true) === true) {
                                 $recipients = User::query()
@@ -85,9 +87,9 @@ class SendDocumentExpiryNotificationsJob implements ShouldQueue
                                 }
                             }
 
-                            if (($cfg['email'] ?? false) === true && !empty($company->email)) {
+                            if (($cfg['email'] ?? false) === true && ! empty($company->email)) {
                                 try {
-                                    Mail::raw($message . "\n\nWorkshopOS", function ($m) use ($company) {
+                                    Mail::raw($message."\n\nWorkshopOS", function ($m) use ($company) {
                                         $m->to($company->email)->subject('تنبيه صلاحية مستند');
                                     });
                                 } catch (\Throwable) {
@@ -126,4 +128,3 @@ class SendDocumentExpiryNotificationsJob implements ShouldQueue
         }
     }
 }
-

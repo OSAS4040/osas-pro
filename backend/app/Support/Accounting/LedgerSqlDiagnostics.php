@@ -28,7 +28,7 @@ final class LedgerSqlDiagnostics
         $depth = 0;
         while ($cursor !== null && $depth < 12) {
             $entry = [
-                'class'   => $cursor::class,
+                'class' => $cursor::class,
                 'message' => mb_substr($cursor->getMessage(), 0, 800),
             ];
 
@@ -73,13 +73,13 @@ final class LedgerSqlDiagnostics
         foreach ($chain as $entry) {
             if (isset($entry['sqlstate']) && $entry['sqlstate'] !== null && $entry['sqlstate'] !== '') {
                 return [
-                    'primary_sqlstate'   => $entry['sqlstate'],
+                    'primary_sqlstate' => $entry['sqlstate'],
                     'primary_constraint' => $entry['constraint_name'] ?? null,
                 ];
             }
             if (isset($entry['pdo_sqlstate']) && $entry['pdo_sqlstate'] !== null && $entry['pdo_sqlstate'] !== '') {
                 return [
-                    'primary_sqlstate'   => $entry['pdo_sqlstate'],
+                    'primary_sqlstate' => $entry['pdo_sqlstate'],
                     'primary_constraint' => $entry['constraint_name'] ?? null,
                 ];
             }
@@ -88,7 +88,7 @@ final class LedgerSqlDiagnostics
         $last = $chain[0] ?? [];
 
         return [
-            'primary_sqlstate'   => $last['sqlstate'] ?? $last['pdo_sqlstate'] ?? null,
+            'primary_sqlstate' => $last['sqlstate'] ?? $last['pdo_sqlstate'] ?? null,
             'primary_constraint' => $last['constraint_name'] ?? null,
         ];
     }

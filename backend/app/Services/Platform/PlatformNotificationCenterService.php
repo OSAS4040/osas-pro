@@ -474,4 +474,3 @@ final class PlatformNotificationCenterService
         ];
     }
 }
-

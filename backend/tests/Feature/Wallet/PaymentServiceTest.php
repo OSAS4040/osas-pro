@@ -16,46 +16,50 @@ use Tests\TestCase;
 class PaymentServiceTest extends TestCase
 {
     private PaymentService $paymentService;
-    private WalletService  $walletService;
-    private array    $tenant;
+
+    private WalletService $walletService;
+
+    private array $tenant;
+
     private Customer $customer;
-    private Invoice  $invoice;
+
+    private Invoice $invoice;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->paymentService = app(PaymentService::class);
-        $this->walletService  = app(WalletService::class);
-        $this->tenant         = $this->createTenant();
+        $this->walletService = app(WalletService::class);
+        $this->tenant = $this->createTenant();
 
         $this->customer = Customer::create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $this->tenant['company']->id,
-            'branch_id'  => $this->tenant['branch']->id,
-            'type'       => 'individual',
-            'name'       => 'Payment Customer',
-            'is_active'  => true,
+            'branch_id' => $this->tenant['branch']->id,
+            'type' => 'individual',
+            'name' => 'Payment Customer',
+            'is_active' => true,
         ]);
 
         $this->invoice = Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $this->tenant['company']->id,
-            'branch_id'          => $this->tenant['branch']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $this->tenant['company']->id,
+            'branch_id' => $this->tenant['branch']->id,
             'created_by_user_id' => $this->tenant['user']->id,
-            'customer_id'        => $this->customer->id,
-            'invoice_number'     => 'INV-TEST-001',
-            'invoice_hash'       => hash('sha256', 'test'),
-            'invoice_counter'    => 1,
-            'source_type'        => 'pos',
-            'source_id'          => 0,
-            'subtotal'           => 434.78,
-            'tax_amount'         => 65.22,
-            'total'              => 500.00,
-            'paid_amount'        => 0,
-            'due_amount'         => 500.00,
-            'status'             => 'pending',
-            'currency'           => 'SAR',
+            'customer_id' => $this->customer->id,
+            'invoice_number' => 'INV-TEST-001',
+            'invoice_hash' => hash('sha256', 'test'),
+            'invoice_counter' => 1,
+            'source_type' => 'pos',
+            'source_id' => 0,
+            'subtotal' => 434.78,
+            'tax_amount' => 65.22,
+            'total' => 500.00,
+            'paid_amount' => 0,
+            'due_amount' => 500.00,
+            'status' => 'pending',
+            'currency' => 'SAR',
         ]);
     }
 
@@ -66,17 +70,17 @@ class PaymentServiceTest extends TestCase
     private function topUp(float $amount = 1000.0): void
     {
         $this->walletService->topUpIndividual(
-            companyId:      $this->tenant['company']->id,
-            customerId:     $this->customer->id,
-            vehicleId:      null,
-            amount:         $amount,
-            invoiceId:      null,
-            paymentId:      null,
-            userId:         $this->tenant['user']->id,
-            traceId:        'trace-setup-' . Str::random(4),
+            companyId: $this->tenant['company']->id,
+            customerId: $this->customer->id,
+            vehicleId: null,
+            amount: $amount,
+            invoiceId: null,
+            paymentId: null,
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-setup-'.Str::random(4),
             idempotencyKey: (string) Str::uuid(),
-            branchId:       $this->tenant['branch']->id,
-            notes:          null,
+            branchId: $this->tenant['branch']->id,
+            notes: null,
         );
     }
 
@@ -97,11 +101,11 @@ class PaymentServiceTest extends TestCase
     public function test_cash_payment_marks_invoice_paid(): void
     {
         $payment = $this->paymentService->createPayment(
-            invoice:  $this->invoice,
-            amount:   500.00,
-            method:   'cash',
-            userId:   $this->tenant['user']->id,
-            traceId:  'trace-pay-01',
+            invoice: $this->invoice,
+            amount: 500.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-pay-01',
         );
 
         $this->assertEquals('completed', $payment->status);
@@ -119,26 +123,26 @@ class PaymentServiceTest extends TestCase
         $idempotencyKey = (string) Str::uuid();
 
         $this->walletService->debitIndividualForInvoice(
-            companyId:      $this->tenant['company']->id,
-            customerId:     $this->customer->id,
-            vehicleId:      null,
-            amount:         500.00,
-            invoiceId:      $this->invoice->id,
-            paymentId:      null,
-            userId:         $this->tenant['user']->id,
-            traceId:        'trace-wallet-pay',
+            companyId: $this->tenant['company']->id,
+            customerId: $this->customer->id,
+            vehicleId: null,
+            amount: 500.00,
+            invoiceId: $this->invoice->id,
+            paymentId: null,
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-wallet-pay',
             idempotencyKey: $idempotencyKey,
-            branchId:       $this->tenant['branch']->id,
-            notes:          null,
-            paymentMode:    'prepaid',
+            branchId: $this->tenant['branch']->id,
+            notes: null,
+            paymentMode: 'prepaid',
         );
 
         $this->paymentService->createPayment(
-            invoice:  $this->invoice,
-            amount:   500.00,
-            method:   'wallet',
-            userId:   $this->tenant['user']->id,
-            traceId:  'trace-wallet-pay',
+            invoice: $this->invoice,
+            amount: 500.00,
+            method: 'wallet',
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-wallet-pay',
         );
 
         $this->assertEquals(500.0, $this->walletBalance());
@@ -148,9 +152,9 @@ class PaymentServiceTest extends TestCase
     {
         $this->paymentService->createPayment(
             invoice: $this->invoice,
-            amount:  200.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 200.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'trace-partial',
         );
 
@@ -166,9 +170,9 @@ class PaymentServiceTest extends TestCase
 
         $this->paymentService->createPayment(
             invoice: $this->invoice,
-            amount:  600.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 600.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'trace-over',
         );
     }
@@ -177,16 +181,16 @@ class PaymentServiceTest extends TestCase
     {
         $payment = $this->paymentService->createPayment(
             invoice: $this->invoice,
-            amount:  500.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 500.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'trace-pay',
         );
 
         $refund = $this->paymentService->refund(
-            paymentId:      $payment->id,
-            userId:         $this->tenant['user']->id,
-            traceId:        'trace-refund',
+            paymentId: $payment->id,
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-refund',
             idempotencyKey: (string) Str::uuid(),
         );
 
@@ -204,33 +208,33 @@ class PaymentServiceTest extends TestCase
         // Debit wallet for invoice
         $walletIdemKey = (string) Str::uuid();
         $this->walletService->debitIndividualForInvoice(
-            companyId:      $this->tenant['company']->id,
-            customerId:     $this->customer->id,
-            vehicleId:      null,
-            amount:         500.00,
-            invoiceId:      $this->invoice->id,
-            paymentId:      null,
-            userId:         $this->tenant['user']->id,
-            traceId:        'trace-wallet-debit',
+            companyId: $this->tenant['company']->id,
+            customerId: $this->customer->id,
+            vehicleId: null,
+            amount: 500.00,
+            invoiceId: $this->invoice->id,
+            paymentId: null,
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-wallet-debit',
             idempotencyKey: $walletIdemKey,
-            branchId:       $this->tenant['branch']->id,
-            notes:          null,
-            paymentMode:    'prepaid',
+            branchId: $this->tenant['branch']->id,
+            notes: null,
+            paymentMode: 'prepaid',
         );
 
         $payment = $this->paymentService->createPayment(
             invoice: $this->invoice,
-            amount:  500.00,
-            method:  'wallet',
-            userId:  $this->tenant['user']->id,
+            amount: 500.00,
+            method: 'wallet',
+            userId: $this->tenant['user']->id,
             traceId: 'trace-pay',
         );
 
         // Refund — credits wallet back via topUpIndividual
         $this->paymentService->refund(
-            paymentId:      $payment->id,
-            userId:         $this->tenant['user']->id,
-            traceId:        'trace-refund',
+            paymentId: $payment->id,
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-refund',
             idempotencyKey: (string) Str::uuid(),
         );
 
@@ -241,16 +245,16 @@ class PaymentServiceTest extends TestCase
     {
         $payment = $this->paymentService->createPayment(
             invoice: $this->invoice,
-            amount:  500.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 500.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'trace-pay',
         );
 
         $this->paymentService->refund(
-            paymentId:      $payment->id,
-            userId:         $this->tenant['user']->id,
-            traceId:        'trace-refund-1',
+            paymentId: $payment->id,
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-refund-1',
             idempotencyKey: (string) Str::uuid(),
         );
 
@@ -258,9 +262,9 @@ class PaymentServiceTest extends TestCase
         $this->expectExceptionMessageMatches('/already been fully refunded/');
 
         $this->paymentService->refund(
-            paymentId:      $payment->id,
-            userId:         $this->tenant['user']->id,
-            traceId:        'trace-refund-2',
+            paymentId: $payment->id,
+            userId: $this->tenant['user']->id,
+            traceId: 'trace-refund-2',
             idempotencyKey: (string) Str::uuid(),
         );
     }
@@ -274,9 +278,9 @@ class PaymentServiceTest extends TestCase
 
         $this->paymentService->createPayment(
             invoice: $inv,
-            amount:  40.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 40.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'case1',
         );
 
@@ -295,18 +299,18 @@ class PaymentServiceTest extends TestCase
 
         $this->paymentService->createPayment(
             invoice: $inv,
-            amount:  40.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 40.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'case2a',
         );
         $inv->refresh();
 
         $this->paymentService->createPayment(
             invoice: $inv,
-            amount:  60.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 60.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'case2b',
         );
 
@@ -325,9 +329,9 @@ class PaymentServiceTest extends TestCase
 
         $this->paymentService->createPayment(
             invoice: $inv,
-            amount:  40.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 40.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'case3a',
         );
         $inv->refresh();
@@ -337,9 +341,9 @@ class PaymentServiceTest extends TestCase
 
         $this->paymentService->createPayment(
             invoice: $inv,
-            amount:  100.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 100.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'case3b',
         );
     }
@@ -356,9 +360,9 @@ class PaymentServiceTest extends TestCase
 
         $this->paymentService->createPayment(
             invoice: $inv,
-            amount:  100.01,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 100.01,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'case4',
         );
     }
@@ -372,9 +376,9 @@ class PaymentServiceTest extends TestCase
 
         $this->paymentService->createPayment(
             invoice: $inv,
-            amount:  100.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 100.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'case5a',
         );
         $inv->refresh();
@@ -384,9 +388,9 @@ class PaymentServiceTest extends TestCase
 
         $this->paymentService->createPayment(
             invoice: $inv,
-            amount:  1.00,
-            method:  'cash',
-            userId:  $this->tenant['user']->id,
+            amount: 1.00,
+            method: 'cash',
+            userId: $this->tenant['user']->id,
             traceId: 'case5b',
         );
     }
@@ -394,23 +398,23 @@ class PaymentServiceTest extends TestCase
     private function makeHundredSarInvoice(): Invoice
     {
         return Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $this->tenant['company']->id,
-            'branch_id'          => $this->tenant['branch']->id,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $this->tenant['company']->id,
+            'branch_id' => $this->tenant['branch']->id,
             'created_by_user_id' => $this->tenant['user']->id,
-            'customer_id'        => $this->customer->id,
-            'invoice_number'     => 'INV-HUNDRED-'.Str::lower(Str::random(6)),
-            'invoice_hash'       => hash('sha256', Str::random(16)),
-            'invoice_counter'    => random_int(10_000, 99_999),
-            'source_type'        => 'pos',
-            'source_id'          => 0,
-            'subtotal'           => 100.00,
-            'tax_amount'         => 0,
-            'total'              => 100.00,
-            'paid_amount'        => 0,
-            'due_amount'         => 100.00,
-            'status'             => 'pending',
-            'currency'           => 'SAR',
+            'customer_id' => $this->customer->id,
+            'invoice_number' => 'INV-HUNDRED-'.Str::lower(Str::random(6)),
+            'invoice_hash' => hash('sha256', Str::random(16)),
+            'invoice_counter' => random_int(10_000, 99_999),
+            'source_type' => 'pos',
+            'source_id' => 0,
+            'subtotal' => 100.00,
+            'tax_amount' => 0,
+            'total' => 100.00,
+            'paid_amount' => 0,
+            'due_amount' => 100.00,
+            'status' => 'pending',
+            'currency' => 'SAR',
         ]);
     }
 }

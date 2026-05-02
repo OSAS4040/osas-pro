@@ -7,16 +7,15 @@ use App\Enums\CompanyFinancialModelStatus;
 use App\Enums\CompanyStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Support\TenantBusinessFeatures;
 use App\Models\AuditLog;
-use App\Models\Contract;
 use App\Models\Company;
+use App\Models\Contract;
 use App\Models\Customer;
-use App\Models\Service;
+use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\PlanAddon;
+use App\Models\Service;
 use App\Models\Subscription;
-use App\Models\Invoice;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VerticalProfile;
@@ -29,6 +28,7 @@ use App\Services\Platform\PlatformAdminOverviewService;
 use App\Services\Platform\PlatformPermissionService;
 use App\Services\Saas\SubscriptionAddonEntitlements;
 use App\Services\WorkOrderCancellationRequestService;
+use App\Support\TenantBusinessFeatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -68,8 +68,8 @@ class PlatformAdminController extends Controller
                 ->first();
 
             $planSlug = $sub ? (string) $sub->plan : '—';
-            $plan     = $planSlug !== '—' ? Plan::where('slug', $planSlug)->first() : null;
-            $monthly  = $plan ? (float) $plan->price_monthly : 0.0;
+            $plan = $planSlug !== '—' ? Plan::where('slug', $planSlug)->first() : null;
+            $monthly = $plan ? (float) $plan->price_monthly : 0.0;
             $planName = $plan !== null
                 ? (string) (($plan->name_ar ?? null) ?: ($plan->name ?? $planSlug))
                 : '—';
@@ -86,34 +86,34 @@ class PlatformAdminController extends Controller
             }
 
             return [
-                'id'                    => $c->id,
-                'name'                  => $c->name,
-                'slug'                  => 'company-'.$c->id,
-                'plan_slug'             => $planSlug,
-                'plan_name'             => $planName,
-                'is_active'             => (bool) $c->is_active,
-                'company_status'        => $c->status?->value,
+                'id' => $c->id,
+                'name' => $c->name,
+                'slug' => 'company-'.$c->id,
+                'plan_slug' => $planSlug,
+                'plan_name' => $planName,
+                'is_active' => (bool) $c->is_active,
+                'company_status' => $c->status?->value,
                 'vertical_profile_code' => $c->vertical_profile_code,
-                'financial_model'       => $c->financial_model?->value,
-                'financial_model_status'=> $c->financial_model_status?->value,
-                'credit_limit'          => $c->credit_limit !== null ? (string) $c->credit_limit : null,
-                'created_at'            => $c->created_at?->toIso8601String(),
-                'updated_at'            => $c->updated_at?->toIso8601String(),
-                'owner_name'            => $owner?->name ?? '—',
-                'users_count'           => $c->users_count,
-                'monthly_revenue'       => $monthly,
+                'financial_model' => $c->financial_model?->value,
+                'financial_model_status' => $c->financial_model_status?->value,
+                'credit_limit' => $c->credit_limit !== null ? (string) $c->credit_limit : null,
+                'created_at' => $c->created_at?->toIso8601String(),
+                'updated_at' => $c->updated_at?->toIso8601String(),
+                'owner_name' => $owner?->name ?? '—',
+                'users_count' => $c->users_count,
+                'monthly_revenue' => $monthly,
                 'subscription_status' => $status,
                 'platform_execution_partner' => TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) $c->id),
             ];
         });
 
         return response()->json([
-            'data'       => $paginator->items(),
+            'data' => $paginator->items(),
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
             ],
             'trace_id' => app('trace_id'),
         ]);
@@ -745,7 +745,7 @@ class PlatformAdminController extends Controller
     {
         $data = $request->validate([
             'addon_slug' => ['required', 'string', 'max:120'],
-            'attach'     => ['required', 'boolean'],
+            'attach' => ['required', 'boolean'],
         ]);
 
         Company::query()->findOrFail($id);
@@ -757,7 +757,7 @@ class PlatformAdminController extends Controller
 
         if ($sub === null) {
             return response()->json([
-                'message'  => 'لا يوجد اشتراك لهذه الشركة.',
+                'message' => 'لا يوجد اشتراك لهذه الشركة.',
                 'trace_id' => app('trace_id'),
             ], 404);
         }
@@ -765,7 +765,7 @@ class PlatformAdminController extends Controller
         $addon = PlanAddon::query()->where('slug', $data['addon_slug'])->first();
         if ($addon === null) {
             return response()->json([
-                'message'  => 'إضافة غير معروفة.',
+                'message' => 'إضافة غير معروفة.',
                 'trace_id' => app('trace_id'),
             ], 404);
         }
@@ -780,7 +780,7 @@ class PlatformAdminController extends Controller
             }
         } catch (\InvalidArgumentException $e) {
             return response()->json([
-                'message'  => $e->getMessage(),
+                'message' => $e->getMessage(),
                 'trace_id' => app('trace_id'),
             ], 422);
         }
@@ -792,7 +792,7 @@ class PlatformAdminController extends Controller
             before: [],
             after: [
                 'addon_slug' => $data['addon_slug'],
-                'attach'     => $data['attach'],
+                'attach' => $data['attach'],
             ],
             companyId: $id,
             branchId: null,
@@ -812,8 +812,8 @@ class PlatformAdminController extends Controller
         $user = $request->user();
         if (! $user || ! app(PlatformPermissionService::class)->canManageGlobalPlanCatalog($user)) {
             return response()->json([
-                'message'  => 'إنشاء إضافة في الكتالوج غير مسموح لهذا الحساب.',
-                'code'     => 'PLAN_CATALOG_FORBIDDEN',
+                'message' => 'إنشاء إضافة في الكتالوج غير مسموح لهذا الحساب.',
+                'code' => 'PLAN_CATALOG_FORBIDDEN',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -873,8 +873,8 @@ class PlatformAdminController extends Controller
         $user = $request->user();
         if (! $user || ! app(PlatformPermissionService::class)->canManageGlobalPlanCatalog($user)) {
             return response()->json([
-                'message'  => 'تعديل كتالوج الإضافات غير مسموح لهذا الحساب.',
-                'code'     => 'PLAN_CATALOG_FORBIDDEN',
+                'message' => 'تعديل كتالوج الإضافات غير مسموح لهذا الحساب.',
+                'code' => 'PLAN_CATALOG_FORBIDDEN',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -882,20 +882,20 @@ class PlatformAdminController extends Controller
         $addon = PlanAddon::query()->where('slug', $slug)->firstOrFail();
 
         $validated = $request->validate([
-            'name_ar'               => ['sometimes', 'string', 'max:160'],
-            'description_ar'        => ['sometimes', 'nullable', 'string', 'max:2000'],
-            'price_monthly'         => ['sometimes', 'numeric', 'min:0'],
-            'price_yearly'          => ['sometimes', 'numeric', 'min:0'],
-            'eligible_plan_slugs'   => ['sometimes', 'nullable', 'array'],
+            'name_ar' => ['sometimes', 'string', 'max:160'],
+            'description_ar' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'price_monthly' => ['sometimes', 'numeric', 'min:0'],
+            'price_yearly' => ['sometimes', 'numeric', 'min:0'],
+            'eligible_plan_slugs' => ['sometimes', 'nullable', 'array'],
             'eligible_plan_slugs.*' => ['string', 'max:64'],
-            'is_active'             => ['sometimes', 'boolean'],
-            'sort_order'            => ['sometimes', 'integer', 'min:0'],
+            'is_active' => ['sometimes', 'boolean'],
+            'sort_order' => ['sometimes', 'integer', 'min:0'],
         ]);
 
         $addon->update($validated);
 
         return response()->json([
-            'data'     => $addon->fresh(),
+            'data' => $addon->fresh(),
             'trace_id' => app('trace_id'),
         ]);
     }

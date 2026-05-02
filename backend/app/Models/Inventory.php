@@ -16,9 +16,9 @@ class Inventory extends Model
     ];
 
     protected $casts = [
-        'quantity'          => 'decimal:4',
+        'quantity' => 'decimal:4',
         'reserved_quantity' => 'decimal:4',
-        'reorder_point'     => 'decimal:4',
+        'reorder_point' => 'decimal:4',
     ];
 
     public function product()

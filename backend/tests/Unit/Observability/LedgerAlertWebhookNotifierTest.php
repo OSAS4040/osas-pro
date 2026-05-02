@@ -3,6 +3,7 @@
 namespace Tests\Unit\Observability;
 
 use App\Support\Observability\LedgerAlertWebhookNotifier;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -14,8 +15,8 @@ class LedgerAlertWebhookNotifierTest extends TestCase
         Http::fake();
         Config::set('ledger_alerts.webhook_url', '');
 
-        (new LedgerAlertWebhookNotifier())->notifyFromLogContext([
-            'code'       => 'LEDGER_POST_FAILED',
+        (new LedgerAlertWebhookNotifier)->notifyFromLogContext([
+            'code' => 'LEDGER_POST_FAILED',
             'company_id' => 1,
         ]);
 
@@ -30,17 +31,17 @@ class LedgerAlertWebhookNotifierTest extends TestCase
 
         Http::fake(['https://hooks.example.test/*' => Http::response([], 200)]);
 
-        (new LedgerAlertWebhookNotifier())->notifyFromLogContext([
-            'code'             => 'LEDGER_POST_FAILED',
-            'source'           => 'pos',
-            'company_id'       => 7,
-            'invoice_id'       => 42,
-            'trace_id'         => 'trace-abc',
-            'previous_class'   => 'RuntimeException',
+        (new LedgerAlertWebhookNotifier)->notifyFromLogContext([
+            'code' => 'LEDGER_POST_FAILED',
+            'source' => 'pos',
+            'company_id' => 7,
+            'invoice_id' => 42,
+            'trace_id' => 'trace-abc',
+            'previous_class' => 'RuntimeException',
             'previous_message' => 'should not appear in body',
         ]);
 
-        Http::assertSent(function (\Illuminate\Http\Client\Request $request): bool {
+        Http::assertSent(function (Request $request): bool {
             if ($request->url() !== 'https://hooks.example.test/ledger') {
                 return false;
             }

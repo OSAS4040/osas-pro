@@ -40,7 +40,7 @@ class Role extends Model
     public function hasPermission(string $permission): bool
     {
         if ($this->is_system) {
-            $systemPerms = config('permissions.roles.' . $this->name, []);
+            $systemPerms = config('permissions.roles.'.$this->name, []);
             if (in_array('*', $systemPerms) || in_array($permission, $systemPerms)) {
                 return true;
             }

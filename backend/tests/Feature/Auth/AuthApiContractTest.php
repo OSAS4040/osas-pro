@@ -18,7 +18,7 @@ class AuthApiContractTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $response = $this->post('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
@@ -33,7 +33,7 @@ class AuthApiContractTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
@@ -48,7 +48,7 @@ class AuthApiContractTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $login = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
@@ -81,7 +81,7 @@ class AuthApiContractTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'WrongPassword!',
         ])->assertUnauthorized()
             ->assertJsonPath('message_key', 'auth.login.invalid_credentials')
@@ -103,7 +103,7 @@ class AuthApiContractTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $login = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
         $token = $login->json('token');

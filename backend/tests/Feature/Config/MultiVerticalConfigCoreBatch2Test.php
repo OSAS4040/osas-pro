@@ -161,4 +161,3 @@ class MultiVerticalConfigCoreBatch2Test extends TestCase
         );
     }
 }
-

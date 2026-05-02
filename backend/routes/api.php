@@ -1,5 +1,124 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AdminCommunicationController;
+use App\Http\Controllers\Api\V1\AdminWalletTopUpRequestController;
+use App\Http\Controllers\Api\V1\ApiKeyController;
+use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Auth\AuthSessionController;
+use App\Http\Controllers\Api\V1\Auth\PhoneOtpAuthController;
+use App\Http\Controllers\Api\V1\Auth\PhoneRegistrationFlowController;
+use App\Http\Controllers\Api\V1\BayController;
+use App\Http\Controllers\Api\V1\BranchController;
+use App\Http\Controllers\Api\V1\BundleController;
+use App\Http\Controllers\Api\V1\ChartOfAccountController;
+use App\Http\Controllers\Api\V1\CompanyController;
+use App\Http\Controllers\Api\V1\CompanyProfileController;
+use App\Http\Controllers\Api\V1\ContractController;
+use App\Http\Controllers\Api\V1\ContractServiceItemController;
+use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\CustomerGroupController;
+use App\Http\Controllers\Api\V1\CustomerPortalController;
+use App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController;
+use App\Http\Controllers\Api\V1\CustomerPortalReportsController;
+use App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController;
+use App\Http\Controllers\Api\V1\CustomerProfileController;
+use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\External\ExternalInvoiceController;
+use App\Http\Controllers\Api\V1\FinancialReconciliationController;
+use App\Http\Controllers\Api\V1\FleetController;
+use App\Http\Controllers\Api\V1\FleetPortalController;
+use App\Http\Controllers\Api\V1\FuelController;
+use App\Http\Controllers\Api\V1\GoodsReceiptController;
+use App\Http\Controllers\Api\V1\GovernanceController;
+use App\Http\Controllers\Api\V1\ImportController;
+use App\Http\Controllers\Api\V1\Internal\AuthSuspiciousLoginSignalsController;
+use App\Http\Controllers\Api\V1\Internal\CommandCenterGovernanceController;
+use App\Http\Controllers\Api\V1\Internal\DomainEventInspectionController;
+use App\Http\Controllers\Api\V1\Internal\Phase2IntelligenceController;
+use App\Http\Controllers\Api\V1\Internal\QaValidationController;
+use App\Http\Controllers\Api\V1\InventoryController;
+use App\Http\Controllers\Api\V1\InvoiceController;
+use App\Http\Controllers\Api\V1\LeaveController;
+use App\Http\Controllers\Api\V1\LedgerController;
+use App\Http\Controllers\Api\V1\MeetingController;
+use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\NpsController;
+use App\Http\Controllers\Api\V1\OcrController;
+use App\Http\Controllers\Api\V1\OnboardingController;
+use App\Http\Controllers\Api\V1\OrgUnitController;
+use App\Http\Controllers\Api\V1\PermissionController;
+use App\Http\Controllers\Api\V1\Platform\PlatformCustomerPriceVersionController;
+use App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController;
+use App\Http\Controllers\Api\V1\Platform\PlatformPurchaseClaimsController;
+use App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController;
+use App\Http\Controllers\Api\V1\PlatformAdminController;
+use App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController;
+use App\Http\Controllers\Api\V1\PlatformControlledActionController;
+use App\Http\Controllers\Api\V1\PlatformDecisionLogController;
+use App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController;
+use App\Http\Controllers\Api\V1\PlatformIncidentWorkflowController;
+use App\Http\Controllers\Api\V1\PlatformIntelligenceCommandSurfaceController;
+use App\Http\Controllers\Api\V1\PlatformIntelligenceIncidentCandidatesController;
+use App\Http\Controllers\Api\V1\PlatformIntelligenceIncidentsController;
+use App\Http\Controllers\Api\V1\PlatformIntelligenceSignalsController;
+use App\Http\Controllers\Api\V1\PlatformNotificationCenterController;
+use App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController;
+use App\Http\Controllers\Api\V1\PlatformSupportController;
+use App\Http\Controllers\Api\V1\PlatformTenantNavHideController;
+use App\Http\Controllers\Api\V1\PluginController;
+use App\Http\Controllers\Api\V1\POSController;
+use App\Http\Controllers\Api\V1\ProductController;
+use App\Http\Controllers\Api\V1\PublicContentController;
+use App\Http\Controllers\Api\V1\PurchaseClaimController;
+use App\Http\Controllers\Api\V1\PurchaseController;
+use App\Http\Controllers\Api\V1\QuoteController;
+use App\Http\Controllers\Api\V1\ReferralController;
+use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\Reporting\CompanyReportingController;
+use App\Http\Controllers\Api\V1\Reporting\CustomerReportingController;
+use App\Http\Controllers\Api\V1\Reporting\GlobalOperationsFeedController;
+use App\Http\Controllers\Api\V1\Reporting\PlatformReportingController;
+use App\Http\Controllers\Api\V1\Reporting\ReportingController;
+use App\Http\Controllers\Api\V1\Reporting\ReportingExportController;
+use App\Http\Controllers\Api\V1\RoleController;
+use App\Http\Controllers\Api\V1\SaasController;
+use App\Http\Controllers\Api\V1\SalaryController;
+use App\Http\Controllers\Api\V1\SensitiveOperationPreviewController;
+use App\Http\Controllers\Api\V1\ServiceController;
+use App\Http\Controllers\Api\V1\ServicePricingPolicyController;
+use App\Http\Controllers\Api\V1\SubscriptionController;
+use App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformBankTransactionImportController;
+use App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformPaymentOrderController;
+use App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformReviewQueueController;
+use App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController;
+use App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController;
+use App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionsDebugHealthController;
+use App\Http\Controllers\Api\V1\SubscriptionsV2\TenantPaymentOrderController;
+use App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController;
+use App\Http\Controllers\Api\V1\SupplierContractController;
+use App\Http\Controllers\Api\V1\SupplierController;
+use App\Http\Controllers\Api\V1\SupportController;
+use App\Http\Controllers\Api\V1\SystemCapabilitiesController;
+use App\Http\Controllers\Api\V1\SystemVersionController;
+use App\Http\Controllers\Api\V1\UnitController;
+use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\VehicleController;
+use App\Http\Controllers\Api\V1\VehicleIdentityController;
+use App\Http\Controllers\Api\V1\WalletController;
+use App\Http\Controllers\Api\V1\WalletTopUpRequestController;
+use App\Http\Controllers\Api\V1\WebhookController;
+use App\Http\Controllers\Api\V1\WorkOrderBatchController;
+use App\Http\Controllers\Api\V1\WorkOrderBulkController;
+use App\Http\Controllers\Api\V1\WorkOrderCancellationRequestController;
+use App\Http\Controllers\Api\V1\WorkOrderController;
+use App\Http\Controllers\Api\V1\WorkshopController;
+use App\Http\Controllers\Api\V1\ZatcaController;
+use App\Models\ApiUsageLog;
+use App\Models\ServiceReminder;
+use App\Models\WarrantyItem;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -9,63 +128,63 @@ Route::prefix('v1')->group(function () {
         $healthy = true;
 
         try {
-            \Illuminate\Support\Facades\DB::select('SELECT 1');
+            DB::select('SELECT 1');
             $checks['database'] = 'ok';
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $checks['database'] = 'fail';
             $healthy = false;
         }
 
         try {
-            \Illuminate\Support\Facades\Redis::ping();
+            Redis::ping();
             $checks['redis'] = 'ok';
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $checks['redis'] = 'fail';
             $healthy = false;
         }
 
         return response()->json([
-            'status'   => $healthy ? 'healthy' : 'degraded',
-            'checks'   => $checks,
-            'version'  => (string) config('deployment.version'),
+            'status' => $healthy ? 'healthy' : 'degraded',
+            'checks' => $checks,
+            'version' => (string) config('deployment.version'),
             'trace_id' => app('trace_id'),
         ], $healthy ? 200 : 503);
     });
 
-    Route::get('/system/version', \App\Http\Controllers\Api\V1\SystemVersionController::class);
+    Route::get('/system/version', SystemVersionController::class);
 
-    Route::get('/public/landing-plans', [\App\Http\Controllers\Api\V1\PublicContentController::class, 'landingPlans']);
-    Route::get('/public/platform-announcement-banner', [\App\Http\Controllers\Api\V1\PublicContentController::class, 'platformAnnouncementBanner']);
+    Route::get('/public/landing-plans', [PublicContentController::class, 'landingPlans']);
+    Route::get('/public/platform-announcement-banner', [PublicContentController::class, 'platformAnnouncementBanner']);
 
-    Route::get('/public/vehicle-identity/{token}', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'publicShow'])
+    Route::get('/public/vehicle-identity/{token}', [VehicleIdentityController::class, 'publicShow'])
         ->where('token', '[a-f0-9]{64}')
         ->middleware('throttle:120,1');
 
-    Route::post('/auth/login', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'login'])
+    Route::post('/auth/login', [AuthController::class, 'login'])
         ->middleware('throttle:login');
-    Route::post('/auth/register', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'register'])
+    Route::post('/auth/register', [AuthController::class, 'register'])
         ->middleware('throttle:register');
-    Route::post('/auth/forgot-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'forgotPassword'])
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])
         ->middleware('throttle:password-reset-request');
-    Route::post('/auth/reset-password', [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'resetPassword'])
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])
         ->middleware('throttle:password-reset-confirm');
 
-    Route::post('/auth/phone/request-otp', [\App\Http\Controllers\Api\V1\Auth\PhoneOtpAuthController::class, 'requestOtp'])
+    Route::post('/auth/phone/request-otp', [PhoneOtpAuthController::class, 'requestOtp'])
         ->middleware('throttle:otp-resend');
-    Route::post('/auth/phone/verify-otp', [\App\Http\Controllers\Api\V1\Auth\PhoneOtpAuthController::class, 'verifyOtp'])
+    Route::post('/auth/phone/verify-otp', [PhoneOtpAuthController::class, 'verifyOtp'])
         ->middleware('throttle:otp-verify');
 
     /** Identity-only: no tenant/subscription/branch gates (Bearer must resolve). */
     Route::middleware(['auth:sanctum'])->group(function () {
-        Route::post('/auth/logout',       [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'logout']);
-        Route::post('/auth/logout-all',   [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'logoutAll']);
-        Route::post('/auth/push-device',  [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'registerPushDevice']);
-        Route::get('/auth/me',            [\App\Http\Controllers\Api\V1\Auth\AuthController::class, 'me']);
-        Route::get('/auth/sessions',      [\App\Http\Controllers\Api\V1\Auth\AuthSessionController::class, 'index']);
-        Route::delete('/auth/sessions/{id}', [\App\Http\Controllers\Api\V1\Auth\AuthSessionController::class, 'destroy'])
+        Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::post('/auth/logout-all', [AuthController::class, 'logoutAll']);
+        Route::post('/auth/push-device', [AuthController::class, 'registerPushDevice']);
+        Route::get('/auth/me', [AuthController::class, 'me']);
+        Route::get('/auth/sessions', [AuthSessionController::class, 'index']);
+        Route::delete('/auth/sessions/{id}', [AuthSessionController::class, 'destroy'])
             ->whereNumber('id');
-        Route::post('/auth/sessions/revoke-others', [\App\Http\Controllers\Api\V1\Auth\AuthSessionController::class, 'revokeOthers']);
-        Route::get('/auth/registration-status', [\App\Http\Controllers\Api\V1\Auth\PhoneRegistrationFlowController::class, 'registrationStatus']);
+        Route::post('/auth/sessions/revoke-others', [AuthSessionController::class, 'revokeOthers']);
+        Route::get('/auth/registration-status', [PhoneRegistrationFlowController::class, 'registrationStatus']);
     });
 
     /**
@@ -74,1281 +193,1282 @@ Route::prefix('v1')->group(function () {
      */
     Route::middleware(['auth:sanctum', 'platform.admin'])->group(function () {
         Route::middleware(['platform.permission:platform.ops.read'])->group(function () {
-            Route::get('/platform/ops-summary', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'opsSummary'])
+            Route::get('/platform/ops-summary', [PlatformAdminController::class, 'opsSummary'])
                 ->middleware('throttle:120,1');
         });
 
         Route::middleware(['platform.permission:platform.audit.read'])->group(function () {
-            Route::get('/platform/audit-logs', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'auditLogs'])
+            Route::get('/platform/audit-logs', [PlatformAdminController::class, 'auditLogs'])
                 ->middleware('throttle:60,1');
         });
 
         Route::middleware(['platform.permission:platform.companies.read'])->group(function () {
-            Route::get('/platform/companies/{id}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'showCompany']);
-            Route::get('/platform/companies/{id}/entity-snapshot', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companyEntitySnapshot']);
-            Route::get('/platform/companies/{id}/contracts-bridge', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companyContractsBridge'])
+            Route::get('/platform/companies/{id}', [PlatformAdminController::class, 'showCompany']);
+            Route::get('/platform/companies/{id}/entity-snapshot', [PlatformAdminController::class, 'companyEntitySnapshot']);
+            Route::get('/platform/companies/{id}/contracts-bridge', [PlatformAdminController::class, 'companyContractsBridge'])
                 ->whereNumber('id')
                 ->middleware('throttle:60,1');
-            Route::get('/platform/companies/{id}/services-bridge', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companyServicesBridge'])
+            Route::get('/platform/companies/{id}/services-bridge', [PlatformAdminController::class, 'companyServicesBridge'])
                 ->whereNumber('id')
                 ->middleware('throttle:60,1');
-            Route::get('/platform/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
-            Route::get('/platform/provider-invoice-attachments', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'providerInvoiceAttachments']);
-            Route::get('/platform/search', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'globalSearch']);
-            Route::get('/platform/plans', [\App\Http\Controllers\Api\V1\SaasController::class, 'listPlans']);
-            Route::get('/platform/customers', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'platformCustomers'])
+            Route::get('/platform/companies', [PlatformAdminController::class, 'companies']);
+            Route::get('/platform/provider-invoice-attachments', [PlatformAdminController::class, 'providerInvoiceAttachments']);
+            Route::get('/platform/search', [PlatformAdminController::class, 'globalSearch']);
+            Route::get('/platform/plans', [SaasController::class, 'listPlans']);
+            Route::get('/platform/customers', [PlatformAdminController::class, 'platformCustomers'])
                 ->middleware('throttle:60,1');
-            Route::get('/admin/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
-            Route::get('/admin/overview', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'dashboardOverview'])
+            Route::get('/admin/companies', [PlatformAdminController::class, 'companies']);
+            Route::get('/admin/overview', [PlatformAdminController::class, 'dashboardOverview'])
                 ->middleware('throttle:60,1');
-            Route::get('/platform/navigation-visibility', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'navigationVisibility']);
+            Route::get('/platform/navigation-visibility', [PlatformAdminController::class, 'navigationVisibility']);
         });
 
         Route::middleware(['platform.permission:platform.companies.operational'])->group(function () {
-            Route::patch('/platform/navigation-visibility', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateNavigationVisibility'])
+            Route::patch('/platform/navigation-visibility', [PlatformAdminController::class, 'updateNavigationVisibility'])
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.intelligence.signals.read'])->group(function () {
-            Route::get('/platform/intelligence/signals', [\App\Http\Controllers\Api\V1\PlatformIntelligenceSignalsController::class, 'index'])
+            Route::get('/platform/intelligence/signals', [PlatformIntelligenceSignalsController::class, 'index'])
                 ->middleware('throttle:60,1');
         });
 
         Route::middleware(['platform.permission:platform.intelligence.candidates.read'])->group(function () {
-            Route::get('/platform/intelligence/incident-candidates', [\App\Http\Controllers\Api\V1\PlatformIntelligenceIncidentCandidatesController::class, 'index'])
+            Route::get('/platform/intelligence/incident-candidates', [PlatformIntelligenceIncidentCandidatesController::class, 'index'])
                 ->middleware('throttle:60,1');
         });
 
         Route::middleware(['platform.permission:platform.intelligence.incidents.read'])->group(function () {
-            Route::get('/platform/intelligence/incidents', [\App\Http\Controllers\Api\V1\PlatformIntelligenceIncidentsController::class, 'index'])
+            Route::get('/platform/intelligence/incidents', [PlatformIntelligenceIncidentsController::class, 'index'])
                 ->middleware('throttle:60,1');
-            Route::get('/platform/intelligence/incidents/{incident_key}', [\App\Http\Controllers\Api\V1\PlatformIntelligenceIncidentsController::class, 'show'])
+            Route::get('/platform/intelligence/incidents/{incident_key}', [PlatformIntelligenceIncidentsController::class, 'show'])
                 ->where('incident_key', '[A-Za-z0-9_.]+')
                 ->middleware('throttle:60,1');
         });
 
         Route::middleware(['platform.permission:platform.intelligence.incidents.materialize'])->group(function () {
-            Route::post('/platform/intelligence/incidents/materialize', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'materialize'])
+            Route::post('/platform/intelligence/incidents/materialize', [PlatformIncidentLifecycleController::class, 'materialize'])
                 ->middleware('throttle:30,1');
         });
 
-        Route::post('/platform/intelligence/incidents/{incident_key}/acknowledge', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'acknowledge'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/acknowledge', [PlatformIncidentLifecycleController::class, 'acknowledge'])
             ->middleware(['platform.permission:platform.intelligence.incidents.acknowledge', 'throttle:60,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
-        Route::post('/platform/intelligence/incidents/{incident_key}/move-under-review', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'moveUnderReview'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/move-under-review', [PlatformIncidentLifecycleController::class, 'moveUnderReview'])
             ->middleware(['platform.permission:platform.intelligence.incidents.acknowledge', 'throttle:60,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
-        Route::post('/platform/intelligence/incidents/{incident_key}/escalate', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'escalate'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/escalate', [PlatformIncidentLifecycleController::class, 'escalate'])
             ->middleware(['platform.permission:platform.intelligence.incidents.escalate', 'throttle:60,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
-        Route::post('/platform/intelligence/incidents/{incident_key}/move-monitoring', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'moveMonitoring'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/move-monitoring', [PlatformIncidentLifecycleController::class, 'moveMonitoring'])
             ->middleware(['platform.permission:platform.intelligence.incidents.acknowledge', 'throttle:60,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
-        Route::post('/platform/intelligence/incidents/{incident_key}/resolve', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'resolve'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/resolve', [PlatformIncidentLifecycleController::class, 'resolve'])
             ->middleware(['platform.permission:platform.intelligence.incidents.resolve', 'throttle:30,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
-        Route::post('/platform/intelligence/incidents/{incident_key}/close', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'close'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/close', [PlatformIncidentLifecycleController::class, 'close'])
             ->middleware(['platform.permission:platform.intelligence.incidents.close', 'throttle:30,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
-        Route::post('/platform/intelligence/incidents/{incident_key}/assign-owner', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'assignOwner'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/assign-owner', [PlatformIncidentLifecycleController::class, 'assignOwner'])
             ->middleware(['platform.permission:platform.intelligence.incidents.assign_owner', 'throttle:60,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
-        Route::post('/platform/intelligence/incidents/{incident_key}/notes', [\App\Http\Controllers\Api\V1\PlatformIncidentLifecycleController::class, 'appendNote'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/notes', [PlatformIncidentLifecycleController::class, 'appendNote'])
             ->middleware(['platform.permission:platform.intelligence.incidents.acknowledge', 'throttle:60,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
 
         Route::middleware(['platform.permission:platform.intelligence.decisions.read'])->group(function () {
-            Route::get('/platform/intelligence/decisions', [\App\Http\Controllers\Api\V1\PlatformDecisionLogController::class, 'index'])
+            Route::get('/platform/intelligence/decisions', [PlatformDecisionLogController::class, 'index'])
                 ->middleware('throttle:60,1');
-            Route::get('/platform/intelligence/incidents/{incident_key}/decisions', [\App\Http\Controllers\Api\V1\PlatformDecisionLogController::class, 'indexForIncident'])
+            Route::get('/platform/intelligence/incidents/{incident_key}/decisions', [PlatformDecisionLogController::class, 'indexForIncident'])
                 ->where('incident_key', '[A-Za-z0-9_.]+')
                 ->middleware('throttle:60,1');
         });
 
-        Route::post('/platform/intelligence/incidents/{incident_key}/decisions', [\App\Http\Controllers\Api\V1\PlatformDecisionLogController::class, 'store'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/decisions', [PlatformDecisionLogController::class, 'store'])
             ->middleware(['platform.permission:platform.intelligence.decisions.write', 'throttle:30,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
 
         Route::middleware(['platform.permission:platform.intelligence.incidents.read'])->group(function () {
-            Route::get('/platform/intelligence/incidents/{incident_key}/workflows', [\App\Http\Controllers\Api\V1\PlatformIncidentWorkflowController::class, 'index'])
+            Route::get('/platform/intelligence/incidents/{incident_key}/workflows', [PlatformIncidentWorkflowController::class, 'index'])
                 ->where('incident_key', '[A-Za-z0-9_.]+')
                 ->middleware('throttle:60,1');
         });
 
-        Route::post('/platform/intelligence/incidents/{incident_key}/workflows/execute', [\App\Http\Controllers\Api\V1\PlatformIncidentWorkflowController::class, 'execute'])
+        Route::post('/platform/intelligence/incidents/{incident_key}/workflows/execute', [PlatformIncidentWorkflowController::class, 'execute'])
             ->middleware(['platform.permission:platform.intelligence.guided_workflows.execute', 'throttle:20,1'])
             ->where('incident_key', '[A-Za-z0-9_.]+');
 
         Route::middleware(['platform.permission:platform.intelligence.incidents.read'])->group(function () {
-            Route::get('/platform/intelligence/command-surface', [\App\Http\Controllers\Api\V1\PlatformIntelligenceCommandSurfaceController::class, 'commandSurface'])
+            Route::get('/platform/intelligence/command-surface', [PlatformIntelligenceCommandSurfaceController::class, 'commandSurface'])
                 ->middleware('throttle:60,1');
-            Route::get('/platform/intelligence/incidents/{incident_key}/correlation', [\App\Http\Controllers\Api\V1\PlatformIntelligenceCommandSurfaceController::class, 'incidentCorrelation'])
+            Route::get('/platform/intelligence/incidents/{incident_key}/correlation', [PlatformIntelligenceCommandSurfaceController::class, 'incidentCorrelation'])
                 ->where('incident_key', '[A-Za-z0-9_.]+')
                 ->middleware('throttle:60,1');
 
             Route::middleware(['platform.permission:platform.intelligence.controlled_actions.view'])->group(function () {
-                Route::get('/platform/intelligence/incidents/{incident_key}/controlled-actions', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'index'])
+                Route::get('/platform/intelligence/incidents/{incident_key}/controlled-actions', [PlatformControlledActionController::class, 'index'])
                     ->where('incident_key', '[A-Za-z0-9_.]+')
                     ->middleware('throttle:60,1');
             });
 
             Route::middleware(['platform.permission:platform.intelligence.controlled_actions.create_follow_up'])->group(function () {
-                Route::post('/platform/intelligence/incidents/{incident_key}/controlled-actions/create-follow-up', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'createFollowUp'])
+                Route::post('/platform/intelligence/incidents/{incident_key}/controlled-actions/create-follow-up', [PlatformControlledActionController::class, 'createFollowUp'])
                     ->where('incident_key', '[A-Za-z0-9_.]+')
                     ->middleware('throttle:30,1');
             });
 
             Route::middleware(['platform.permission:platform.intelligence.controlled_actions.request_human_review'])->group(function () {
-                Route::post('/platform/intelligence/incidents/{incident_key}/controlled-actions/request-human-review', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'requestHumanReview'])
+                Route::post('/platform/intelligence/incidents/{incident_key}/controlled-actions/request-human-review', [PlatformControlledActionController::class, 'requestHumanReview'])
                     ->where('incident_key', '[A-Za-z0-9_.]+')
                     ->middleware('throttle:20,1');
             });
 
             Route::middleware(['platform.permission:platform.intelligence.controlled_actions.link_task_reference'])->group(function () {
-                Route::post('/platform/intelligence/incidents/{incident_key}/controlled-actions/link-internal-task-reference', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'linkInternalTaskReference'])
+                Route::post('/platform/intelligence/incidents/{incident_key}/controlled-actions/link-internal-task-reference', [PlatformControlledActionController::class, 'linkInternalTaskReference'])
                     ->where('incident_key', '[A-Za-z0-9_.]+')
                     ->middleware('throttle:20,1');
             });
 
             Route::middleware(['platform.permission:platform.intelligence.controlled_actions.assign_owner'])->group(function () {
-                Route::post('/platform/intelligence/controlled-actions/{action_id}/assign-owner', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'assignOwner'])
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/assign-owner', [PlatformControlledActionController::class, 'assignOwner'])
                     ->where('action_id', '[0-9a-fA-F\\-]{36}')
                     ->middleware('throttle:40,1');
             });
 
             Route::middleware(['platform.permission:platform.intelligence.controlled_actions.schedule'])->group(function () {
-                Route::post('/platform/intelligence/controlled-actions/{action_id}/schedule-follow-up-window', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'schedule'])
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/schedule-follow-up-window', [PlatformControlledActionController::class, 'schedule'])
                     ->where('action_id', '[0-9a-fA-F\\-]{36}')
                     ->middleware('throttle:30,1');
             });
 
             Route::middleware(['platform.permission:platform.intelligence.controlled_actions.complete'])->group(function () {
-                Route::post('/platform/intelligence/controlled-actions/{action_id}/mark-completed', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'complete'])
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/mark-completed', [PlatformControlledActionController::class, 'complete'])
                     ->where('action_id', '[0-9a-fA-F\\-]{36}')
                     ->middleware('throttle:30,1');
             });
 
             Route::middleware(['platform.permission:platform.intelligence.controlled_actions.cancel'])->group(function () {
-                Route::post('/platform/intelligence/controlled-actions/{action_id}/cancel', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'cancel'])
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/cancel', [PlatformControlledActionController::class, 'cancel'])
                     ->where('action_id', '[0-9a-fA-F\\-]{36}')
                     ->middleware('throttle:30,1');
             });
 
             Route::middleware(['platform.permission:platform.intelligence.controlled_actions.reopen'])->group(function () {
-                Route::post('/platform/intelligence/controlled-actions/{action_id}/reopen', [\App\Http\Controllers\Api\V1\PlatformControlledActionController::class, 'reopen'])
+                Route::post('/platform/intelligence/controlled-actions/{action_id}/reopen', [PlatformControlledActionController::class, 'reopen'])
                     ->where('action_id', '[0-9a-fA-F\\-]{36}')
                     ->middleware('throttle:20,1');
             });
         });
 
         Route::middleware(['platform.permission:platform.companies.operational'])->group(function () {
-            Route::patch('/platform/companies/{id}/operational', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateOperational'])
+            Route::patch('/platform/companies/{id}/operational', [PlatformAdminController::class, 'updateOperational'])
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.tenant_nav.manage'])->group(function () {
-            Route::get('/platform/tenant-nav-hides', [\App\Http\Controllers\Api\V1\PlatformTenantNavHideController::class, 'index'])
+            Route::get('/platform/tenant-nav-hides', [PlatformTenantNavHideController::class, 'index'])
                 ->middleware('throttle:60,1');
-            Route::post('/platform/tenant-nav-hides', [\App\Http\Controllers\Api\V1\PlatformTenantNavHideController::class, 'store'])
+            Route::post('/platform/tenant-nav-hides', [PlatformTenantNavHideController::class, 'store'])
                 ->middleware('throttle:30,1');
-            Route::delete('/platform/tenant-nav-hides/{id}', [\App\Http\Controllers\Api\V1\PlatformTenantNavHideController::class, 'destroy'])
+            Route::delete('/platform/tenant-nav-hides/{id}', [PlatformTenantNavHideController::class, 'destroy'])
                 ->whereNumber('id')
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.subscription.manage'])->group(function () {
-            Route::post('/platform/plans', [\App\Http\Controllers\Api\V1\SaasController::class, 'createPlan']);
-            Route::patch('/platform/companies/{id}/subscription', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateSubscription'])
+            Route::post('/platform/plans', [SaasController::class, 'createPlan']);
+            Route::patch('/platform/companies/{id}/subscription', [PlatformAdminController::class, 'updateSubscription'])
                 ->middleware('throttle:30,1');
-            Route::put('/platform/plans/{slug}', [\App\Http\Controllers\Api\V1\SaasController::class, 'updatePlan']);
-            Route::post('/platform/companies/{id}/subscription-addons', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'syncCompanySubscriptionAddon'])
+            Route::put('/platform/plans/{slug}', [SaasController::class, 'updatePlan']);
+            Route::post('/platform/companies/{id}/subscription-addons', [PlatformAdminController::class, 'syncCompanySubscriptionAddon'])
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.subscription.manage'])->prefix('admin/subscriptions')->group(function () {
-            Route::get('/attention-summary', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'attentionSummary'])
+            Route::get('/attention-summary', [PlatformSubscriptionOperationsController::class, 'attentionSummary'])
                 ->middleware('throttle:120,1');
-            Route::get('/list', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'subscriptionList'])
+            Route::get('/list', [PlatformSubscriptionOperationsController::class, 'subscriptionList'])
                 ->middleware('throttle:60,1');
-            Route::get('/subscription/{subscription}', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'subscriptionShow'])
+            Route::get('/subscription/{subscription}', [PlatformSubscriptionOperationsController::class, 'subscriptionShow'])
                 ->whereNumber('subscription')
                 ->middleware('throttle:60,1');
-            Route::get('/invoices', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'invoiceList'])
+            Route::get('/invoices', [PlatformSubscriptionOperationsController::class, 'invoiceList'])
                 ->middleware('throttle:60,1');
-            Route::get('/invoices/{invoice}', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'invoiceShow'])
+            Route::get('/invoices/{invoice}', [PlatformSubscriptionOperationsController::class, 'invoiceShow'])
                 ->whereNumber('invoice')
                 ->middleware('throttle:60,1');
-            Route::get('/payment-orders/{id}', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'paymentOrderShow'])
+            Route::get('/payment-orders/{id}', [PlatformSubscriptionOperationsController::class, 'paymentOrderShow'])
                 ->whereNumber('id')
                 ->middleware('throttle:60,1');
-            Route::get('/bank-transactions/{id}', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOperationsController::class, 'bankTransactionShow'])
+            Route::get('/bank-transactions/{id}', [PlatformSubscriptionOperationsController::class, 'bankTransactionShow'])
                 ->whereNumber('id')
                 ->middleware('throttle:60,1');
-            Route::get('/debug/health', \App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionsDebugHealthController::class)
+            Route::get('/debug/health', PlatformSubscriptionsDebugHealthController::class)
                 ->middleware('throttle:30,1');
-            Route::get('/overview', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'overview'])
+            Route::get('/overview', [PlatformSubscriptionOverviewController::class, 'overview'])
                 ->middleware('throttle:60,1');
-            Route::get('/review-queue', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformReviewQueueController::class, 'index'])
+            Route::get('/review-queue', [PlatformReviewQueueController::class, 'index'])
                 ->middleware('throttle:60,1');
-            Route::get('/transactions', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'transactions'])
+            Route::get('/transactions', [PlatformSubscriptionOverviewController::class, 'transactions'])
                 ->middleware('throttle:60,1');
-            Route::get('/wallets', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'wallets'])
+            Route::get('/wallets', [PlatformSubscriptionOverviewController::class, 'wallets'])
                 ->middleware('throttle:60,1');
-            Route::get('/notifications', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'notifications'])
+            Route::get('/notifications', [PlatformSubscriptionOverviewController::class, 'notifications'])
                 ->middleware('throttle:120,1');
-            Route::get('/insights', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformSubscriptionOverviewController::class, 'insights'])
+            Route::get('/insights', [PlatformSubscriptionOverviewController::class, 'insights'])
                 ->middleware('throttle:60,1');
-            Route::post('/review-queue/{id}/match', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformReviewQueueController::class, 'match'])
+            Route::post('/review-queue/{id}/match', [PlatformReviewQueueController::class, 'match'])
                 ->whereNumber('id')
                 ->middleware('throttle:30,1');
-            Route::post('/review-queue/{id}/reject', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformReviewQueueController::class, 'reject'])
+            Route::post('/review-queue/{id}/reject', [PlatformReviewQueueController::class, 'reject'])
                 ->whereNumber('id')
                 ->middleware('throttle:30,1');
-            Route::post('/bank-transactions/import', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformBankTransactionImportController::class, 'store'])
+            Route::post('/bank-transactions/import', [PlatformBankTransactionImportController::class, 'store'])
                 ->middleware('throttle:30,1');
-            Route::post('/payment-orders/{id}/approve', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformPaymentOrderController::class, 'approve'])
+            Route::post('/payment-orders/{id}/approve', [PlatformPaymentOrderController::class, 'approve'])
                 ->whereNumber('id')
                 ->middleware('throttle:30,1');
-            Route::post('/payment-orders/{id}/reject', [\App\Http\Controllers\Api\V1\SubscriptionsV2\PlatformPaymentOrderController::class, 'reject'])
+            Route::post('/payment-orders/{id}/reject', [PlatformPaymentOrderController::class, 'reject'])
                 ->whereNumber('id')
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.pricing.view'])->prefix('platform/pricing')->group(function () {
-            Route::get('/requests', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'index'])
+            Route::get('/requests', [PlatformPricingRequestController::class, 'index'])
                 ->middleware('throttle:60,1');
-            Route::get('/requests/{uuid}', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'show'])
+            Route::get('/requests/{uuid}', [PlatformPricingRequestController::class, 'show'])
                 ->whereUuid('uuid')
                 ->middleware('throttle:60,1');
-            Route::get('/customer-price-versions', [\App\Http\Controllers\Api\V1\Platform\PlatformCustomerPriceVersionController::class, 'index'])
+            Route::get('/customer-price-versions', [PlatformCustomerPriceVersionController::class, 'index'])
                 ->middleware('throttle:60,1');
         });
 
         Route::middleware(['platform.permission:platform.pricing.create'])->prefix('platform/pricing')->group(function () {
-            Route::post('/requests', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'store'])
+            Route::post('/requests', [PlatformPricingRequestController::class, 'store'])
                 ->middleware('throttle:30,1');
-            Route::post('/requests/{uuid}/submit-for-review', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'submitForReview'])
+            Route::post('/requests/{uuid}/submit-for-review', [PlatformPricingRequestController::class, 'submitForReview'])
                 ->whereUuid('uuid')
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.pricing.review'])->prefix('platform/pricing')->group(function () {
-            Route::post('/requests/{uuid}/begin-review', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'beginReview'])
+            Route::post('/requests/{uuid}/begin-review', [PlatformPricingRequestController::class, 'beginReview'])
                 ->whereUuid('uuid')
                 ->middleware('throttle:30,1');
-            Route::post('/requests/{uuid}/complete-review', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'completeReview'])
+            Route::post('/requests/{uuid}/complete-review', [PlatformPricingRequestController::class, 'completeReview'])
                 ->whereUuid('uuid')
                 ->middleware('throttle:30,1');
-            Route::post('/requests/{uuid}/escalate', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'escalate'])
+            Route::post('/requests/{uuid}/escalate', [PlatformPricingRequestController::class, 'escalate'])
                 ->whereUuid('uuid')
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.pricing.approve'])->prefix('platform/pricing')->group(function () {
-            Route::post('/requests/{uuid}/approve', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'approve'])
+            Route::post('/requests/{uuid}/approve', [PlatformPricingRequestController::class, 'approve'])
                 ->whereUuid('uuid')
                 ->middleware('throttle:20,1');
-            Route::post('/requests/{uuid}/reject', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'reject'])
+            Route::post('/requests/{uuid}/reject', [PlatformPricingRequestController::class, 'reject'])
                 ->whereUuid('uuid')
                 ->middleware('throttle:20,1');
-            Route::post('/requests/{uuid}/return-for-edit', [\App\Http\Controllers\Api\V1\Platform\PlatformPricingRequestController::class, 'returnForEdit'])
+            Route::post('/requests/{uuid}/return-for-edit', [PlatformPricingRequestController::class, 'returnForEdit'])
                 ->whereUuid('uuid')
                 ->middleware('throttle:20,1');
         });
 
         Route::middleware(['platform.permission:platform.providers.manage'])->prefix('platform/providers')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController::class, 'index'])
+            Route::get('/', [PlatformServiceProviderController::class, 'index'])
                 ->middleware('throttle:60,1');
-            Route::post('/', [\App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController::class, 'store'])
+            Route::post('/', [PlatformServiceProviderController::class, 'store'])
                 ->middleware('throttle:30,1');
-            Route::get('/{id}/costs', [\App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController::class, 'costs'])
+            Route::get('/{id}/costs', [PlatformServiceProviderController::class, 'costs'])
                 ->whereNumber('id')
                 ->middleware('throttle:60,1');
-            Route::post('/{id}/costs', [\App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController::class, 'storeCost'])
+            Route::post('/{id}/costs', [PlatformServiceProviderController::class, 'storeCost'])
                 ->whereNumber('id')
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.purchase_claims.read'])->group(function () {
-            Route::get('/platform/purchase-claims', [\App\Http\Controllers\Api\V1\Platform\PlatformPurchaseClaimsController::class, 'index'])
+            Route::get('/platform/purchase-claims', [PlatformPurchaseClaimsController::class, 'index'])
                 ->middleware('throttle:60,1');
         });
 
         Route::middleware(['platform.permission:platform.purchase_claims.review'])->group(function () {
-            Route::patch('/platform/purchase-claims/{id}/review', [\App\Http\Controllers\Api\V1\Platform\PlatformPurchaseClaimsController::class, 'review'])
+            Route::patch('/platform/purchase-claims/{id}/review', [PlatformPurchaseClaimsController::class, 'review'])
                 ->whereNumber('id')
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.vertical.assign'])->group(function () {
-            Route::patch('/platform/companies/{id}/vertical-profile', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'assignVerticalProfile'])
+            Route::patch('/platform/companies/{id}/vertical-profile', [PlatformAdminController::class, 'assignVerticalProfile'])
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.financial_model.manage'])->group(function () {
-            Route::patch('/platform/companies/{id}/financial-model', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updateFinancialModel']);
+            Route::patch('/platform/companies/{id}/financial-model', [PlatformAdminController::class, 'updateFinancialModel']);
         });
 
         Route::middleware(['platform.permission:platform.catalog.manage'])->group(function () {
-            Route::put('/platform/plans/{slug}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updatePlanCatalog'])
+            Route::put('/platform/plans/{slug}', [PlatformAdminController::class, 'updatePlanCatalog'])
                 ->middleware('throttle:30,1');
-            Route::post('/platform/plan-addons', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'storePlanAddonCatalog'])
+            Route::post('/platform/plan-addons', [PlatformAdminController::class, 'storePlanAddonCatalog'])
                 ->middleware('throttle:30,1');
-            Route::put('/platform/plan-addons/{slug}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'updatePlanAddonCatalog'])
+            Route::put('/platform/plan-addons/{slug}', [PlatformAdminController::class, 'updatePlanAddonCatalog'])
                 ->middleware('throttle:30,1');
         });
 
         Route::middleware(['platform.permission:platform.cancellations.read'])->group(function () {
-            Route::get('/platform/work-order-cancellation-requests', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'workOrderCancellationRequests']);
+            Route::get('/platform/work-order-cancellation-requests', [PlatformAdminController::class, 'workOrderCancellationRequests']);
         });
 
         Route::middleware(['platform.permission:platform.cancellations.manage'])->group(function () {
-            Route::post('/platform/work-order-cancellation-requests/{id}/approve', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'approveWorkOrderCancellation']);
-            Route::post('/platform/work-order-cancellation-requests/{id}/reject', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'rejectWorkOrderCancellation']);
+            Route::post('/platform/work-order-cancellation-requests/{id}/approve', [PlatformAdminController::class, 'approveWorkOrderCancellation']);
+            Route::post('/platform/work-order-cancellation-requests/{id}/reject', [PlatformAdminController::class, 'rejectWorkOrderCancellation']);
         });
 
         Route::middleware(['platform.permission:platform.announcement.read'])->group(function () {
-            Route::get('/platform/announcement-banner/admin', [\App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController::class, 'adminShow']);
+            Route::get('/platform/announcement-banner/admin', [PlatformAnnouncementBannerController::class, 'adminShow']);
         });
 
         Route::middleware(['platform.permission:platform.announcement.manage'])->group(function () {
-            Route::put('/platform/announcement-banner', [\App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController::class, 'update']);
+            Route::put('/platform/announcement-banner', [PlatformAnnouncementBannerController::class, 'update']);
         });
 
         Route::middleware(['platform.permission:platform.registration.read'])->group(function () {
-            Route::get('/platform/registration-profiles', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'index']);
+            Route::get('/platform/registration-profiles', [PlatformPhoneRegistrationReviewController::class, 'index']);
         });
 
         Route::middleware(['platform.permission:platform.registration.manage'])->group(function () {
-            Route::post('/platform/registration-profiles/{id}/approve', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'approve']);
-            Route::post('/platform/registration-profiles/{id}/reject', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'reject']);
-            Route::post('/platform/registration-profiles/{id}/request-more-info', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'requestMoreInfo']);
-            Route::post('/platform/registration-profiles/{id}/suspend', [\App\Http\Controllers\Api\V1\PlatformPhoneRegistrationReviewController::class, 'suspend']);
+            Route::post('/platform/registration-profiles/{id}/approve', [PlatformPhoneRegistrationReviewController::class, 'approve']);
+            Route::post('/platform/registration-profiles/{id}/reject', [PlatformPhoneRegistrationReviewController::class, 'reject']);
+            Route::post('/platform/registration-profiles/{id}/request-more-info', [PlatformPhoneRegistrationReviewController::class, 'requestMoreInfo']);
+            Route::post('/platform/registration-profiles/{id}/suspend', [PlatformPhoneRegistrationReviewController::class, 'suspend']);
         });
 
         Route::middleware(['platform.permission:platform.support.read'])->group(function () {
-            Route::get('/platform/support/tickets', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'indexTickets'])
+            Route::get('/platform/support/tickets', [PlatformSupportController::class, 'indexTickets'])
                 ->middleware('throttle:120,1');
-            Route::get('/platform/support/tickets/{id}', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'showTicket'])
+            Route::get('/platform/support/tickets/{id}', [PlatformSupportController::class, 'showTicket'])
                 ->whereNumber('id')
                 ->middleware('throttle:120,1');
-            Route::get('/platform/support/stats', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'stats'])
+            Route::get('/platform/support/stats', [PlatformSupportController::class, 'stats'])
                 ->middleware('throttle:60,1');
         });
 
         Route::middleware(['platform.permission:platform.notifications.read|platform.subscription.manage'])->group(function () {
-            Route::get('/platform/notifications', [\App\Http\Controllers\Api\V1\PlatformNotificationCenterController::class, 'index'])
+            Route::get('/platform/notifications', [PlatformNotificationCenterController::class, 'index'])
                 ->middleware('throttle:120,1');
         });
 
         Route::middleware(['platform.permission:platform.support.manage'])->group(function () {
-            Route::patch('/platform/support/tickets/{id}', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'updateTicket'])
+            Route::patch('/platform/support/tickets/{id}', [PlatformSupportController::class, 'updateTicket'])
                 ->whereNumber('id')
                 ->middleware('throttle:60,1');
-            Route::patch('/platform/support/tickets/{id}/status', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'changeStatus'])
+            Route::patch('/platform/support/tickets/{id}/status', [PlatformSupportController::class, 'changeStatus'])
                 ->whereNumber('id')
                 ->middleware('throttle:60,1');
-            Route::post('/platform/support/tickets/{id}/replies', [\App\Http\Controllers\Api\V1\PlatformSupportController::class, 'storeReply'])
+            Route::post('/platform/support/tickets/{id}/replies', [PlatformSupportController::class, 'storeReply'])
                 ->whereNumber('id')
                 ->middleware('throttle:60,1');
         });
 
         Route::prefix('reporting')->group(function () {
             Route::middleware(['platform.permission:platform.reporting.read'])->group(function () {
-                Route::get('/v1/platform/pulse-summary', [\App\Http\Controllers\Api\V1\Reporting\PlatformReportingController::class, 'pulseSummary']);
+                Route::get('/v1/platform/pulse-summary', [PlatformReportingController::class, 'pulseSummary']);
             });
             Route::middleware(['platform.permission:platform.reporting.export'])->group(function () {
-                Route::get('/v1/platform/pulse-summary/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'platformPulseSummary']);
+                Route::get('/v1/platform/pulse-summary/export', [ReportingExportController::class, 'platformPulseSummary']);
             });
         });
     });
 
     Route::middleware(['auth:sanctum', 'permission:phone_registration.flow'])->group(function () {
-        Route::post('/auth/complete-account-type', [\App\Http\Controllers\Api\V1\Auth\PhoneRegistrationFlowController::class, 'completeAccountType']);
-        Route::post('/auth/complete-individual-profile', [\App\Http\Controllers\Api\V1\Auth\PhoneRegistrationFlowController::class, 'completeIndividualProfile']);
-        Route::post('/auth/complete-company-profile', [\App\Http\Controllers\Api\V1\Auth\PhoneRegistrationFlowController::class, 'completeCompanyProfile']);
+        Route::post('/auth/complete-account-type', [PhoneRegistrationFlowController::class, 'completeAccountType']);
+        Route::post('/auth/complete-individual-profile', [PhoneRegistrationFlowController::class, 'completeIndividualProfile']);
+        Route::post('/auth/complete-company-profile', [PhoneRegistrationFlowController::class, 'completeCompanyProfile']);
     });
 
     /**
      * QA — نفس حزمة الوسائط الإدارية: اشتراك فوري + نطاق فرع (بدون استثناء صامت).
      */
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription', 'permission:users.update'])->group(function () {
-        Route::post('/internal/run-tests', [\App\Http\Controllers\Api\V1\Internal\QaValidationController::class, 'run'])->name('internal.qa.run-tests');
-        Route::get('/internal/test-results', [\App\Http\Controllers\Api\V1\Internal\QaValidationController::class, 'results'])->name('internal.qa.test-results');
-        Route::get('/internal/auth/suspicious-login-signals', [\App\Http\Controllers\Api\V1\Internal\AuthSuspiciousLoginSignalsController::class, 'index'])
+        Route::post('/internal/run-tests', [QaValidationController::class, 'run'])->name('internal.qa.run-tests');
+        Route::get('/internal/test-results', [QaValidationController::class, 'results'])->name('internal.qa.test-results');
+        Route::get('/internal/auth/suspicious-login-signals', [AuthSuspiciousLoginSignalsController::class, 'index'])
             ->name('internal.auth.suspicious-login-signals');
     });
 
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->group(function () {
 
-        Route::get('/dashboard/summary', [\App\Http\Controllers\Api\V1\DashboardController::class, 'summary']);
+        Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
         /** قدرات النظام — قراءة فقط، مُقيّد بالمستأجر والدور؛ يحد من إساءة الاستخدام */
-        Route::get('/system/capabilities', [\App\Http\Controllers\Api\V1\SystemCapabilitiesController::class, 'index'])
+        Route::get('/system/capabilities', [SystemCapabilitiesController::class, 'index'])
             ->middleware('throttle:120,1');
-        Route::get('/onboarding/setup-status', [\App\Http\Controllers\Api\V1\OnboardingController::class, 'setupStatus']);
+        Route::get('/onboarding/setup-status', [OnboardingController::class, 'setupStatus']);
 
         /** Phase 1 intelligence — inspection only (feature-flagged, admin). */
         Route::prefix('internal')->middleware('intelligent.internal')->group(function () {
-            Route::get('/domain-events', [\App\Http\Controllers\Api\V1\Internal\DomainEventInspectionController::class, 'index']);
+            Route::get('/domain-events', [DomainEventInspectionController::class, 'index']);
         });
 
         /** Phase 2 — read-only analytics (master + per-endpoint flags, admin). */
         Route::prefix('internal')->middleware(['intelligent.internal', 'intelligent.phase2'])->group(function () {
-            Route::get('/intelligence/overview', [\App\Http\Controllers\Api\V1\Internal\Phase2IntelligenceController::class, 'overview']);
-            Route::get('/intelligence/insights', [\App\Http\Controllers\Api\V1\Internal\Phase2IntelligenceController::class, 'insights']);
-            Route::get('/intelligence/recommendations', [\App\Http\Controllers\Api\V1\Internal\Phase2IntelligenceController::class, 'recommendations']);
-            Route::get('/intelligence/alerts', [\App\Http\Controllers\Api\V1\Internal\Phase2IntelligenceController::class, 'alerts']);
-            Route::get('/intelligence/command-center', [\App\Http\Controllers\Api\V1\Internal\Phase2IntelligenceController::class, 'commandCenter']);
-            Route::post('/intelligence/command-center/governance', [\App\Http\Controllers\Api\V1\Internal\CommandCenterGovernanceController::class, 'store']);
-            Route::get('/intelligence/command-center/governance/history', [\App\Http\Controllers\Api\V1\Internal\CommandCenterGovernanceController::class, 'history']);
+            Route::get('/intelligence/overview', [Phase2IntelligenceController::class, 'overview']);
+            Route::get('/intelligence/insights', [Phase2IntelligenceController::class, 'insights']);
+            Route::get('/intelligence/recommendations', [Phase2IntelligenceController::class, 'recommendations']);
+            Route::get('/intelligence/alerts', [Phase2IntelligenceController::class, 'alerts']);
+            Route::get('/intelligence/command-center', [Phase2IntelligenceController::class, 'commandCenter']);
+            Route::post('/intelligence/command-center/governance', [CommandCenterGovernanceController::class, 'store']);
+            Route::get('/intelligence/command-center/governance/history', [CommandCenterGovernanceController::class, 'history']);
         });
 
-        Route::get('/companies/{id}/profile', [\App\Http\Controllers\Api\V1\CompanyProfileController::class, 'show'])
+        Route::get('/companies/{id}/profile', [CompanyProfileController::class, 'show'])
             ->whereNumber('id');
-        Route::get('/platform/announcement-banner', [\App\Http\Controllers\Api\V1\PlatformAnnouncementBannerController::class, 'show']);
-        Route::apiResource('companies', \App\Http\Controllers\Api\V1\CompanyController::class);
-        Route::post('/companies/{id}/logo',           [\App\Http\Controllers\Api\V1\CompanyController::class, 'uploadLogo']);
-        Route::post('/companies/{id}/signature',      [\App\Http\Controllers\Api\V1\CompanyController::class, 'uploadSignature']);
-        Route::delete('/companies/{id}/signature',    [\App\Http\Controllers\Api\V1\CompanyController::class, 'deleteSignature']);
-        Route::post('/companies/{id}/stamp',          [\App\Http\Controllers\Api\V1\CompanyController::class, 'uploadStamp']);
-        Route::delete('/companies/{id}/stamp',        [\App\Http\Controllers\Api\V1\CompanyController::class, 'deleteStamp']);
-        Route::get('/companies/{id}/settings',        [\App\Http\Controllers\Api\V1\CompanyController::class, 'getSettings']);
-        Route::patch('/companies/{id}/settings',      [\App\Http\Controllers\Api\V1\CompanyController::class, 'updateSettings']);
-        Route::post('/companies/{id}/settings/test-channel', [\App\Http\Controllers\Api\V1\CompanyController::class, 'testIntegrationChannel'])
+        Route::get('/platform/announcement-banner', [PlatformAnnouncementBannerController::class, 'show']);
+        Route::apiResource('companies', CompanyController::class);
+        Route::post('/companies/{id}/logo', [CompanyController::class, 'uploadLogo']);
+        Route::post('/companies/{id}/signature', [CompanyController::class, 'uploadSignature']);
+        Route::delete('/companies/{id}/signature', [CompanyController::class, 'deleteSignature']);
+        Route::post('/companies/{id}/stamp', [CompanyController::class, 'uploadStamp']);
+        Route::delete('/companies/{id}/stamp', [CompanyController::class, 'deleteStamp']);
+        Route::get('/companies/{id}/settings', [CompanyController::class, 'getSettings']);
+        Route::patch('/companies/{id}/settings', [CompanyController::class, 'updateSettings']);
+        Route::post('/companies/{id}/settings/test-channel', [CompanyController::class, 'testIntegrationChannel'])
             ->middleware('permission:users.update');
-        Route::post('/companies/{id}/pos/test-connection', [\App\Http\Controllers\Api\V1\CompanyController::class, 'testPosConnection'])
+        Route::post('/companies/{id}/pos/test-connection', [CompanyController::class, 'testPosConnection'])
             ->middleware(['permission:users.update', 'throttle:20,1']);
-        Route::get('/companies/{id}/feature-profile', [\App\Http\Controllers\Api\V1\CompanyController::class, 'featureProfile']);
-        Route::patch('/companies/{id}/feature-profile', [\App\Http\Controllers\Api\V1\CompanyController::class, 'updateFeatureProfile']);
-        Route::get('/companies/{id}/navigation-visibility', [\App\Http\Controllers\Api\V1\CompanyController::class, 'navigationVisibility']);
-        Route::patch('/companies/{id}/navigation-visibility', [\App\Http\Controllers\Api\V1\CompanyController::class, 'updateNavigationVisibility']);
-        Route::patch('/companies/{id}/vertical-profile', [\App\Http\Controllers\Api\V1\CompanyController::class, 'assignVerticalProfile'])
+        Route::get('/companies/{id}/feature-profile', [CompanyController::class, 'featureProfile']);
+        Route::patch('/companies/{id}/feature-profile', [CompanyController::class, 'updateFeatureProfile']);
+        Route::get('/companies/{id}/navigation-visibility', [CompanyController::class, 'navigationVisibility']);
+        Route::patch('/companies/{id}/navigation-visibility', [CompanyController::class, 'updateNavigationVisibility']);
+        Route::patch('/companies/{id}/vertical-profile', [CompanyController::class, 'assignVerticalProfile'])
             ->middleware('permission:config_profiles.manage');
-        Route::get('/companies/{id}/effective-config', [\App\Http\Controllers\Api\V1\CompanyController::class, 'effectiveConfig'])
+        Route::get('/companies/{id}/effective-config', [CompanyController::class, 'effectiveConfig'])
             ->middleware('permission:config_profiles.view');
-        Route::apiResource('branches',   \App\Http\Controllers\Api\V1\BranchController::class);
-        Route::patch('/branches/{id}/vertical-profile', [\App\Http\Controllers\Api\V1\BranchController::class, 'assignVerticalProfile'])
+        Route::apiResource('branches', BranchController::class);
+        Route::patch('/branches/{id}/vertical-profile', [BranchController::class, 'assignVerticalProfile'])
             ->middleware('permission:config_profiles.manage');
-        Route::get('/branches/{id}/effective-config', [\App\Http\Controllers\Api\V1\BranchController::class, 'effectiveConfig'])
+        Route::get('/branches/{id}/effective-config', [BranchController::class, 'effectiveConfig'])
             ->middleware('permission:config_profiles.view');
-        Route::apiResource('users',      \App\Http\Controllers\Api\V1\UserController::class);
+        Route::apiResource('users', UserController::class);
 
         // ── Notifications / Sharing ──
-        Route::post('/notifications/share-email', [\App\Http\Controllers\Api\V1\NotificationController::class, 'shareEmail'])
+        Route::post('/notifications/share-email', [NotificationController::class, 'shareEmail'])
             ->middleware('permission:users.update');
-        Route::post('/notifications/track-share', [\App\Http\Controllers\Api\V1\NotificationController::class, 'trackShare'])
+        Route::post('/notifications/track-share', [NotificationController::class, 'trackShare'])
             ->middleware('permission:users.update');
 
         Route::middleware('permission:users.update')->group(function () {
-            Route::get('/roles/{id}/assign',  [\App\Http\Controllers\Api\V1\RoleController::class, 'assign']);
-            Route::post('/roles/{id}/assign', [\App\Http\Controllers\Api\V1\RoleController::class, 'assign']);
-            Route::apiResource('roles',       \App\Http\Controllers\Api\V1\RoleController::class);
-            Route::get('/permissions',        [\App\Http\Controllers\Api\V1\PermissionController::class, 'index']);
-            Route::get('/permissions/my',     [\App\Http\Controllers\Api\V1\PermissionController::class, 'my']);
+            Route::get('/roles/{id}/assign', [RoleController::class, 'assign']);
+            Route::post('/roles/{id}/assign', [RoleController::class, 'assign']);
+            Route::apiResource('roles', RoleController::class);
+            Route::get('/permissions', [PermissionController::class, 'index']);
+            Route::get('/permissions/my', [PermissionController::class, 'my']);
         });
 
         Route::prefix('subscriptions')->group(function () {
-            Route::get('/',        [\App\Http\Controllers\Api\V1\SubscriptionController::class, 'index'])
+            Route::get('/', [SubscriptionController::class, 'index'])
                 ->middleware('permission:subscriptions.view');
-            Route::get('/current', [\App\Http\Controllers\Api\V1\SubscriptionController::class, 'current'])
+            Route::get('/current', [SubscriptionController::class, 'current'])
                 ->middleware('permission:subscriptions.view');
-            Route::post('/renew',  [\App\Http\Controllers\Api\V1\SubscriptionController::class, 'renew'])
+            Route::post('/renew', [SubscriptionController::class, 'renew'])
                 ->middleware('permission:subscriptions.manage');
         });
 
-        Route::post('/customers', [\App\Http\Controllers\Api\V1\CustomerController::class, 'store'])
+        Route::post('/customers', [CustomerController::class, 'store'])
             ->middleware('permission:customers.create');
-        Route::put('/customers/{customer}', [\App\Http\Controllers\Api\V1\CustomerController::class, 'update'])
+        Route::put('/customers/{customer}', [CustomerController::class, 'update'])
             ->middleware('permission:customers.update');
-        Route::delete('/customers/{customer}', [\App\Http\Controllers\Api\V1\CustomerController::class, 'destroy'])
+        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])
             ->middleware('permission:customers.delete');
-        Route::get('/customers/{id}/profile', [\App\Http\Controllers\Api\V1\CustomerProfileController::class, 'show'])
+        Route::get('/customers/{id}/profile', [CustomerProfileController::class, 'show'])
             ->whereNumber('id')
             ->middleware('permission:customers.view');
-        Route::apiResource('customers', \App\Http\Controllers\Api\V1\CustomerController::class)->only(['index', 'show']);
+        Route::apiResource('customers', CustomerController::class)->only(['index', 'show']);
 
-        Route::post('/vehicles', [\App\Http\Controllers\Api\V1\VehicleController::class, 'store'])
+        Route::post('/vehicles', [VehicleController::class, 'store'])
             ->middleware('permission:vehicles.create');
-        Route::get('/vehicles/resolve-plate', [\App\Http\Controllers\Api\V1\VehicleController::class, 'resolvePlate'])
+        Route::get('/vehicles/resolve-plate', [VehicleController::class, 'resolvePlate'])
             ->middleware('permission:vehicles.view');
-        Route::put('/vehicles/{vehicle}', [\App\Http\Controllers\Api\V1\VehicleController::class, 'update'])
+        Route::put('/vehicles/{vehicle}', [VehicleController::class, 'update'])
             ->middleware('permission:vehicles.update');
-        Route::delete('/vehicles/{vehicle}', [\App\Http\Controllers\Api\V1\VehicleController::class, 'destroy'])
+        Route::delete('/vehicles/{vehicle}', [VehicleController::class, 'destroy'])
             ->middleware('permission:vehicles.delete');
-        Route::apiResource('vehicles',  \App\Http\Controllers\Api\V1\VehicleController::class)->only(['index', 'show']);
-        Route::get('vehicles/{id}/digital-card', [\App\Http\Controllers\Api\V1\VehicleController::class, 'digitalCard']);
-        Route::post('/vehicle-identity/resolve', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'resolve']);
-        Route::post('/vehicles/{id}/identity/rotate', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'rotate'])
+        Route::apiResource('vehicles', VehicleController::class)->only(['index', 'show']);
+        Route::get('vehicles/{id}/digital-card', [VehicleController::class, 'digitalCard']);
+        Route::post('/vehicle-identity/resolve', [VehicleIdentityController::class, 'resolve']);
+        Route::post('/vehicles/{id}/identity/rotate', [VehicleIdentityController::class, 'rotate'])
             ->middleware('permission:vehicles.update');
-        Route::post('/vehicles/{id}/identity/revoke', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'revoke'])
+        Route::post('/vehicles/{id}/identity/revoke', [VehicleIdentityController::class, 'revoke'])
             ->middleware('permission:vehicles.update');
-        Route::post('/vehicles/{id}/identity/issue', [\App\Http\Controllers\Api\V1\VehicleIdentityController::class, 'issue'])
+        Route::post('/vehicles/{id}/identity/issue', [VehicleIdentityController::class, 'issue'])
             ->middleware('permission:vehicles.update');
-        Route::delete('/services/{service}', [\App\Http\Controllers\Api\V1\ServiceController::class, 'destroy'])
+        Route::delete('/services/{service}', [ServiceController::class, 'destroy'])
             ->middleware('permission:users.update');
-        Route::apiResource('services',  \App\Http\Controllers\Api\V1\ServiceController::class)->except(['destroy']);
-        Route::delete('/bundles/{bundle}', [\App\Http\Controllers\Api\V1\BundleController::class, 'destroy'])
+        Route::apiResource('services', ServiceController::class)->except(['destroy']);
+        Route::delete('/bundles/{bundle}', [BundleController::class, 'destroy'])
             ->middleware('permission:users.update');
-        Route::apiResource('bundles',   \App\Http\Controllers\Api\V1\BundleController::class)->except(['destroy']);
+        Route::apiResource('bundles', BundleController::class)->except(['destroy']);
 
-        Route::get('/customer-groups', [\App\Http\Controllers\Api\V1\CustomerGroupController::class, 'index'])
+        Route::get('/customer-groups', [CustomerGroupController::class, 'index'])
             ->middleware('permission:customer_groups.view');
-        Route::post('/customer-groups', [\App\Http\Controllers\Api\V1\CustomerGroupController::class, 'store'])
+        Route::post('/customer-groups', [CustomerGroupController::class, 'store'])
             ->middleware('permission:customer_groups.manage');
-        Route::put('/customer-groups/{id}', [\App\Http\Controllers\Api\V1\CustomerGroupController::class, 'update'])
+        Route::put('/customer-groups/{id}', [CustomerGroupController::class, 'update'])
             ->middleware('permission:customer_groups.manage');
-        Route::delete('/customer-groups/{id}', [\App\Http\Controllers\Api\V1\CustomerGroupController::class, 'destroy'])
+        Route::delete('/customer-groups/{id}', [CustomerGroupController::class, 'destroy'])
             ->middleware('permission:customer_groups.manage');
 
-        Route::get('/service-pricing-policies', [\App\Http\Controllers\Api\V1\ServicePricingPolicyController::class, 'index'])
+        Route::get('/service-pricing-policies', [ServicePricingPolicyController::class, 'index'])
             ->middleware('permission:pricing_policies.view');
-        Route::post('/service-pricing-policies', [\App\Http\Controllers\Api\V1\ServicePricingPolicyController::class, 'store'])
+        Route::post('/service-pricing-policies', [ServicePricingPolicyController::class, 'store'])
             ->middleware('permission:pricing_policies.manage');
-        Route::put('/service-pricing-policies/{id}', [\App\Http\Controllers\Api\V1\ServicePricingPolicyController::class, 'update'])
+        Route::put('/service-pricing-policies/{id}', [ServicePricingPolicyController::class, 'update'])
             ->middleware('permission:pricing_policies.manage');
-        Route::delete('/service-pricing-policies/{id}', [\App\Http\Controllers\Api\V1\ServicePricingPolicyController::class, 'destroy'])
+        Route::delete('/service-pricing-policies/{id}', [ServicePricingPolicyController::class, 'destroy'])
             ->middleware('permission:pricing_policies.manage');
 
         Route::prefix('work-orders')->group(function () {
-            Route::get('/intake-lookup', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'intakeLookup'])
+            Route::get('/intake-lookup', [WorkOrderController::class, 'intakeLookup'])
                 ->middleware('permission:work_orders.view');
-            Route::post('/intake-lookup-camera', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'intakeLookupCamera'])
+            Route::post('/intake-lookup-camera', [WorkOrderController::class, 'intakeLookupCamera'])
                 ->middleware('permission:work_orders.view');
-            Route::post('/intake-odometer-ocr', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'intakeOdometerOcr'])
+            Route::post('/intake-odometer-ocr', [WorkOrderController::class, 'intakeOdometerOcr'])
                 ->middleware('permission:work_orders.view');
-            Route::post('/line-pricing-preview', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'linePricingPreview'])
+            Route::post('/line-pricing-preview', [WorkOrderController::class, 'linePricingPreview'])
                 ->middleware('permission:work_orders.view');
-            Route::get('/',              [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'index'])
+            Route::get('/', [WorkOrderController::class, 'index'])
                 ->middleware('permission:work_orders.view');
-            Route::post('/',             [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'store'])
+            Route::post('/', [WorkOrderController::class, 'store'])
                 ->middleware('permission:work_orders.create');
-            Route::post('/bulk', [\App\Http\Controllers\Api\V1\WorkOrderBulkController::class, 'store'])
+            Route::post('/bulk', [WorkOrderBulkController::class, 'store'])
                 ->middleware('permission:work_orders.create');
-            Route::get('/batches/{batchUuid}', [\App\Http\Controllers\Api\V1\WorkOrderBulkController::class, 'showBatch'])
+            Route::get('/batches/{batchUuid}', [WorkOrderBulkController::class, 'showBatch'])
                 ->where('batchUuid', '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
                 ->middleware('permission:work_orders.view');
-            Route::post('/batches',      [\App\Http\Controllers\Api\V1\WorkOrderBatchController::class, 'store'])
+            Route::post('/batches', [WorkOrderBatchController::class, 'store'])
                 ->middleware('permission:work_orders.create');
-            Route::get('/{id}/pdf', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'downloadPdf'])
+            Route::get('/{id}/pdf', [WorkOrderController::class, 'downloadPdf'])
                 ->middleware('permission:work_orders.view');
-            Route::get('/{id}/share-links', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'shareLinks'])
+            Route::get('/{id}/share-links', [WorkOrderController::class, 'shareLinks'])
                 ->middleware('permission:work_orders.view');
-            Route::post('/{id}/share-email', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'shareEmail'])
+            Route::post('/{id}/share-email', [WorkOrderController::class, 'shareEmail'])
                 ->middleware('permission:work_orders.view');
-            Route::post('/{id}/share-whatsapp-driver', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'shareWhatsAppDriver'])
+            Route::post('/{id}/share-whatsapp-driver', [WorkOrderController::class, 'shareWhatsAppDriver'])
                 ->middleware('permission:work_orders.view');
-            Route::post('/{id}/service-media', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'uploadServiceMedia'])
+            Route::post('/{id}/service-media', [WorkOrderController::class, 'uploadServiceMedia'])
                 ->middleware('permission:work_orders.update');
-            Route::patch('/{id}/execution-report', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'updateExecutionReport'])
+            Route::patch('/{id}/execution-report', [WorkOrderController::class, 'updateExecutionReport'])
                 ->middleware('permission:work_orders.update');
-            Route::get('/{id}',          [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'show'])
+            Route::get('/{id}', [WorkOrderController::class, 'show'])
                 ->middleware('permission:work_orders.view');
-            Route::put('/{id}',          [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'update'])
+            Route::put('/{id}', [WorkOrderController::class, 'update'])
                 ->middleware('permission:work_orders.update');
-            Route::patch('/{id}/status', [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'updateStatus'])
+            Route::patch('/{id}/status', [WorkOrderController::class, 'updateStatus'])
                 ->middleware('permission:work_orders.update');
-            Route::post('/{id}/cancellation-requests', [\App\Http\Controllers\Api\V1\WorkOrderCancellationRequestController::class, 'store'])
+            Route::post('/{id}/cancellation-requests', [WorkOrderCancellationRequestController::class, 'store'])
                 ->middleware('permission:work_orders.update');
-            Route::delete('/{id}',       [\App\Http\Controllers\Api\V1\WorkOrderController::class, 'destroy'])
+            Route::delete('/{id}', [WorkOrderController::class, 'destroy'])
                 ->middleware('permission:work_orders.delete');
         });
 
-        Route::post('/work-order-cancellation-requests/{id}/approve', [\App\Http\Controllers\Api\V1\WorkOrderCancellationRequestController::class, 'approve'])
+        Route::post('/work-order-cancellation-requests/{id}/approve', [WorkOrderCancellationRequestController::class, 'approve'])
             ->middleware('permission:work_orders.update');
-        Route::post('/work-order-cancellation-requests/{id}/reject', [\App\Http\Controllers\Api\V1\WorkOrderCancellationRequestController::class, 'reject'])
+        Route::post('/work-order-cancellation-requests/{id}/reject', [WorkOrderCancellationRequestController::class, 'reject'])
             ->middleware('permission:work_orders.update');
 
-        Route::post('/sensitive-operations/preview', [\App\Http\Controllers\Api\V1\SensitiveOperationPreviewController::class, 'preview'])
+        Route::post('/sensitive-operations/preview', [SensitiveOperationPreviewController::class, 'preview'])
             ->middleware('permission:work_orders.view');
 
         Route::middleware('idempotent')->group(function () {
-            Route::post('/invoices',      [\App\Http\Controllers\Api\V1\InvoiceController::class, 'store'])
+            Route::post('/invoices', [InvoiceController::class, 'store'])
                 ->middleware('permission:invoices.create');
-            Route::post('/invoices/{id}/pay', [\App\Http\Controllers\Api\V1\InvoiceController::class, 'pay'])
+            Route::post('/invoices/{id}/pay', [InvoiceController::class, 'pay'])
                 ->middleware('permission:invoices.update');
-            Route::post('/pos/sale',      [\App\Http\Controllers\Api\V1\POSController::class, 'sale'])
+            Route::post('/pos/sale', [POSController::class, 'sale'])
                 ->middleware('permission:invoices.create');
-            Route::post('/invoices/from-work-order/{workOrderId}', [\App\Http\Controllers\Api\V1\InvoiceController::class, 'fromWorkOrder'])
+            Route::post('/invoices/from-work-order/{workOrderId}', [InvoiceController::class, 'fromWorkOrder'])
                 ->middleware('permission:invoices.create');
         });
 
-        Route::get('/invoices', [\App\Http\Controllers\Api\V1\InvoiceController::class, 'index'])
+        Route::get('/invoices', [InvoiceController::class, 'index'])
             ->middleware('permission:invoices.view');
-        Route::get('/invoices/{invoice}', [\App\Http\Controllers\Api\V1\InvoiceController::class, 'show'])
+        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])
             ->middleware('permission:invoices.view');
-        Route::get('/invoices/{invoice}/pdf', [\App\Http\Controllers\Api\V1\InvoiceController::class, 'pdf'])
+        Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])
             ->middleware('permission:invoices.view');
-        Route::put('/invoices/{invoice}', [\App\Http\Controllers\Api\V1\InvoiceController::class, 'update'])
+        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])
             ->middleware('permission:invoices.update');
-        Route::patch('/invoices/{invoice}', [\App\Http\Controllers\Api\V1\InvoiceController::class, 'update'])
+        Route::patch('/invoices/{invoice}', [InvoiceController::class, 'update'])
             ->middleware('permission:invoices.update');
-        Route::delete('/invoices/{invoice}', [\App\Http\Controllers\Api\V1\InvoiceController::class, 'destroy'])
+        Route::delete('/invoices/{invoice}', [InvoiceController::class, 'destroy'])
             ->middleware('permission:invoices.delete');
-        Route::post('/invoices/{id}/media', [\App\Http\Controllers\Api\V1\InvoiceController::class, 'uploadMedia'])
+        Route::post('/invoices/{id}/media', [InvoiceController::class, 'uploadMedia'])
             ->middleware('permission:invoices.update');
 
         /** استخراج بيانات من صورة فاتورة (OCR) — لمن يُنشئ فواتير دون صلاحية users.update */
-        Route::post('/invoices/ocr-extract', [\App\Http\Controllers\Api\V1\OcrController::class, 'scanInvoice'])
+        Route::post('/invoices/ocr-extract', [OcrController::class, 'scanInvoice'])
             ->middleware('permission:invoices.create');
 
         Route::prefix('wallet')->group(function () {
-            Route::get('/',                           [\App\Http\Controllers\Api\V1\WalletController::class, 'show'])
+            Route::get('/', [WalletController::class, 'show'])
                 ->middleware('permission:invoices.view');
-            Route::get('/transactions',               [\App\Http\Controllers\Api\V1\WalletController::class, 'transactions'])
+            Route::get('/transactions', [WalletController::class, 'transactions'])
                 ->middleware('permission:invoices.view');
             Route::middleware('idempotent')->group(function () {
-                Route::post('/top-up',              [\App\Http\Controllers\Api\V1\WalletController::class, 'topUp'])
+                Route::post('/top-up', [WalletController::class, 'topUp'])
                     ->middleware('permission:invoices.update');
-                Route::post('/transfer',             [\App\Http\Controllers\Api\V1\WalletController::class, 'transfer'])
+                Route::post('/transfer', [WalletController::class, 'transfer'])
                     ->middleware('permission:invoices.update');
             });
-            Route::post('/transactions/{id}/reverse', [\App\Http\Controllers\Api\V1\WalletController::class, 'reverse'])
+            Route::post('/transactions/{id}/reverse', [WalletController::class, 'reverse'])
                 ->middleware('permission:invoices.update');
         });
 
         /** طلبات شحن المحفظة — اعتماد الإدارة قبل إضافة الرصيد */
         Route::prefix('wallet-top-up-requests')->group(function () {
-            Route::post('/', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'store'])
+            Route::post('/', [WalletTopUpRequestController::class, 'store'])
                 ->middleware('permission:wallet.top_up_requests.create');
-            Route::get('/my', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'my'])
+            Route::get('/my', [WalletTopUpRequestController::class, 'my'])
                 ->middleware('permission:wallet.top_up_requests.view');
-            Route::get('/{id}/receipt', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'receipt']);
-            Route::get('/{id}/transfer-instructions', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'transferInstructions']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'show']);
-            Route::patch('/{id}', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'update'])
+            Route::get('/{id}/receipt', [WalletTopUpRequestController::class, 'receipt']);
+            Route::get('/{id}/transfer-instructions', [WalletTopUpRequestController::class, 'transferInstructions']);
+            Route::get('/{id}', [WalletTopUpRequestController::class, 'show']);
+            Route::patch('/{id}', [WalletTopUpRequestController::class, 'update'])
                 ->middleware('permission:wallet.top_up_requests.create');
-            Route::post('/{id}/resubmit', [\App\Http\Controllers\Api\V1\WalletTopUpRequestController::class, 'resubmit'])
+            Route::post('/{id}/resubmit', [WalletTopUpRequestController::class, 'resubmit'])
                 ->middleware('permission:wallet.top_up_requests.create');
         });
 
         Route::prefix('admin/wallet-top-up-requests')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\AdminWalletTopUpRequestController::class, 'index'])
+            Route::get('/', [AdminWalletTopUpRequestController::class, 'index'])
                 ->middleware('permission:wallet.top_up_requests.review');
-            Route::post('/{id}/approve', [\App\Http\Controllers\Api\V1\AdminWalletTopUpRequestController::class, 'approve'])
+            Route::post('/{id}/approve', [AdminWalletTopUpRequestController::class, 'approve'])
                 ->middleware('permission:wallet.top_up_requests.review');
-            Route::post('/{id}/reject', [\App\Http\Controllers\Api\V1\AdminWalletTopUpRequestController::class, 'reject'])
+            Route::post('/{id}/reject', [AdminWalletTopUpRequestController::class, 'reject'])
                 ->middleware('permission:wallet.top_up_requests.review');
-            Route::post('/{id}/return', [\App\Http\Controllers\Api\V1\AdminWalletTopUpRequestController::class, 'returnForRevision'])
+            Route::post('/{id}/return', [AdminWalletTopUpRequestController::class, 'returnForRevision'])
                 ->middleware('permission:wallet.top_up_requests.review');
         });
 
         Route::prefix('payments')->group(function () {
-            Route::get('/invoice/{invoiceId}', [\App\Http\Controllers\Api\V1\WalletController::class, 'paymentsByInvoice'])
+            Route::get('/invoice/{invoiceId}', [WalletController::class, 'paymentsByInvoice'])
                 ->middleware('permission:invoices.view');
-            Route::post('/{id}/refund',        [\App\Http\Controllers\Api\V1\WalletController::class, 'refundPayment'])
+            Route::post('/{id}/refund', [WalletController::class, 'refundPayment'])
                 ->middleware(['idempotent', 'permission:invoices.update']);
         });
 
-        Route::delete('/products/{product}', [\App\Http\Controllers\Api\V1\ProductController::class, 'destroy'])
+        Route::delete('/products/{product}', [ProductController::class, 'destroy'])
             ->middleware('permission:products.delete');
-        Route::apiResource('products',  \App\Http\Controllers\Api\V1\ProductController::class)->except(['destroy']);
-        Route::post('/quotes', [\App\Http\Controllers\Api\V1\QuoteController::class, 'store'])
+        Route::apiResource('products', ProductController::class)->except(['destroy']);
+        Route::post('/quotes', [QuoteController::class, 'store'])
             ->middleware('permission:users.update');
-        Route::put('/quotes/{quote}', [\App\Http\Controllers\Api\V1\QuoteController::class, 'update'])
+        Route::put('/quotes/{quote}', [QuoteController::class, 'update'])
             ->middleware('permission:users.update');
-        Route::delete('/quotes/{quote}', [\App\Http\Controllers\Api\V1\QuoteController::class, 'destroy'])
+        Route::delete('/quotes/{quote}', [QuoteController::class, 'destroy'])
             ->middleware('permission:users.update');
-        Route::apiResource('quotes',    \App\Http\Controllers\Api\V1\QuoteController::class)->only(['index', 'show']);
-        Route::get('/nps',              [\App\Http\Controllers\Api\V1\NpsController::class, 'index']);
-        Route::post('/nps',             [\App\Http\Controllers\Api\V1\NpsController::class, 'store'])
+        Route::apiResource('quotes', QuoteController::class)->only(['index', 'show']);
+        Route::get('/nps', [NpsController::class, 'index']);
+        Route::post('/nps', [NpsController::class, 'store'])
             ->middleware('permission:users.update');
-        Route::get('/warranty-items',   fn(\Illuminate\Http\Request $r) => response()->json(['data' => \App\Models\WarrantyItem::where('company_id', $r->user()->company_id)->orderByDesc('warranty_end')->paginate(20)]));
-        Route::get('/service-reminders',fn(\Illuminate\Http\Request $r) => response()->json(['data' => \App\Models\ServiceReminder::where('company_id', $r->user()->company_id)->orderBy('next_service_date')->paginate(20)]));
+        Route::get('/warranty-items', fn (Request $r) => response()->json(['data' => WarrantyItem::where('company_id', $r->user()->company_id)->orderByDesc('warranty_end')->paginate(20)]));
+        Route::get('/service-reminders', fn (Request $r) => response()->json(['data' => ServiceReminder::where('company_id', $r->user()->company_id)->orderBy('next_service_date')->paginate(20)]));
 
         Route::prefix('units')->group(function () {
-            Route::get('/',                [\App\Http\Controllers\Api\V1\UnitController::class, 'index']);
-            Route::post('/',               [\App\Http\Controllers\Api\V1\UnitController::class, 'store']);
-            Route::put('/{id}',            [\App\Http\Controllers\Api\V1\UnitController::class, 'update'])
+            Route::get('/', [UnitController::class, 'index']);
+            Route::post('/', [UnitController::class, 'store']);
+            Route::put('/{id}', [UnitController::class, 'update'])
                 ->middleware('permission:inventory.adjust');
-            Route::delete('/{id}',         [\App\Http\Controllers\Api\V1\UnitController::class, 'destroy'])
+            Route::delete('/{id}', [UnitController::class, 'destroy'])
                 ->middleware('permission:inventory.adjust');
-            Route::get('/conversions',     [\App\Http\Controllers\Api\V1\UnitController::class, 'conversions']);
-            Route::post('/conversions',    [\App\Http\Controllers\Api\V1\UnitController::class, 'storeConversion'])
+            Route::get('/conversions', [UnitController::class, 'conversions']);
+            Route::post('/conversions', [UnitController::class, 'storeConversion'])
                 ->middleware('permission:inventory.adjust');
         });
 
-        Route::post('/suppliers', [\App\Http\Controllers\Api\V1\SupplierController::class, 'store'])
+        Route::post('/suppliers', [SupplierController::class, 'store'])
             ->middleware('permission:suppliers.create');
-        Route::put('/suppliers/{supplier}', [\App\Http\Controllers\Api\V1\SupplierController::class, 'update'])
+        Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])
             ->middleware('permission:suppliers.update');
-        Route::delete('/suppliers/{supplier}', [\App\Http\Controllers\Api\V1\SupplierController::class, 'destroy'])
+        Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])
             ->middleware('permission:suppliers.delete');
-        Route::apiResource('suppliers', \App\Http\Controllers\Api\V1\SupplierController::class)->only(['index', 'show']);
+        Route::apiResource('suppliers', SupplierController::class)->only(['index', 'show']);
 
         Route::middleware(['permission:org_units.view', 'business.feature:org_structure'])->group(function () {
-            Route::get('/org-units', [\App\Http\Controllers\Api\V1\OrgUnitController::class, 'index']);
-            Route::get('/org-units/tree', [\App\Http\Controllers\Api\V1\OrgUnitController::class, 'tree']);
+            Route::get('/org-units', [OrgUnitController::class, 'index']);
+            Route::get('/org-units/tree', [OrgUnitController::class, 'tree']);
         });
-        Route::post('/org-units', [\App\Http\Controllers\Api\V1\OrgUnitController::class, 'store'])
+        Route::post('/org-units', [OrgUnitController::class, 'store'])
             ->middleware(['permission:org_units.create', 'business.feature:org_structure']);
-        Route::put('/org-units/{id}', [\App\Http\Controllers\Api\V1\OrgUnitController::class, 'update'])
+        Route::put('/org-units/{id}', [OrgUnitController::class, 'update'])
             ->middleware(['permission:org_units.update', 'business.feature:org_structure']);
-        Route::delete('/org-units/{id}', [\App\Http\Controllers\Api\V1\OrgUnitController::class, 'destroy'])
+        Route::delete('/org-units/{id}', [OrgUnitController::class, 'destroy'])
             ->middleware(['permission:org_units.delete', 'business.feature:org_structure']);
 
         Route::middleware(['permission:suppliers.view', 'business.feature:supplier_contract_mgmt'])->group(function () {
-            Route::get('/suppliers/{supplierId}/contracts', [\App\Http\Controllers\Api\V1\SupplierContractController::class, 'index']);
-            Route::get('/suppliers/{supplierId}/contracts/{contractId}/download', [\App\Http\Controllers\Api\V1\SupplierContractController::class, 'download']);
+            Route::get('/suppliers/{supplierId}/contracts', [SupplierContractController::class, 'index']);
+            Route::get('/suppliers/{supplierId}/contracts/{contractId}/download', [SupplierContractController::class, 'download']);
         });
-        Route::post('/suppliers/{supplierId}/contracts', [\App\Http\Controllers\Api\V1\SupplierContractController::class, 'store'])
+        Route::post('/suppliers/{supplierId}/contracts', [SupplierContractController::class, 'store'])
             ->middleware(['permission:suppliers.update', 'business.feature:supplier_contract_mgmt']);
-        Route::delete('/suppliers/{supplierId}/contracts/{contractId}', [\App\Http\Controllers\Api\V1\SupplierContractController::class, 'destroy'])
+        Route::delete('/suppliers/{supplierId}/contracts/{contractId}', [SupplierContractController::class, 'destroy'])
             ->middleware(['permission:suppliers.update', 'business.feature:supplier_contract_mgmt']);
 
         Route::prefix('purchase-claims')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\PurchaseClaimController::class, 'index'])
+            Route::get('/', [PurchaseClaimController::class, 'index'])
                 ->middleware('permission:purchases.claims.view');
-            Route::post('/', [\App\Http\Controllers\Api\V1\PurchaseClaimController::class, 'store'])
+            Route::post('/', [PurchaseClaimController::class, 'store'])
                 ->middleware('permission:purchases.claims.create');
-            Route::patch('/{id}/review', [\App\Http\Controllers\Api\V1\PurchaseClaimController::class, 'review'])
+            Route::patch('/{id}/review', [PurchaseClaimController::class, 'review'])
                 ->middleware('permission:purchases.claims.review');
         });
 
         Route::prefix('purchases')->group(function () {
-            Route::get('/',                    [\App\Http\Controllers\Api\V1\PurchaseController::class, 'index']);
-            Route::post('/',                   [\App\Http\Controllers\Api\V1\PurchaseController::class, 'store'])
+            Route::get('/', [PurchaseController::class, 'index']);
+            Route::post('/', [PurchaseController::class, 'store'])
                 ->middleware('permission:purchases.create');
             /** OCR لصور فواتير الموردين — دون صلاحية users.update (مسار الحوكمة القديم) */
-            Route::post('/ocr-extract',        [\App\Http\Controllers\Api\V1\OcrController::class, 'scanInvoice'])
+            Route::post('/ocr-extract', [OcrController::class, 'scanInvoice'])
                 ->middleware('permission:purchases.create');
-            Route::get('/{id}',                [\App\Http\Controllers\Api\V1\PurchaseController::class, 'show']);
-            Route::patch('/{id}/status',       [\App\Http\Controllers\Api\V1\PurchaseController::class, 'updateStatus'])
+            Route::get('/{id}', [PurchaseController::class, 'show']);
+            Route::patch('/{id}/status', [PurchaseController::class, 'updateStatus'])
                 ->middleware('permission:purchases.create');
-            Route::post('/{id}/receive',       [\App\Http\Controllers\Api\V1\PurchaseController::class, 'receive'])
+            Route::post('/{id}/receive', [PurchaseController::class, 'receive'])
                 ->middleware('permission:purchases.create');
-            Route::post('/{id}/documents',     [\App\Http\Controllers\Api\V1\PurchaseController::class, 'uploadDocument'])
+            Route::post('/{id}/documents', [PurchaseController::class, 'uploadDocument'])
                 ->middleware('permission:purchases.create');
-            Route::delete('/{id}/documents/{index}', [\App\Http\Controllers\Api\V1\PurchaseController::class, 'deleteDocument'])
+            Route::delete('/{id}/documents/{index}', [PurchaseController::class, 'deleteDocument'])
                 ->middleware('permission:purchases.create');
-            Route::get('/{id}/receipts',       [\App\Http\Controllers\Api\V1\GoodsReceiptController::class, 'byPurchase']);
-            Route::post('/{id}/receipts',      [\App\Http\Controllers\Api\V1\GoodsReceiptController::class, 'store'])
+            Route::get('/{id}/receipts', [GoodsReceiptController::class, 'byPurchase']);
+            Route::post('/{id}/receipts', [GoodsReceiptController::class, 'store'])
                 ->middleware('permission:purchases.create');
         });
 
         Route::prefix('goods-receipts')->group(function () {
-            Route::get('/',     [\App\Http\Controllers\Api\V1\GoodsReceiptController::class, 'index']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\GoodsReceiptController::class, 'show']);
+            Route::get('/', [GoodsReceiptController::class, 'index']);
+            Route::get('/{id}', [GoodsReceiptController::class, 'show']);
         });
 
         Route::prefix('inventory')->group(function () {
-            Route::get('/',        [\App\Http\Controllers\Api\V1\InventoryController::class, 'index']);
-            Route::get('/movements',  [\App\Http\Controllers\Api\V1\InventoryController::class, 'movements']);
-            Route::post('/adjust', [\App\Http\Controllers\Api\V1\InventoryController::class, 'adjust'])->middleware('idempotent');
-            Route::get('/{id}',    [\App\Http\Controllers\Api\V1\InventoryController::class, 'show']);
+            Route::get('/', [InventoryController::class, 'index']);
+            Route::get('/movements', [InventoryController::class, 'movements']);
+            Route::post('/adjust', [InventoryController::class, 'adjust'])->middleware('idempotent');
+            Route::get('/{id}', [InventoryController::class, 'show']);
 
             Route::prefix('reservations')->group(function () {
-                Route::get('/',                  [\App\Http\Controllers\Api\V1\InventoryController::class, 'reservations']);
-                Route::post('/',                 [\App\Http\Controllers\Api\V1\InventoryController::class, 'createReservation'])
+                Route::get('/', [InventoryController::class, 'reservations']);
+                Route::post('/', [InventoryController::class, 'createReservation'])
                     ->middleware('permission:inventory.adjust');
-                Route::patch('/{id}/consume',    [\App\Http\Controllers\Api\V1\InventoryController::class, 'consumeReservation'])
+                Route::patch('/{id}/consume', [InventoryController::class, 'consumeReservation'])
                     ->middleware('permission:inventory.adjust');
-                Route::patch('/{id}/release',    [\App\Http\Controllers\Api\V1\InventoryController::class, 'releaseReservation'])
+                Route::patch('/{id}/release', [InventoryController::class, 'releaseReservation'])
                     ->middleware('permission:inventory.adjust');
-                Route::patch('/{id}/cancel',     [\App\Http\Controllers\Api\V1\InventoryController::class, 'cancelReservation'])
+                Route::patch('/{id}/cancel', [InventoryController::class, 'cancelReservation'])
                     ->middleware('permission:inventory.adjust');
             });
         });
 
         Route::prefix('wallets')->group(function () {
-            Route::get('/{customerId}/summary',          [\App\Http\Controllers\Api\V1\WalletController::class, 'summary'])
+            Route::get('/{customerId}/summary', [WalletController::class, 'summary'])
                 ->middleware('permission:invoices.view');
-            Route::get('/{walletId}/transactions',       [\App\Http\Controllers\Api\V1\WalletController::class, 'transactions'])
+            Route::get('/{walletId}/transactions', [WalletController::class, 'transactions'])
                 ->middleware('permission:invoices.view');
-            Route::post('/top-up/individual',            [\App\Http\Controllers\Api\V1\WalletController::class, 'topUpIndividual'])
+            Route::post('/top-up/individual', [WalletController::class, 'topUpIndividual'])
                 ->middleware(['idempotent', 'permission:invoices.update']);
-            Route::post('/top-up/fleet',                 [\App\Http\Controllers\Api\V1\WalletController::class, 'topUpFleet'])
+            Route::post('/top-up/fleet', [WalletController::class, 'topUpFleet'])
                 ->middleware(['idempotent', 'permission:invoices.update']);
-            Route::post('/transfer',                     [\App\Http\Controllers\Api\V1\WalletController::class, 'transfer'])
+            Route::post('/transfer', [WalletController::class, 'transfer'])
                 ->middleware(['idempotent', 'permission:invoices.update']);
-            Route::post('/reversal',                     [\App\Http\Controllers\Api\V1\WalletController::class, 'reverse'])
+            Route::post('/reversal', [WalletController::class, 'reverse'])
                 ->middleware(['idempotent', 'permission:invoices.update']);
         });
 
         Route::prefix('api-keys')->middleware('permission:api_keys.manage')->group(function () {
-            Route::get('/',        [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'index']);
-            Route::post('/',       [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'store']);
-            Route::patch('/{id}',  [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'revoke']);
+            Route::get('/', [ApiKeyController::class, 'index']);
+            Route::post('/', [ApiKeyController::class, 'store']);
+            Route::patch('/{id}', [ApiKeyController::class, 'update']);
+            Route::delete('/{id}', [ApiKeyController::class, 'revoke']);
         });
 
         Route::prefix('webhooks')->middleware('permission:webhooks.manage')->group(function () {
-            Route::get('/',                 [\App\Http\Controllers\Api\V1\WebhookController::class, 'index']);
-            Route::post('/',                [\App\Http\Controllers\Api\V1\WebhookController::class, 'store']);
-            Route::delete('/{id}',          [\App\Http\Controllers\Api\V1\WebhookController::class, 'destroy']);
-            Route::get('/{id}/deliveries',  [\App\Http\Controllers\Api\V1\WebhookController::class, 'deliveries']);
+            Route::get('/', [WebhookController::class, 'index']);
+            Route::post('/', [WebhookController::class, 'store']);
+            Route::delete('/{id}', [WebhookController::class, 'destroy']);
+            Route::get('/{id}/deliveries', [WebhookController::class, 'deliveries']);
         });
 
-        Route::get('/api-usage-logs', function (\Illuminate\Http\Request $request) {
-            $logs = \App\Models\ApiUsageLog::where('company_id', $request->user()->company_id)
-                ->when($request->api_key_id, fn($q) => $q->where('api_key_id', $request->api_key_id))
+        Route::get('/api-usage-logs', function (Request $request) {
+            $logs = ApiUsageLog::where('company_id', $request->user()->company_id)
+                ->when($request->api_key_id, fn ($q) => $q->where('api_key_id', $request->api_key_id))
                 ->orderByDesc('id')
                 ->paginate($request->integer('per_page', 50));
+
             return response()->json(['data' => $logs, 'trace_id' => app('trace_id')]);
         });
 
         // Alias for frontend dashboard
-        Route::get('/dashboard/kpi', [\App\Http\Controllers\Api\V1\ReportController::class, 'kpi']);
+        Route::get('/dashboard/kpi', [ReportController::class, 'kpi']);
 
         Route::prefix('reports')->middleware('permission:reports.view')->group(function () {
-            Route::get('/sales',                [\App\Http\Controllers\Api\V1\ReportController::class, 'sales'])->middleware('permission:reports.financial.view');
-            Route::get('/sales-by-customer',    [\App\Http\Controllers\Api\V1\ReportController::class, 'salesByCustomer'])->middleware('permission:reports.financial.view');
-            Route::get('/sales-by-product',     [\App\Http\Controllers\Api\V1\ReportController::class, 'salesByProduct'])->middleware('permission:reports.financial.view');
-            Route::get('/overdue-receivables',  [\App\Http\Controllers\Api\V1\ReportController::class, 'overdueReceivables'])->middleware('permission:reports.financial.view');
-            Route::get('/work-orders',          [\App\Http\Controllers\Api\V1\ReportController::class, 'workOrders'])->middleware('permission:reports.operations.view');
-            Route::get('/kpi',                  [\App\Http\Controllers\Api\V1\ReportController::class, 'kpi'])->middleware('permission:reports.financial.view');
-            Route::get('/summary',              [\App\Http\Controllers\Api\V1\ReportController::class, 'kpi'])->middleware('permission:reports.financial.view');
-            Route::get('/kpi-dictionary',       [\App\Http\Controllers\Api\V1\ReportController::class, 'kpiDictionary']);
-            Route::get('/vat',                  [\App\Http\Controllers\Api\V1\ReportController::class, 'vatReport'])->middleware('permission:reports.accounting.view');
-            Route::get('/inventory',            [\App\Http\Controllers\Api\V1\ReportController::class, 'inventory'])->middleware('permission:reports.operations.view');
-            Route::get('/financial',            [\App\Http\Controllers\Api\V1\ReportController::class, 'financial'])->middleware('permission:reports.financial.view');
-            Route::get('/cash-flow',            [\App\Http\Controllers\Api\V1\ReportController::class, 'cashFlow'])->middleware('permission:reports.financial.view');
-            Route::get('/purchases',            [\App\Http\Controllers\Api\V1\ReportController::class, 'purchasesReport'])->middleware('permission:reports.financial.view');
-            Route::get('/receivables-aging',    [\App\Http\Controllers\Api\V1\ReportController::class, 'receivablesAging'])->middleware('permission:reports.financial.view');
-            Route::get('/business-analytics',   [\App\Http\Controllers\Api\V1\ReportController::class, 'businessAnalytics'])->middleware('permission:reports.intelligence.view');
-            Route::get('/employees',            [\App\Http\Controllers\Api\V1\ReportController::class, 'employeeReport'])->middleware('permission:reports.employees.view');
-            Route::get('/operations',           [\App\Http\Controllers\Api\V1\ReportController::class, 'operationsReport'])->middleware('permission:reports.operations.view');
-            Route::get('/intelligence-digest',  [\App\Http\Controllers\Api\V1\ReportController::class, 'intelligenceDigest'])->middleware('permission:reports.intelligence.view');
-            Route::get('/communications',       [\App\Http\Controllers\Api\V1\ReportController::class, 'communicationsReport'])->middleware('permission:reports.operations.view');
-            Route::get('/smart-tasks',          [\App\Http\Controllers\Api\V1\ReportController::class, 'smartTasksReport'])->middleware('permission:reports.operations.view');
+            Route::get('/sales', [ReportController::class, 'sales'])->middleware('permission:reports.financial.view');
+            Route::get('/sales-by-customer', [ReportController::class, 'salesByCustomer'])->middleware('permission:reports.financial.view');
+            Route::get('/sales-by-product', [ReportController::class, 'salesByProduct'])->middleware('permission:reports.financial.view');
+            Route::get('/overdue-receivables', [ReportController::class, 'overdueReceivables'])->middleware('permission:reports.financial.view');
+            Route::get('/work-orders', [ReportController::class, 'workOrders'])->middleware('permission:reports.operations.view');
+            Route::get('/kpi', [ReportController::class, 'kpi'])->middleware('permission:reports.financial.view');
+            Route::get('/summary', [ReportController::class, 'kpi'])->middleware('permission:reports.financial.view');
+            Route::get('/kpi-dictionary', [ReportController::class, 'kpiDictionary']);
+            Route::get('/vat', [ReportController::class, 'vatReport'])->middleware('permission:reports.accounting.view');
+            Route::get('/inventory', [ReportController::class, 'inventory'])->middleware('permission:reports.operations.view');
+            Route::get('/financial', [ReportController::class, 'financial'])->middleware('permission:reports.financial.view');
+            Route::get('/cash-flow', [ReportController::class, 'cashFlow'])->middleware('permission:reports.financial.view');
+            Route::get('/purchases', [ReportController::class, 'purchasesReport'])->middleware('permission:reports.financial.view');
+            Route::get('/receivables-aging', [ReportController::class, 'receivablesAging'])->middleware('permission:reports.financial.view');
+            Route::get('/business-analytics', [ReportController::class, 'businessAnalytics'])->middleware('permission:reports.intelligence.view');
+            Route::get('/employees', [ReportController::class, 'employeeReport'])->middleware('permission:reports.employees.view');
+            Route::get('/operations', [ReportController::class, 'operationsReport'])->middleware('permission:reports.operations.view');
+            Route::get('/intelligence-digest', [ReportController::class, 'intelligenceDigest'])->middleware('permission:reports.intelligence.view');
+            Route::get('/communications', [ReportController::class, 'communicationsReport'])->middleware('permission:reports.operations.view');
+            Route::get('/smart-tasks', [ReportController::class, 'smartTasksReport'])->middleware('permission:reports.operations.view');
         });
 
         /** WAVE 2 / PR7–PR8 — read-only reporting API (query layer; not legacy /reports/*). */
         Route::prefix('reporting')->group(function () {
             Route::middleware(['permission:reports.view', 'permission:reports.operations.view'])->group(function () {
-                Route::get('/v1/operations/work-order-summary', [\App\Http\Controllers\Api\V1\Reporting\ReportingController::class, 'workOrderSummary']);
-                Route::get('/v1/operations/work-order-summary/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'workOrderSummary']);
-                Route::get('/v1/company/pulse-summary', [\App\Http\Controllers\Api\V1\Reporting\CompanyReportingController::class, 'pulseSummary']);
-                Route::get('/v1/company/pulse-summary/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'companyPulseSummary']);
-                Route::get('/v1/customer/pulse-summary', [\App\Http\Controllers\Api\V1\Reporting\CustomerReportingController::class, 'pulseSummary']);
-                Route::get('/v1/customer/pulse-summary/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'customerPulseSummary']);
-                Route::get('/v1/operations/global-feed', [\App\Http\Controllers\Api\V1\Reporting\GlobalOperationsFeedController::class, 'index']);
-                Route::get('/v1/operations/global-feed/export', [\App\Http\Controllers\Api\V1\Reporting\ReportingExportController::class, 'globalOperationsFeed']);
+                Route::get('/v1/operations/work-order-summary', [ReportingController::class, 'workOrderSummary']);
+                Route::get('/v1/operations/work-order-summary/export', [ReportingExportController::class, 'workOrderSummary']);
+                Route::get('/v1/company/pulse-summary', [CompanyReportingController::class, 'pulseSummary']);
+                Route::get('/v1/company/pulse-summary/export', [ReportingExportController::class, 'companyPulseSummary']);
+                Route::get('/v1/customer/pulse-summary', [CustomerReportingController::class, 'pulseSummary']);
+                Route::get('/v1/customer/pulse-summary/export', [ReportingExportController::class, 'customerPulseSummary']);
+                Route::get('/v1/operations/global-feed', [GlobalOperationsFeedController::class, 'index']);
+                Route::get('/v1/operations/global-feed/export', [ReportingExportController::class, 'globalOperationsFeed']);
             });
         });
 
         // Wave 3 Batch-3: lightweight operational review layer for reconciliation
         Route::prefix('financial-reconciliation')->middleware('permission:reports.financial.view')->group(function () {
-            Route::get('/latest', [\App\Http\Controllers\Api\V1\FinancialReconciliationController::class, 'latest']);
-            Route::get('/health', [\App\Http\Controllers\Api\V1\FinancialReconciliationController::class, 'health']);
-            Route::get('/runs', [\App\Http\Controllers\Api\V1\FinancialReconciliationController::class, 'runs']);
-            Route::get('/findings', [\App\Http\Controllers\Api\V1\FinancialReconciliationController::class, 'findings']);
-            Route::get('/findings/{id}', [\App\Http\Controllers\Api\V1\FinancialReconciliationController::class, 'show']);
-            Route::get('/summary', [\App\Http\Controllers\Api\V1\FinancialReconciliationController::class, 'summary']);
-            Route::patch('/findings/{id}/status', [\App\Http\Controllers\Api\V1\FinancialReconciliationController::class, 'updateFindingStatus'])
+            Route::get('/latest', [FinancialReconciliationController::class, 'latest']);
+            Route::get('/health', [FinancialReconciliationController::class, 'health']);
+            Route::get('/runs', [FinancialReconciliationController::class, 'runs']);
+            Route::get('/findings', [FinancialReconciliationController::class, 'findings']);
+            Route::get('/findings/{id}', [FinancialReconciliationController::class, 'show']);
+            Route::get('/summary', [FinancialReconciliationController::class, 'summary']);
+            Route::patch('/findings/{id}/status', [FinancialReconciliationController::class, 'updateFindingStatus'])
                 ->middleware('permission:users.update');
         });
 
         // Institutional capabilities Batch-2: Meetings MVP (low risk, no video/calendar integrations)
         Route::prefix('meetings')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\MeetingController::class, 'index'])
+            Route::get('/', [MeetingController::class, 'index'])
                 ->middleware('permission:meetings.update');
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\MeetingController::class, 'show'])
+            Route::get('/{id}', [MeetingController::class, 'show'])
                 ->whereNumber('id')
                 ->middleware('permission:meetings.update');
-            Route::post('/', [\App\Http\Controllers\Api\V1\MeetingController::class, 'store'])
+            Route::post('/', [MeetingController::class, 'store'])
                 ->middleware('permission:meetings.create');
-            Route::put('/{id}', [\App\Http\Controllers\Api\V1\MeetingController::class, 'update'])
+            Route::put('/{id}', [MeetingController::class, 'update'])
                 ->middleware('permission:meetings.update');
-            Route::post('/{id}/participants', [\App\Http\Controllers\Api\V1\MeetingController::class, 'addParticipant'])
+            Route::post('/{id}/participants', [MeetingController::class, 'addParticipant'])
                 ->middleware('permission:meetings.update');
-            Route::delete('/{id}/participants/{participantId}', [\App\Http\Controllers\Api\V1\MeetingController::class, 'removeParticipant'])
+            Route::delete('/{id}/participants/{participantId}', [MeetingController::class, 'removeParticipant'])
                 ->middleware('permission:meetings.update');
-            Route::post('/{id}/minutes', [\App\Http\Controllers\Api\V1\MeetingController::class, 'addMinutes'])
+            Route::post('/{id}/minutes', [MeetingController::class, 'addMinutes'])
                 ->middleware('permission:meetings.update');
-            Route::get('/{id}/minutes', [\App\Http\Controllers\Api\V1\MeetingController::class, 'listMinutes'])
+            Route::get('/{id}/minutes', [MeetingController::class, 'listMinutes'])
                 ->middleware('permission:meetings.view_minutes');
-            Route::post('/{id}/decisions', [\App\Http\Controllers\Api\V1\MeetingController::class, 'addDecision'])
+            Route::post('/{id}/decisions', [MeetingController::class, 'addDecision'])
                 ->middleware('permission:meetings.manage_actions');
-            Route::post('/{id}/decisions/{decisionId}/approval/start', [\App\Http\Controllers\Api\V1\MeetingController::class, 'startDecisionApproval'])
+            Route::post('/{id}/decisions/{decisionId}/approval/start', [MeetingController::class, 'startDecisionApproval'])
                 ->middleware('permission:meetings.manage_actions');
-            Route::get('/{id}/decisions/{decisionId}/approval-status', [\App\Http\Controllers\Api\V1\MeetingController::class, 'decisionApprovalStatus'])
+            Route::get('/{id}/decisions/{decisionId}/approval-status', [MeetingController::class, 'decisionApprovalStatus'])
                 ->middleware('permission:meetings.view_minutes');
-            Route::post('/{id}/decisions/{decisionId}/approve', [\App\Http\Controllers\Api\V1\MeetingController::class, 'approveDecision'])
+            Route::post('/{id}/decisions/{decisionId}/approve', [MeetingController::class, 'approveDecision'])
                 ->middleware(['permission:meetings.manage_actions', 'permission:users.update']);
-            Route::post('/{id}/decisions/{decisionId}/reject', [\App\Http\Controllers\Api\V1\MeetingController::class, 'rejectDecision'])
+            Route::post('/{id}/decisions/{decisionId}/reject', [MeetingController::class, 'rejectDecision'])
                 ->middleware(['permission:meetings.manage_actions', 'permission:users.update']);
-            Route::post('/{id}/actions', [\App\Http\Controllers\Api\V1\MeetingController::class, 'addAction'])
+            Route::post('/{id}/actions', [MeetingController::class, 'addAction'])
                 ->middleware('permission:meetings.manage_actions');
-            Route::patch('/{id}/actions/{actionId}', [\App\Http\Controllers\Api\V1\MeetingController::class, 'updateAction'])
+            Route::patch('/{id}/actions/{actionId}', [MeetingController::class, 'updateAction'])
                 ->middleware('permission:meetings.manage_actions');
-            Route::post('/{id}/actions/{actionId}/close', [\App\Http\Controllers\Api\V1\MeetingController::class, 'closeAction'])
+            Route::post('/{id}/actions/{actionId}/close', [MeetingController::class, 'closeAction'])
                 ->middleware('permission:meetings.manage_actions');
-            Route::post('/{id}/close', [\App\Http\Controllers\Api\V1\MeetingController::class, 'close'])
+            Route::post('/{id}/close', [MeetingController::class, 'close'])
                 ->middleware('permission:meetings.close');
         });
 
         // Financial Core — Ledger & Chart of Accounts
         Route::prefix('ledger')->middleware('permission:reports.accounting.view')->group(function () {
-            Route::get('/',               [\App\Http\Controllers\Api\V1\LedgerController::class, 'index']);
-            Route::get('/trial-balance',  [\App\Http\Controllers\Api\V1\LedgerController::class, 'trialBalance']);
-            Route::get('/{id}',           [\App\Http\Controllers\Api\V1\LedgerController::class, 'show']);
-            Route::post('/{id}/reverse',  [\App\Http\Controllers\Api\V1\LedgerController::class, 'reverse']);
+            Route::get('/', [LedgerController::class, 'index']);
+            Route::get('/trial-balance', [LedgerController::class, 'trialBalance']);
+            Route::get('/{id}', [LedgerController::class, 'show']);
+            Route::post('/{id}/reverse', [LedgerController::class, 'reverse']);
         });
 
-        Route::apiResource('chart-of-accounts', \App\Http\Controllers\Api\V1\ChartOfAccountController::class)
+        Route::apiResource('chart-of-accounts', ChartOfAccountController::class)
             ->middleware('permission:reports.accounting.view');
 
         // Fleet Wallet — read-only
-        Route::get('/wallet/{customerId}/summary',    [\App\Http\Controllers\Api\V1\WalletController::class, 'summary'])
+        Route::get('/wallet/{customerId}/summary', [WalletController::class, 'summary'])
             ->middleware('permission:invoices.view');
-        Route::get('/wallet/{walletId}/transactions', [\App\Http\Controllers\Api\V1\WalletController::class, 'transactions'])
+        Route::get('/wallet/{walletId}/transactions', [WalletController::class, 'transactions'])
             ->middleware('permission:invoices.view');
 
         // Fleet Wallet — write (idempotent)
         Route::middleware('idempotent')->group(function () {
-            Route::post('/wallet/top-up/individual', [\App\Http\Controllers\Api\V1\WalletController::class, 'topUpIndividual'])
+            Route::post('/wallet/top-up/individual', [WalletController::class, 'topUpIndividual'])
                 ->middleware('permission:invoices.update');
-            Route::post('/wallet/top-up/fleet',      [\App\Http\Controllers\Api\V1\WalletController::class, 'topUpFleet'])
+            Route::post('/wallet/top-up/fleet', [WalletController::class, 'topUpFleet'])
                 ->middleware('permission:invoices.update');
-            Route::post('/wallet/transfer',          [\App\Http\Controllers\Api\V1\WalletController::class, 'transfer'])
+            Route::post('/wallet/transfer', [WalletController::class, 'transfer'])
                 ->middleware('permission:invoices.update');
-            Route::post('/wallet/reversal',          [\App\Http\Controllers\Api\V1\WalletController::class, 'reverse'])
+            Route::post('/wallet/reversal', [WalletController::class, 'reverse'])
                 ->middleware('permission:invoices.update');
         });
 
         // Fleet Operations — Workshop Side (verify-plate only)
         Route::prefix('fleet')->group(function () {
-            Route::get('/customers',                          [\App\Http\Controllers\Api\V1\FleetController::class, 'fleetCustomers']);
-            Route::post('/verify-plate',                      [\App\Http\Controllers\Api\V1\FleetController::class, 'verifyPlate'])
+            Route::get('/customers', [FleetController::class, 'fleetCustomers']);
+            Route::post('/verify-plate', [FleetController::class, 'verifyPlate'])
                 ->middleware('permission:fleet.plate.verify');
             // يتم الاعتماد الآن من Fleet Portal — هذا المسار لمركز الخدمة فقط (طوارئ)
-            Route::post('/work-orders/{id}/approve',          [\App\Http\Controllers\Api\V1\FleetController::class, 'approveWorkOrder'])
+            Route::post('/work-orders/{id}/approve', [FleetController::class, 'approveWorkOrder'])
                 ->middleware('permission:work_orders.update');
         });
 
         // Fleet Portal — Customer Side (fleet_contact / fleet_manager only)
         Route::prefix('fleet-portal')->group(function () {
-            Route::get('/dashboard',                          [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'dashboard']);
-            Route::get('/service-catalog',                  [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'serviceCatalog']);
-            Route::post('/work-orders/pricing-preview',       [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'previewWorkOrderLinePrice'])
+            Route::get('/dashboard', [FleetPortalController::class, 'dashboard']);
+            Route::get('/service-catalog', [FleetPortalController::class, 'serviceCatalog']);
+            Route::post('/work-orders/pricing-preview', [FleetPortalController::class, 'previewWorkOrderLinePrice'])
                 ->middleware('permission:fleet.workorder.create');
-            Route::get('/vehicles',                           [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'vehicles']);
-            Route::get('/wallet/summary',                     [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'walletSummary']);
-            Route::get('/wallet/transactions',                [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'transactions']);
-            Route::post('/wallet/top-up',                     [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'topUp'])
+            Route::get('/vehicles', [FleetPortalController::class, 'vehicles']);
+            Route::get('/wallet/summary', [FleetPortalController::class, 'walletSummary']);
+            Route::get('/wallet/transactions', [FleetPortalController::class, 'transactions']);
+            Route::post('/wallet/top-up', [FleetPortalController::class, 'topUp'])
                 ->middleware(['idempotent', 'permission:fleet.wallet.topup']);
-            Route::get('/work-orders',                        [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'pendingApproval']);
-            Route::post('/work-orders',                       [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'createWorkOrder'])
+            Route::get('/work-orders', [FleetPortalController::class, 'pendingApproval']);
+            Route::post('/work-orders', [FleetPortalController::class, 'createWorkOrder'])
                 ->middleware('permission:fleet.workorder.create');
-            Route::get('/work-orders/pending-approval',       [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'pendingApproval']);
-            Route::get('/wallet',                             [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'walletSummary']);
-            Route::post('/work-orders/{id}/approve-credit',   [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'approveCredit'])
+            Route::get('/work-orders/pending-approval', [FleetPortalController::class, 'pendingApproval']);
+            Route::get('/wallet', [FleetPortalController::class, 'walletSummary']);
+            Route::post('/work-orders/{id}/approve-credit', [FleetPortalController::class, 'approveCredit'])
                 ->middleware('permission:fleet.workorder.approve');
-            Route::post('/work-orders/{id}/reject-credit',    [\App\Http\Controllers\Api\V1\FleetPortalController::class, 'rejectCredit'])
+            Route::post('/work-orders/{id}/reject-credit', [FleetPortalController::class, 'rejectCredit'])
                 ->middleware('permission:fleet.workorder.approve');
         });
     });
 
     // ── SaaS Plans (Phase 7) ─────────────────────────────────────────
-    Route::get('/plans', [\App\Http\Controllers\Api\V1\SaasController::class, 'listPlans']);
-    Route::post('/plans/seed', [\App\Http\Controllers\Api\V1\SaasController::class, 'seedPlans'])
+    Route::get('/plans', [SaasController::class, 'listPlans']);
+    Route::post('/plans/seed', [SaasController::class, 'seedPlans'])
         ->middleware(['auth:sanctum', 'permission:subscriptions.manage']);
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->group(function () {
-        Route::get('/subscription',         [\App\Http\Controllers\Api\V1\SaasController::class, 'currentSubscription']);
-        Route::post('/subscription/change',  [\App\Http\Controllers\Api\V1\SaasController::class, 'changePlan'])
+        Route::get('/subscription', [SaasController::class, 'currentSubscription']);
+        Route::post('/subscription/change', [SaasController::class, 'changePlan'])
             ->middleware('permission:subscriptions.manage');
-        Route::post('/subscription/addons', [\App\Http\Controllers\Api\V1\SaasController::class, 'purchaseSubscriptionAddon'])
+        Route::post('/subscription/addons', [SaasController::class, 'purchaseSubscriptionAddon'])
             ->middleware('permission:subscriptions.manage');
-        Route::delete('/subscription/addons/{slug}', [\App\Http\Controllers\Api\V1\SaasController::class, 'removeSubscriptionAddon'])
+        Route::delete('/subscription/addons/{slug}', [SaasController::class, 'removeSubscriptionAddon'])
             ->middleware('permission:subscriptions.manage');
-        Route::get('/subscription/usage',   [\App\Http\Controllers\Api\V1\SaasController::class, 'usageLimits'])
+        Route::get('/subscription/usage', [SaasController::class, 'usageLimits'])
             ->middleware('permission:subscriptions.view');
-        Route::put('/plans/{slug}',         [\App\Http\Controllers\Api\V1\SaasController::class, 'updatePlan'])
+        Route::put('/plans/{slug}', [SaasController::class, 'updatePlan'])
             ->middleware('permission:subscriptions.manage');
 
         Route::prefix('subscriptions')->group(function () {
-            Route::get('/payment-orders', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantPaymentOrderController::class, 'index'])
+            Route::get('/payment-orders', [TenantPaymentOrderController::class, 'index'])
                 ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
-            Route::post('/payment-orders', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantPaymentOrderController::class, 'store'])
+            Route::post('/payment-orders', [TenantPaymentOrderController::class, 'store'])
                 ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
-            Route::post('/payment-orders/{id}/submit-transfer', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantPaymentOrderController::class, 'submitTransfer'])
+            Route::post('/payment-orders/{id}/submit-transfer', [TenantPaymentOrderController::class, 'submitTransfer'])
                 ->whereNumber('id')
                 ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
-            Route::post('/payment-orders/{id}/upload-receipt', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantPaymentOrderController::class, 'uploadReceipt'])
+            Route::post('/payment-orders/{id}/upload-receipt', [TenantPaymentOrderController::class, 'uploadReceipt'])
                 ->whereNumber('id')
                 ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
-            Route::get('/current', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'current'])
+            Route::get('/current', [TenantSubscriptionPortalController::class, 'current'])
                 ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
-            Route::get('/plans', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'plans'])
+            Route::get('/plans', [TenantSubscriptionPortalController::class, 'plans'])
                 ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
-            Route::get('/invoices', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'invoices'])
+            Route::get('/invoices', [TenantSubscriptionPortalController::class, 'invoices'])
                 ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
-            Route::get('/wallet', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'wallet'])
+            Route::get('/wallet', [TenantSubscriptionPortalController::class, 'wallet'])
                 ->middleware(['permission:subscriptions.view', 'throttle:60,1']);
-            Route::get('/notifications', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'notifications'])
+            Route::get('/notifications', [TenantSubscriptionPortalController::class, 'notifications'])
                 ->middleware(['permission:subscriptions.view', 'throttle:120,1']);
-            Route::post('/upgrade', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'upgrade'])
+            Route::post('/upgrade', [TenantSubscriptionPortalController::class, 'upgrade'])
                 ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
-            Route::post('/downgrade', [\App\Http\Controllers\Api\V1\SubscriptionsV2\TenantSubscriptionPortalController::class, 'downgrade'])
+            Route::post('/downgrade', [TenantSubscriptionPortalController::class, 'downgrade'])
                 ->middleware(['permission:subscriptions.manage', 'throttle:30,1']);
         });
     });
 
     // ── Bays & Bookings (Phase 6) ────────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->group(function () {
-        Route::get('/bays',                      [\App\Http\Controllers\Api\V1\BayController::class, 'index']);
-        Route::post('/bays',                     [\App\Http\Controllers\Api\V1\BayController::class, 'store'])
+        Route::get('/bays', [BayController::class, 'index']);
+        Route::post('/bays', [BayController::class, 'store'])
             ->middleware('permission:work_orders.update');
-        Route::patch('/bays/{id}/status',        [\App\Http\Controllers\Api\V1\BayController::class, 'updateStatus'])
+        Route::patch('/bays/{id}/status', [BayController::class, 'updateStatus'])
             ->middleware('permission:work_orders.update');
-        Route::get('/bookings',                  [\App\Http\Controllers\Api\V1\BayController::class, 'listBookings']);
-        Route::post('/bookings',                 [\App\Http\Controllers\Api\V1\BayController::class, 'storeBooking'])
+        Route::get('/bookings', [BayController::class, 'listBookings']);
+        Route::post('/bookings', [BayController::class, 'storeBooking'])
             ->middleware('permission:work_orders.update');
-        Route::patch('/bookings/{id}',           [\App\Http\Controllers\Api\V1\BayController::class, 'updateBooking'])
+        Route::patch('/bookings/{id}', [BayController::class, 'updateBooking'])
             ->middleware('permission:work_orders.update');
-        Route::post('/bookings/availability',    [\App\Http\Controllers\Api\V1\BayController::class, 'checkAvailability'])
+        Route::post('/bookings/availability', [BayController::class, 'checkAvailability'])
             ->middleware('permission:work_orders.update');
-        Route::get('/bays/heatmap',              [\App\Http\Controllers\Api\V1\BayController::class, 'heatmap']);
+        Route::get('/bays/heatmap', [BayController::class, 'heatmap']);
     });
 
     // ── Workshop Operations (Phase 5) ────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->prefix('workshop')->group(function () {
         // Employees
-        Route::get('/employees/stats',        [\App\Http\Controllers\Api\V1\WorkshopController::class, 'employeeStats']);
-        Route::get('/employees',              [\App\Http\Controllers\Api\V1\WorkshopController::class, 'listEmployees']);
-        Route::post('/employees',             [\App\Http\Controllers\Api\V1\WorkshopController::class, 'storeEmployee'])
+        Route::get('/employees/stats', [WorkshopController::class, 'employeeStats']);
+        Route::get('/employees', [WorkshopController::class, 'listEmployees']);
+        Route::post('/employees', [WorkshopController::class, 'storeEmployee'])
             ->middleware('permission:users.update');
-        Route::get('/employees/{id}',         [\App\Http\Controllers\Api\V1\WorkshopController::class, 'showEmployee']);
-        Route::put('/employees/{id}',         [\App\Http\Controllers\Api\V1\WorkshopController::class, 'updateEmployee'])
+        Route::get('/employees/{id}', [WorkshopController::class, 'showEmployee']);
+        Route::put('/employees/{id}', [WorkshopController::class, 'updateEmployee'])
             ->middleware('permission:users.update');
         // Attendance
-        Route::post('/attendance/check-in',              [\App\Http\Controllers\Api\V1\WorkshopController::class, 'checkIn'])
+        Route::post('/attendance/check-in', [WorkshopController::class, 'checkIn'])
             ->middleware('permission:users.update');
-        Route::post('/attendance/check-out',             [\App\Http\Controllers\Api\V1\WorkshopController::class, 'checkOut'])
+        Route::post('/attendance/check-out', [WorkshopController::class, 'checkOut'])
             ->middleware('permission:users.update');
-        Route::get('/attendance/today',                  [\App\Http\Controllers\Api\V1\WorkshopController::class, 'attendanceTodayAll']);
-        Route::get('/attendance/month-all',             [\App\Http\Controllers\Api\V1\WorkshopController::class, 'attendanceMonthAll']);
-        Route::get('/attendance/{employeeId}/today',     [\App\Http\Controllers\Api\V1\WorkshopController::class, 'attendanceToday']);
-        Route::get('/attendance/{employeeId}/month',     [\App\Http\Controllers\Api\V1\WorkshopController::class, 'attendanceMonth']);
-        Route::get('/attendance/{employeeId}/logs',      [\App\Http\Controllers\Api\V1\WorkshopController::class, 'attendanceLogs']);
+        Route::get('/attendance/today', [WorkshopController::class, 'attendanceTodayAll']);
+        Route::get('/attendance/month-all', [WorkshopController::class, 'attendanceMonthAll']);
+        Route::get('/attendance/{employeeId}/today', [WorkshopController::class, 'attendanceToday']);
+        Route::get('/attendance/{employeeId}/month', [WorkshopController::class, 'attendanceMonth']);
+        Route::get('/attendance/{employeeId}/logs', [WorkshopController::class, 'attendanceLogs']);
         // Tasks
-        Route::get('/tasks',                  [\App\Http\Controllers\Api\V1\WorkshopController::class, 'listTasks']);
-        Route::post('/tasks',                 [\App\Http\Controllers\Api\V1\WorkshopController::class, 'storeTask'])
+        Route::get('/tasks', [WorkshopController::class, 'listTasks']);
+        Route::post('/tasks', [WorkshopController::class, 'storeTask'])
             ->middleware('permission:users.update');
-        Route::patch('/tasks/{id}/status',    [\App\Http\Controllers\Api\V1\WorkshopController::class, 'updateTaskStatus'])
+        Route::patch('/tasks/{id}/status', [WorkshopController::class, 'updateTaskStatus'])
             ->middleware('permission:users.update');
-        Route::get('/tasks/stats',            [\App\Http\Controllers\Api\V1\WorkshopController::class, 'taskStats']);
-        Route::get('/tasks/smart-summary',    [\App\Http\Controllers\Api\V1\WorkshopController::class, 'smartTaskSummary']);
-        Route::get('/tasks/suggested-assignees', [\App\Http\Controllers\Api\V1\WorkshopController::class, 'suggestTaskAssignees']);
+        Route::get('/tasks/stats', [WorkshopController::class, 'taskStats']);
+        Route::get('/tasks/smart-summary', [WorkshopController::class, 'smartTaskSummary']);
+        Route::get('/tasks/suggested-assignees', [WorkshopController::class, 'suggestTaskAssignees']);
         // Administrative Communications
-        Route::get('/communications', [\App\Http\Controllers\Api\V1\AdminCommunicationController::class, 'index']);
-        Route::post('/communications', [\App\Http\Controllers\Api\V1\AdminCommunicationController::class, 'store']);
-        Route::put('/communications/{id}', [\App\Http\Controllers\Api\V1\AdminCommunicationController::class, 'update']);
-        Route::post('/communications/{id}/submit', [\App\Http\Controllers\Api\V1\AdminCommunicationController::class, 'submit']);
-        Route::post('/communications/{id}/transfer', [\App\Http\Controllers\Api\V1\AdminCommunicationController::class, 'transfer']);
-        Route::post('/communications/{id}/request-signature', [\App\Http\Controllers\Api\V1\AdminCommunicationController::class, 'requestSignature']);
-        Route::post('/communications/{id}/sign', [\App\Http\Controllers\Api\V1\AdminCommunicationController::class, 'sign']);
-        Route::post('/communications/{id}/archive', [\App\Http\Controllers\Api\V1\AdminCommunicationController::class, 'archive']);
-        Route::post('/communications/{id}/restore', [\App\Http\Controllers\Api\V1\AdminCommunicationController::class, 'restore']);
+        Route::get('/communications', [AdminCommunicationController::class, 'index']);
+        Route::post('/communications', [AdminCommunicationController::class, 'store']);
+        Route::put('/communications/{id}', [AdminCommunicationController::class, 'update']);
+        Route::post('/communications/{id}/submit', [AdminCommunicationController::class, 'submit']);
+        Route::post('/communications/{id}/transfer', [AdminCommunicationController::class, 'transfer']);
+        Route::post('/communications/{id}/request-signature', [AdminCommunicationController::class, 'requestSignature']);
+        Route::post('/communications/{id}/sign', [AdminCommunicationController::class, 'sign']);
+        Route::post('/communications/{id}/archive', [AdminCommunicationController::class, 'archive']);
+        Route::post('/communications/{id}/restore', [AdminCommunicationController::class, 'restore']);
         // Commissions
-        Route::get('/commissions',            [\App\Http\Controllers\Api\V1\WorkshopController::class, 'listCommissions']);
-        Route::get('/commission-rules',         [\App\Http\Controllers\Api\V1\WorkshopController::class, 'listCommissionRules']);
-        Route::post('/commission-rules',       [\App\Http\Controllers\Api\V1\WorkshopController::class, 'storeCommissionRule'])
+        Route::get('/commissions', [WorkshopController::class, 'listCommissions']);
+        Route::get('/commission-rules', [WorkshopController::class, 'listCommissionRules']);
+        Route::post('/commission-rules', [WorkshopController::class, 'storeCommissionRule'])
             ->middleware('permission:users.update');
-        Route::put('/commission-rules/{id}',  [\App\Http\Controllers\Api\V1\WorkshopController::class, 'updateCommissionRule'])
+        Route::put('/commission-rules/{id}', [WorkshopController::class, 'updateCommissionRule'])
             ->middleware('permission:users.update');
-        Route::delete('/commission-rules/{id}', [\App\Http\Controllers\Api\V1\WorkshopController::class, 'deleteCommissionRule'])
+        Route::delete('/commission-rules/{id}', [WorkshopController::class, 'deleteCommissionRule'])
             ->middleware('permission:users.update');
-        Route::post('/commissions/{id}/pay',  [\App\Http\Controllers\Api\V1\WorkshopController::class, 'payCommission'])
+        Route::post('/commissions/{id}/pay', [WorkshopController::class, 'payCommission'])
             ->middleware('permission:users.update');
     });
 
     // بنود الكتالوج التعاقدي — صلاحيات مفصّلة (لا تتطلب `users.update` كي تبقى قابلة للفصل لاحقًا)
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'subscription'])->prefix('governance')->group(function () {
         Route::middleware('permission:contracts.service_items.view')->group(function () {
-            Route::get('/contracts/{contract}/service-items', [\App\Http\Controllers\Api\V1\ContractServiceItemController::class, 'index']);
-            Route::get('/contracts/{contract}/service-items/{itemId}/usage', [\App\Http\Controllers\Api\V1\ContractServiceItemController::class, 'itemUsage']);
+            Route::get('/contracts/{contract}/service-items', [ContractServiceItemController::class, 'index']);
+            Route::get('/contracts/{contract}/service-items/{itemId}/usage', [ContractServiceItemController::class, 'itemUsage']);
         });
-        Route::post('/contracts/{contract}/service-items/match-preview', [\App\Http\Controllers\Api\V1\ContractServiceItemController::class, 'matchPreview'])
+        Route::post('/contracts/{contract}/service-items/match-preview', [ContractServiceItemController::class, 'matchPreview'])
             ->middleware('permission:contracts.service_items.match_preview');
-        Route::post('/contracts/{contract}/service-items', [\App\Http\Controllers\Api\V1\ContractServiceItemController::class, 'store'])
+        Route::post('/contracts/{contract}/service-items', [ContractServiceItemController::class, 'store'])
             ->middleware('permission:contracts.service_items.create');
-        Route::put('/contracts/{contract}/service-items/{itemId}', [\App\Http\Controllers\Api\V1\ContractServiceItemController::class, 'update'])
+        Route::put('/contracts/{contract}/service-items/{itemId}', [ContractServiceItemController::class, 'update'])
             ->middleware('permission:contracts.service_items.update');
-        Route::delete('/contracts/{contract}/service-items/{itemId}', [\App\Http\Controllers\Api\V1\ContractServiceItemController::class, 'destroy'])
+        Route::delete('/contracts/{contract}/service-items/{itemId}', [ContractServiceItemController::class, 'destroy'])
             ->middleware('permission:contracts.service_items.delete');
     });
 
     // ── Governance (Phase 4) ──────────────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'subscription', 'permission:users.update'])->prefix('governance')->group(function () {
         // Policy Rules
-        Route::get('/policies',          [\App\Http\Controllers\Api\V1\GovernanceController::class, 'listPolicies']);
-        Route::post('/policies',         [\App\Http\Controllers\Api\V1\GovernanceController::class, 'storePolicy']);
-        Route::delete('/policies/{id}',  [\App\Http\Controllers\Api\V1\GovernanceController::class, 'deletePolicy']);
-        Route::post('/policies/evaluate',[\App\Http\Controllers\Api\V1\GovernanceController::class, 'evaluatePolicy']);
+        Route::get('/policies', [GovernanceController::class, 'listPolicies']);
+        Route::post('/policies', [GovernanceController::class, 'storePolicy']);
+        Route::delete('/policies/{id}', [GovernanceController::class, 'deletePolicy']);
+        Route::post('/policies/evaluate', [GovernanceController::class, 'evaluatePolicy']);
 
         // Approval Workflows
-        Route::get('/workflows',                    [\App\Http\Controllers\Api\V1\GovernanceController::class, 'listWorkflows']);
-        Route::post('/workflows/{id}/approve',      [\App\Http\Controllers\Api\V1\GovernanceController::class, 'approveWorkflow']);
-        Route::post('/workflows/{id}/reject',       [\App\Http\Controllers\Api\V1\GovernanceController::class, 'rejectWorkflow']);
+        Route::get('/workflows', [GovernanceController::class, 'listWorkflows']);
+        Route::post('/workflows/{id}/approve', [GovernanceController::class, 'approveWorkflow']);
+        Route::post('/workflows/{id}/reject', [GovernanceController::class, 'rejectWorkflow']);
 
         // Audit Logs
-        Route::get('/audit-logs',                   [\App\Http\Controllers\Api\V1\GovernanceController::class, 'auditLogs']);
+        Route::get('/audit-logs', [GovernanceController::class, 'auditLogs']);
 
         // Alert Rules & Notifications
-        Route::get('/alert-rules',                  [\App\Http\Controllers\Api\V1\GovernanceController::class, 'listAlertRules']);
-        Route::post('/alert-rules',                 [\App\Http\Controllers\Api\V1\GovernanceController::class, 'storeAlertRule']);
-        Route::get('/alerts/me',                    [\App\Http\Controllers\Api\V1\GovernanceController::class, 'myAlerts']);
-        Route::post('/alerts/mark-read',            [\App\Http\Controllers\Api\V1\GovernanceController::class, 'markAlertsRead']);
+        Route::get('/alert-rules', [GovernanceController::class, 'listAlertRules']);
+        Route::post('/alert-rules', [GovernanceController::class, 'storeAlertRule']);
+        Route::get('/alerts/me', [GovernanceController::class, 'myAlerts']);
+        Route::post('/alerts/mark-read', [GovernanceController::class, 'markAlertsRead']);
 
         // Contracts
-        Route::apiResource('contracts', \App\Http\Controllers\Api\V1\ContractController::class);
-        Route::post('/contracts/{contract}/upload-document', [\App\Http\Controllers\Api\V1\ContractController::class, 'uploadDocument']);
-        Route::post('/contracts/{contract}/send-for-signature', [\App\Http\Controllers\Api\V1\ContractController::class, 'sendForSignature']);
-        Route::get('/contracts-expiring', [\App\Http\Controllers\Api\V1\ContractController::class, 'expiringContracts']);
+        Route::apiResource('contracts', ContractController::class);
+        Route::post('/contracts/{contract}/upload-document', [ContractController::class, 'uploadDocument']);
+        Route::post('/contracts/{contract}/send-for-signature', [ContractController::class, 'sendForSignature']);
+        Route::get('/contracts-expiring', [ContractController::class, 'expiringContracts']);
 
         // Excel Import
-        Route::post('/products/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importProducts']);
-        Route::post('/services/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importServices']);
-        Route::post('/vehicles/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importVehicles']);
-        Route::get('/products/template', [\App\Http\Controllers\Api\V1\ImportController::class, 'productsTemplate']);
-        Route::get('/vehicles/template', [\App\Http\Controllers\Api\V1\ImportController::class, 'vehiclesTemplate']);
+        Route::post('/products/import', [ImportController::class, 'importProducts']);
+        Route::post('/services/import', [ImportController::class, 'importServices']);
+        Route::post('/vehicles/import', [ImportController::class, 'importVehicles']);
+        Route::get('/products/template', [ImportController::class, 'productsTemplate']);
+        Route::get('/vehicles/template', [ImportController::class, 'vehiclesTemplate']);
 
         // Fuel Management
         Route::prefix('fuel')->group(function () {
-            Route::get('/',         [\App\Http\Controllers\Api\V1\FuelController::class, 'index']);
-            Route::post('/',        [\App\Http\Controllers\Api\V1\FuelController::class, 'store'])->middleware('idempotent');
-            Route::delete('/{id}',  [\App\Http\Controllers\Api\V1\FuelController::class, 'destroy']);
-            Route::get('/stats',    [\App\Http\Controllers\Api\V1\FuelController::class, 'stats']);
+            Route::get('/', [FuelController::class, 'index']);
+            Route::post('/', [FuelController::class, 'store'])->middleware('idempotent');
+            Route::delete('/{id}', [FuelController::class, 'destroy']);
+            Route::get('/stats', [FuelController::class, 'stats']);
         });
 
         // Vehicle Settings & Documents
-        Route::get('/vehicles/{id}/settings',              [\App\Http\Controllers\Api\V1\FuelController::class, 'getSettings']);
-        Route::match(['put', 'patch'], '/vehicles/{id}/settings', [\App\Http\Controllers\Api\V1\FuelController::class, 'saveSettings']);
-        Route::get('/vehicles/{id}/documents',             [\App\Http\Controllers\Api\V1\FuelController::class, 'getDocuments']);
-        Route::post('/vehicles/{id}/documents',            [\App\Http\Controllers\Api\V1\FuelController::class, 'uploadDocument']);
-        Route::delete('/vehicles/{vehicleId}/documents/{docId}', [\App\Http\Controllers\Api\V1\FuelController::class, 'deleteDocument']);
+        Route::get('/vehicles/{id}/settings', [FuelController::class, 'getSettings']);
+        Route::match(['put', 'patch'], '/vehicles/{id}/settings', [FuelController::class, 'saveSettings']);
+        Route::get('/vehicles/{id}/documents', [FuelController::class, 'getDocuments']);
+        Route::post('/vehicles/{id}/documents', [FuelController::class, 'uploadDocument']);
+        Route::delete('/vehicles/{vehicleId}/documents/{docId}', [FuelController::class, 'deleteDocument']);
 
         // Bulk Import (Excel / CSV)
-        Route::post('/vehicles/import',  [\App\Http\Controllers\Api\V1\ImportController::class, 'importVehicles']);
-        Route::post('/employees/import', [\App\Http\Controllers\Api\V1\ImportController::class, 'importEmployees']);
+        Route::post('/vehicles/import', [ImportController::class, 'importVehicles']);
+        Route::post('/employees/import', [ImportController::class, 'importEmployees']);
 
         // OCR
-        Route::post('/ocr/plate',   [\App\Http\Controllers\Api\V1\OcrController::class, 'scanPlate']);
-        Route::post('/ocr/invoice', [\App\Http\Controllers\Api\V1\OcrController::class, 'scanInvoice']);
-        Route::post('/ocr/vehicle-document', [\App\Http\Controllers\Api\V1\OcrController::class, 'scanVehicleDocument'])
+        Route::post('/ocr/plate', [OcrController::class, 'scanPlate']);
+        Route::post('/ocr/invoice', [OcrController::class, 'scanInvoice']);
+        Route::post('/ocr/vehicle-document', [OcrController::class, 'scanVehicleDocument'])
             ->middleware('permission:vehicles.update');
 
         // HR — Leaves
-        Route::get('/leaves',                           [\App\Http\Controllers\Api\V1\LeaveController::class, 'index']);
-        Route::post('/leaves',                          [\App\Http\Controllers\Api\V1\LeaveController::class, 'store']);
-        Route::post('/leaves/{id}/approve',             [\App\Http\Controllers\Api\V1\LeaveController::class, 'approve']);
-        Route::post('/leaves/{id}/reject',              [\App\Http\Controllers\Api\V1\LeaveController::class, 'reject']);
-        Route::delete('/leaves/{id}',                   [\App\Http\Controllers\Api\V1\LeaveController::class, 'destroy']);
+        Route::get('/leaves', [LeaveController::class, 'index']);
+        Route::post('/leaves', [LeaveController::class, 'store']);
+        Route::post('/leaves/{id}/approve', [LeaveController::class, 'approve']);
+        Route::post('/leaves/{id}/reject', [LeaveController::class, 'reject']);
+        Route::delete('/leaves/{id}', [LeaveController::class, 'destroy']);
 
         // HR — Salaries
-        Route::get('/salaries',                         [\App\Http\Controllers\Api\V1\SalaryController::class, 'index']);
-        Route::post('/salaries',                        [\App\Http\Controllers\Api\V1\SalaryController::class, 'store']);
-        Route::post('/salaries/{id}/approve',           [\App\Http\Controllers\Api\V1\SalaryController::class, 'approve']);
-        Route::post('/salaries/{id}/pay',               [\App\Http\Controllers\Api\V1\SalaryController::class, 'pay']);
-        Route::get('/salaries/summary',                 [\App\Http\Controllers\Api\V1\SalaryController::class, 'summary']);
+        Route::get('/salaries', [SalaryController::class, 'index']);
+        Route::post('/salaries', [SalaryController::class, 'store']);
+        Route::post('/salaries/{id}/approve', [SalaryController::class, 'approve']);
+        Route::post('/salaries/{id}/pay', [SalaryController::class, 'pay']);
+        Route::get('/salaries/summary', [SalaryController::class, 'summary']);
 
         // Referral & Loyalty
-        Route::get('/referrals',                        [\App\Http\Controllers\Api\V1\ReferralController::class, 'index']);
-        Route::post('/referrals/generate',              [\App\Http\Controllers\Api\V1\ReferralController::class, 'generate']);
-        Route::get('/referrals/policy',                 [\App\Http\Controllers\Api\V1\ReferralController::class, 'getPolicy']);
-        Route::put('/referrals/policy',                 [\App\Http\Controllers\Api\V1\ReferralController::class, 'savePolicy']);
-        Route::get('/loyalty/customer/{id}',            [\App\Http\Controllers\Api\V1\ReferralController::class, 'customerPoints']);
-        Route::post('/loyalty/redeem',                  [\App\Http\Controllers\Api\V1\ReferralController::class, 'redeemPoints']);
-        Route::get('/loyalty/leaderboard',              [\App\Http\Controllers\Api\V1\ReferralController::class, 'leaderboard']);
+        Route::get('/referrals', [ReferralController::class, 'index']);
+        Route::post('/referrals/generate', [ReferralController::class, 'generate']);
+        Route::get('/referrals/policy', [ReferralController::class, 'getPolicy']);
+        Route::put('/referrals/policy', [ReferralController::class, 'savePolicy']);
+        Route::get('/loyalty/customer/{id}', [ReferralController::class, 'customerPoints']);
+        Route::post('/loyalty/redeem', [ReferralController::class, 'redeemPoints']);
+        Route::get('/loyalty/leaderboard', [ReferralController::class, 'leaderboard']);
     });
 
     // ─── SUPPORT SYSTEM ────────────────────────────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->prefix('support')->group(function () {
         // Tickets
-        Route::get('/tickets',                              [\App\Http\Controllers\Api\V1\SupportController::class, 'indexTickets']);
-        Route::post('/tickets',                             [\App\Http\Controllers\Api\V1\SupportController::class, 'storeTicket'])
+        Route::get('/tickets', [SupportController::class, 'indexTickets']);
+        Route::post('/tickets', [SupportController::class, 'storeTicket'])
             ->middleware('permission:users.update');
-        Route::get('/tickets/{id}',                         [\App\Http\Controllers\Api\V1\SupportController::class, 'showTicket']);
-        Route::put('/tickets/{id}',                         [\App\Http\Controllers\Api\V1\SupportController::class, 'updateTicket'])
+        Route::get('/tickets/{id}', [SupportController::class, 'showTicket']);
+        Route::put('/tickets/{id}', [SupportController::class, 'updateTicket'])
             ->middleware('permission:users.update');
-        Route::patch('/tickets/{id}/status',                [\App\Http\Controllers\Api\V1\SupportController::class, 'changeStatus'])
+        Route::patch('/tickets/{id}/status', [SupportController::class, 'changeStatus'])
             ->middleware('permission:users.update');
-        Route::post('/tickets/{id}/replies',                [\App\Http\Controllers\Api\V1\SupportController::class, 'storeReply'])
+        Route::post('/tickets/{id}/replies', [SupportController::class, 'storeReply'])
             ->middleware('permission:users.update');
-        Route::post('/tickets/{id}/rate',                   [\App\Http\Controllers\Api\V1\SupportController::class, 'rateSatisfaction'])
+        Route::post('/tickets/{id}/rate', [SupportController::class, 'rateSatisfaction'])
             ->middleware('permission:users.update');
         // Stats & SLA
-        Route::get('/stats',                                [\App\Http\Controllers\Api\V1\SupportController::class, 'stats']);
-        Route::get('/sla-policies',                         [\App\Http\Controllers\Api\V1\SupportController::class, 'indexSla']);
-        Route::post('/sla-policies',                        [\App\Http\Controllers\Api\V1\SupportController::class, 'storeSla'])
+        Route::get('/stats', [SupportController::class, 'stats']);
+        Route::get('/sla-policies', [SupportController::class, 'indexSla']);
+        Route::post('/sla-policies', [SupportController::class, 'storeSla'])
             ->middleware('permission:users.update');
-        Route::put('/sla-policies/{id}',                    [\App\Http\Controllers\Api\V1\SupportController::class, 'updateSla'])
+        Route::put('/sla-policies/{id}', [SupportController::class, 'updateSla'])
             ->middleware('permission:users.update');
-        Route::post('/sla/check-breaches',                  [\App\Http\Controllers\Api\V1\SupportController::class, 'checkSlaBreaches'])
+        Route::post('/sla/check-breaches', [SupportController::class, 'checkSlaBreaches'])
             ->middleware('permission:users.update');
         // Knowledge Base
-        Route::get('/kb',                                   [\App\Http\Controllers\Api\V1\SupportController::class, 'indexKb']);
-        Route::post('/kb',                                  [\App\Http\Controllers\Api\V1\SupportController::class, 'storeKb'])
+        Route::get('/kb', [SupportController::class, 'indexKb']);
+        Route::post('/kb', [SupportController::class, 'storeKb'])
             ->middleware('permission:users.update');
-        Route::put('/kb/{id}',                              [\App\Http\Controllers\Api\V1\SupportController::class, 'updateKb'])
+        Route::put('/kb/{id}', [SupportController::class, 'updateKb'])
             ->middleware('permission:users.update');
-        Route::post('/kb/{id}/vote',                        [\App\Http\Controllers\Api\V1\SupportController::class, 'voteKb'])
+        Route::post('/kb/{id}/vote', [SupportController::class, 'voteKb'])
             ->middleware('permission:users.update');
-        Route::get('/kb/search',                            [\App\Http\Controllers\Api\V1\SupportController::class, 'searchKb']);
-        Route::get('/kb-categories',                        [\App\Http\Controllers\Api\V1\SupportController::class, 'indexKbCategories']);
-        Route::post('/kb-categories',                       [\App\Http\Controllers\Api\V1\SupportController::class, 'storeKbCategory'])
+        Route::get('/kb/search', [SupportController::class, 'searchKb']);
+        Route::get('/kb-categories', [SupportController::class, 'indexKbCategories']);
+        Route::post('/kb-categories', [SupportController::class, 'storeKbCategory'])
             ->middleware('permission:users.update');
     });
 
     // ── ZATCA ─────────────────────────────────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->prefix('zatca')->group(function () {
-        Route::get('/status',  [\App\Http\Controllers\Api\V1\ZatcaController::class, 'status']);
-        Route::get('/logs',    [\App\Http\Controllers\Api\V1\ZatcaController::class, 'logs']);
-        Route::post('/submit', [\App\Http\Controllers\Api\V1\ZatcaController::class, 'submit'])
+        Route::get('/status', [ZatcaController::class, 'status']);
+        Route::get('/logs', [ZatcaController::class, 'logs']);
+        Route::post('/submit', [ZatcaController::class, 'submit'])
             ->middleware('permission:invoices.update');
     });
 
     // ── Notifications ──────────────────────────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->prefix('notifications')->group(function () {
-        Route::get('/',         [\App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
-        Route::put('/{id}/read',[\App\Http\Controllers\Api\V1\NotificationController::class, 'markRead'])
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::put('/{id}/read', [NotificationController::class, 'markRead'])
             ->middleware('permission:users.update');
-        Route::put('/read-all', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead'])
+        Route::put('/read-all', [NotificationController::class, 'markAllRead'])
             ->middleware('permission:users.update');
     });
 
     // ── Customer Portal ────────────────────────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->prefix('customer-portal')->group(function () {
-        Route::get('/dashboard', [\App\Http\Controllers\Api\V1\CustomerPortalController::class, 'dashboard']);
-        Route::get('/pricing', [\App\Http\Controllers\Api\V1\CustomerPortalController::class, 'pricing']);
-        Route::get('/work-orders/{id}/media', [\App\Http\Controllers\Api\V1\CustomerPortalController::class, 'workOrderMedia']);
-        Route::get('/team-users', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'index']);
-        Route::post('/team-users', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'store']);
-        Route::put('/team-users/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'update']);
-        Route::delete('/team-users/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalTeamUsersController::class, 'destroy']);
-        Route::get('/org-units/tree', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'tree']);
-        Route::post('/org-units', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'store']);
-        Route::put('/org-units/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'update']);
-        Route::delete('/org-units/{id}', [\App\Http\Controllers\Api\V1\CustomerPortalOrgUnitsController::class, 'destroy']);
-        Route::get('/reports/filter-options', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'filterOptions']);
-        Route::get('/reports/summary', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'summary']);
-        Route::get('/reports/invoices', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'invoices']);
-        Route::get('/reports/org-unit-breakdown', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'orgUnitBreakdown']);
-        Route::get('/reports/work-order-items-by-service', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'itemsByService']);
-        Route::get('/reports/work-order-items-by-product', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'itemsByProduct']);
-        Route::get('/reports/work-orders-completed', [\App\Http\Controllers\Api\V1\CustomerPortalReportsController::class, 'workOrdersCompleted']);
+        Route::get('/dashboard', [CustomerPortalController::class, 'dashboard']);
+        Route::get('/pricing', [CustomerPortalController::class, 'pricing']);
+        Route::get('/work-orders/{id}/media', [CustomerPortalController::class, 'workOrderMedia']);
+        Route::get('/team-users', [CustomerPortalTeamUsersController::class, 'index']);
+        Route::post('/team-users', [CustomerPortalTeamUsersController::class, 'store']);
+        Route::put('/team-users/{id}', [CustomerPortalTeamUsersController::class, 'update']);
+        Route::delete('/team-users/{id}', [CustomerPortalTeamUsersController::class, 'destroy']);
+        Route::get('/org-units/tree', [CustomerPortalOrgUnitsController::class, 'tree']);
+        Route::post('/org-units', [CustomerPortalOrgUnitsController::class, 'store']);
+        Route::put('/org-units/{id}', [CustomerPortalOrgUnitsController::class, 'update']);
+        Route::delete('/org-units/{id}', [CustomerPortalOrgUnitsController::class, 'destroy']);
+        Route::get('/reports/filter-options', [CustomerPortalReportsController::class, 'filterOptions']);
+        Route::get('/reports/summary', [CustomerPortalReportsController::class, 'summary']);
+        Route::get('/reports/invoices', [CustomerPortalReportsController::class, 'invoices']);
+        Route::get('/reports/org-unit-breakdown', [CustomerPortalReportsController::class, 'orgUnitBreakdown']);
+        Route::get('/reports/work-order-items-by-service', [CustomerPortalReportsController::class, 'itemsByService']);
+        Route::get('/reports/work-order-items-by-product', [CustomerPortalReportsController::class, 'itemsByProduct']);
+        Route::get('/reports/work-orders-completed', [CustomerPortalReportsController::class, 'workOrdersCompleted']);
     });
 
     Route::middleware(['auth.apikey', 'api.log', 'financial.protection', 'subscription'])->group(function () {
         Route::prefix('external/v1')->group(function () {
-            Route::post('/invoices',       [\App\Http\Controllers\Api\V1\External\ExternalInvoiceController::class, 'store'])->middleware('idempotent');
-            Route::get('/invoices/{uuid}', [\App\Http\Controllers\Api\V1\External\ExternalInvoiceController::class, 'show']);
+            Route::post('/invoices', [ExternalInvoiceController::class, 'store'])->middleware('idempotent');
+            Route::get('/invoices/{uuid}', [ExternalInvoiceController::class, 'show']);
         });
     });
 
     // ── AI Plugins Marketplace ─────────────────────────────────────────
     Route::middleware(['auth:sanctum', 'tenant', 'financial.protection', 'branch.scope', 'subscription'])->prefix('plugins')->group(function () {
-        Route::get('/',                 [\App\Http\Controllers\Api\V1\PluginController::class, 'index']);
-        Route::get('/tenant',           [\App\Http\Controllers\Api\V1\PluginController::class, 'tenantPlugins']);
-        Route::get('/{key}',            [\App\Http\Controllers\Api\V1\PluginController::class, 'show']);
-        Route::post('/{key}/install',   [\App\Http\Controllers\Api\V1\PluginController::class, 'install'])
+        Route::get('/', [PluginController::class, 'index']);
+        Route::get('/tenant', [PluginController::class, 'tenantPlugins']);
+        Route::get('/{key}', [PluginController::class, 'show']);
+        Route::post('/{key}/install', [PluginController::class, 'install'])
             ->middleware('permission:users.update');
-        Route::delete('/{key}/uninstall', [\App\Http\Controllers\Api\V1\PluginController::class, 'uninstall'])
+        Route::delete('/{key}/uninstall', [PluginController::class, 'uninstall'])
             ->middleware('permission:users.update');
-        Route::put('/{key}/configure',  [\App\Http\Controllers\Api\V1\PluginController::class, 'configure'])
+        Route::put('/{key}/configure', [PluginController::class, 'configure'])
             ->middleware('permission:users.update');
-        Route::post('/{key}/execute',   [\App\Http\Controllers\Api\V1\PluginController::class, 'execute'])
+        Route::post('/{key}/execute', [PluginController::class, 'execute'])
             ->middleware('permission:users.update');
     });
 });

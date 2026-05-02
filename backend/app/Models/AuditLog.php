@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 class AuditLog extends Model
 {
     public $timestamps = true;
+
     public const UPDATED_AT = null;
 
     protected $fillable = [
@@ -18,7 +19,7 @@ class AuditLog extends Model
 
     protected $casts = [
         'before' => 'array',
-        'after'  => 'array',
+        'after' => 'array',
     ];
 
     protected static function booted(): void

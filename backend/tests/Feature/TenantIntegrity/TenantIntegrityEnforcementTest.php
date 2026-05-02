@@ -3,6 +3,7 @@
 namespace Tests\Feature\TenantIntegrity;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -14,7 +15,7 @@ class TenantIntegrityEnforcementTest extends TestCase
         $tenant['company']->delete();
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
@@ -31,15 +32,15 @@ class TenantIntegrityEnforcementTest extends TestCase
         $this->expectExceptionMessage('Tenant integrity: users.branch_id must reference');
 
         User::withoutGlobalScope('tenant')->create([
-            'uuid'       => (string) Str::uuid(),
+            'uuid' => (string) Str::uuid(),
             'company_id' => $a['company']->id,
-            'branch_id'  => $b['branch']->id,
-            'name'       => 'Bad Link',
-            'email'      => 'bad-branch-link-' . uniqid('', true) . '@test.sa',
-            'password'   => 'Password123!',
-            'role'       => 'cashier',
-            'status'     => 'active',
-            'is_active'  => true,
+            'branch_id' => $b['branch']->id,
+            'name' => 'Bad Link',
+            'email' => 'bad-branch-link-'.uniqid('', true).'@test.sa',
+            'password' => 'Password123!',
+            'role' => 'cashier',
+            'status' => 'active',
+            'is_active' => true,
         ]);
     }
 
@@ -48,7 +49,7 @@ class TenantIntegrityEnforcementTest extends TestCase
         $a = $this->createTenant('owner');
         $b = $this->createTenant('owner');
 
-        \Illuminate\Support\Facades\DB::table('users')->where('id', $a['user']->id)->update([
+        DB::table('users')->where('id', $a['user']->id)->update([
             'branch_id' => $b['branch']->id,
         ]);
 
@@ -61,7 +62,7 @@ class TenantIntegrityEnforcementTest extends TestCase
         $a = $this->createTenant('owner');
         $b = $this->createTenant('owner');
 
-        \Illuminate\Support\Facades\DB::table('users')->where('id', $a['user']->id)->update([
+        DB::table('users')->where('id', $a['user']->id)->update([
             'branch_id' => $b['branch']->id,
         ]);
 

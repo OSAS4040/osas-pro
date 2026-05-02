@@ -35,14 +35,14 @@ class QaValidationRunnerService
         int $raceWorkers = 20,
         bool $runSimulation = false,
     ): array {
-        $stressOps   = max(100, min(50_000, $stressOps));
+        $stressOps = max(100, min(50_000, $stressOps));
         $raceWorkers = max(2, min(60, $raceWorkers));
 
         Log::info('qa.validation.run.start', [
-            'email'        => $email,
-            'stress_ops'   => $stressOps,
+            'email' => $email,
+            'stress_ops' => $stressOps,
             'race_workers' => $raceWorkers,
-            'simulation'   => $runSimulation,
+            'simulation' => $runSimulation,
         ]);
 
         $latMs = [];
@@ -63,10 +63,10 @@ class QaValidationRunnerService
         $p95idx = count($sorted) > 0 ? (int) floor(0.95 * (count($sorted) - 1)) : 0;
 
         $stress = [
-            'operations'    => $stressOps,
+            'operations' => $stressOps,
             'success_count' => count($latMs),
             'failure_count' => $stressFailures,
-            'latency_ms'    => [
+            'latency_ms' => [
                 'avg' => count($sorted) ? round(array_sum($sorted) / count($sorted), 4) : 0,
                 'min' => count($sorted) ? round(min($sorted), 4) : 0,
                 'max' => count($sorted) ? round(max($sorted), 4) : 0,
@@ -75,7 +75,7 @@ class QaValidationRunnerService
         ];
 
         $raceKey = 'ctov-race-'.Str::uuid()->toString();
-        $php     = PHP_BINARY;
+        $php = PHP_BINARY;
         $artisan = $this->backendRoot.DIRECTORY_SEPARATOR.'artisan';
         $processes = [];
         for ($w = 0; $w < $raceWorkers; $w++) {
@@ -106,11 +106,11 @@ class QaValidationRunnerService
         }
 
         $race = [
-            'workers'                       => $raceWorkers,
+            'workers' => $raceWorkers,
             'shared_idempotency_key_prefix' => Str::limit($raceKey, 48, ''),
-            'exit_code_0_success'           => $raceSuccess,
-            'exit_code_2_duplicate'         => $raceDuplicate,
-            'exit_other_failure'            => $raceFail,
+            'exit_code_0_success' => $raceSuccess,
+            'exit_code_2_duplicate' => $raceDuplicate,
+            'exit_other_failure' => $raceFail,
         ];
 
         $sim = ['ran' => false, 'exit_code' => null, 'note' => 'skipped'];
@@ -126,8 +126,8 @@ class QaValidationRunnerService
             ], $this->backendRoot, null, null, 600);
             $simProcess->run();
             $sim = [
-                'ran'         => true,
-                'exit_code'   => $simProcess->getExitCode(),
+                'ran' => true,
+                'exit_code' => $simProcess->getExitCode(),
                 'stdout_tail' => Str::limit($simProcess->getOutput(), 4000, '…'),
                 'stderr_tail' => Str::limit($simProcess->getErrorOutput(), 2000, '…'),
             ];
@@ -135,10 +135,10 @@ class QaValidationRunnerService
 
         $doubleDebitSuspected = $raceSuccess > 1;
         $integrityFlags = [
-            'double_debit_suspected'          => $doubleDebitSuspected,
-            'duplicate_invoice_suspected'     => false,
-            'negative_stock_suspected'        => false,
-            'note'                            => 'invoice/stock flags require dedicated audit queries; wallet race: >1 success implies duplicate credit risk.',
+            'double_debit_suspected' => $doubleDebitSuspected,
+            'duplicate_invoice_suspected' => false,
+            'negative_stock_suspected' => false,
+            'note' => 'invoice/stock flags require dedicated audit queries; wallet race: >1 success implies duplicate credit risk.',
         ];
 
         $systemStatus = 'PASS';
@@ -149,13 +149,13 @@ class QaValidationRunnerService
         }
 
         $payload = [
-            'generated_at'              => now()->toIso8601String(),
-            'tenant_user'               => $email,
-            'stress_db_ping'            => $stress,
-            'wallet_race'               => $race,
-            'simulation_stress'         => $sim,
-            'integrity_flags'           => $integrityFlags,
-            'system_status'             => $systemStatus,
+            'generated_at' => now()->toIso8601String(),
+            'tenant_user' => $email,
+            'stress_db_ping' => $stress,
+            'wallet_race' => $race,
+            'simulation_stress' => $sim,
+            'integrity_flags' => $integrityFlags,
+            'system_status' => $systemStatus,
             'wallet_idempotency_expect' => 'Exactly one race worker should succeed (exit 0); others exit 2 (duplicate).',
         ];
 

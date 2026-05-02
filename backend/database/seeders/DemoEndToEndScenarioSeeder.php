@@ -106,17 +106,17 @@ final class DemoEndToEndScenarioSeeder extends Seeder
             Employee::withoutGlobalScope('tenant')->firstOrCreate(
                 ['company_id' => $company->id, 'employee_number' => $row['number']],
                 [
-                    'uuid'        => (string) Str::uuid(),
-                    'branch_id'   => $branch->id,
-                    'user_id'     => null,
-                    'name'        => $row['name'],
-                    'phone'       => null,
-                    'email'       => null,
-                    'position'    => $row['position'],
-                    'department'  => $row['department'],
-                    'hire_date'   => now()->subMonths(6)->toDateString(),
+                    'uuid' => (string) Str::uuid(),
+                    'branch_id' => $branch->id,
+                    'user_id' => null,
+                    'name' => $row['name'],
+                    'phone' => null,
+                    'email' => null,
+                    'position' => $row['position'],
+                    'department' => $row['department'],
+                    'hire_date' => now()->subMonths(6)->toDateString(),
                     'base_salary' => $row['salary'],
-                    'status'      => 'active',
+                    'status' => 'active',
                 ]
             );
         }
@@ -131,19 +131,19 @@ final class DemoEndToEndScenarioSeeder extends Seeder
             }
 
             Employee::withoutGlobalScope('tenant')->create([
-                'uuid'              => (string) Str::uuid(),
-                'company_id'        => $company->id,
-                'branch_id'         => $branch->id,
-                'user_id'           => $user->id,
-                'employee_number'   => 'E2E-U-'.$user->id,
-                'name'              => $user->name,
-                'phone'             => $user->phone,
-                'email'             => $user->email,
-                'position'          => 'Team Member',
-                'department'        => 'الإدارة',
-                'hire_date'         => now()->subMonths(3)->toDateString(),
-                'base_salary'       => 7000,
-                'status'            => 'active',
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $company->id,
+                'branch_id' => $branch->id,
+                'user_id' => $user->id,
+                'employee_number' => 'E2E-U-'.$user->id,
+                'name' => $user->name,
+                'phone' => $user->phone,
+                'email' => $user->email,
+                'position' => 'Team Member',
+                'department' => 'الإدارة',
+                'hire_date' => now()->subMonths(3)->toDateString(),
+                'base_salary' => 7000,
+                'status' => 'active',
             ]);
         }
     }
@@ -197,13 +197,13 @@ final class DemoEndToEndScenarioSeeder extends Seeder
         }
 
         AttendanceLog::create([
-            'company_id'  => $companyId,
-            'branch_id'   => $branchId,
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
             'employee_id' => $employeeId,
-            'type'        => $type,
-            'logged_at'   => $at,
-            'device_id'   => self::SEED_TAG,
-            'is_valid'    => true,
+            'type' => $type,
+            'logged_at' => $at,
+            'device_id' => self::SEED_TAG,
+            'is_valid' => true,
         ]);
     }
 
@@ -228,34 +228,34 @@ final class DemoEndToEndScenarioSeeder extends Seeder
         DB::transaction(function () use ($company, $uid, $cash, $rev, $amount, $suffix): void {
             $branchId = Branch::withoutGlobalScope('tenant')->where('company_id', $company->id)->value('id');
             $entry = JournalEntry::create([
-                'uuid'               => (string) Str::uuid(),
-                'company_id'         => $company->id,
-                'branch_id'          => $branchId,
-                'entry_number'       => 'JE'.$company->id.'-'.substr(str_replace('-', '', (string) Str::uuid()), 0, 20),
-                'type'               => JournalEntryType::Adjustment,
-                'source_type'        => null,
-                'source_id'          => null,
-                'entry_date'         => now()->subDays(2)->toDateString(),
-                'description'        => 'قيد افتتاحي للمحاكاة — '.$suffix,
-                'total_debit'        => $amount,
-                'total_credit'       => $amount,
-                'currency'           => 'SAR',
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $company->id,
+                'branch_id' => $branchId,
+                'entry_number' => 'JE'.$company->id.'-'.substr(str_replace('-', '', (string) Str::uuid()), 0, 20),
+                'type' => JournalEntryType::Adjustment,
+                'source_type' => null,
+                'source_id' => null,
+                'entry_date' => now()->subDays(2)->toDateString(),
+                'description' => 'قيد افتتاحي للمحاكاة — '.$suffix,
+                'total_debit' => $amount,
+                'total_credit' => $amount,
+                'currency' => 'SAR',
                 'created_by_user_id' => $uid,
             ]);
 
             JournalEntryLine::create([
                 'journal_entry_id' => $entry->id,
-                'account_id'       => (int) $cash,
-                'type'             => 'debit',
-                'amount'           => $amount,
-                'description'      => 'حركة مدينة — نقدية',
+                'account_id' => (int) $cash,
+                'type' => 'debit',
+                'amount' => $amount,
+                'description' => 'حركة مدينة — نقدية',
             ]);
             JournalEntryLine::create([
                 'journal_entry_id' => $entry->id,
-                'account_id'       => (int) $rev,
-                'type'             => 'credit',
-                'amount'           => $amount,
-                'description'      => 'إيراد خدمات — ترحيل تجريبي',
+                'account_id' => (int) $rev,
+                'type' => 'credit',
+                'amount' => $amount,
+                'description' => 'إيراد خدمات — ترحيل تجريبي',
             ]);
         });
     }
@@ -293,12 +293,12 @@ final class DemoEndToEndScenarioSeeder extends Seeder
             $customers[] = Customer::withoutGlobalScope('tenant')->firstOrCreate(
                 ['company_id' => $company->id, 'phone' => $row['phone']],
                 [
-                    'uuid'       => (string) Str::uuid(),
-                    'branch_id'  => $branch->id,
-                    'name'       => $row['name'],
-                    'email'      => null,
-                    'type'       => 'b2c',
-                    'is_active'  => true,
+                    'uuid' => (string) Str::uuid(),
+                    'branch_id' => $branch->id,
+                    'name' => $row['name'],
+                    'email' => null,
+                    'type' => 'b2c',
+                    'is_active' => true,
                 ]
             );
         }
@@ -306,16 +306,16 @@ final class DemoEndToEndScenarioSeeder extends Seeder
         $product = Product::withoutGlobalScope('tenant')->firstOrCreate(
             ['company_id' => $company->id, 'sku' => 'OSAS-SEED-SVC-01'],
             [
-                'uuid'               => (string) Str::uuid(),
+                'uuid' => (string) Str::uuid(),
                 'created_by_user_id' => $owner->id,
-                'name'               => 'خدمة صيانة — بذرة أسس',
-                'name_ar'            => 'خدمة صيانة — بذرة أسس',
-                'sale_price'         => 400,
-                'cost_price'         => 200,
-                'tax_rate'           => 15,
-                'product_type'       => ProductType::Service,
-                'is_active'          => true,
-                'track_inventory'    => false,
+                'name' => 'خدمة صيانة — بذرة أسس',
+                'name_ar' => 'خدمة صيانة — بذرة أسس',
+                'sale_price' => 400,
+                'cost_price' => 200,
+                'tax_rate' => 15,
+                'product_type' => ProductType::Service,
+                'is_active' => true,
+                'track_inventory' => false,
             ]
         );
 
@@ -334,23 +334,23 @@ final class DemoEndToEndScenarioSeeder extends Seeder
             Invoice::withoutGlobalScope('tenant')->firstOrCreate(
                 ['company_id' => $company->id, 'invoice_number' => $invNo],
                 [
-                    'uuid'               => (string) Str::uuid(),
-                    'branch_id'          => $branch->id,
-                    'customer_id'        => $cust->id,
+                    'uuid' => (string) Str::uuid(),
+                    'branch_id' => $branch->id,
+                    'customer_id' => $cust->id,
                     'created_by_user_id' => $owner->id,
-                    'invoice_counter'    => 0,
-                    'type'               => 'sale',
-                    'status'             => $status,
-                    'customer_type'      => 'b2c',
-                    'subtotal'           => $subtotal,
-                    'tax_amount'         => $tax,
-                    'total'              => $total,
-                    'paid_amount'        => $status === InvoiceStatus::Paid ? $total : 0,
-                    'due_amount'         => $status === InvoiceStatus::Paid ? 0 : $total,
-                    'currency'           => 'SAR',
-                    'issued_at'          => now()->subDays(5 + $n),
-                    'due_at'             => now()->addDays(20),
-                    'invoice_hash'       => hash('sha256', $invNo.$company->id),
+                    'invoice_counter' => 0,
+                    'type' => 'sale',
+                    'status' => $status,
+                    'customer_type' => 'b2c',
+                    'subtotal' => $subtotal,
+                    'tax_amount' => $tax,
+                    'total' => $total,
+                    'paid_amount' => $status === InvoiceStatus::Paid ? $total : 0,
+                    'due_amount' => $status === InvoiceStatus::Paid ? 0 : $total,
+                    'currency' => 'SAR',
+                    'issued_at' => now()->subDays(5 + $n),
+                    'due_at' => now()->addDays(20),
+                    'invoice_hash' => hash('sha256', $invNo.$company->id),
                     'previous_invoice_hash' => hash('sha256', 'osas-seed-genesis'),
                 ]
             );
@@ -375,38 +375,38 @@ final class DemoEndToEndScenarioSeeder extends Seeder
         $team = [
             [
                 'email' => 'platform-ops-hr@osas.sa',
-                'name'  => 'منسق سياسات المنصة (HR)',
+                'name' => 'منسق سياسات المنصة (HR)',
                 'phone' => '966599999881',
-                'role'  => UserRole::Manager,
+                'role' => UserRole::Manager,
             ],
             [
                 'email' => 'platform-ops-finance@osas.sa',
-                'name'  => 'مراقب مالي للمنصة',
+                'name' => 'مراقب مالي للمنصة',
                 'phone' => '966599999882',
-                'role'  => UserRole::Accountant,
+                'role' => UserRole::Accountant,
             ],
         ];
 
         foreach ($team as $i => $row) {
             $attrs = [
-                'company_id'         => $company->id,
-                'branch_id'          => $branch->id,
-                'name'               => $row['name'],
-                'password'           => '12345678',
-                'phone'              => PhoneNormalizer::normalizeForStorage($row['phone']),
-                'phone_verified_at'  => now(),
+                'company_id' => $company->id,
+                'branch_id' => $branch->id,
+                'name' => $row['name'],
+                'password' => '12345678',
+                'phone' => PhoneNormalizer::normalizeForStorage($row['phone']),
+                'phone_verified_at' => now(),
                 'registration_stage' => 'phone_verified',
-                'role'               => $row['role'],
-                'status'             => UserStatus::Active,
-                'is_active'          => true,
-                'is_platform_user'   => true,
-                'platform_role'      => $i === 0 ? 'super_admin' : 'platform_admin',
+                'role' => $row['role'],
+                'status' => UserStatus::Active,
+                'is_active' => true,
+                'is_platform_user' => true,
+                'platform_role' => $i === 0 ? 'super_admin' : 'platform_admin',
             ];
 
             $existing = User::withoutGlobalScope('tenant')->whereRaw('LOWER(TRIM(email)) = ?', [strtolower($row['email'])])->first();
             if ($existing === null) {
                 User::withoutGlobalScope('tenant')->create(array_merge($attrs, [
-                    'uuid'  => (string) Str::uuid(),
+                    'uuid' => (string) Str::uuid(),
                     'email' => $row['email'],
                 ]));
             } else {

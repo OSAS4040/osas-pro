@@ -15,8 +15,8 @@ use App\Services\PaymentService;
 use App\Services\WalletService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 /**
@@ -34,7 +34,7 @@ class TestFinancialFlows extends Command
         InvoiceService $invoiceService,
     ): int {
         $email = (string) $this->option('email');
-        $user  = User::where('email', $email)->first();
+        $user = User::where('email', $email)->first();
         if (! $user) {
             $this->error("User not found: {$email}");
 
@@ -46,28 +46,28 @@ class TestFinancialFlows extends Command
         $this->newLine();
 
         $companyId = (int) $user->company_id;
-        $branchId  = (int) $user->branch_id;
+        $branchId = (int) $user->branch_id;
 
         $this->runScenario('SCENARIO 1 — Wallet Top-up', function () use ($walletService, $user, $companyId, $branchId) {
             $this->bindTenant($user);
             $customer = $this->makeCustomer($companyId, $branchId, 'S1-'.Str::random(4));
 
             $walletBefore = $this->customerMainBalance($companyId, $customer->id);
-            $idem         = 'flow-s1-topup-'.Str::uuid()->toString();
-            $traceId      = (string) Str::uuid();
+            $idem = 'flow-s1-topup-'.Str::uuid()->toString();
+            $traceId = (string) Str::uuid();
 
             $txn = $walletService->topUpIndividual(
-                companyId:      $companyId,
-                customerId:     $customer->id,
-                vehicleId:      null,
-                amount:         100.00,
-                invoiceId:      null,
-                paymentId:      null,
-                userId:         $user->id,
-                traceId:        $traceId,
+                companyId: $companyId,
+                customerId: $customer->id,
+                vehicleId: null,
+                amount: 100.00,
+                invoiceId: null,
+                paymentId: null,
+                userId: $user->id,
+                traceId: $traceId,
                 idempotencyKey: $idem,
-                branchId:       $branchId,
-                notes:          'test:financial-flows scenario 1',
+                branchId: $branchId,
+                notes: 'test:financial-flows scenario 1',
             );
 
             $walletAfter = $this->customerMainBalance($companyId, $customer->id);
@@ -88,16 +88,16 @@ class TestFinancialFlows extends Command
 
             $invoice = $invoiceService->createInvoice(
                 data: [
-                    'customer_id'   => $customer->id,
+                    'customer_id' => $customer->id,
                     'customer_type' => 'b2c',
-                    'items'         => [
+                    'items' => [
                         ['name' => 'Flow Test Line', 'quantity' => 1, 'unit_price' => 50, 'tax_rate' => 0],
                     ],
                     'idempotency_key' => 'flow-s2-inv-'.Str::uuid()->toString(),
                 ],
                 companyId: $companyId,
-                branchId:  $branchId,
-                userId:    $user->id,
+                branchId: $branchId,
+                userId: $user->id,
             );
 
             $this->payInvoice(
@@ -125,24 +125,24 @@ class TestFinancialFlows extends Command
 
             $invoice = $invoiceService->createInvoice(
                 data: [
-                    'customer_id'   => $customer->id,
+                    'customer_id' => $customer->id,
                     'customer_type' => 'b2c',
-                    'items'         => [
+                    'items' => [
                         ['name' => 'Flow Wallet Line', 'quantity' => 1, 'unit_price' => 30, 'tax_rate' => 0],
                     ],
                     'idempotency_key' => 'flow-s3-inv-'.Str::uuid()->toString(),
                 ],
                 companyId: $companyId,
-                branchId:  $branchId,
-                userId:    $user->id,
+                branchId: $branchId,
+                userId: $user->id,
             );
 
             $walletKey = 'flow-s3-wallet-'.Str::uuid()->toString();
             $this->payInvoice(
                 $invoice,
                 [
-                    'amount'                 => 30,
-                    'method'                 => 'wallet',
+                    'amount' => 30,
+                    'method' => 'wallet',
                     'wallet_idempotency_key' => $walletKey,
                 ],
                 $user,
@@ -169,43 +169,43 @@ class TestFinancialFlows extends Command
 
             $invoice = $invoiceService->createInvoice(
                 data: [
-                    'customer_id'   => $customer->id,
+                    'customer_id' => $customer->id,
                     'customer_type' => 'b2c',
-                    'items'         => [
+                    'items' => [
                         ['name' => 'Idem Line', 'quantity' => 1, 'unit_price' => 40, 'tax_rate' => 0],
                     ],
                     'idempotency_key' => 'flow-s4-inv-'.Str::uuid()->toString(),
                 ],
                 companyId: $companyId,
-                branchId:  $branchId,
-                userId:    $user->id,
+                branchId: $branchId,
+                userId: $user->id,
             );
 
             $idemKey = 'idem-flow-'.Str::uuid()->toString();
-            $token   = $user->createToken('financial-flows')->plainTextToken;
+            $token = $user->createToken('financial-flows')->plainTextToken;
 
             $payload = [
-                'amount'    => 40,
-                'method'    => 'cash',
+                'amount' => 40,
+                'method' => 'cash',
                 'reference' => 'idem-test',
             ];
 
             // Hit nginx from inside Docker (CLI has no web route table match for Request::create).
             $base = env('FINANCIAL_FLOW_API_BASE', 'http://nginx');
-            $url  = $base.'/api/v1/invoices/'.$invoice->id.'/pay';
+            $url = $base.'/api/v1/invoices/'.$invoice->id.'/pay';
 
             $client = Http::acceptJson()
                 ->withToken($token)
                 ->withHeaders(['Idempotency-Key' => $idemKey]);
 
             $res1 = $client->post($url, $payload);
-            $status1  = $res1->status();
+            $status1 = $res1->status();
             $content1 = $res1->body();
 
             $countAfterFirst = Payment::where('invoice_id', $invoice->id)->count();
 
             $res2 = $client->post($url, $payload);
-            $status2  = $res2->status();
+            $status2 = $res2->status();
             $content2 = $res2->body();
 
             $countAfterSecond = Payment::where('invoice_id', $invoice->id)->count();
@@ -237,12 +237,12 @@ class TestFinancialFlows extends Command
             $traceId = (string) Str::uuid();
 
             $refund = $paymentService->refund(
-                paymentId:      (int) $pid,
-                userId:         $user->id,
-                traceId:        $traceId,
+                paymentId: (int) $pid,
+                userId: $user->id,
+                traceId: $traceId,
                 idempotencyKey: $idem,
-                amount:         null,
-                reason:         'test:financial-flows scenario 5',
+                amount: null,
+                reason: 'test:financial-flows scenario 5',
             );
 
             $inv = Invoice::find($payment->invoice_id);
@@ -261,68 +261,68 @@ class TestFinancialFlows extends Command
         $this->runScenario('SCENARIO 6 — Fleet + Vehicle', function () use ($walletService, $user, $companyId, $branchId, $invoiceService, $paymentService) {
             $this->bindTenant($user);
             $customer = $this->makeCustomer($companyId, $branchId, 'S6-'.Str::random(4));
-            $vehicle  = Vehicle::create([
-                'uuid'               => (string) Str::uuid(),
-                'company_id'         => $companyId,
-                'branch_id'          => $branchId,
-                'customer_id'        => $customer->id,
+            $vehicle = Vehicle::create([
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $companyId,
+                'branch_id' => $branchId,
+                'customer_id' => $customer->id,
                 'created_by_user_id' => $user->id,
-                'plate_number'       => 'FF-'.rand(1000, 9999),
-                'make'               => 'Test',
-                'model'              => 'Fleet',
-                'year'               => 2024,
-                'is_active'          => true,
+                'plate_number' => 'FF-'.rand(1000, 9999),
+                'make' => 'Test',
+                'model' => 'Fleet',
+                'year' => 2024,
+                'is_active' => true,
             ]);
 
             $trace = (string) Str::uuid();
             $walletService->topUpFleet(
-                companyId:      $companyId,
-                customerId:     $customer->id,
-                vehicleId:      null,
-                amount:         5000.00,
-                invoiceId:      null,
-                paymentId:      null,
-                userId:         $user->id,
-                traceId:        $trace,
+                companyId: $companyId,
+                customerId: $customer->id,
+                vehicleId: null,
+                amount: 5000.00,
+                invoiceId: null,
+                paymentId: null,
+                userId: $user->id,
+                traceId: $trace,
                 idempotencyKey: 'flow-s6-fleet-'.Str::uuid()->toString(),
-                branchId:       $branchId,
-                notes:          null,
+                branchId: $branchId,
+                notes: null,
             );
 
             $walletService->transferToVehicle(
-                companyId:      $companyId,
-                customerId:     $customer->id,
-                vehicleId:      $vehicle->id,
-                amount:         800.00,
-                invoiceId:      null,
-                paymentId:      null,
-                userId:         $user->id,
-                traceId:        (string) Str::uuid(),
+                companyId: $companyId,
+                customerId: $customer->id,
+                vehicleId: $vehicle->id,
+                amount: 800.00,
+                invoiceId: null,
+                paymentId: null,
+                userId: $user->id,
+                traceId: (string) Str::uuid(),
                 idempotencyKey: 'flow-s6-xfer-'.Str::uuid()->toString(),
-                branchId:       $branchId,
-                notes:          null,
+                branchId: $branchId,
+                notes: null,
             );
 
             $invoice = $invoiceService->createInvoice(
                 data: [
-                    'customer_id'   => $customer->id,
-                    'vehicle_id'    => $vehicle->id,
+                    'customer_id' => $customer->id,
+                    'vehicle_id' => $vehicle->id,
                     'customer_type' => 'b2b',
-                    'items'         => [
+                    'items' => [
                         ['name' => 'Fleet vehicle service', 'quantity' => 1, 'unit_price' => 50, 'tax_rate' => 0],
                     ],
                     'idempotency_key' => 'flow-s6-inv-'.Str::uuid()->toString(),
                 ],
                 companyId: $companyId,
-                branchId:  $branchId,
-                userId:    $user->id,
+                branchId: $branchId,
+                userId: $user->id,
             );
 
             $this->payInvoice(
                 $invoice,
                 [
-                    'amount'                 => 50,
-                    'method'                 => 'wallet',
+                    'amount' => 50,
+                    'method' => 'wallet',
                     'wallet_idempotency_key' => 'flow-s6-wpay-'.Str::uuid()->toString(),
                 ],
                 $user,
@@ -330,7 +330,7 @@ class TestFinancialFlows extends Command
                 $paymentService,
             );
 
-            $fleetBal   = $this->walletBalanceByType($companyId, $customer->id, WalletType::FleetMain);
+            $fleetBal = $this->walletBalanceByType($companyId, $customer->id, WalletType::FleetMain);
             $vehicleBal = $this->vehicleWalletBalance($companyId, $customer->id, $vehicle->id);
 
             $this->line('  fleet_main balance: '.$fleetBal);
@@ -389,13 +389,13 @@ class TestFinancialFlows extends Command
     private function makeCustomer(int $companyId, int $branchId, string $suffix): Customer
     {
         return Customer::create([
-            'uuid'        => (string) Str::uuid(),
-            'company_id'  => $companyId,
-            'branch_id'   => $branchId,
-            'name'        => 'Financial Flow '.$suffix,
-            'type'        => 'individual',
-            'email'       => 'flow-'.Str::lower($suffix).'@test.local',
-            'is_active'   => true,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $companyId,
+            'branch_id' => $branchId,
+            'name' => 'Financial Flow '.$suffix,
+            'type' => 'individual',
+            'email' => 'flow-'.Str::lower($suffix).'@test.local',
+            'is_active' => true,
         ]);
     }
 
@@ -456,12 +456,12 @@ class TestFinancialFlows extends Command
             $traceId = trim((string) (app('trace_id') ?? '')) ?: Str::uuid()->toString();
 
             $payment = $paymentService->createPayment(
-                invoice:   $invoice,
-                amount:    (float) $data['amount'],
-                method:    $data['method'],
-                userId:    $user->id,
-                traceId:   $traceId,
-                branchId:  $invoice->branch_id,
+                invoice: $invoice,
+                amount: (float) $data['amount'],
+                method: $data['method'],
+                userId: $user->id,
+                traceId: $traceId,
+                branchId: $invoice->branch_id,
                 reference: $data['reference'] ?? null,
             );
 
@@ -480,33 +480,33 @@ class TestFinancialFlows extends Command
 
                 if ($vehicleId && $invoice->customer_type === 'b2b') {
                     $walletService->debitVehicleForInvoice(
-                        companyId:      $invoice->company_id,
-                        customerId:     $invoice->customer_id,
-                        vehicleId:      $vehicleId,
-                        amount:         (float) $payment->amount,
-                        invoiceId:      $invoice->id,
-                        paymentId:      $payment->id,
-                        userId:         $user->id,
-                        traceId:        $traceId,
+                        companyId: $invoice->company_id,
+                        customerId: $invoice->customer_id,
+                        vehicleId: $vehicleId,
+                        amount: (float) $payment->amount,
+                        invoiceId: $invoice->id,
+                        paymentId: $payment->id,
+                        userId: $user->id,
+                        traceId: $traceId,
                         idempotencyKey: $walletKey,
-                        branchId:       $invoice->branch_id,
-                        notes:          null,
-                        paymentMode:    'prepaid',
+                        branchId: $invoice->branch_id,
+                        notes: null,
+                        paymentMode: 'prepaid',
                     );
                 } else {
                     $walletService->debitIndividualForInvoice(
-                        companyId:      $invoice->company_id,
-                        customerId:     $invoice->customer_id,
-                        vehicleId:      $vehicleId,
-                        amount:         (float) $payment->amount,
-                        invoiceId:      $invoice->id,
-                        paymentId:      $payment->id,
-                        userId:         $user->id,
-                        traceId:        $traceId,
+                        companyId: $invoice->company_id,
+                        customerId: $invoice->customer_id,
+                        vehicleId: $vehicleId,
+                        amount: (float) $payment->amount,
+                        invoiceId: $invoice->id,
+                        paymentId: $payment->id,
+                        userId: $user->id,
+                        traceId: $traceId,
                         idempotencyKey: $walletKey,
-                        branchId:       $invoice->branch_id,
-                        notes:          null,
-                        paymentMode:    'prepaid',
+                        branchId: $invoice->branch_id,
+                        notes: null,
+                        paymentMode: 'prepaid',
                     );
                 }
             }

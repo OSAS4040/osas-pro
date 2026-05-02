@@ -3,14 +3,21 @@
 namespace Tests\Feature\PreProduction;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\WorkOrderStatus;
+use App\Models\Branch;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Inventory;
 use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\Product;
 use App\Models\Unit;
+use App\Models\User;
+use App\Models\Vehicle;
 use App\Models\WorkOrder;
 use App\Services\InventoryService;
+use App\Services\WalletService;
+use App\Services\WorkOrderService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Group;
@@ -30,11 +37,11 @@ use Tests\TestCase;
 #[Group('phase7')]
 class RealWorkflowApiTest extends TestCase
 {
-    private \App\Models\Company $company;
+    private Company $company;
 
-    private \App\Models\Branch $branch;
+    private Branch $branch;
 
-    private \App\Models\User $user;
+    private User $user;
 
     private Product $product;
 
@@ -42,39 +49,39 @@ class RealWorkflowApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->company  = $this->createCompany();
-        $this->branch   = $this->createBranch($this->company);
-        $this->user     = $this->createUser($this->company, $this->branch);
+        $this->company = $this->createCompany();
+        $this->branch = $this->createBranch($this->company);
+        $this->user = $this->createUser($this->company, $this->branch);
         $this->createActiveSubscription($this->company);
 
         $unit = Unit::create([
             'company_id' => $this->company->id,
-            'name'       => 'Piece', 'symbol' => 'pcs',
-            'type'       => 'quantity', 'is_base' => true,
-            'is_system'  => false, 'is_active' => true,
+            'name' => 'Piece', 'symbol' => 'pcs',
+            'type' => 'quantity', 'is_base' => true,
+            'is_system' => false, 'is_active' => true,
         ]);
 
         $this->product = Product::create([
-            'uuid'              => Str::uuid(),
-            'company_id'        => $this->company->id,
-            'name'              => 'PreProd Part',
-            'sku'               => 'PP-' . Str::random(6),
-            'product_type'      => 'physical',
-            'unit_id'           => $unit->id,
-            'sale_price'        => 25.00,
-            'cost_price'        => 12.00,
-            'track_inventory'   => true,
-            'is_active'         => true,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
+            'name' => 'PreProd Part',
+            'sku' => 'PP-'.Str::random(6),
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => 25.00,
+            'cost_price' => 12.00,
+            'track_inventory' => true,
+            'is_active' => true,
         ]);
 
         app(InventoryService::class)->addStock(
             companyId: $this->company->id,
-            branchId:  $this->branch->id,
+            branchId: $this->branch->id,
             productId: $this->product->id,
-            quantity:  100,
-            userId:    $this->user->id,
-            type:      'manual_add',
-            traceId:   'preprod-seed',
+            quantity: 100,
+            userId: $this->user->id,
+            type: 'manual_add',
+            traceId: 'preprod-seed',
         );
     }
 
@@ -99,13 +106,13 @@ class RealWorkflowApiTest extends TestCase
             ->assertJsonPath('data.type', 'b2b');
         $customerId = (int) $rCustomer->json('data.id');
 
-        $plate = 'PRE-' . strtoupper(Str::random(5));
+        $plate = 'PRE-'.strtoupper(Str::random(5));
         $rVehicle = $auth()->postJson('/api/v1/vehicles', [
-            'customer_id'  => $customerId,
+            'customer_id' => $customerId,
             'plate_number' => $plate,
-            'make'         => 'Test',
-            'model'        => 'Truck',
-            'year'         => 2023,
+            'make' => 'Test',
+            'model' => 'Truck',
+            'year' => 2023,
         ]);
         $rVehicle->assertStatus(201)
             ->assertJsonStructure(['data', 'trace_id']);
@@ -113,32 +120,32 @@ class RealWorkflowApiTest extends TestCase
 
         $rWo = $auth()->postJson('/api/v1/work-orders', [
             'customer_id' => $customerId,
-            'vehicle_id'  => $vehicleId,
-            'items'       => [
+            'vehicle_id' => $vehicleId,
+            'items' => [
                 [
                     'item_type' => 'labor',
-                    'name'      => 'Oil change labor',
-                    'quantity'  => 1,
-                    'unit_price'=> 80,
-                    'tax_rate'  => 15,
+                    'name' => 'Oil change labor',
+                    'quantity' => 1,
+                    'unit_price' => 80,
+                    'tax_rate' => 15,
                 ],
                 [
-                    'item_type'  => 'part',
-                    'name'       => $this->product->name,
+                    'item_type' => 'part',
+                    'name' => $this->product->name,
                     'product_id' => $this->product->id,
-                    'quantity'   => 2,
+                    'quantity' => 2,
                     'unit_price' => 25,
-                    'tax_rate'   => 15,
+                    'tax_rate' => 15,
                 ],
             ],
         ]);
         $rWo->assertStatus(201)->assertJsonStructure(['data', 'trace_id']);
         $rWo->assertJsonPath('data.status', 'approved');
-        $woId    = (int) $rWo->json('data.id');
+        $woId = (int) $rWo->json('data.id');
         $version = (int) $rWo->json('data.version');
 
         $rIp = $auth()->patchJson("/api/v1/work-orders/{$woId}/status", [
-            'status'  => 'in_progress',
+            'status' => 'in_progress',
             'version' => $version,
         ]);
         $rIp->assertOk()->assertJsonStructure(['data', 'trace_id']);
@@ -147,10 +154,10 @@ class RealWorkflowApiTest extends TestCase
         $this->prepareWorkOrderForCompletedTransition(WorkOrder::query()->findOrFail($woId));
 
         $rDone = $auth()->patchJson("/api/v1/work-orders/{$woId}/status", [
-            'status'           => 'completed',
-            'version'          => $version,
+            'status' => 'completed',
+            'version' => $version,
             'technician_notes' => 'preprod complete',
-            'mileage_out'      => 88000,
+            'mileage_out' => 88000,
         ]);
         $rDone->assertOk()->assertJsonStructure(['data', 'trace_id']);
 
@@ -159,7 +166,7 @@ class RealWorkflowApiTest extends TestCase
             ->postJson("/api/v1/invoices/from-work-order/{$woId}");
         $rInv->assertStatus(201)->assertJsonStructure(['data', 'trace_id']);
         $invoiceId = (int) $rInv->json('data.id');
-        $due       = (float) $rInv->json('data.due_amount');
+        $due = (float) $rInv->json('data.due_amount');
         $this->assertGreaterThan(0, $due);
 
         $splitInvoices = Invoice::withoutGlobalScopes()
@@ -191,9 +198,9 @@ class RealWorkflowApiTest extends TestCase
         $topUpKey = (string) Str::uuid();
         $rTop = $auth()->withHeaders(['Idempotency-Key' => $topUpKey])
             ->postJson('/api/v1/wallet/top-up', [
-                'customer_id'     => $customerId,
-                'amount'          => $due + 5000,
-                'target'          => 'fleet',
+                'customer_id' => $customerId,
+                'amount' => $due + 5000,
+                'target' => 'fleet',
                 'idempotency_key' => $topUpKey,
             ]);
         $rTop->assertStatus(201)->assertJsonStructure(['data', 'trace_id']);
@@ -201,9 +208,9 @@ class RealWorkflowApiTest extends TestCase
         $xferKey = (string) Str::uuid();
         $rXfer = $auth()->withHeaders(['Idempotency-Key' => $xferKey])
             ->postJson('/api/v1/wallet/transfer', [
-                'customer_id'     => $customerId,
-                'vehicle_id'      => $vehicleId,
-                'amount'          => $due + 500,
+                'customer_id' => $customerId,
+                'vehicle_id' => $vehicleId,
+                'amount' => $due + 500,
                 'idempotency_key' => $xferKey,
             ]);
         $rXfer->assertStatus(201)->assertJsonStructure(['data', 'trace_id']);
@@ -256,25 +263,25 @@ class RealWorkflowApiTest extends TestCase
         $auth = fn () => $this->actingAs($this->user, 'sanctum');
 
         $customer = Customer::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $this->company->id,
-            'branch_id'  => $this->branch->id,
-            'type'       => 'b2b',
-            'name'       => 'Pay Replay Customer',
-            'is_active'  => true,
+            'branch_id' => $this->branch->id,
+            'type' => 'b2b',
+            'name' => 'Pay Replay Customer',
+            'is_active' => true,
         ]);
 
-        $vehicle = \App\Models\Vehicle::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->company->id,
-            'branch_id'          => $this->branch->id,
-            'customer_id'        => $customer->id,
+        $vehicle = Vehicle::create([
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
+            'branch_id' => $this->branch->id,
+            'customer_id' => $customer->id,
             'created_by_user_id' => $this->user->id,
-            'plate_number'       => 'PAY-' . strtoupper(Str::random(4)),
-            'make'               => 'X', 'model' => 'Y', 'year' => 2022,
+            'plate_number' => 'PAY-'.strtoupper(Str::random(4)),
+            'make' => 'X', 'model' => 'Y', 'year' => 2022,
         ]);
 
-        $order = app(\App\Services\WorkOrderService::class)->create(
+        $order = app(WorkOrderService::class)->create(
             [
                 'customer_id' => $customer->id,
                 'vehicle_id' => $vehicle->id,
@@ -292,12 +299,12 @@ class RealWorkflowApiTest extends TestCase
             $this->user->id,
         );
 
-        app(\App\Services\WorkOrderService::class)->transition($order, \App\Enums\WorkOrderStatus::InProgress);
+        app(WorkOrderService::class)->transition($order, WorkOrderStatus::InProgress);
         $order->refresh();
         $this->prepareWorkOrderForCompletedTransition($order);
-        app(\App\Services\WorkOrderService::class)->transition($order, \App\Enums\WorkOrderStatus::Completed, [
+        app(WorkOrderService::class)->transition($order, WorkOrderStatus::Completed, [
             'technician_notes' => 'pay idem',
-            'mileage_out'      => 1000,
+            'mileage_out' => 1000,
         ]);
 
         $issueKey = (string) Str::uuid();
@@ -305,9 +312,9 @@ class RealWorkflowApiTest extends TestCase
             ->postJson("/api/v1/invoices/from-work-order/{$order->id}");
         $issue->assertStatus(201);
         $invoiceId = (int) $issue->json('data.id');
-        $due       = (float) $issue->json('data.due_amount');
+        $due = (float) $issue->json('data.due_amount');
 
-        app(\App\Services\WalletService::class)->topUpFleet(
+        app(WalletService::class)->topUpFleet(
             $this->company->id,
             $customer->id,
             null,
@@ -320,7 +327,7 @@ class RealWorkflowApiTest extends TestCase
             $this->branch->id,
             null,
         );
-        app(\App\Services\WalletService::class)->transferToVehicle(
+        app(WalletService::class)->transferToVehicle(
             $this->company->id,
             $customer->id,
             $vehicle->id,

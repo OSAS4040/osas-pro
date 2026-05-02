@@ -20,74 +20,78 @@ class POSSaleTest extends TestCase
 {
     use RefreshDatabase;
 
-    private Company  $company;
-    private Branch   $branch;
-    private User     $user;
+    private Company $company;
+
+    private Branch $branch;
+
+    private User $user;
+
     private Customer $customer;
-    private Product  $product;
+
+    private Product $product;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->company  = $this->createCompany();
-        $this->branch   = $this->createBranch($this->company);
-        $this->user     = $this->createUser($this->company, $this->branch);
+        $this->company = $this->createCompany();
+        $this->branch = $this->createBranch($this->company);
+        $this->user = $this->createUser($this->company, $this->branch);
         $this->createActiveSubscription($this->company);
 
         $this->customer = Customer::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->company->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
             'created_by_user_id' => $this->user->id,
-            'name'               => 'Walk-In Customer',
-            'customer_type'      => 'individual',
-            'is_active'          => true,
+            'name' => 'Walk-In Customer',
+            'customer_type' => 'individual',
+            'is_active' => true,
         ]);
 
         $unit = Unit::create([
             'company_id' => $this->company->id,
-            'name'       => 'Piece', 'symbol' => 'pcs',
-            'type'       => 'quantity', 'is_base' => true,
-            'is_system'  => false, 'is_active' => true,
+            'name' => 'Piece', 'symbol' => 'pcs',
+            'type' => 'quantity', 'is_base' => true,
+            'is_system' => false, 'is_active' => true,
         ]);
 
         $this->product = Product::create([
-            'uuid'            => Str::uuid(),
-            'company_id'      => $this->company->id,
-            'name'            => 'Engine Oil 5W30',
-            'sku'             => 'OIL-5W30',
-            'product_type'    => 'consumable',
-            'unit_id'         => $unit->id,
-            'sale_price'      => 50.00,
-            'cost_price'      => 30.00,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
+            'name' => 'Engine Oil 5W30',
+            'sku' => 'OIL-5W30',
+            'product_type' => 'consumable',
+            'unit_id' => $unit->id,
+            'sale_price' => 50.00,
+            'cost_price' => 30.00,
             'track_inventory' => true,
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         app(InventoryService::class)->addStock(
             companyId: $this->company->id,
-            branchId:  $this->branch->id,
+            branchId: $this->branch->id,
             productId: $this->product->id,
-            quantity:  100,
-            userId:    $this->user->id,
-            type:      'manual_add',
-            traceId:   'setup',
+            quantity: 100,
+            userId: $this->user->id,
+            type: 'manual_add',
+            traceId: 'setup',
         );
     }
 
     private function salePayload(array $overrides = []): array
     {
         return array_merge([
-            'customer_id'  => $this->customer->id,
+            'customer_id' => $this->customer->id,
             'customer_type' => 'b2c',
             'items' => [
                 [
-                    'name'       => $this->product->name,
+                    'name' => $this->product->name,
                     'product_id' => $this->product->id,
-                    'quantity'   => 2,
+                    'quantity' => 2,
                     'unit_price' => 50.00,
                     'cost_price' => 30.00,
-                    'tax_rate'   => 15,
+                    'tax_rate' => 15,
                 ],
             ],
             'payment' => ['method' => 'cash', 'amount' => 115.00],
@@ -113,7 +117,7 @@ class POSSaleTest extends TestCase
 
         $inventory = Inventory::where([
             'company_id' => $this->company->id,
-            'branch_id'  => $this->branch->id,
+            'branch_id' => $this->branch->id,
             'product_id' => $this->product->id,
         ])->first();
 
@@ -185,11 +189,11 @@ class POSSaleTest extends TestCase
     {
         $payload = $this->salePayload([
             'items' => [[
-                'name'       => $this->product->name,
+                'name' => $this->product->name,
                 'product_id' => $this->product->id,
-                'quantity'   => 999,
+                'quantity' => 999,
                 'unit_price' => 50.00,
-                'tax_rate'   => 15,
+                'tax_rate' => 15,
             ]],
             'payment' => ['method' => 'cash', 'amount' => 57442.50],
         ]);
@@ -237,11 +241,11 @@ class POSSaleTest extends TestCase
             ->withHeaders(['Idempotency-Key' => Str::uuid()])
             ->postJson('/api/v1/pos/sale', [
                 'customer_id' => $this->customer->id,
-                'items'       => [[
-                    'name'       => 'Pilot line',
-                    'quantity'   => 1,
+                'items' => [[
+                    'name' => 'Pilot line',
+                    'quantity' => 1,
                     'unit_price' => 20,
-                    'tax_rate'   => 15,
+                    'tax_rate' => 15,
                 ]],
                 'payment' => ['method' => 'cash', 'amount' => 23],
             ]);
@@ -258,11 +262,11 @@ class POSSaleTest extends TestCase
                 ->withHeaders(['Idempotency-Key' => Str::uuid()])
                 ->postJson('/api/v1/pos/sale', [
                     'customer_id' => $this->customer->id,
-                    'items'       => [[
-                        'name'       => 'Stress POS '.$i,
-                        'quantity'   => 1,
+                    'items' => [[
+                        'name' => 'Stress POS '.$i,
+                        'quantity' => 1,
                         'unit_price' => 20,
-                        'tax_rate'   => 15,
+                        'tax_rate' => 15,
                     ]],
                     'payment' => ['method' => 'cash', 'amount' => 23],
                 ]);

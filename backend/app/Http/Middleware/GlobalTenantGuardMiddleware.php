@@ -47,7 +47,7 @@ class GlobalTenantGuardMiddleware
 
         if (! $user->company_id) {
             return response()->json([
-                'message'  => 'Tenant context not found.',
+                'message' => 'Tenant context not found.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -56,14 +56,14 @@ class GlobalTenantGuardMiddleware
 
         if (! $company) {
             return response()->json([
-                'message'  => 'Company context is invalid for this account.',
+                'message' => 'Company context is invalid for this account.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
 
         if ($company->status === CompanyStatus::Suspended) {
             return response()->json([
-                'message'  => 'Company account is suspended.',
+                'message' => 'Company account is suspended.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -104,21 +104,21 @@ class GlobalTenantGuardMiddleware
         $company = Company::query()->find($companyId);
         if ($company === null) {
             return response()->json([
-                'message'  => 'الشركة المحدّدة غير موجودة.',
+                'message' => 'الشركة المحدّدة غير موجودة.',
                 'trace_id' => app('trace_id'),
             ], 404);
         }
 
         if (! TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId)) {
             return response()->json([
-                'message'  => 'الشركة المختارة ليست مُسجّلة كشريك تنفيذ منصّة.',
+                'message' => 'الشركة المختارة ليست مُسجّلة كشريك تنفيذ منصّة.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }
 
         if ($company->status === CompanyStatus::Suspended) {
             return response()->json([
-                'message'  => 'Company account is suspended.',
+                'message' => 'Company account is suspended.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }

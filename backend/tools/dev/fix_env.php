@@ -1,14 +1,15 @@
 <?php
+
 $path = '/var/www/.env';
 $content = file_get_contents($path);
 
 // لا تُلصق APP_KEY في هذا السكربت — شغّل داخل الحاوية: php artisan key:generate
 
 $replacements = [
-    'DB_DATABASE=osas_db'  => 'DB_DATABASE=saas_db',
+    'DB_DATABASE=osas_db' => 'DB_DATABASE=saas_db',
     'DB_USERNAME=postgres' => 'DB_USERNAME=saas_user',
-    'DB_PASSWORD=secret'   => 'DB_PASSWORD=saas_password',
-    'LOG_LEVEL=debug'      => 'LOG_LEVEL=warning',
+    'DB_PASSWORD=secret' => 'DB_PASSWORD=saas_password',
+    'LOG_LEVEL=debug' => 'LOG_LEVEL=warning',
 ];
 
 foreach ($replacements as $from => $to) {

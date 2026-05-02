@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\WorkOrder;
 use App\Services\WalletService;
 use App\Services\WorkOrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,48 +22,54 @@ class InvoiceFromWorkOrderTest extends TestCase
     use RefreshDatabase;
 
     private Company $company;
+
     private Branch $branch;
+
     private User $user;
+
     private Customer $customer;
+
     private Vehicle $vehicle;
+
     private WorkOrderService $workOrderService;
+
     private WalletService $walletService;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->company  = $this->createCompany();
-        $this->branch   = $this->createBranch($this->company);
-        $this->user     = $this->createUser($this->company, $this->branch);
+        $this->company = $this->createCompany();
+        $this->branch = $this->createBranch($this->company);
+        $this->user = $this->createUser($this->company, $this->branch);
         $this->createActiveSubscription($this->company);
 
         $this->customer = Customer::create([
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => $this->company->id,
-            'branch_id'  => $this->branch->id,
-            'type'       => 'fleet',
-            'name'       => 'Fleet From-WO Test',
-            'is_active'  => true,
+            'branch_id' => $this->branch->id,
+            'type' => 'fleet',
+            'name' => 'Fleet From-WO Test',
+            'is_active' => true,
         ]);
 
         $this->vehicle = Vehicle::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $this->company->id,
-            'branch_id'          => $this->branch->id,
-            'customer_id'        => $this->customer->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $this->company->id,
+            'branch_id' => $this->branch->id,
+            'customer_id' => $this->customer->id,
             'created_by_user_id' => $this->user->id,
-            'plate_number'       => 'WO-INV-01',
-            'make'               => 'Test',
-            'model'              => 'Fleet',
-            'year'               => 2024,
+            'plate_number' => 'WO-INV-01',
+            'make' => 'Test',
+            'model' => 'Fleet',
+            'year' => 2024,
         ]);
 
         $this->workOrderService = app(WorkOrderService::class);
-        $this->walletService    = app(WalletService::class);
+        $this->walletService = app(WalletService::class);
     }
 
-    private function ensureApproved(\App\Models\WorkOrder $order): void
+    private function ensureApproved(WorkOrder $order): void
     {
         $order->refresh();
         if ($order->status === WorkOrderStatus::PendingManagerApproval) {
@@ -101,7 +108,7 @@ class InvoiceFromWorkOrderTest extends TestCase
         $this->prepareWorkOrderForCompletedTransition($order);
         $this->workOrderService->transition($order, WorkOrderStatus::Completed, [
             'technician_notes' => 'ready to invoice',
-            'mileage_out'      => 12000,
+            'mileage_out' => 12000,
         ]);
         $order->refresh();
 
@@ -120,16 +127,16 @@ class InvoiceFromWorkOrderTest extends TestCase
         $this->assertSame(WorkOrderStatus::Completed->value, $order->fresh()->status->value);
 
         $this->assertDatabaseHas('invoices', [
-            'id'                => $invoiceId,
-            'idempotency_key'   => $idempotencyKey.'-customer',
-            'source_type'       => \App\Models\WorkOrder::class,
-            'source_id'         => $order->id,
+            'id' => $invoiceId,
+            'idempotency_key' => $idempotencyKey.'-customer',
+            'source_type' => WorkOrder::class,
+            'source_id' => $order->id,
             'billing_flow_type' => 'platform_to_customer',
             'work_order_number_snapshot' => $order->order_number,
             'vehicle_plate_snapshot' => $this->vehicle->plate_number,
         ]);
         $this->assertDatabaseHas('invoices', [
-            'source_type' => \App\Models\WorkOrder::class,
+            'source_type' => WorkOrder::class,
             'source_id' => $order->id,
             'billing_flow_type' => 'provider_to_platform',
             'customer_visible' => false,
@@ -165,7 +172,7 @@ class InvoiceFromWorkOrderTest extends TestCase
         $this->prepareWorkOrderForCompletedTransition($order);
         $this->workOrderService->transition($order, WorkOrderStatus::Completed, [
             'technician_notes' => 'invoice + wallet',
-            'mileage_out'      => 13000,
+            'mileage_out' => 13000,
         ]);
 
         $issueKey = (string) Str::uuid();
@@ -176,7 +183,7 @@ class InvoiceFromWorkOrderTest extends TestCase
 
         $issueResponse->assertStatus(201);
         $invoiceId = (int) $issueResponse->json('data.id');
-        $due       = (float) $issueResponse->json('data.due_amount');
+        $due = (float) $issueResponse->json('data.due_amount');
         $this->assertGreaterThan(0, $due);
 
         $this->walletService->topUpFleet(
@@ -254,7 +261,7 @@ class InvoiceFromWorkOrderTest extends TestCase
         $order->refresh();
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'pricing snapshot test',
-            'mileage_out'      => 14000,
+            'mileage_out' => 14000,
         ]);
         $this->workOrderService->transition($order, WorkOrderStatus::Completed);
         $order->refresh();

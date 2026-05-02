@@ -10,7 +10,7 @@ use App\Modules\SubscriptionsV2\Models\RealtimeEvent;
 final class RealtimeNotificationService
 {
     /**
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     public function publish(string $eventType, ?int $companyId, string $audience, array $payload): void
     {
@@ -29,4 +29,3 @@ final class RealtimeNotificationService
         ));
     }
 }
-

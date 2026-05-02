@@ -24,8 +24,8 @@ class AuditLog extends Model
     ];
 
     protected $casts = [
-        'before_json'  => 'array',
-        'after_json'   => 'array',
+        'before_json' => 'array',
+        'after_json' => 'array',
         'context_json' => 'array',
     ];
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use Illuminate\Http\JsonResponse;
@@ -18,10 +19,13 @@ class PermissionController extends Controller
      *     tags={"Permissions"},
      *     summary="List all available permissions grouped by category",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Permissions grouped by category",
+     *
      *         @OA\JsonContent(
+     *
      *             @OA\Property(property="data", type="object", description="Key = group, value = array of permission names"),
      *             @OA\Property(property="trace_id", type="string")
      *         )
@@ -32,8 +36,8 @@ class PermissionController extends Controller
     {
         $grouped = Permission::orderBy('group')->orderBy('name')->get()
             ->groupBy('group')
-            ->map(fn($items) => $items->map(fn($p) => [
-                'name'        => $p->name,
+            ->map(fn ($items) => $items->map(fn ($p) => [
+                'name' => $p->name,
                 'description' => $p->description,
             ])->values());
 
@@ -46,22 +50,23 @@ class PermissionController extends Controller
      *     tags={"Permissions"},
      *     summary="Get permissions for the authenticated user",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
     public function my(Request $request): JsonResponse
     {
-        $user        = $request->user();
-        $roleKey     = $user->role instanceof \App\Enums\UserRole ? $user->role->value : $user->role;
-        $configPerms = config('permissions.roles.' . $roleKey, []);
+        $user = $request->user();
+        $roleKey = $user->role instanceof UserRole ? $user->role->value : $user->role;
+        $configPerms = config('permissions.roles.'.$roleKey, []);
 
         $all = in_array('*', $configPerms)
             ? config('permissions.all_permissions', [])
             : $configPerms;
 
         return response()->json([
-            'data'     => [
-                'role'        => $roleKey,
+            'data' => [
+                'role' => $roleKey,
                 'permissions' => $all,
             ],
             'trace_id' => app('trace_id'),

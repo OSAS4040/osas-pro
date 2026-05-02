@@ -31,23 +31,23 @@ final class BankTransactionImportService
     public function import(array $rows, ?int $actorId = null, ?string $batchUuid = null): array
     {
         $batchUuid ??= (string) Str::uuid();
-        $ids       = [];
+        $ids = [];
 
         foreach ($rows as $row) {
             $refRaw = $row['bank_reference'] ?? $row['description'] ?? '';
             $extracted = $this->extractReference((string) $refRaw);
 
             $tx = BankTransaction::query()->create([
-                'import_batch_uuid'   => $batchUuid,
-                'transaction_date'    => $row['transaction_date'],
-                'transaction_time'    => $row['transaction_time'] ?? null,
-                'amount'              => $row['amount'],
-                'currency'            => $row['currency'] ?? 'SAR',
-                'sender_name'         => $row['sender_name'] ?? null,
-                'bank_reference'      => $row['bank_reference'] ?? null,
-                'description'         => $row['description'] ?? null,
+                'import_batch_uuid' => $batchUuid,
+                'transaction_date' => $row['transaction_date'],
+                'transaction_time' => $row['transaction_time'] ?? null,
+                'amount' => $row['amount'],
+                'currency' => $row['currency'] ?? 'SAR',
+                'sender_name' => $row['sender_name'] ?? null,
+                'bank_reference' => $row['bank_reference'] ?? null,
+                'description' => $row['description'] ?? null,
                 'reference_extracted' => $extracted,
-                'is_matched'          => false,
+                'is_matched' => false,
             ]);
             $ids[] = $tx->id;
         }

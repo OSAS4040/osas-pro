@@ -230,4 +230,3 @@ final class PlatformNotificationCenterApiTest extends TestCase
             ->assertJsonPath('data.0.requires_action', true);
     }
 }
-

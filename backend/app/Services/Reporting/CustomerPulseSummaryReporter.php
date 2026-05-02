@@ -32,7 +32,7 @@ final class CustomerPulseSummaryReporter
         $context = ($this->resolveContext)($actor, $validated);
         if ($context->customerId === null) {
             throw new HttpResponseException(response()->json([
-                'message'  => 'customer_id is required for this report.',
+                'message' => 'customer_id is required for this report.',
                 'trace_id' => app('trace_id'),
             ], 422));
         }
@@ -46,14 +46,14 @@ final class CustomerPulseSummaryReporter
             period: $period,
             appliedFilters: $context->toFilterSnapshot(),
             data: [
-                'summary'   => $payload['summary'],
+                'summary' => $payload['summary'],
                 'breakdown' => $payload['breakdown'],
             ],
             meta: [
                 'financial_metrics_included' => $includeFinancial,
-                'read_only'                  => true,
-                'filters_applied'            => $context->toFilterSnapshot(),
-                'query_kind'                 => 'aggregate',
+                'read_only' => true,
+                'filters_applied' => $context->toFilterSnapshot(),
+                'query_kind' => 'aggregate',
             ],
         );
     }

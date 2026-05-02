@@ -28,7 +28,7 @@ class RegistrationProfile extends Model
     {
         return [
             'submitted_at' => 'datetime',
-            'reviewed_at'  => 'datetime',
+            'reviewed_at' => 'datetime',
         ];
     }
 

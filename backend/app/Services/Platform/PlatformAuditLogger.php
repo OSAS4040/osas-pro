@@ -25,13 +25,13 @@ final class PlatformAuditLogger
 
         try {
             PlatformAuditLog::query()->create([
-                'user_id'      => $user?->id,
-                'action'       => $action,
+                'user_id' => $user?->id,
+                'action' => $action,
                 'subject_type' => $subjectType,
-                'subject_id'   => $subjectId,
-                'ip_address'   => $request->ip(),
-                'user_agent'   => mb_substr((string) $request->userAgent(), 0, 512),
-                'metadata'     => $metadata === [] ? null : $metadata,
+                'subject_id' => $subjectId,
+                'ip_address' => $request->ip(),
+                'user_agent' => mb_substr((string) $request->userAgent(), 0, 512),
+                'metadata' => $metadata === [] ? null : $metadata,
             ]);
         } catch (\Throwable $e) {
             report($e);

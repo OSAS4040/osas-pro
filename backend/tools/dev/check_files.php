@@ -1,4 +1,4 @@
-﻿$errors = [];
+$errors = [];
 $models = ["User","Vehicle","Invoice","WorkOrder","Employee","Fleet","Contract","Wallet","JournalEntry"];
 foreach($models as $m) {
     $file = "/var/www/app/Models/" . $m . ".php";

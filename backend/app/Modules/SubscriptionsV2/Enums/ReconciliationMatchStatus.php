@@ -6,7 +6,7 @@ namespace App\Modules\SubscriptionsV2\Enums;
 
 enum ReconciliationMatchStatus: string
 {
-    case Pending   = 'pending';
+    case Pending = 'pending';
     case Confirmed = 'confirmed';
-    case Rejected  = 'rejected';
+    case Rejected = 'rejected';
 }

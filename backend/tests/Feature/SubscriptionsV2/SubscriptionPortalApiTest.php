@@ -78,8 +78,8 @@ final class SubscriptionPortalApiTest extends TestCase
     public function test_jobs_are_routed_to_expected_queues(): void
     {
         $this->assertSame('high', (new RunReconciliationJob(1))->queue);
-        $this->assertSame('high', (new RunSubscriptionRenewalJob())->queue);
-        $this->assertSame('low', (new PruneSubscriptionRealtimeEventsJob())->queue);
+        $this->assertSame('high', (new RunSubscriptionRenewalJob)->queue);
+        $this->assertSame('low', (new PruneSubscriptionRealtimeEventsJob)->queue);
     }
 
     public function test_client_subscription_endpoints_return_data(): void
@@ -284,4 +284,3 @@ final class SubscriptionPortalApiTest extends TestCase
         $this->actingAs($platform, 'sanctum')->getJson('/api/v1/admin/subscriptions/wallets')->assertOk();
     }
 }
-

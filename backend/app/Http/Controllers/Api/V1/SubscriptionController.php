@@ -21,6 +21,7 @@ class SubscriptionController extends Controller
      *     tags={"Subscriptions"},
      *     summary="List subscriptions for current company",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/PaginatedResponse")
      * )
      */
@@ -37,6 +38,7 @@ class SubscriptionController extends Controller
      *     tags={"Subscriptions"},
      *     summary="Get the current active subscription",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
@@ -54,7 +56,7 @@ class SubscriptionController extends Controller
         $plan = Plan::findBySlug($subscription->plan);
 
         return response()->json([
-            'data'     => array_merge($subscription->toArray(), ['plan_details' => $plan]),
+            'data' => array_merge($subscription->toArray(), ['plan_details' => $plan]),
             'trace_id' => app('trace_id'),
         ]);
     }
@@ -65,34 +67,38 @@ class SubscriptionController extends Controller
      *     tags={"Subscriptions"},
      *     summary="Renew or upgrade subscription",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
+     *
      *         @OA\JsonContent(
      *             required={"plan"},
+     *
      *             @OA\Property(property="plan", type="string", example="professional"),
      *             @OA\Property(property="months", type="integer", example=12)
      *         )
      *     ),
+     *
      *     @OA\Response(response=200, ref="#/components/schemas/ApiResponse")
      * )
      */
     public function renew(RenewSubscriptionRequest $request): JsonResponse
     {
-        $data       = $request->validated();
-        $user       = $request->user();
-        $plan       = Plan::findBySlug($data['plan']);
-        $months     = $data['months'] ?? 1;
+        $data = $request->validated();
+        $user = $request->user();
+        $plan = Plan::findBySlug($data['plan']);
+        $months = $data['months'] ?? 1;
 
         $current = Subscription::where('company_id', $user->company_id)->latest()->first();
 
         if ($current !== null) {
-            $fromStatus   = (string) $current->status->value;
+            $fromStatus = (string) $current->status->value;
             $renewableFrom = ['active', 'grace_period', 'suspended'];
             if (! in_array($fromStatus, $renewableFrom, true)) {
                 return response()->json([
-                    'message'  => "Subscription status transition {$fromStatus} -> renew is not allowed.",
-                    'code'     => 'TRANSITION_NOT_ALLOWED',
-                    'status'   => 409,
+                    'message' => "Subscription status transition {$fromStatus} -> renew is not allowed.",
+                    'code' => 'TRANSITION_NOT_ALLOWED',
+                    'status' => 409,
                     'trace_id' => app('trace_id'),
                 ], 409);
             }
@@ -101,17 +107,17 @@ class SubscriptionController extends Controller
         $startsAt = ($current && $current->ends_at->isFuture()) ? $current->ends_at : now();
 
         $subscription = Subscription::create([
-            'uuid'         => Str::uuid(),
-            'company_id'   => $user->company_id,
-            'plan'         => $plan->slug,
-            'status'       => 'active',
-            'starts_at'    => $startsAt,
-            'ends_at'      => $startsAt->copy()->addMonths($months),
-            'amount'       => $plan->price_monthly * $months,
-            'currency'     => $data['currency'] ?? $plan->currency,
+            'uuid' => Str::uuid(),
+            'company_id' => $user->company_id,
+            'plan' => $plan->slug,
+            'status' => 'active',
+            'starts_at' => $startsAt,
+            'ends_at' => $startsAt->copy()->addMonths($months),
+            'amount' => $plan->price_monthly * $months,
+            'currency' => $data['currency'] ?? $plan->currency,
             'max_branches' => $plan->max_branches,
-            'max_users'    => $plan->max_users,
-            'features'     => $plan->features,
+            'max_users' => $plan->max_users,
+            'features' => $plan->features,
         ]);
 
         if ($current) {

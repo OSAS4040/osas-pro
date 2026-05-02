@@ -22,13 +22,14 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 require __DIR__.'/../vendor/autoload.php';
 
-/** @var \Illuminate\Foundation\Application $app */
+/** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
@@ -48,45 +49,45 @@ $ensureTenantAndOwner = static function () use (&$setupLog): User {
     }
 
     $company = Company::create([
-        'uuid'      => (string) Str::uuid(),
-        'name'      => 'Phase2 Live Demo Co',
-        'currency'  => 'SAR',
-        'timezone'  => 'Asia/Riyadh',
-        'status'    => 'active',
+        'uuid' => (string) Str::uuid(),
+        'name' => 'Phase2 Live Demo Co',
+        'currency' => 'SAR',
+        'timezone' => 'Asia/Riyadh',
+        'status' => 'active',
         'is_active' => true,
     ]);
 
     $branch = Branch::create([
-        'uuid'       => (string) Str::uuid(),
+        'uuid' => (string) Str::uuid(),
         'company_id' => $company->id,
-        'name'       => 'Main',
-        'code'       => 'MAIN',
-        'status'     => 'active',
-        'is_main'    => true,
-        'is_active'  => true,
+        'name' => 'Main',
+        'code' => 'MAIN',
+        'status' => 'active',
+        'is_main' => true,
+        'is_active' => true,
     ]);
 
     Subscription::create([
-        'uuid'         => (string) Str::uuid(),
-        'company_id'   => $company->id,
-        'plan'         => 'professional',
-        'status'       => SubscriptionStatus::Active,
-        'starts_at'    => now()->subDay(),
-        'ends_at'      => now()->addYear(),
+        'uuid' => (string) Str::uuid(),
+        'company_id' => $company->id,
+        'plan' => 'professional',
+        'status' => SubscriptionStatus::Active,
+        'starts_at' => now()->subDay(),
+        'ends_at' => now()->addYear(),
         'max_branches' => 5,
-        'max_users'    => 20,
+        'max_users' => 20,
     ]);
 
     $user = User::create([
-        'uuid'       => (string) Str::uuid(),
+        'uuid' => (string) Str::uuid(),
         'company_id' => $company->id,
-        'branch_id'  => $branch->id,
-        'name'       => 'Phase2 Owner',
-        'email'      => 'phase2_owner_'.Str::lower(Str::random(8)).'@demo.local',
-        'password'   => bcrypt('Password123!'),
-        'role'       => UserRole::Owner,
-        'status'     => 'active',
-        'is_active'  => true,
+        'branch_id' => $branch->id,
+        'name' => 'Phase2 Owner',
+        'email' => 'phase2_owner_'.Str::lower(Str::random(8)).'@demo.local',
+        'password' => bcrypt('Password123!'),
+        'role' => UserRole::Owner,
+        'status' => 'active',
+        'is_active' => true,
     ]);
 
     $setupLog[] = 'Created demo tenant + owner user id='.$user->id;
@@ -98,18 +99,18 @@ $user = $ensureTenantAndOwner();
 
 if (DomainEvent::query()->where('company_id', $user->company_id)->doesntExist()) {
     DomainEvent::create([
-        'uuid'              => (string) Str::uuid(),
-        'company_id'        => $user->company_id,
-        'branch_id'         => $user->branch_id,
-        'aggregate_type'    => 'Customer',
-        'aggregate_id'      => 'demo-1',
-        'event_name'        => 'CustomerCreated',
-        'event_version'     => 1,
-        'payload_json'      => ['source' => 'phase2_intelligence_all_live.php'],
-        'metadata_json'     => [],
-        'trace_id'          => 'phase2-live',
-        'correlation_id'    => 'phase2-live',
-        'occurred_at'       => now()->subHour(),
+        'uuid' => (string) Str::uuid(),
+        'company_id' => $user->company_id,
+        'branch_id' => $user->branch_id,
+        'aggregate_type' => 'Customer',
+        'aggregate_id' => 'demo-1',
+        'event_name' => 'CustomerCreated',
+        'event_version' => 1,
+        'payload_json' => ['source' => 'phase2_intelligence_all_live.php'],
+        'metadata_json' => [],
+        'trace_id' => 'phase2-live',
+        'correlation_id' => 'phase2-live',
+        'occurred_at' => now()->subHour(),
         'processing_status' => 'recorded',
     ]);
     $setupLog[] = 'Inserted sample domain_events row for company_id='.$user->company_id;
@@ -118,9 +119,9 @@ if (DomainEvent::query()->where('company_id', $user->company_id)->doesntExist())
 $token = $user->createToken('phase2-all-endpoints')->plainTextToken;
 
 $snapshot = static fn (): array => [
-    'domain_events'          => DomainEvent::query()->count(),
-    'invoices'               => Invoice::query()->count(),
-    'wallet_transactions'    => WalletTransaction::query()->count(),
+    'domain_events' => DomainEvent::query()->count(),
+    'invoices' => Invoice::query()->count(),
+    'wallet_transactions' => WalletTransaction::query()->count(),
     'personal_access_tokens' => DB::table('personal_access_tokens')->count(),
 ];
 
@@ -134,10 +135,10 @@ $delta = static function (array $before, array $after): array {
 };
 
 $paths = [
-    'overview'        => '/api/v1/internal/intelligence/overview',
-    'insights'        => '/api/v1/internal/intelligence/insights',
+    'overview' => '/api/v1/internal/intelligence/overview',
+    'insights' => '/api/v1/internal/intelligence/insights',
     'recommendations' => '/api/v1/internal/intelligence/recommendations',
-    'alerts'          => '/api/v1/internal/intelligence/alerts',
+    'alerts' => '/api/v1/internal/intelligence/alerts',
 ];
 
 $kernel = $app->make(Kernel::class);
@@ -153,7 +154,7 @@ foreach ($paths as $name => $path) {
         [],
         [
             'HTTP_AUTHORIZATION' => 'Bearer '.$token,
-            'HTTP_ACCEPT'        => 'application/json',
+            'HTTP_ACCEPT' => 'application/json',
         ]
     );
     $response = $kernel->handle($request);
@@ -161,18 +162,18 @@ foreach ($paths as $name => $path) {
     $after = $snapshot();
 
     $calls[$name] = [
-        'path'           => $path,
-        'http_status'    => $response->getStatusCode(),
-        'response_json'  => json_decode($response->getContent(), true),
-        'counts_before'  => $before,
-        'counts_after'   => $after,
-        'delta'          => $delta($before, $after),
+        'path' => $path,
+        'http_status' => $response->getStatusCode(),
+        'response_json' => json_decode($response->getContent(), true),
+        'counts_before' => $before,
+        'counts_after' => $after,
+        'delta' => $delta($before, $after),
     ];
 }
 
 $out = [
     'setup_log' => $setupLog,
-    'calls'     => $calls,
+    'calls' => $calls,
 ];
 
 echo json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).PHP_EOL;

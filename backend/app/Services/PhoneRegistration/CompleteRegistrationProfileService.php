@@ -36,13 +36,13 @@ final class CompleteRegistrationProfileService
     {
         if ((string) $user->getRawOriginal('role') !== UserRole::PhoneOnboarding->value) {
             return [
-                'onboarding_active'          => false,
-                'registration_stage'         => $user->registration_stage,
-                'account_type'               => $user->account_type,
-                'profile'                    => null,
-                'needs_account_type'         => false,
-                'needs_basic_profile'        => false,
-                'company_pending_review'     => false,
+                'onboarding_active' => false,
+                'registration_stage' => $user->registration_stage,
+                'account_type' => $user->account_type,
+                'profile' => null,
+                'needs_account_type' => false,
+                'needs_basic_profile' => false,
+                'company_pending_review' => false,
                 'profile_completion_percent' => 0,
             ];
         }
@@ -50,13 +50,13 @@ final class CompleteRegistrationProfileService
         $profile = RegistrationProfile::query()->where('user_id', $user->id)->first();
 
         return [
-            'onboarding_active'          => true,
-            'registration_stage'         => $user->registration_stage,
-            'account_type'               => $user->account_type,
-            'profile'                    => $profile?->toArray(),
-            'needs_account_type'         => $user->account_type === null,
-            'needs_basic_profile'        => $this->needsBasicProfile($user, $profile),
-            'company_pending_review'     => $profile !== null
+            'onboarding_active' => true,
+            'registration_stage' => $user->registration_stage,
+            'account_type' => $user->account_type,
+            'profile' => $profile?->toArray(),
+            'needs_account_type' => $user->account_type === null,
+            'needs_basic_profile' => $this->needsBasicProfile($user, $profile),
+            'company_pending_review' => $profile !== null
                 && $profile->company_activation_status === 'pending_review',
             'profile_completion_percent' => $profile?->profile_completion_percent ?? 0,
         ];
@@ -74,7 +74,7 @@ final class CompleteRegistrationProfileService
 
         DB::transaction(function () use ($user, $accountType): void {
             $user->forceFill([
-                'account_type'       => $accountType,
+                'account_type' => $accountType,
                 'registration_stage' => 'account_type_set',
             ])->save();
 
@@ -83,7 +83,7 @@ final class CompleteRegistrationProfileService
                 ['status' => 'draft', 'company_activation_status' => 'not_applicable'],
             );
             $p->forceFill([
-                'account_type'               => $accountType,
+                'account_type' => $accountType,
                 'profile_completion_percent' => 30,
             ])->save();
         });
@@ -101,16 +101,16 @@ final class CompleteRegistrationProfileService
 
         DB::transaction(function () use ($user, $fullName): void {
             $user->forceFill([
-                'name'                 => $fullName,
-                'registration_stage'   => 'individual_completed',
+                'name' => $fullName,
+                'registration_stage' => 'individual_completed',
                 'profile_completed_at' => now(),
             ])->save();
 
             $p = RegistrationProfile::query()->where('user_id', $user->id)->firstOrFail();
             $p->forceFill([
-                'full_name'                  => $fullName,
-                'status'                     => 'active',
-                'company_activation_status'  => 'not_applicable',
+                'full_name' => $fullName,
+                'status' => 'active',
+                'company_activation_status' => 'not_applicable',
                 'profile_completion_percent' => 100,
             ])->save();
         });
@@ -128,19 +128,19 @@ final class CompleteRegistrationProfileService
 
         DB::transaction(function () use ($user, $companyName, $contactName): void {
             $user->forceFill([
-                'name'                 => $contactName,
-                'registration_stage'   => 'company_pending_review',
+                'name' => $contactName,
+                'registration_stage' => 'company_pending_review',
                 'profile_completed_at' => null,
             ])->save();
 
             $p = RegistrationProfile::query()->where('user_id', $user->id)->firstOrFail();
             $p->forceFill([
-                'company_name'               => $companyName,
-                'contact_name'               => $contactName,
-                'status'                     => 'pending_review',
-                'company_activation_status'  => 'pending_review',
+                'company_name' => $companyName,
+                'contact_name' => $contactName,
+                'status' => 'pending_review',
+                'company_activation_status' => 'pending_review',
                 'profile_completion_percent' => 60,
-                'submitted_at'               => now(),
+                'submitted_at' => now(),
             ])->save();
         });
     }

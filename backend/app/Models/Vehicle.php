@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Vehicle extends Model
 {
-    use HasFactory, SoftDeletes, HasTenantScope;
+    use HasFactory, HasTenantScope, SoftDeletes;
 
     protected $fillable = [
         'uuid', 'company_id', 'branch_id', 'customer_id', 'created_by_user_id',
@@ -20,7 +20,7 @@ class Vehicle extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'year'      => 'integer',
+        'year' => 'integer',
     ];
 
     public function customer()

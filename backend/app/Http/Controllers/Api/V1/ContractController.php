@@ -24,11 +24,11 @@ class ContractController extends Controller
                 TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId),
                 static fn ($q) => $q->platformProviderAgreements(),
             )
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->party_type, fn($q) => $q->where('party_type', $request->party_type))
-            ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
+            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($request->party_type, fn ($q) => $q->where('party_type', $request->party_type))
+            ->when($request->search, fn ($q) => $q->where(function ($q) use ($request) {
                 $q->where('title', 'ilike', "%{$request->search}%")
-                  ->orWhere('party_name', 'ilike', "%{$request->search}%");
+                    ->orWhere('party_name', 'ilike', "%{$request->search}%");
             }))
             ->orderBy('end_date')
             ->paginate(20);
@@ -40,34 +40,34 @@ class ContractController extends Controller
     {
         if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
             return response()->json([
-                'message'  => 'عقود الإطار مع المنصّة تُدار من فريق المنصّة. يمكنك الاطلاع على العقد والأسعار المتفق عليها من هذه الصفحة.',
+                'message' => 'عقود الإطار مع المنصّة تُدار من فريق المنصّة. يمكنك الاطلاع على العقد والأسعار المتفق عليها من هذه الصفحة.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
 
         $validated = $request->validate([
-            'title'             => 'required|string|max:255',
-            'party_name'        => 'required|string|max:255',
-            'party_type'        => 'required|in:company,pos,service_center,individual',
-            'party_email'       => 'nullable|email',
-            'party_phone'       => 'nullable|string|max:20',
-            'party_cr'          => 'nullable|string|max:20',
-            'party_tax_number'  => 'nullable|string|max:20',
-            'description'       => 'nullable|string',
-            'value'             => 'nullable|numeric|min:0',
-            'payment_policy'    => 'nullable|in:monthly,quarterly,annually,one_time,custom',
-            'payment_day'       => 'nullable|integer|min:1|max:31',
-            'payment_terms'     => 'nullable|array',
-            'start_date'        => 'required|date',
-            'end_date'          => 'required|date|after:start_date',
+            'title' => 'required|string|max:255',
+            'party_name' => 'required|string|max:255',
+            'party_type' => 'required|in:company,pos,service_center,individual',
+            'party_email' => 'nullable|email',
+            'party_phone' => 'nullable|string|max:20',
+            'party_cr' => 'nullable|string|max:20',
+            'party_tax_number' => 'nullable|string|max:20',
+            'description' => 'nullable|string',
+            'value' => 'nullable|numeric|min:0',
+            'payment_policy' => 'nullable|in:monthly,quarterly,annually,one_time,custom',
+            'payment_day' => 'nullable|integer|min:1|max:31',
+            'payment_terms' => 'nullable|array',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
             'alert_days_before' => 'integer|min:1|max:365',
         ]);
 
         $contract = Contract::create(array_merge($validated, [
-            'uuid'       => Str::uuid(),
+            'uuid' => Str::uuid(),
             'company_id' => app('tenant_company_id'),
             'created_by' => auth()->id(),
-            'status'     => 'draft',
+            'status' => 'draft',
         ]));
 
         return response()->json(['data' => $contract, 'trace_id' => app('trace_id')], 201);
@@ -86,23 +86,23 @@ class ContractController extends Controller
 
         if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
             return response()->json([
-                'message'  => 'تعديل عقد المنصّة غير متاح من بوابة المزوّد.',
+                'message' => 'تعديل عقد المنصّة غير متاح من بوابة المزوّد.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
 
         $validated = $request->validate([
-            'title'             => 'sometimes|string|max:255',
-            'status'            => 'sometimes|in:draft,pending_signature,active,expired,terminated',
-            'party_name'        => 'sometimes|string|max:255',
-            'party_email'       => 'nullable|email',
-            'party_phone'       => 'nullable|string|max:20',
-            'description'       => 'nullable|string',
-            'value'             => 'nullable|numeric|min:0',
-            'payment_policy'    => 'sometimes|in:monthly,quarterly,annually,one_time,custom',
-            'payment_terms'     => 'nullable|array',
-            'start_date'        => 'sometimes|date',
-            'end_date'          => 'sometimes|date',
+            'title' => 'sometimes|string|max:255',
+            'status' => 'sometimes|in:draft,pending_signature,active,expired,terminated',
+            'party_name' => 'sometimes|string|max:255',
+            'party_email' => 'nullable|email',
+            'party_phone' => 'nullable|string|max:20',
+            'description' => 'nullable|string',
+            'value' => 'nullable|numeric|min:0',
+            'payment_policy' => 'sometimes|in:monthly,quarterly,annually,one_time,custom',
+            'payment_terms' => 'nullable|array',
+            'start_date' => 'sometimes|date',
+            'end_date' => 'sometimes|date',
             'alert_days_before' => 'integer|min:1|max:365',
         ]);
 
@@ -117,12 +117,13 @@ class ContractController extends Controller
 
         if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
             return response()->json([
-                'message'  => 'حذف عقد المنصّة غير متاح من بوابة المزوّد.',
+                'message' => 'حذف عقد المنصّة غير متاح من بوابة المزوّد.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
 
         $contract->delete();
+
         return response()->json(['message' => 'تم حذف العقد', 'trace_id' => app('trace_id')]);
     }
 
@@ -132,7 +133,7 @@ class ContractController extends Controller
 
         if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
             return response()->json([
-                'message'  => 'رفع مستندات العقد غير متاح من بوابة المزوّد.',
+                'message' => 'رفع مستندات العقد غير متاح من بوابة المزوّد.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -156,7 +157,7 @@ class ContractController extends Controller
 
         if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'))) {
             return response()->json([
-                'message'  => 'إرسال العقد للتوقيع غير متاح من بوابة المزوّد.',
+                'message' => 'إرسال العقد للتوقيع غير متاح من بوابة المزوّد.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
@@ -183,11 +184,11 @@ class ContractController extends Controller
         }
 
         $contract->notifications()->create([
-            'type'      => 'signature_request',
-            'channel'   => implode(',', $notified),
+            'type' => 'signature_request',
+            'channel' => implode(',', $notified),
             'recipient' => $contract->party_email ?? $contract->party_phone ?? 'unknown',
-            'status'    => 'sent',
-            'sent_at'   => now(),
+            'status' => 'sent',
+            'sent_at' => now(),
         ]);
 
         return response()->json(['data' => ['channels' => $notified], 'trace_id' => app('trace_id')]);
@@ -207,7 +208,7 @@ class ContractController extends Controller
             ->whereDate('end_date', '>=', now())
             ->orderBy('end_date')
             ->get()
-            ->map(fn($c) => array_merge($c->toArray(), [
+            ->map(fn ($c) => array_merge($c->toArray(), [
                 'days_until_expiry' => $c->days_until_expiry,
             ]));
 
@@ -231,14 +232,14 @@ class ContractController extends Controller
     private function sendEmailNotification(Contract $contract, string $type): void
     {
         try {
-            \Illuminate\Support\Facades\Mail::raw(
+            Mail::raw(
                 "عزيزي {$contract->party_name},\n\nتم إرسال عقد جديد للمراجعة والتوقيع: {$contract->title}\n\nتاريخ الانتهاء: {$contract->end_date->format('Y-m-d')}",
                 function ($msg) use ($contract) {
                     $msg->to($contract->party_email)->subject("عقد جديد يستحق مراجعتك: {$contract->title}");
                 }
             );
         } catch (\Exception $e) {
-            \Log::warning("Contract email failed: " . $e->getMessage());
+            \Log::warning('Contract email failed: '.$e->getMessage());
         }
     }
 

@@ -36,23 +36,23 @@ class ZatcaControllerTest extends TestCase
         $this->createActiveSubscription($company);
 
         $invoice = Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $branch->id,
-            'customer_id'        => null,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $branch->id,
+            'customer_id' => null,
             'created_by_user_id' => $user->id,
-            'invoice_number'     => 'INV-ZATCA-'.Str::upper(Str::random(6)),
-            'type'               => 'sale',
-            'status'             => InvoiceStatus::Pending,
-            'customer_type'      => 'b2c',
-            'subtotal'           => 100,
-            'discount_amount'    => 0,
-            'tax_amount'         => 15,
-            'total'              => 115,
-            'paid_amount'        => 0,
-            'due_amount'         => 115,
-            'currency'           => 'SAR',
-            'invoice_hash'       => 'testhash',
+            'invoice_number' => 'INV-ZATCA-'.Str::upper(Str::random(6)),
+            'type' => 'sale',
+            'status' => InvoiceStatus::Pending,
+            'customer_type' => 'b2c',
+            'subtotal' => 100,
+            'discount_amount' => 0,
+            'tax_amount' => 15,
+            'total' => 115,
+            'paid_amount' => 0,
+            'due_amount' => 115,
+            'currency' => 'SAR',
+            'invoice_hash' => 'testhash',
         ]);
 
         $response = $this->actingAsUser($user)->postJson('/api/v1/zatca/submit', [
@@ -63,11 +63,11 @@ class ZatcaControllerTest extends TestCase
         $response->assertJsonPath('data.simulation_mode', true);
 
         $this->assertDatabaseHas('zatca_logs', [
-            'company_id'     => $company->id,
+            'company_id' => $company->id,
             'reference_type' => Invoice::class,
-            'reference_id'   => $invoice->id,
-            'action'         => 'clearance_simulation',
-            'status'         => 'simulated',
+            'reference_id' => $invoice->id,
+            'action' => 'clearance_simulation',
+            'status' => 'simulated',
         ]);
     }
 
@@ -79,22 +79,22 @@ class ZatcaControllerTest extends TestCase
         $this->createActiveSubscription($company);
 
         $invoice = Invoice::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => $company->id,
-            'branch_id'          => $branch->id,
-            'customer_id'        => null,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => $branch->id,
+            'customer_id' => null,
             'created_by_user_id' => $user->id,
-            'invoice_number'     => 'INV-ZATCA-'.Str::upper(Str::random(6)),
-            'type'               => 'sale',
-            'status'             => InvoiceStatus::Pending,
-            'customer_type'      => 'b2c',
-            'subtotal'           => 10,
-            'discount_amount'    => 0,
-            'tax_amount'         => 0,
-            'total'              => 10,
-            'paid_amount'        => 0,
-            'due_amount'         => 10,
-            'currency'           => 'SAR',
+            'invoice_number' => 'INV-ZATCA-'.Str::upper(Str::random(6)),
+            'type' => 'sale',
+            'status' => InvoiceStatus::Pending,
+            'customer_type' => 'b2c',
+            'subtotal' => 10,
+            'discount_amount' => 0,
+            'tax_amount' => 0,
+            'total' => 10,
+            'paid_amount' => 0,
+            'due_amount' => 10,
+            'currency' => 'SAR',
         ]);
 
         $before = ZatcaLog::count();

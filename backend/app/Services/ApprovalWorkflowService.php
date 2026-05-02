@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Models\ApprovalWorkflow;
-use App\Models\User;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ApprovalWorkflowService
 {
@@ -59,7 +59,7 @@ class ApprovalWorkflowService
         string $policyCode = '',
         string $note = '',
         array $meta = [],
-        int|null $assignedApprover = null,
+        ?int $assignedApprover = null,
         int $totalSteps = 1,
     ): ApprovalWorkflow {
         return DB::transaction(function () use (
@@ -76,18 +76,18 @@ class ApprovalWorkflowService
             $traceId = app()->bound('trace_id') ? (string) app('trace_id') : (string) Str::uuid();
 
             return ApprovalWorkflow::create([
-                'company_id'       => $companyId,
-                'subject_type'     => $subjectType,
-                'subject_id'       => $subjectId,
-                'policy_code'      => $policyCode,
-                'status'           => 'pending',
-                'current_step'     => 1,
-                'total_steps'      => max(1, $totalSteps),
-                'requested_by'     => $requestedBy,
-                'assigned_approver'=> $assignedApprover,
-                'requester_note'   => $note,
-                'trace_id'         => $traceId,
-                'meta'             => $meta ?: null,
+                'company_id' => $companyId,
+                'subject_type' => $subjectType,
+                'subject_id' => $subjectId,
+                'policy_code' => $policyCode,
+                'status' => 'pending',
+                'current_step' => 1,
+                'total_steps' => max(1, $totalSteps),
+                'requested_by' => $requestedBy,
+                'assigned_approver' => $assignedApprover,
+                'requester_note' => $note,
+                'trace_id' => $traceId,
+                'meta' => $meta ?: null,
             ]);
         });
     }
@@ -136,13 +136,13 @@ class ApprovalWorkflowService
         $traceId = app()->bound('trace_id') ? (string) app('trace_id') : (string) Str::uuid();
 
         $workflow->update([
-            'status'        => $status,
-            'resolved_by'   => $resolvedBy,
-            'resolved_at'   => $actedAt,
-            'acted_at'      => $actedAt,
+            'status' => $status,
+            'resolved_by' => $resolvedBy,
+            'resolved_at' => $actedAt,
+            'acted_at' => $actedAt,
             'resolver_note' => $note,
-            'trace_id'      => $traceId,
-            'current_step'  => min((int) $workflow->total_steps, (int) $workflow->current_step + 1),
+            'trace_id' => $traceId,
+            'current_step' => min((int) $workflow->total_steps, (int) $workflow->current_step + 1),
         ]);
 
         DB::table('approval_workflow_actions')->insert([
@@ -162,10 +162,13 @@ class ApprovalWorkflowService
         return $workflow->fresh();
     }
 
-    public function pendingFor(int $companyId, string $subjectType = null): \Illuminate\Database\Eloquent\Collection
+    public function pendingFor(int $companyId, ?string $subjectType = null): Collection
     {
         $q = ApprovalWorkflow::where('company_id', $companyId)->where('status', 'pending');
-        if ($subjectType) $q->where('subject_type', $subjectType);
+        if ($subjectType) {
+            $q->where('subject_type', $subjectType);
+        }
+
         return $q->with('requester:id,name,email')->latest()->get();
     }
 }

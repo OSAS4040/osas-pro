@@ -28,11 +28,11 @@ final class ReportingContext
     public function toFilterSnapshot(): array
     {
         return [
-            'company_id'  => $this->companyId,
-            'branch_ids'  => $this->branchIds,
+            'company_id' => $this->companyId,
+            'branch_ids' => $this->branchIds,
             'customer_id' => $this->customerId,
-            'user_id'     => $this->subjectUserId,
-            'actor_id'    => $this->actor->id,
+            'user_id' => $this->subjectUserId,
+            'actor_id' => $this->actor->id,
         ];
     }
 }

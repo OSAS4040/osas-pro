@@ -12,6 +12,7 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ResolveLoginContextActionTest extends TestCase
@@ -35,17 +36,17 @@ class ResolveLoginContextActionTest extends TestCase
         Config::set('saas.platform_admin_phones', ['966504112233']);
 
         $user = User::withoutGlobalScopes()->create([
-            'uuid'               => \Illuminate\Support\Str::uuid(),
-            'company_id'         => null,
-            'branch_id'          => null,
-            'name'               => 'Platform phone admin',
-            'email'              => 'platform+testphone@internal.platform.sa',
-            'password'           => 'Password123!X',
-            'phone'              => '966504112233',
-            'phone_verified_at'  => now(),
-            'role'               => UserRole::Owner,
-            'status'             => UserStatus::Active,
-            'is_active'          => true,
+            'uuid' => Str::uuid(),
+            'company_id' => null,
+            'branch_id' => null,
+            'name' => 'Platform phone admin',
+            'email' => 'platform+testphone@internal.platform.sa',
+            'password' => 'Password123!X',
+            'phone' => '966504112233',
+            'phone_verified_at' => now(),
+            'role' => UserRole::Owner,
+            'status' => UserStatus::Active,
+            'is_active' => true,
         ]);
 
         $action = new ResolveLoginContextAction(new ResolveLoginEligibilityAction);
@@ -80,7 +81,7 @@ class ResolveLoginContextActionTest extends TestCase
         $tenant = $this->createTenant('owner');
         $tenant['user']->update([
             'is_platform_user' => true,
-            'platform_role'      => 'super_admin',
+            'platform_role' => 'super_admin',
         ]);
 
         $action = new ResolveLoginContextAction(new ResolveLoginEligibilityAction);
@@ -109,17 +110,17 @@ class ResolveLoginContextActionTest extends TestCase
     public function test_phone_onboarding_without_company_maps_to_onboarding_hint(): void
     {
         User::withoutGlobalScopes()->create([
-            'uuid'               => \Illuminate\Support\Str::uuid(),
-            'company_id'         => null,
-            'branch_id'          => null,
-            'name'               => '966509998877',
-            'email'              => null,
-            'password'           => bcrypt('secret'),
-            'phone'              => '966509998877',
-            'phone_verified_at'  => now(),
-            'role'               => UserRole::PhoneOnboarding,
-            'status'             => UserStatus::Active,
-            'is_active'          => true,
+            'uuid' => Str::uuid(),
+            'company_id' => null,
+            'branch_id' => null,
+            'name' => '966509998877',
+            'email' => null,
+            'password' => bcrypt('secret'),
+            'phone' => '966509998877',
+            'phone_verified_at' => now(),
+            'role' => UserRole::PhoneOnboarding,
+            'status' => UserStatus::Active,
+            'is_active' => true,
             'registration_stage' => 'phone_verified',
         ]);
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\DispatchLowNpsAlertJob;
+use App\Models\Invoice;
 use App\Models\NpsRating;
 use Illuminate\Http\Request;
 
@@ -12,22 +13,22 @@ class NpsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'score'        => 'required|integer|min:1|max:5',
-            'invoice_id'   => 'nullable|integer',
-            'work_order_id'=> 'nullable|integer',
-            'comment'      => 'nullable|string|max:500',
-            'channel'      => 'nullable|in:invoice,sms,email',
+            'score' => 'required|integer|min:1|max:5',
+            'invoice_id' => 'nullable|integer',
+            'work_order_id' => 'nullable|integer',
+            'comment' => 'nullable|string|max:500',
+            'channel' => 'nullable|in:invoice,sms,email',
         ]);
 
         $rating = NpsRating::create([
-            'company_id'    => $request->user()->company_id,
-            'invoice_id'    => $request->invoice_id,
+            'company_id' => $request->user()->company_id,
+            'invoice_id' => $request->invoice_id,
             'work_order_id' => $request->work_order_id,
-            'customer_id'   => $request->user()->customer_id ?? null,
-            'score'         => $request->score,
-            'comment'       => $request->comment,
-            'channel'       => $request->channel ?? 'invoice',
-            'alert_sent'    => false,
+            'customer_id' => $request->user()->customer_id ?? null,
+            'score' => $request->score,
+            'comment' => $request->comment,
+            'channel' => $request->channel ?? 'invoice',
+            'alert_sent' => false,
         ]);
 
         if ($rating->score <= 2) {
@@ -52,22 +53,22 @@ class NpsController extends Controller
             ->pluck('total', 'score');
 
         return response()->json([
-            'data'    => $ratings,
+            'data' => $ratings,
             'average' => round($avg, 1),
-            'counts'  => $counts,
+            'counts' => $counts,
         ]);
     }
 
     public function storePublic(Request $request)
     {
         $request->validate([
-            'score'      => 'required|integer|min:1|max:5',
+            'score' => 'required|integer|min:1|max:5',
             'invoice_id' => 'required|integer',
-            'comment'    => 'nullable|string|max:500',
-            'token'      => 'required|string',
+            'comment' => 'nullable|string|max:500',
+            'token' => 'required|string',
         ]);
 
-        $invoice = \App\Models\Invoice::where('uuid', $request->token)->firstOrFail();
+        $invoice = Invoice::where('uuid', $request->token)->firstOrFail();
 
         $existing = NpsRating::where('invoice_id', $invoice->id)->first();
         if ($existing) {
@@ -77,9 +78,9 @@ class NpsController extends Controller
         $rating = NpsRating::create([
             'company_id' => $invoice->company_id,
             'invoice_id' => $invoice->id,
-            'score'      => $request->score,
-            'comment'    => $request->comment,
-            'channel'    => 'invoice',
+            'score' => $request->score,
+            'comment' => $request->comment,
+            'channel' => 'invoice',
             'alert_sent' => $request->score <= 2,
         ]);
 

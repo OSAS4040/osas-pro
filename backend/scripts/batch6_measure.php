@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\FinancialReconciliationController;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -38,8 +39,8 @@ file_put_contents(
 );
 
 $today = now()->toDateString();
-\Illuminate\Support\Facades\Artisan::call('finance:reconcile-daily', ['--run-date' => $today, '--out-file' => 'reports/financial-reliability/reconciliation-batch6-success.json']);
-\Illuminate\Support\Facades\Artisan::call('finance:reconcile-daily', ['--run-date' => now()->addDay()->toDateString(), '--out-file' => 'reports/financial-reliability/reconciliation-batch6-failed.json', '--simulate-failure' => true]);
+Artisan::call('finance:reconcile-daily', ['--run-date' => $today, '--out-file' => 'reports/financial-reliability/reconciliation-batch6-success.json']);
+Artisan::call('finance:reconcile-daily', ['--run-date' => now()->addDay()->toDateString(), '--out-file' => 'reports/financial-reliability/reconciliation-batch6-failed.json', '--simulate-failure' => true]);
 $failedRunId = (int) DB::table('financial_reconciliation_runs')->where('execution_status', 'failed')->orderByDesc('id')->value('id');
 if ($failedRunId) {
     DB::table('financial_reconciliation_runs')->where('id', $failedRunId)->update([

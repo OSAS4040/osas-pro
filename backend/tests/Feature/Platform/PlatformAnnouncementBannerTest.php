@@ -19,19 +19,19 @@ class PlatformAnnouncementBannerTest extends TestCase
 
         return [
             'Authorization' => 'Bearer '.$token,
-            'Accept'        => 'application/json',
+            'Accept' => 'application/json',
         ];
     }
 
     private function validBannerBody(bool $enabled = false): array
     {
         return [
-            'is_enabled'  => $enabled,
-            'title'       => null,
-            'message'     => $enabled ? 'نص تجريبي للإعلان' : null,
-            'link_url'    => null,
-            'link_text'   => null,
-            'variant'     => 'promo',
+            'is_enabled' => $enabled,
+            'title' => null,
+            'message' => $enabled ? 'نص تجريبي للإعلان' : null,
+            'link_url' => null,
+            'link_text' => null,
+            'variant' => 'promo',
             'dismissible' => true,
         ];
     }
@@ -48,7 +48,7 @@ class PlatformAnnouncementBannerTest extends TestCase
         config(['saas.platform_admin_emails' => []]);
 
         $company = $this->createCompany();
-        $branch  = $this->createBranch($company);
+        $branch = $this->createBranch($company);
         $this->createActiveSubscription($company);
         $user = $this->createUser($company, $branch, 'owner');
 
@@ -62,7 +62,7 @@ class PlatformAnnouncementBannerTest extends TestCase
         config(['saas.platform_admin_emails' => []]);
 
         $company = $this->createCompany();
-        $branch  = $this->createBranch($company);
+        $branch = $this->createBranch($company);
         $this->createActiveSubscription($company);
         $user = $this->createUser($company, $branch, 'owner');
 
@@ -76,7 +76,7 @@ class PlatformAnnouncementBannerTest extends TestCase
         config(['saas.platform_admin_emails' => []]);
 
         $company = $this->createCompany();
-        $branch  = $this->createBranch($company);
+        $branch = $this->createBranch($company);
         $this->createActiveSubscription($company);
         $user = $this->createUser($company, $branch, 'owner');
 
@@ -95,12 +95,12 @@ class PlatformAnnouncementBannerTest extends TestCase
         $user = $this->createStandalonePlatformOperator('ops@platform.example');
 
         $body = [
-            'is_enabled'  => true,
-            'title'       => 'عنوان',
-            'message'     => 'رسالة للمستخدمين',
-            'link_url'    => '/subscription',
-            'link_text'   => 'الاشتراك',
-            'variant'     => 'info',
+            'is_enabled' => true,
+            'title' => 'عنوان',
+            'message' => 'رسالة للمستخدمين',
+            'link_url' => '/subscription',
+            'link_text' => 'الاشتراك',
+            'variant' => 'info',
             'dismissible' => true,
         ];
 

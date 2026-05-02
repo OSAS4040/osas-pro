@@ -16,9 +16,9 @@ class WorkOrderTechnician extends Model
     ];
 
     protected $casts = [
-        'labor_hours'  => 'decimal:2',
-        'labor_cost'   => 'decimal:4',
-        'assigned_at'  => 'datetime',
+        'labor_hours' => 'decimal:2',
+        'labor_cost' => 'decimal:4',
+        'assigned_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
 

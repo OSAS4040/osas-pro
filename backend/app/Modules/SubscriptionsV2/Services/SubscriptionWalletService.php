@@ -57,18 +57,18 @@ final class SubscriptionWalletService
 
             if ($wallet === null) {
                 $wallet = Wallet::query()->create([
-                    'uuid'       => (string) Str::uuid(),
+                    'uuid' => (string) Str::uuid(),
                     'company_id' => $companyId,
                     'customer_id' => null,
-                    'balance'    => 0,
-                    'currency'   => 'SAR',
-                    'status'     => 'active',
+                    'balance' => 0,
+                    'currency' => 'SAR',
+                    'status' => 'active',
                 ]);
                 $wallet = Wallet::query()->whereKey($wallet->id)->lockForUpdate()->firstOrFail();
             }
 
             $before = (float) $wallet->balance;
-            $after  = $isCredit ? ($before + $amount) : ($before - $amount);
+            $after = $isCredit ? ($before + $amount) : ($before - $amount);
             if ($after < -0.0001) {
                 throw new \DomainException('Insufficient wallet balance.');
             }
@@ -88,22 +88,22 @@ final class SubscriptionWalletService
             $wallet->save();
 
             $txn = WalletTransaction::query()->create([
-                'uuid'               => (string) Str::uuid(),
-                'company_id'         => $companyId,
-                'branch_id'          => $wallet->branch_id,
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $companyId,
+                'branch_id' => $wallet->branch_id,
                 'created_by_user_id' => $actorId,
-                'wallet_id'          => $wallet->id,
+                'wallet_id' => $wallet->id,
                 'customer_wallet_id' => null,
-                'type'               => $isCredit ? 'ADJUSTMENT_ADD' : 'INVOICE_DEBIT',
-                'amount'             => $amount,
-                'balance_before'     => $before,
-                'balance_after'      => $after,
-                'reference_type'     => $isCredit ? 'adjustment' : 'payment',
-                'reference_id'       => null,
-                'idempotency_key'    => $idempotencyKey,
-                'trace_id'           => app()->bound('trace_id') ? (string) app('trace_id') : null,
-                'note'               => $reason,
-                'created_at'         => now(),
+                'type' => $isCredit ? 'ADJUSTMENT_ADD' : 'INVOICE_DEBIT',
+                'amount' => $amount,
+                'balance_before' => $before,
+                'balance_after' => $after,
+                'reference_type' => $isCredit ? 'adjustment' : 'payment',
+                'reference_id' => null,
+                'idempotency_key' => $idempotencyKey,
+                'trace_id' => app()->bound('trace_id') ? (string) app('trace_id') : null,
+                'note' => $reason,
+                'created_at' => now(),
             ]);
 
             $this->postLedger($companyId, (float) $amount, $isCredit, $txn->id, $reason, $wallet->branch_id, $actorId);
@@ -146,14 +146,13 @@ final class SubscriptionWalletService
             ];
 
         $this->ledgerService->post($companyId, [
-            'type'        => $isCredit ? 'wallet_top_up' : 'wallet_debit',
+            'type' => $isCredit ? 'wallet_top_up' : 'wallet_debit',
             'description' => 'Subscriptions wallet '.($isCredit ? 'credit' : 'debit').': '.$reason,
             'source_type' => WalletTransaction::class,
-            'source_id'   => $sourceId,
-            'trace_id'    => app()->bound('trace_id') ? (string) app('trace_id') : ('subv2-wallet-'.$sourceId),
-            'lines'       => $lines,
-            'currency'    => 'SAR',
+            'source_id' => $sourceId,
+            'trace_id' => app()->bound('trace_id') ? (string) app('trace_id') : ('subv2-wallet-'.$sourceId),
+            'lines' => $lines,
+            'currency' => 'SAR',
         ], $branchId, $actorId);
     }
 }
-

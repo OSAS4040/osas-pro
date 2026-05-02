@@ -19,9 +19,9 @@ class GoodsReceiptController extends Controller
     public function index(Request $request): JsonResponse
     {
         $receipts = GoodsReceipt::with(['supplier', 'purchase', 'branch'])
-            ->when($request->purchase_id, fn($q) => $q->where('purchase_id', $request->purchase_id))
-            ->when($request->supplier_id, fn($q) => $q->where('supplier_id', $request->supplier_id))
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->when($request->purchase_id, fn ($q) => $q->where('purchase_id', $request->purchase_id))
+            ->when($request->supplier_id, fn ($q) => $q->where('supplier_id', $request->supplier_id))
+            ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->orderByDesc('id')
             ->paginate($request->integer('per_page', 25));
 
@@ -31,28 +31,28 @@ class GoodsReceiptController extends Controller
     public function store(Request $request, int $purchaseId): JsonResponse
     {
         $data = $request->validate([
-            'delivery_note_number'          => 'nullable|string|max:100',
-            'notes'                         => 'nullable|string',
-            'items'                         => 'required|array|min:1',
-            'items.*.purchase_item_id'      => 'required|integer',
-            'items.*.received_quantity'     => 'required|numeric|min:0.0001',
-            'items.*.notes'                 => 'nullable|string',
+            'delivery_note_number' => 'nullable|string|max:100',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.purchase_item_id' => 'required|integer',
+            'items.*.received_quantity' => 'required|numeric|min:0.0001',
+            'items.*.notes' => 'nullable|string',
         ]);
 
-        $user     = $request->user();
+        $user = $request->user();
         $purchase = Purchase::where('company_id', $user->company_id)
             ->with('items')
             ->findOrFail($purchaseId);
 
         $receipt = $this->receiptService->createReceipt(
             purchase: $purchase,
-            data:     $data,
-            userId:   $user->id,
-            traceId:  app('trace_id'),
+            data: $data,
+            userId: $user->id,
+            traceId: app('trace_id'),
         );
 
         return response()->json([
-            'data'     => $receipt->load('items.product', 'supplier', 'purchase'),
+            'data' => $receipt->load('items.product', 'supplier', 'purchase'),
             'trace_id' => app('trace_id'),
         ], 201);
     }
@@ -68,7 +68,7 @@ class GoodsReceiptController extends Controller
 
     public function byPurchase(Request $request, int $purchaseId): JsonResponse
     {
-        $user     = $request->user();
+        $user = $request->user();
         $purchase = Purchase::where('company_id', $user->company_id)->findOrFail($purchaseId);
 
         $receipts = GoodsReceipt::with('items.product')

@@ -21,9 +21,9 @@ class CommissionService
         ?int $customerId = null,
     ): ?Commission {
         $appliesTo = match (true) {
-            str_contains($sourceType, 'Invoice')   => 'invoice',
+            str_contains($sourceType, 'Invoice') => 'invoice',
             str_contains($sourceType, 'WorkOrder') => 'work_order',
-            default                                 => 'service',
+            default => 'service',
         };
 
         $rule = CommissionRule::query()
@@ -56,18 +56,18 @@ class CommissionService
         }
 
         $quality = $this->attendanceQualityFactor($employeeId, $companyId);
-        $blend   = 0.75 + 0.25 * $quality;
-        $amount  = round($amount * (float) $rule->attendance_multiplier * $blend, 2);
+        $blend = 0.75 + 0.25 * $quality;
+        $amount = round($amount * (float) $rule->attendance_multiplier * $blend, 2);
 
         return Commission::create([
-            'company_id'  => $companyId,
+            'company_id' => $companyId,
             'employee_id' => $employeeId,
             'source_type' => $sourceType,
-            'source_id'   => $sourceId,
+            'source_id' => $sourceId,
             'base_amount' => $baseAmount,
-            'rate'        => $rule->rate,
-            'amount'      => $amount,
-            'status'      => 'pending',
+            'rate' => $rule->rate,
+            'amount' => $amount,
+            'status' => 'pending',
         ]);
     }
 
@@ -77,7 +77,7 @@ class CommissionService
     private function attendanceQualityFactor(int $employeeId, int $companyId): float
     {
         $since = now()->subDays(30)->startOfDay();
-        $days  = AttendanceLog::query()
+        $days = AttendanceLog::query()
             ->where('company_id', $companyId)
             ->where('employee_id', $employeeId)
             ->where('type', 'check_in')
@@ -96,6 +96,7 @@ class CommissionService
     {
         $c = Commission::findOrFail($commissionId);
         $c->update(['status' => 'paid', 'paid_at' => now(), 'paid_by' => $paidBy]);
+
         return $c->fresh();
     }
 

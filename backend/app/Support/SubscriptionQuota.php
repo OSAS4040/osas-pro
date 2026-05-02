@@ -68,7 +68,7 @@ final class SubscriptionQuota
     {
         throw new HttpResponseException(
             response()->json([
-                'message'  => $message,
+                'message' => $message,
                 'trace_id' => app('trace_id'),
             ], $code)
         );

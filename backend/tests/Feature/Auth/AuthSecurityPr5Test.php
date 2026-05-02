@@ -34,13 +34,13 @@ class AuthSecurityPr5Test extends TestCase
 
         for ($i = 0; $i < 3; $i++) {
             $this->postJson('/api/v1/auth/login', [
-                'email'    => $email,
+                'email' => $email,
                 'password' => 'WrongPassword!',
             ])->assertUnauthorized();
         }
 
         $res = $this->postJson('/api/v1/auth/login', [
-            'email'    => $email,
+            'email' => $email,
             'password' => 'WrongPassword!',
         ]);
 
@@ -60,23 +60,23 @@ class AuthSecurityPr5Test extends TestCase
         Config::set('auth_security.otp_verify.per_minute', 2);
 
         PhoneOtp::query()->create([
-            'phone'         => '966500112233',
+            'phone' => '966500112233',
             'otp_code_hash' => Hash::make('123456'),
-            'purpose'       => 'phone_register_login',
-            'expires_at'    => now()->addMinutes(5),
-            'max_attempts'  => 8,
+            'purpose' => 'phone_register_login',
+            'expires_at' => now()->addMinutes(5),
+            'max_attempts' => 8,
         ]);
 
         for ($i = 0; $i < 2; $i++) {
             $this->postJson('/api/v1/auth/phone/verify-otp', [
                 'phone' => '0500112233',
-                'otp'   => '000000',
+                'otp' => '000000',
             ])->assertStatus(422);
         }
 
         $res = $this->postJson('/api/v1/auth/phone/verify-otp', [
             'phone' => '0500112233',
-            'otp'   => '000000',
+            'otp' => '000000',
         ]);
 
         $res->assertStatus(429)
@@ -119,7 +119,7 @@ class AuthSecurityPr5Test extends TestCase
 
         for ($i = 0; $i < 3; $i++) {
             $this->postJson('/api/v1/auth/login', [
-                'email'    => $email,
+                'email' => $email,
                 'password' => 'WrongPassword!',
             ])->assertUnauthorized();
         }
@@ -136,17 +136,17 @@ class AuthSecurityPr5Test extends TestCase
         Config::set('auth_security.otp_verify.per_minute', 60);
 
         PhoneOtp::query()->create([
-            'phone'         => '966500112233',
+            'phone' => '966500112233',
             'otp_code_hash' => Hash::make('123456'),
-            'purpose'       => 'phone_register_login',
-            'expires_at'    => now()->addMinutes(5),
-            'max_attempts'  => 8,
+            'purpose' => 'phone_register_login',
+            'expires_at' => now()->addMinutes(5),
+            'max_attempts' => 8,
         ]);
 
         for ($i = 0; $i < 2; $i++) {
             $this->postJson('/api/v1/auth/phone/verify-otp', [
                 'phone' => '0500112233',
-                'otp'   => '000000',
+                'otp' => '000000',
             ])->assertStatus(422);
         }
 
@@ -165,12 +165,12 @@ class AuthSecurityPr5Test extends TestCase
         $email = $tenant['user']->email;
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $email,
+            'email' => $email,
             'password' => 'WrongPassword!',
         ])->assertUnauthorized();
 
         $req = Request::create('/api/v1/auth/login', 'POST', [
-            'email'    => $email,
+            'email' => $email,
             'password' => 'WrongPassword!',
         ]);
         $req->server->set('REMOTE_ADDR', '127.0.0.1');
@@ -185,7 +185,7 @@ class AuthSecurityPr5Test extends TestCase
         $tenant = $this->createTenant('owner');
 
         $res = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'WrongPassword!',
         ]);
 
@@ -199,7 +199,7 @@ class AuthSecurityPr5Test extends TestCase
         $tenant = $this->createTenant('owner');
 
         $login = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
@@ -224,7 +224,7 @@ class AuthSecurityPr5Test extends TestCase
         $tenant = $this->createTenant('owner');
 
         $token = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ])->json('token');
 

@@ -2,6 +2,10 @@
 
 namespace App\Console\Commands;
 
+use Database\Seeders\DefaultAdminSeeder;
+use Database\Seeders\DemoCompanySeeder;
+use Database\Seeders\DemoIntegratedPortalJourneySeeder;
+use Database\Seeders\DemoPlatformAdminSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,21 +32,21 @@ class WorkshopSeedDemoCommand extends Command
         require_once database_path('seeders/DemoPlatformAdminSeeder.php');
 
         Model::unguarded(function () {
-            $demo = new \Database\Seeders\DemoCompanySeeder;
+            $demo = new DemoCompanySeeder;
             $demo->setContainer($this->laravel)->setCommand($this);
             $demo->__invoke();
 
-            $admin = new \Database\Seeders\DefaultAdminSeeder;
+            $admin = new DefaultAdminSeeder;
             $admin->setContainer($this->laravel)->setCommand($this);
             $admin->__invoke();
 
-            $platformDemo = new \Database\Seeders\DemoPlatformAdminSeeder;
+            $platformDemo = new DemoPlatformAdminSeeder;
             $platformDemo->setContainer($this->laravel)->setCommand($this);
             $platformDemo->__invoke();
         });
 
         $journeyCode = $this->call('db:seed', [
-            '--class' => \Database\Seeders\DemoIntegratedPortalJourneySeeder::class,
+            '--class' => DemoIntegratedPortalJourneySeeder::class,
             '--force' => true,
         ]);
         if ($journeyCode !== self::SUCCESS) {

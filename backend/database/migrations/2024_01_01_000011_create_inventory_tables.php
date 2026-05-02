@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -25,7 +26,7 @@ return new class extends Migration
 
         Schema::create('inventory_reservations', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique()->default(\Illuminate\Support\Facades\DB::raw('uuid_generate_v4()'));
+            $table->uuid('uuid')->unique()->default(DB::raw('uuid_generate_v4()'));
             $table->foreignId('company_id')->constrained('companies');
             $table->foreignId('branch_id')->constrained('branches');
             $table->foreignId('product_id')->constrained('products');
@@ -43,7 +44,7 @@ return new class extends Migration
 
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique()->default(\Illuminate\Support\Facades\DB::raw('uuid_generate_v4()'));
+            $table->uuid('uuid')->unique()->default(DB::raw('uuid_generate_v4()'));
             $table->foreignId('company_id')->constrained('companies');
             $table->foreignId('branch_id')->constrained('branches');
             $table->foreignId('product_id')->constrained('products');

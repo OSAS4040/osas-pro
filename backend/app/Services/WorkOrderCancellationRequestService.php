@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\CompanyReceivableEntryType;
 use App\Enums\InvoiceStatus;
 use App\Enums\WalletTransactionType;
 use App\Enums\WorkOrderCancellationRequestStatus;
 use App\Enums\WorkOrderStatus;
+use App\Models\CompanyReceivableLedger;
 use App\Models\CustomerWallet;
 use App\Models\Invoice;
 use App\Models\SupportTicket;
@@ -126,10 +128,10 @@ final class WorkOrderCancellationRequestService
             }
 
             if ($isCreditTenant) {
-                $charge = \App\Models\CompanyReceivableLedger::query()
+                $charge = CompanyReceivableLedger::query()
                     ->where('company_id', $wo->company_id)
                     ->where('work_order_id', $wo->id)
-                    ->where('entry_type', \App\Enums\CompanyReceivableEntryType::Charge)
+                    ->where('entry_type', CompanyReceivableEntryType::Charge)
                     ->orderByDesc('id')
                     ->first();
                 if ($charge && bccomp((string) $charge->amount, '0', 4) > 0) {

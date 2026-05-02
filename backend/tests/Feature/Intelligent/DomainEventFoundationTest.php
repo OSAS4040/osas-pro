@@ -16,7 +16,7 @@ class DomainEventFoundationTest extends TestCase
         $c = 'test-corr-'.uniqid();
 
         $response = $this->withHeaders([
-            'X-Trace-Id'       => $t,
+            'X-Trace-Id' => $t,
             'X-Correlation-Id' => $c,
         ])->getJson('/api/v1/health');
 

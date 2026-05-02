@@ -20,8 +20,8 @@ class StoreCommandCenterGovernanceRequest extends FormRequest
     {
         return [
             'governance_ref' => ['required', 'string', 'max:8192'],
-            'action'         => ['required', 'string', Rule::in(CommandCenterGovernanceService::ACTIONS)],
-            'note'           => ['nullable', 'string', 'max:'.CommandCenterGovernanceService::NOTE_MAX],
+            'action' => ['required', 'string', Rule::in(CommandCenterGovernanceService::ACTIONS)],
+            'note' => ['nullable', 'string', 'max:'.CommandCenterGovernanceService::NOTE_MAX],
             'client_context' => ['nullable', 'array', 'max:20'],
         ];
     }

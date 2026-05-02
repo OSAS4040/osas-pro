@@ -31,35 +31,35 @@ class Phase7GovernanceApiTest extends TestCase
     private function seedDomainEventsForCommandCenter($company): void
     {
         DomainEvent::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'       => $company->id,
-            'branch_id'        => null,
-            'aggregate_type'   => 'invoice',
-            'aggregate_id'     => '42',
-            'event_name'       => 'InvoiceCreated',
-            'event_version'    => 1,
-            'payload_json'     => [],
-            'metadata_json'    => [],
-            'trace_id'         => 't-inv',
-            'correlation_id'   => 'c-inv',
-            'occurred_at'      => now()->subHour(),
-            'processing_status'=> 'recorded',
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => null,
+            'aggregate_type' => 'invoice',
+            'aggregate_id' => '42',
+            'event_name' => 'InvoiceCreated',
+            'event_version' => 1,
+            'payload_json' => [],
+            'metadata_json' => [],
+            'trace_id' => 't-inv',
+            'correlation_id' => 'c-inv',
+            'occurred_at' => now()->subHour(),
+            'processing_status' => 'recorded',
         ]);
 
         DomainEvent::create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'       => $company->id,
-            'branch_id'        => null,
-            'aggregate_type'   => 'Customer',
-            'aggregate_id'     => '1',
-            'event_name'       => 'CustomerCreated',
-            'event_version'    => 1,
-            'payload_json'     => [],
-            'metadata_json'    => [],
-            'trace_id'         => 't1',
-            'correlation_id'   => 'c1',
-            'occurred_at'      => now()->subDay(),
-            'processing_status'=> 'recorded',
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $company->id,
+            'branch_id' => null,
+            'aggregate_type' => 'Customer',
+            'aggregate_id' => '1',
+            'event_name' => 'CustomerCreated',
+            'event_version' => 1,
+            'payload_json' => [],
+            'metadata_json' => [],
+            'trace_id' => 't1',
+            'correlation_id' => 'c1',
+            'occurred_at' => now()->subDay(),
+            'processing_status' => 'recorded',
         ]);
     }
 
@@ -91,8 +91,8 @@ class Phase7GovernanceApiTest extends TestCase
 
         $post = $this->actingAsUser($user)->postJson('/api/v1/internal/intelligence/command-center/governance', [
             'governance_ref' => $ref,
-            'action'         => 'acknowledged',
-            'note'           => 'راجعت البند',
+            'action' => 'acknowledged',
+            'note' => 'راجعت البند',
         ]);
         $post->assertCreated();
         $post->assertJsonPath('meta.audit_only', true);
@@ -130,7 +130,7 @@ class Phase7GovernanceApiTest extends TestCase
 
         $this->actingAsUser($user)->postJson('/api/v1/internal/intelligence/command-center/governance', [
             'governance_ref' => $ref,
-            'action'         => 'needs_follow_up',
+            'action' => 'needs_follow_up',
         ])->assertCreated();
 
         $this->assertSame($de, DomainEvent::count());
@@ -146,7 +146,7 @@ class Phase7GovernanceApiTest extends TestCase
 
         $this->actingAsUser($user)->postJson('/api/v1/internal/intelligence/command-center/governance', [
             'governance_ref' => 'v1.invalid.token.here',
-            'action'         => 'acknowledged',
+            'action' => 'acknowledged',
         ])->assertStatus(422);
     }
 
@@ -161,7 +161,7 @@ class Phase7GovernanceApiTest extends TestCase
 
         $this->actingAsUser($cashier)->postJson('/api/v1/internal/intelligence/command-center/governance', [
             'governance_ref' => $ref,
-            'action'         => 'acknowledged',
+            'action' => 'acknowledged',
         ])->assertForbidden();
     }
 
@@ -174,7 +174,7 @@ class Phase7GovernanceApiTest extends TestCase
 
         $this->actingAsUser($user)->postJson('/api/v1/internal/intelligence/command-center/governance', [
             'governance_ref' => $ref,
-            'action'         => 'approve_payment',
+            'action' => 'approve_payment',
         ])->assertStatus(422);
     }
 
@@ -187,8 +187,8 @@ class Phase7GovernanceApiTest extends TestCase
 
         $this->actingAsUser($user)->postJson('/api/v1/internal/intelligence/command-center/governance', [
             'governance_ref' => $ref,
-            'action'         => 'acknowledged',
-            'note'           => str_repeat('a', 501),
+            'action' => 'acknowledged',
+            'note' => str_repeat('a', 501),
         ])->assertStatus(422);
     }
 
@@ -201,8 +201,8 @@ class Phase7GovernanceApiTest extends TestCase
 
         $this->actingAsUser($user)->postJson('/api/v1/internal/intelligence/command-center/governance', [
             'governance_ref' => $ref,
-            'action'         => 'ignored_for_now',
-            'note'           => 'مؤقت',
+            'action' => 'ignored_for_now',
+            'note' => 'مؤقت',
         ])->assertCreated();
 
         $h = $this->actingAsUser($user)->getJson(
@@ -237,7 +237,7 @@ class Phase7GovernanceApiTest extends TestCase
 
         $this->actingAsUser($user)->postJson('/api/v1/internal/intelligence/command-center/governance', [
             'governance_ref' => $ref,
-            'action'         => 'acknowledged',
+            'action' => 'acknowledged',
         ])->assertNotFound();
     }
 
@@ -252,7 +252,7 @@ class Phase7GovernanceApiTest extends TestCase
 
         $this->actingAsUser($manager)->postJson('/api/v1/internal/intelligence/command-center/governance', [
             'governance_ref' => $ref,
-            'action'         => 'acknowledged',
+            'action' => 'acknowledged',
         ])->assertCreated();
     }
 }

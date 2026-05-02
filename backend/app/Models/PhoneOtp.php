@@ -23,7 +23,7 @@ class PhoneOtp extends Model
     protected function casts(): array
     {
         return [
-            'expires_at'  => 'datetime',
+            'expires_at' => 'datetime',
             'verified_at' => 'datetime',
         ];
     }

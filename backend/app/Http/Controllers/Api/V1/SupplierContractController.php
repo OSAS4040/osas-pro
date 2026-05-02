@@ -32,28 +32,28 @@ class SupplierContractController extends Controller
         $supplier = Supplier::query()->findOrFail($supplierId);
 
         $data = $request->validate([
-            'title'       => ['required', 'string', 'max:255'],
-            'expires_at'  => ['nullable', 'date'],
-            'notes'       => ['nullable', 'string', 'max:5000'],
-            'file'        => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'title' => ['required', 'string', 'max:255'],
+            'expires_at' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string', 'max:5000'],
+            'file' => ['required', 'file', 'mimes:pdf', 'max:10240'],
         ]);
 
         $file = $request->file('file');
         $companyId = (int) $request->user()->company_id;
-        $dir       = "supplier-contracts/{$companyId}";
-        $path      = $file->store($dir, 'local');
+        $dir = "supplier-contracts/{$companyId}";
+        $path = $file->store($dir, 'local');
 
         $contract = SupplierContract::create([
-            'uuid'                 => Str::uuid()->toString(),
-            'company_id'           => $companyId,
-            'supplier_id'          => $supplier->id,
-            'title'                => $data['title'],
-            'stored_path'          => $path,
-            'original_filename'    => $file->getClientOriginalName(),
-            'mime_type'            => $file->getClientMimeType(),
-            'expires_at'           => $data['expires_at'] ?? null,
-            'notes'                => $data['notes'] ?? null,
-            'created_by_user_id'   => $request->user()->id,
+            'uuid' => Str::uuid()->toString(),
+            'company_id' => $companyId,
+            'supplier_id' => $supplier->id,
+            'title' => $data['title'],
+            'stored_path' => $path,
+            'original_filename' => $file->getClientOriginalName(),
+            'mime_type' => $file->getClientMimeType(),
+            'expires_at' => $data['expires_at'] ?? null,
+            'notes' => $data['notes'] ?? null,
+            'created_by_user_id' => $request->user()->id,
         ]);
 
         return response()->json(['data' => $contract, 'trace_id' => app('trace_id')], 201);

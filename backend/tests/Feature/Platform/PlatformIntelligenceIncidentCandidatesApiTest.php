@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Platform;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Config;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
@@ -36,7 +37,7 @@ final class PlatformIntelligenceIncidentCandidatesApiTest extends TestCase
             'platform_role' => 'platform_admin',
         ]);
 
-        $res = $this->actingAsUser(\App\Models\User::where('email', 'cand-api@platform.test')->firstOrFail())
+        $res = $this->actingAsUser(User::where('email', 'cand-api@platform.test')->firstOrFail())
             ->getJson('/api/v1/platform/intelligence/incident-candidates');
 
         $res->assertSuccessful()

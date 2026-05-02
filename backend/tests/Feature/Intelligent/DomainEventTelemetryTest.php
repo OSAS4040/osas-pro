@@ -46,24 +46,24 @@ class DomainEventTelemetryTest extends TestCase
     {
         $this->enableEventPersistence();
         $company = $this->createCompany();
-        $branch  = $this->createBranch($company);
-        $user    = $this->createUser($company, $branch);
-        $unit    = Unit::create([
+        $branch = $this->createBranch($company);
+        $user = $this->createUser($company, $branch);
+        $unit = Unit::create([
             'company_id' => $company->id,
-            'name'       => 'Piece', 'symbol' => 'pcs',
-            'type'       => 'quantity', 'is_base' => true,
-            'is_system'  => false, 'is_active' => true,
+            'name' => 'Piece', 'symbol' => 'pcs',
+            'type' => 'quantity', 'is_base' => true,
+            'is_system' => false, 'is_active' => true,
         ]);
         $product = Product::create([
-            'uuid'            => Str::uuid(),
-            'company_id'      => $company->id,
-            'name'            => 'Stock Test SKU',
-            'sku'             => 'STK-TEL-1',
-            'product_type'    => 'physical',
-            'unit_id'         => $unit->id,
-            'sale_price'      => 10.00,
+            'uuid' => Str::uuid(),
+            'company_id' => $company->id,
+            'name' => 'Stock Test SKU',
+            'sku' => 'STK-TEL-1',
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => 10.00,
             'track_inventory' => true,
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         $before = DomainEvent::count();
@@ -88,24 +88,24 @@ class DomainEventTelemetryTest extends TestCase
     {
         $this->enableEventPersistence();
         $company = $this->createCompany();
-        $branch  = $this->createBranch($company);
-        $user    = $this->createUser($company, $branch);
-        $unit    = Unit::create([
+        $branch = $this->createBranch($company);
+        $user = $this->createUser($company, $branch);
+        $unit = Unit::create([
             'company_id' => $company->id,
-            'name'       => 'Piece', 'symbol' => 'pcs',
-            'type'       => 'quantity', 'is_base' => true,
-            'is_system'  => false, 'is_active' => true,
+            'name' => 'Piece', 'symbol' => 'pcs',
+            'type' => 'quantity', 'is_base' => true,
+            'is_system' => false, 'is_active' => true,
         ]);
         $product = Product::create([
-            'uuid'            => Str::uuid(),
-            'company_id'      => $company->id,
-            'name'            => 'Res Test',
-            'sku'             => 'RES-TEL-1',
-            'product_type'    => 'physical',
-            'unit_id'         => $unit->id,
-            'sale_price'      => 10.00,
+            'uuid' => Str::uuid(),
+            'company_id' => $company->id,
+            'name' => 'Res Test',
+            'sku' => 'RES-TEL-1',
+            'product_type' => 'physical',
+            'unit_id' => $unit->id,
+            'sale_price' => 10.00,
             'track_inventory' => true,
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         app(InventoryService::class)->addStock(

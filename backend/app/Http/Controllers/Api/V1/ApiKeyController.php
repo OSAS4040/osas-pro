@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ApiKey;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ApiKeyController extends Controller
 {
@@ -23,23 +23,23 @@ class ApiKeyController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'name'               => 'required|string|max:255',
-            'permissions_scope'  => 'nullable|array',
-            'rate_limit'         => 'nullable|integer|min:1',
-            'expires_at'         => 'nullable|date|after:now',
+            'name' => 'required|string|max:255',
+            'permissions_scope' => 'nullable|array',
+            'rate_limit' => 'nullable|integer|min:1',
+            'expires_at' => 'nullable|date|after:now',
         ]);
 
         $rawSecret = Str::random(64);
 
         $key = ApiKey::create([
-            'key_id'             => Str::uuid(),
-            'company_id'         => $request->user()->company_id,
+            'key_id' => Str::uuid(),
+            'company_id' => $request->user()->company_id,
             'created_by_user_id' => $request->user()->id,
-            'name'               => $data['name'],
-            'secret_hash'        => hash('sha256', $rawSecret),
-            'permissions_scope'  => $data['permissions_scope'] ?? null,
-            'rate_limit'         => $data['rate_limit'] ?? 1000,
-            'expires_at'         => $data['expires_at'] ?? null,
+            'name' => $data['name'],
+            'secret_hash' => hash('sha256', $rawSecret),
+            'permissions_scope' => $data['permissions_scope'] ?? null,
+            'rate_limit' => $data['rate_limit'] ?? 1000,
+            'expires_at' => $data['expires_at'] ?? null,
         ]);
 
         Log::info('audit.api_key.created', [
@@ -51,10 +51,10 @@ class ApiKeyController extends Controller
         ]);
 
         return response()->json([
-            'data'       => $key->only(['key_id', 'name', 'expires_at', 'created_at']),
-            'secret'     => $rawSecret,
-            'message'    => 'Store this secret now — it will not be shown again.',
-            'trace_id'   => app('trace_id'),
+            'data' => $key->only(['key_id', 'name', 'expires_at', 'created_at']),
+            'secret' => $rawSecret,
+            'message' => 'Store this secret now — it will not be shown again.',
+            'trace_id' => app('trace_id'),
         ], 201);
     }
 

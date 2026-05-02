@@ -25,8 +25,8 @@ class ZatcaLog extends Model
     ];
 
     protected $casts = [
-        'request_payload'  => 'array',
+        'request_payload' => 'array',
         'response_payload' => 'array',
-        'created_at'       => 'datetime',
+        'created_at' => 'datetime',
     ];
 }

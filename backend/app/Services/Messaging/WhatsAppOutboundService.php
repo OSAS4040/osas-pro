@@ -40,9 +40,9 @@ final class WhatsAppOutboundService
         if (($triggers[$triggerKey] ?? false) !== true) {
             Log::debug('whatsapp.work_order.skip_trigger_disabled', [
                 'work_order_id' => $workOrder->id,
-                'company_id'    => $company->id,
-                'kind'          => $kind,
-                'trigger'       => $triggerKey,
+                'company_id' => $company->id,
+                'kind' => $kind,
+                'trigger' => $triggerKey,
             ]);
 
             return;
@@ -52,8 +52,8 @@ final class WhatsAppOutboundService
         if ($phone === null) {
             Log::info('whatsapp.work_order.skip_no_phone', [
                 'work_order_id' => $workOrder->id,
-                'company_id'    => $company->id,
-                'kind'          => $kind,
+                'company_id' => $company->id,
+                'kind' => $kind,
             ]);
 
             return;
@@ -67,8 +67,8 @@ final class WhatsAppOutboundService
             'custom_api' => $this->sendViaCustomApi($company, $phone, $body, $workOrder->id),
             default => Log::info('whatsapp.work_order.skip_platform_provider', [
                 'work_order_id' => $workOrder->id,
-                'company_id'    => $company->id,
-                'provider'      => $provider,
+                'company_id' => $company->id,
+                'provider' => $provider,
             ]),
         };
     }
@@ -134,7 +134,7 @@ final class WhatsAppOutboundService
         if ($sid === '' || $token === '' || $from === '') {
             Log::warning('whatsapp.work_order.skip_twilio_incomplete', [
                 'work_order_id' => $workOrderId,
-                'company_id'    => $company->id,
+                'company_id' => $company->id,
             ]);
 
             return;
@@ -152,16 +152,16 @@ final class WhatsAppOutboundService
                 ->connectTimeout(5)
                 ->post($url, [
                     'From' => $fromWa,
-                    'To'   => $toWa,
+                    'To' => $toWa,
                     'Body' => $body,
                 ]);
 
             if ($response->successful()) {
                 Log::info('whatsapp.work_order.twilio_sent', [
                     'work_order_id' => $workOrderId,
-                    'company_id'    => $company->id,
-                    'to_suffix'     => $this->maskPhoneSuffix($toDigits),
-                    'http_status'   => $response->status(),
+                    'company_id' => $company->id,
+                    'to_suffix' => $this->maskPhoneSuffix($toDigits),
+                    'http_status' => $response->status(),
                 ]);
 
                 return;
@@ -171,8 +171,8 @@ final class WhatsAppOutboundService
         } catch (\Throwable $e) {
             Log::error('whatsapp.work_order.twilio_error', [
                 'work_order_id' => $workOrderId,
-                'company_id'    => $company->id,
-                'error'         => $e->getMessage(),
+                'company_id' => $company->id,
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -190,7 +190,7 @@ final class WhatsAppOutboundService
         if ($url === '') {
             Log::warning('whatsapp.work_order.skip_custom_api_no_url', [
                 'work_order_id' => $workOrderId,
-                'company_id'    => $company->id,
+                'company_id' => $company->id,
             ]);
 
             return;
@@ -206,18 +206,18 @@ final class WhatsAppOutboundService
                 ->timeout(15)
                 ->connectTimeout(5)
                 ->post($url, [
-                    'to'            => $toDigits,
-                    'from'          => $from,
-                    'body'          => $body,
+                    'to' => $toDigits,
+                    'from' => $from,
+                    'body' => $body,
                     'work_order_id' => $workOrderId,
                 ]);
 
             if ($response->successful()) {
                 Log::info('whatsapp.work_order.custom_api_sent', [
                     'work_order_id' => $workOrderId,
-                    'company_id'    => $company->id,
-                    'to_suffix'     => $this->maskPhoneSuffix($toDigits),
-                    'http_status'   => $response->status(),
+                    'company_id' => $company->id,
+                    'to_suffix' => $this->maskPhoneSuffix($toDigits),
+                    'http_status' => $response->status(),
                 ]);
 
                 return;
@@ -227,8 +227,8 @@ final class WhatsAppOutboundService
         } catch (\Throwable $e) {
             Log::error('whatsapp.work_order.custom_api_error', [
                 'work_order_id' => $workOrderId,
-                'company_id'    => $company->id,
-                'error'         => $e->getMessage(),
+                'company_id' => $company->id,
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }

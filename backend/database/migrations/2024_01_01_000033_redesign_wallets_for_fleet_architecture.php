@@ -55,7 +55,7 @@ return new class extends Migration
 
         // 3. Add work order approval fields
         Schema::table('work_orders', function (Blueprint $table) {
-            if (!Schema::hasColumn('work_orders', 'approved_by_user_id')) {
+            if (! Schema::hasColumn('work_orders', 'approved_by_user_id')) {
                 $table->foreignId('approved_by_user_id')->nullable()->after('created_by_user_id')
                     ->constrained('users')->nullOnDelete();
                 $table->string('approval_status')->default('not_required')->after('approved_by_user_id');

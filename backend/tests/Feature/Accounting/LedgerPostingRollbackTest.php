@@ -33,48 +33,48 @@ class LedgerPostingRollbackTest extends TestCase
 
     public function test_pos_sale_returns_503_and_rolls_back_when_ledger_post_fails(): void
     {
-        $company  = $this->createCompany();
-        $branch   = $this->createBranch($company);
-        $user     = $this->createUser($company, $branch);
+        $company = $this->createCompany();
+        $branch = $this->createBranch($company);
+        $user = $this->createUser($company, $branch);
         $this->createActiveSubscription($company);
 
         $customer = Customer::create([
-            'uuid'               => Str::uuid(),
-            'company_id'         => $company->id,
+            'uuid' => Str::uuid(),
+            'company_id' => $company->id,
             'created_by_user_id' => $user->id,
-            'name'               => 'Walk-In Customer',
-            'customer_type'      => 'individual',
-            'is_active'          => true,
+            'name' => 'Walk-In Customer',
+            'customer_type' => 'individual',
+            'is_active' => true,
         ]);
 
         $unit = Unit::create([
             'company_id' => $company->id,
-            'name'       => 'Piece', 'symbol' => 'pcs',
-            'type'       => 'quantity', 'is_base' => true,
-            'is_system'  => false, 'is_active' => true,
+            'name' => 'Piece', 'symbol' => 'pcs',
+            'type' => 'quantity', 'is_base' => true,
+            'is_system' => false, 'is_active' => true,
         ]);
 
         $product = Product::create([
-            'uuid'            => Str::uuid(),
-            'company_id'      => $company->id,
-            'name'            => 'Engine Oil 5W30',
-            'sku'             => 'OIL-5W30',
-            'product_type'    => 'consumable',
-            'unit_id'         => $unit->id,
-            'sale_price'      => 50.00,
-            'cost_price'      => 30.00,
+            'uuid' => Str::uuid(),
+            'company_id' => $company->id,
+            'name' => 'Engine Oil 5W30',
+            'sku' => 'OIL-5W30',
+            'product_type' => 'consumable',
+            'unit_id' => $unit->id,
+            'sale_price' => 50.00,
+            'cost_price' => 30.00,
             'track_inventory' => true,
-            'is_active'       => true,
+            'is_active' => true,
         ]);
 
         app(InventoryService::class)->addStock(
             companyId: $company->id,
-            branchId:  $branch->id,
+            branchId: $branch->id,
             productId: $product->id,
-            quantity:  100,
-            userId:    $user->id,
-            type:      'manual_add',
-            traceId:   'setup',
+            quantity: 100,
+            userId: $user->id,
+            type: 'manual_add',
+            traceId: 'setup',
         );
 
         $mock = Mockery::mock(LedgerService::class);
@@ -82,25 +82,25 @@ class LedgerPostingRollbackTest extends TestCase
         $this->app->instance(LedgerService::class, $mock);
 
         $beforeInvoices = Invoice::count();
-        $beforeQty      = (float) Inventory::where([
+        $beforeQty = (float) Inventory::where([
             'company_id' => $company->id,
-            'branch_id'  => $branch->id,
+            'branch_id' => $branch->id,
             'product_id' => $product->id,
         ])->value('quantity');
 
         $response = $this->actingAs($user, 'sanctum')
             ->withHeaders(['Idempotency-Key' => Str::uuid()])
             ->postJson('/api/v1/pos/sale', [
-                'customer_id'   => $customer->id,
+                'customer_id' => $customer->id,
                 'customer_type' => 'b2c',
-                'items'         => [
+                'items' => [
                     [
-                        'name'       => $product->name,
+                        'name' => $product->name,
                         'product_id' => $product->id,
-                        'quantity'   => 2,
+                        'quantity' => 2,
                         'unit_price' => 50.00,
                         'cost_price' => 30.00,
-                        'tax_rate'   => 15,
+                        'tax_rate' => 15,
                     ],
                 ],
                 'payment' => ['method' => 'cash', 'amount' => 115.00],
@@ -114,7 +114,7 @@ class LedgerPostingRollbackTest extends TestCase
         $this->assertSame($beforeInvoices, Invoice::count());
         $afterQty = (float) Inventory::where([
             'company_id' => $company->id,
-            'branch_id'  => $branch->id,
+            'branch_id' => $branch->id,
             'product_id' => $product->id,
         ])->value('quantity');
         $this->assertSame($beforeQty, $afterQty);
@@ -135,13 +135,13 @@ class LedgerPostingRollbackTest extends TestCase
             app(InvoiceService::class)->createInvoice(
                 data: [
                     'customer_type' => 'b2c',
-                    'items'         => [
+                    'items' => [
                         ['name' => 'Line', 'quantity' => 1, 'unit_price' => 100, 'tax_rate' => 15],
                     ],
                 ],
                 companyId: $tenant['company']->id,
-                branchId:  $tenant['branch']->id,
-                userId:    $tenant['user']->id,
+                branchId: $tenant['branch']->id,
+                userId: $tenant['user']->id,
             );
         } catch (LedgerPostingFailedException $e) {
             $caught = true;

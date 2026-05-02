@@ -48,21 +48,21 @@ final class SubscriptionService
             ? $subscription->ends_at->copy()
             : now();
         $payload = [
-            'plan'           => $plan->slug,
-            'amount'         => $order->total,
-            'currency'       => $order->currency,
-            'features'       => $plan->features,
-            'max_branches'   => $plan->max_branches,
-            'max_users'      => $plan->max_users,
-            'status'         => SubscriptionStatus::Active,
-            'starts_at'      => $subscription?->starts_at ?? now(),
-            'ends_at'        => $baseDate->copy()->addMonth(),
-            'grace_ends_at'  => null,
+            'plan' => $plan->slug,
+            'amount' => $order->total,
+            'currency' => $order->currency,
+            'features' => $plan->features,
+            'max_branches' => $plan->max_branches,
+            'max_users' => $plan->max_users,
+            'status' => SubscriptionStatus::Active,
+            'starts_at' => $subscription?->starts_at ?? now(),
+            'ends_at' => $baseDate->copy()->addMonth(),
+            'grace_ends_at' => null,
         ];
 
         if ($subscription === null) {
             $subscription = Subscription::withoutGlobalScopes()->create(array_merge([
-                'uuid'       => (string) Str::uuid(),
+                'uuid' => (string) Str::uuid(),
                 'company_id' => $order->company_id,
             ], $payload));
         } else {
@@ -257,12 +257,12 @@ final class SubscriptionService
 
             $change = SubscriptionChange::query()->create([
                 'subscription_id' => $locked->id,
-                'from_plan_id'    => $currentPlan->id,
-                'to_plan_id'      => $newPlan->id,
-                'change_type'     => 'upgrade',
-                'proration_amount'=> $proration,
-                'effective_at'    => now(),
-                'created_by'      => $actorId,
+                'from_plan_id' => $currentPlan->id,
+                'to_plan_id' => $newPlan->id,
+                'change_type' => 'upgrade',
+                'proration_amount' => $proration,
+                'effective_at' => now(),
+                'created_by' => $actorId,
             ]);
 
             $locked->plan = $newPlan->slug;
@@ -285,12 +285,12 @@ final class SubscriptionService
 
         $change = SubscriptionChange::query()->create([
             'subscription_id' => $subscription->id,
-            'from_plan_id'    => $currentPlan->id,
-            'to_plan_id'      => $newPlan->id,
-            'change_type'     => 'downgrade_scheduled',
-            'proration_amount'=> 0,
-            'effective_at'    => $subscription->ends_at ?? now()->addMonth(),
-            'created_by'      => $actorId,
+            'from_plan_id' => $currentPlan->id,
+            'to_plan_id' => $newPlan->id,
+            'change_type' => 'downgrade_scheduled',
+            'proration_amount' => 0,
+            'effective_at' => $subscription->ends_at ?? now()->addMonth(),
+            'created_by' => $actorId,
         ]);
 
         DB::afterCommit(function () use ($subscription): void {
@@ -339,7 +339,7 @@ final class SubscriptionService
     }
 
     /**
-     * @param array<string, mixed> $meta
+     * @param  array<string, mixed>  $meta
      */
     private function createSubscriptionPayment(
         Subscription $subscription,
@@ -349,23 +349,23 @@ final class SubscriptionService
         array $meta,
     ): Payment {
         $company = Company::query()->findOrFail((int) $subscription->company_id);
-        $branch  = ($this->resolveBranch)($company);
+        $branch = ($this->resolveBranch)($company);
 
         return Payment::query()->create([
-            'uuid'               => (string) Str::uuid(),
-            'company_id'         => (int) $subscription->company_id,
-            'branch_id'          => $branch->id,
-            'invoice_id'         => null,
-            'payment_order_id'   => null,
+            'uuid' => (string) Str::uuid(),
+            'company_id' => (int) $subscription->company_id,
+            'branch_id' => $branch->id,
+            'invoice_id' => null,
+            'payment_order_id' => null,
             'created_by_user_id' => $actorId,
-            'method'             => $method,
-            'payment_method'     => $method,
-            'amount'             => $amount,
-            'currency'           => (string) $subscription->currency,
-            'reference'          => 'SUB-CYCLE-'.$subscription->id.'-'.now()->format('YmdHi'),
-            'status'             => 'completed',
-            'meta'               => array_merge($meta, ['subscriptions_v2_cycle' => true, 'subscription_id' => $subscription->id]),
-            'created_at'         => now(),
+            'method' => $method,
+            'payment_method' => $method,
+            'amount' => $amount,
+            'currency' => (string) $subscription->currency,
+            'reference' => 'SUB-CYCLE-'.$subscription->id.'-'.now()->format('YmdHi'),
+            'status' => 'completed',
+            'meta' => array_merge($meta, ['subscriptions_v2_cycle' => true, 'subscription_id' => $subscription->id]),
+            'created_at' => now(),
         ]);
     }
 }

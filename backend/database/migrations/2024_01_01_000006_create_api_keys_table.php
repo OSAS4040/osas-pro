@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -10,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('api_keys', function (Blueprint $table) {
             $table->id();
-            $table->uuid('key_id')->unique()->default(\Illuminate\Support\Facades\DB::raw('uuid_generate_v4()'));
+            $table->uuid('key_id')->unique()->default(DB::raw('uuid_generate_v4()'));
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('created_by_user_id')->constrained('users');
             $table->string('name');

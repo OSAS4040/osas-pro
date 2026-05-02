@@ -48,7 +48,7 @@ final class SubscriptionAddonEntitlements
         return SubscriptionAddon::query()->firstOrCreate(
             [
                 'subscription_id' => $subscription->id,
-                'plan_addon_id'     => $addon->id,
+                'plan_addon_id' => $addon->id,
             ],
             ['activated_at' => now()],
         );
@@ -106,13 +106,13 @@ final class SubscriptionAddonEntitlements
                 $a = $row->planAddon;
 
                 return [
-                    'slug'           => $a ? (string) $a->slug : '',
-                    'feature_key'    => $a ? (string) $a->feature_key : '',
-                    'name_ar'        => $a ? (string) $a->name_ar : '',
-                    'price_monthly'  => $a ? (float) $a->price_monthly : 0.0,
-                    'price_yearly'   => $a ? (float) $a->price_yearly : 0.0,
-                    'currency'       => $a ? (string) $a->currency : 'SAR',
-                    'activated_at'   => $row->activated_at?->toIso8601String(),
+                    'slug' => $a ? (string) $a->slug : '',
+                    'feature_key' => $a ? (string) $a->feature_key : '',
+                    'name_ar' => $a ? (string) $a->name_ar : '',
+                    'price_monthly' => $a ? (float) $a->price_monthly : 0.0,
+                    'price_yearly' => $a ? (float) $a->price_yearly : 0.0,
+                    'currency' => $a ? (string) $a->currency : 'SAR',
+                    'activated_at' => $row->activated_at?->toIso8601String(),
                 ];
             })
             ->values()

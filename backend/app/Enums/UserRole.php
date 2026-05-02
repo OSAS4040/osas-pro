@@ -4,33 +4,33 @@ namespace App\Enums;
 
 enum UserRole: string
 {
-    case Owner         = 'owner';
-    case Manager       = 'manager';
-    case Staff         = 'staff';
-    case Cashier       = 'cashier';
-    case Accountant    = 'accountant';
-    case Technician    = 'technician';
-    case Viewer        = 'viewer';
-    case FleetContact  = 'fleet_contact';
-    case FleetManager  = 'fleet_manager';
-    case Customer      = 'customer';
+    case Owner = 'owner';
+    case Manager = 'manager';
+    case Staff = 'staff';
+    case Cashier = 'cashier';
+    case Accountant = 'accountant';
+    case Technician = 'technician';
+    case Viewer = 'viewer';
+    case FleetContact = 'fleet_contact';
+    case FleetManager = 'fleet_manager';
+    case Customer = 'customer';
 
     /** تسجيل عبر الجوال فقط — بدون مستأجر حتى اكتمال المراجعة */
     case PhoneOnboarding = 'phone_onboarding';
 
     public function label(): string
     {
-        return match($this) {
-            self::Owner        => 'Owner',
-            self::Manager      => 'Manager',
-            self::Staff        => 'Staff',
-            self::Cashier      => 'Cashier',
-            self::Accountant   => 'Accountant',
-            self::Technician   => 'Technician',
-            self::Viewer       => 'Viewer',
+        return match ($this) {
+            self::Owner => 'Owner',
+            self::Manager => 'Manager',
+            self::Staff => 'Staff',
+            self::Cashier => 'Cashier',
+            self::Accountant => 'Accountant',
+            self::Technician => 'Technician',
+            self::Viewer => 'Viewer',
             self::FleetContact => 'Fleet Contact',
             self::FleetManager => 'Fleet Manager',
-            self::Customer     => 'Customer',
+            self::Customer => 'Customer',
             self::PhoneOnboarding => 'Phone onboarding',
         };
     }

@@ -3,20 +3,21 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Referral;
-use App\Models\ReferralPolicy;
 use App\Models\LoyaltyPoints;
 use App\Models\LoyaltyTransaction;
-use App\Models\Customer;
-use App\Models\CustomerWallet;
+use App\Models\Referral;
+use App\Models\ReferralPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ReferralController extends Controller
 {
-    private function cid(): int { return app('tenant_company_id'); }
+    private function cid(): int
+    {
+        return app('tenant_company_id');
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -24,9 +25,11 @@ class ReferralController extends Controller
             ->with(['referrer:id,name,email', 'referredCustomer:id,name,phone'])
             ->orderByDesc('created_at');
 
-        if ($r = $request->status) $q->where('status', $r);
+        if ($r = $request->status) {
+            $q->where('status', $r);
+        }
 
-        return response()->json($q->paginate((int)($request->per_page ?? 50)));
+        return response()->json($q->paginate((int) ($request->per_page ?? 50)));
     }
 
     public function generate(Request $request): JsonResponse
@@ -40,15 +43,17 @@ class ReferralController extends Controller
             ->where('status', 'pending')
             ->first();
 
-        if ($existing) return response()->json($existing);
+        if ($existing) {
+            return response()->json($existing);
+        }
 
         $ref = Referral::create([
-            'company_id'        => $this->cid(),
-            'referrer_user_id'  => auth()->id(),
-            'code'              => strtoupper(Str::random(8)),
-            'status'            => 'pending',
-            'channel'           => $data['channel'] ?? 'link',
-            'expires_at'        => now()->addDays(90),
+            'company_id' => $this->cid(),
+            'referrer_user_id' => auth()->id(),
+            'code' => strtoupper(Str::random(8)),
+            'status' => 'pending',
+            'channel' => $data['channel'] ?? 'link',
+            'expires_at' => now()->addDays(90),
         ]);
 
         return response()->json($ref, 201);
@@ -59,32 +64,34 @@ class ReferralController extends Controller
         $policy = ReferralPolicy::firstOrCreate(
             ['company_id' => $this->cid()],
             [
-                'enabled'           => true,
-                'reward_type'       => 'wallet',
-                'referrer_reward'   => 50,
-                'referred_reward'   => 25,
-                'points_per_sar'    => 1,
+                'enabled' => true,
+                'reward_type' => 'wallet',
+                'referrer_reward' => 50,
+                'referred_reward' => 25,
+                'points_per_sar' => 1,
             ]
         );
+
         return response()->json($policy);
     }
 
     public function savePolicy(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'enabled'               => 'boolean',
-            'reward_type'           => 'in:wallet,points,discount',
-            'referrer_reward'       => 'numeric|min:0',
-            'referred_reward'       => 'numeric|min:0',
-            'referrer_points'       => 'integer|min:0',
-            'referred_points'       => 'integer|min:0',
-            'points_per_sar'        => 'integer|min:0',
-            'min_purchase_to_earn'  => 'numeric|min:0',
-            'points_expiry_days'    => 'nullable|integer|min:1',
-            'terms'                 => 'nullable|string',
+            'enabled' => 'boolean',
+            'reward_type' => 'in:wallet,points,discount',
+            'referrer_reward' => 'numeric|min:0',
+            'referred_reward' => 'numeric|min:0',
+            'referrer_points' => 'integer|min:0',
+            'referred_points' => 'integer|min:0',
+            'points_per_sar' => 'integer|min:0',
+            'min_purchase_to_earn' => 'numeric|min:0',
+            'points_expiry_days' => 'nullable|integer|min:1',
+            'terms' => 'nullable|string',
         ]);
 
         $policy = ReferralPolicy::updateOrCreate(['company_id' => $this->cid()], $data);
+
         return response()->json($policy);
     }
 
@@ -105,14 +112,14 @@ class ReferralController extends Controller
     {
         $data = $request->validate([
             'customer_id' => 'required|integer',
-            'points'      => 'required|integer|min:1',
+            'points' => 'required|integer|min:1',
         ]);
 
         $lp = LoyaltyPoints::where('company_id', $this->cid())
             ->where('customer_id', $data['customer_id'])
             ->first();
 
-        if (!$lp || $lp->points < $data['points']) {
+        if (! $lp || $lp->points < $data['points']) {
             return response()->json(['message' => 'رصيد النقاط غير كافٍ'], 422);
         }
 
@@ -124,13 +131,13 @@ class ReferralController extends Controller
             $lp->increment('points_used', $data['points']);
 
             LoyaltyTransaction::create([
-                'company_id'  => $this->cid(),
+                'company_id' => $this->cid(),
                 'customer_id' => $data['customer_id'],
-                'type'        => 'redeem',
-                'points'      => -$data['points'],
+                'type' => 'redeem',
+                'points' => -$data['points'],
                 'description' => "استبدال {$data['points']} نقطة بـ {$sarValue} ريال",
                 'source_type' => 'loyalty_redemption',
-                'source_id'   => $lp->id,
+                'source_id' => $lp->id,
             ]);
         });
 

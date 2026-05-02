@@ -20,8 +20,8 @@ class PushDeviceTest extends TestCase
         $tenant = $this->createTenant();
 
         $this->postJson('/api/v1/auth/login', [
-            'email'     => $tenant['user']->email,
-            'password'  => 'Password123!',
+            'email' => $tenant['user']->email,
+            'password' => 'Password123!',
             'fcm_token' => str_repeat('a', 32),
         ])->assertStatus(200);
 
@@ -39,7 +39,7 @@ class PushDeviceTest extends TestCase
 
         $this->withHeader('Authorization', 'Bearer '.$plain)
             ->postJson('/api/v1/auth/push-device', [
-                'fcm_token'   => str_repeat('b', 32),
+                'fcm_token' => str_repeat('b', 32),
                 'device_name' => 'JUnit',
                 'device_type' => 'android',
             ])
@@ -63,9 +63,9 @@ class PushDeviceTest extends TestCase
         ))->handle();
 
         $this->assertDatabaseHas('user_push_devices', [
-            'user_id'    => $tenant['user']->id,
+            'user_id' => $tenant['user']->id,
             'company_id' => $tenant['company']->id,
-            'fcm_token'  => $token,
+            'fcm_token' => $token,
         ]);
         $this->assertSame(1, UserPushDevice::query()->where('user_id', $tenant['user']->id)->count());
     }

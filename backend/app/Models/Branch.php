@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Branch extends Model
 {
-    use HasFactory, SoftDeletes, HasTenantScope;
+    use HasFactory, HasTenantScope, SoftDeletes;
 
     protected $fillable = [
         'uuid', 'company_id', 'name', 'name_ar', 'code',
@@ -19,13 +19,13 @@ class Branch extends Model
     ];
 
     protected $casts = [
-        'is_main'             => 'boolean',
-        'is_active'           => 'boolean',
+        'is_main' => 'boolean',
+        'is_active' => 'boolean',
         'cross_branch_access' => 'boolean',
-        'status'              => BranchStatus::class,
-        'latitude'            => 'float',
-        'longitude'           => 'float',
-        'opening_hours'       => 'array',
+        'status' => BranchStatus::class,
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'opening_hours' => 'array',
     ];
 
     public function company()

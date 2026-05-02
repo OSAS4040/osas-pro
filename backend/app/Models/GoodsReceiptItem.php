@@ -15,9 +15,9 @@ class GoodsReceiptItem extends Model
     ];
 
     protected $casts = [
-        'expected_quantity'  => 'decimal:4',
-        'received_quantity'  => 'decimal:4',
-        'unit_cost'          => 'decimal:4',
+        'expected_quantity' => 'decimal:4',
+        'received_quantity' => 'decimal:4',
+        'unit_cost' => 'decimal:4',
     ];
 
     public function goodsReceipt()

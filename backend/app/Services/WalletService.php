@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\WalletTransactionType;
 use App\Enums\WalletType;
+use App\Enums\WorkOrderStatus;
 use App\Intelligence\Events\WalletCredited;
 use App\Intelligence\Events\WalletDebited;
 use App\Models\CustomerWallet;
@@ -12,8 +13,8 @@ use App\Models\Payment;
 use App\Models\WalletTransaction;
 use App\Models\WorkOrder;
 use App\Support\Accounting\FinancialGlMapping;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
-use App\Enums\WorkOrderStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -26,7 +27,6 @@ class WalletService
      *
      * Operation-specific parameters (paymentMode, workOrderId, walletType, transactionIdToReverse) are appended after.
      */
-
     public function __construct(
         private readonly LedgerService $ledger,
         private readonly IntelligentEventEmitter $intelligentEvents,
@@ -35,9 +35,9 @@ class WalletService
     /**
      * Top up an individual customer's main wallet.
      *
-     * @param  ?int  $vehicleId   Trace/context vehicle (nullable when not vehicle-scoped).
-     * @param  ?int  $invoiceId   Optional billing link (nullable).
-     * @param  ?int  $paymentId   Optional payment link (nullable).
+     * @param  ?int  $vehicleId  Trace/context vehicle (nullable when not vehicle-scoped).
+     * @param  ?int  $invoiceId  Optional billing link (nullable).
+     * @param  ?int  $paymentId  Optional payment link (nullable).
      */
     public function topUpIndividual(
         int $companyId,
@@ -118,12 +118,12 @@ class WalletService
         $this->persistIdempotencyResult($companyId, $idempotencyKey, $txn->id);
 
         $this->postLedger($companyId, $branchId, $userId, $traceId, [
-            'type'          => FinancialGlMapping::WALLET_TOP_UP,
-            'description'   => "Fleet wallet top-up — customer #{$customerId}",
-            'source_type'   => WalletTransaction::class,
-            'source_id'     => $txn->id,
-            'lines'         => FinancialGlMapping::walletLines(FinancialGlMapping::WALLET_TOP_UP, $amount, [
-                'debit'  => 'Cash received for fleet wallet',
+            'type' => FinancialGlMapping::WALLET_TOP_UP,
+            'description' => "Fleet wallet top-up — customer #{$customerId}",
+            'source_type' => WalletTransaction::class,
+            'source_id' => $txn->id,
+            'lines' => FinancialGlMapping::walletLines(FinancialGlMapping::WALLET_TOP_UP, $amount, [
+                'debit' => 'Cash received for fleet wallet',
                 'credit' => 'Fleet main wallet deposit',
             ]),
         ]);
@@ -162,7 +162,7 @@ class WalletService
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if (!$fleetWallet->isActive()) {
+            if (! $fleetWallet->isActive()) {
                 throw new \DomainException("Fleet wallet is {$fleetWallet->status}.");
             }
             if ((float) $fleetWallet->balance < $amount) {
@@ -178,14 +178,14 @@ class WalletService
             // TRANSFER_OUT from fleet
             $outTxn = $this->debitWallet(
                 $fleetWallet, $amount, $userId, WalletTransactionType::TransferOut,
-                $vehicleId, null, null, $traceId, $idempotencyKey . '_out', 'direct', $notes,
+                $vehicleId, null, null, $traceId, $idempotencyKey.'_out', 'direct', $notes,
                 $invoiceId, $paymentId, false
             );
 
             // TRANSFER_IN to vehicle (new idempotency key suffix)
             $inTxn = $this->creditWallet(
                 $vehicleWallet, $amount, $userId, WalletTransactionType::TransferIn,
-                $vehicleId, null, null, $traceId, $idempotencyKey . '_in', 'direct', $notes,
+                $vehicleId, null, null, $traceId, $idempotencyKey.'_in', 'direct', $notes,
                 $invoiceId, $paymentId
             );
 
@@ -195,12 +195,12 @@ class WalletService
         $this->persistIdempotencyResult($companyId, $idempotencyKey, $result['transfer_out']->id);
 
         $this->postLedger($companyId, $branchId, $userId, $traceId, [
-            'type'          => FinancialGlMapping::WALLET_TRANSFER,
-            'description'   => "Fleet→Vehicle wallet transfer — vehicle #{$vehicleId}",
-            'source_type'   => WalletTransaction::class,
-            'source_id'     => $result['transfer_out']->id,
-            'lines'         => FinancialGlMapping::walletLines(FinancialGlMapping::WALLET_TRANSFER, $amount, [
-                'debit'  => 'Fleet main wallet out',
+            'type' => FinancialGlMapping::WALLET_TRANSFER,
+            'description' => "Fleet→Vehicle wallet transfer — vehicle #{$vehicleId}",
+            'source_type' => WalletTransaction::class,
+            'source_id' => $result['transfer_out']->id,
+            'lines' => FinancialGlMapping::walletLines(FinancialGlMapping::WALLET_TRANSFER, $amount, [
+                'debit' => 'Fleet main wallet out',
                 'credit' => 'Vehicle wallet in',
             ]),
         ]);
@@ -230,7 +230,7 @@ class WalletService
 
         $txn = DB::transaction(function () use (
             $companyId, $customerId, $vehicleId, $amount, $invoiceId,
-            $userId, $traceId, $idempotencyKey, $paymentMode, $paymentId, $branchId, $notes
+            $userId, $traceId, $idempotencyKey, $paymentMode, $paymentId, $notes
         ) {
             $wallet = CustomerWallet::where('company_id', $companyId)
                 ->where('customer_id', $customerId)
@@ -238,7 +238,7 @@ class WalletService
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if (!$wallet->isActive()) {
+            if (! $wallet->isActive()) {
                 throw new \DomainException("Wallet is {$wallet->status}.");
             }
             if ((float) $wallet->balance < $amount) {
@@ -284,7 +284,7 @@ class WalletService
 
         $txn = DB::transaction(function () use (
             $companyId, $customerId, $vehicleId, $amount, $invoiceId,
-            $userId, $traceId, $idempotencyKey, $paymentMode, $paymentId, $branchId, $notes
+            $userId, $traceId, $idempotencyKey, $paymentMode, $paymentId, $notes
         ) {
             $wallet = CustomerWallet::where('company_id', $companyId)
                 ->where('customer_id', $customerId)
@@ -293,7 +293,7 @@ class WalletService
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if (!$wallet->isActive()) {
+            if (! $wallet->isActive()) {
                 throw new \DomainException("Vehicle wallet is {$wallet->status}.");
             }
             if ((float) $wallet->balance < $amount) {
@@ -313,12 +313,12 @@ class WalletService
         $this->persistIdempotencyResult($companyId, $idempotencyKey, $txn->id);
 
         $this->postLedger($companyId, $branchId, $userId, $traceId, [
-            'type'          => FinancialGlMapping::WALLET_DEBIT,
-            'description'   => "Vehicle wallet debit — invoice #{$invoiceId} vehicle #{$vehicleId}",
-            'source_type'   => WalletTransaction::class,
-            'source_id'     => $txn->id,
-            'lines'         => FinancialGlMapping::walletLines(FinancialGlMapping::WALLET_DEBIT, $amount, [
-                'debit'  => 'Vehicle wallet charged',
+            'type' => FinancialGlMapping::WALLET_DEBIT,
+            'description' => "Vehicle wallet debit — invoice #{$invoiceId} vehicle #{$vehicleId}",
+            'source_type' => WalletTransaction::class,
+            'source_id' => $txn->id,
+            'lines' => FinancialGlMapping::walletLines(FinancialGlMapping::WALLET_DEBIT, $amount, [
+                'debit' => 'Vehicle wallet charged',
                 'credit' => 'Service revenue',
             ]),
         ]);
@@ -389,12 +389,12 @@ class WalletService
         $this->persistIdempotencyResult($companyId, $idempotencyKey, $txn->id);
 
         $this->postLedger($companyId, $branchId, $userId, $traceId, [
-            'type'          => FinancialGlMapping::WALLET_CREDIT_DEBIT,
-            'description'   => "Vehicle credit service — work order #{$workOrderId} vehicle #{$vehicleId}",
-            'source_type'   => WalletTransaction::class,
-            'source_id'     => $txn->id,
-            'lines'         => FinancialGlMapping::walletLines(FinancialGlMapping::WALLET_CREDIT_DEBIT, $amount, [
-                'debit'  => 'Vehicle wallet credit debit',
+            'type' => FinancialGlMapping::WALLET_CREDIT_DEBIT,
+            'description' => "Vehicle credit service — work order #{$workOrderId} vehicle #{$vehicleId}",
+            'source_type' => WalletTransaction::class,
+            'source_id' => $txn->id,
+            'lines' => FinancialGlMapping::walletLines(FinancialGlMapping::WALLET_CREDIT_DEBIT, $amount, [
+                'debit' => 'Vehicle wallet credit debit',
                 'credit' => 'Service revenue (credit)',
             ]),
         ]);
@@ -687,11 +687,11 @@ class WalletService
             $isDebit = $original->type->isDebit();
 
             $balanceBefore = (float) $wallet->balance;
-            $balanceAfter  = $isDebit
+            $balanceAfter = $isDebit
                 ? $balanceBefore + (float) $original->amount
                 : $balanceBefore - (float) $original->amount;
 
-            if (!$isDebit && $balanceAfter < 0) {
+            if (! $isDebit && $balanceAfter < 0) {
                 throw new \DomainException('Cannot reverse credit: insufficient balance.');
             }
 
@@ -717,26 +717,26 @@ class WalletService
 
             try {
                 $rev = WalletTransaction::create([
-                    'uuid'                    => (string) Str::uuid(),
-                    'company_id'              => $original->company_id,
-                    'branch_id'               => $branchId ?? $original->branch_id,
-                    'customer_wallet_id'      => $original->customer_wallet_id,
-                    'vehicle_id'              => $original->vehicle_id,
-                    'created_by_user_id'      => $userId,
-                    'type'                    => WalletTransactionType::Reversal,
-                    'amount'                  => $original->amount,
-                    'payment_mode'            => $original->payment_mode,
-                    'balance_before'          => $balanceBefore,
-                    'balance_after'           => (float) $wallet->balance,
+                    'uuid' => (string) Str::uuid(),
+                    'company_id' => $original->company_id,
+                    'branch_id' => $branchId ?? $original->branch_id,
+                    'customer_wallet_id' => $original->customer_wallet_id,
+                    'vehicle_id' => $original->vehicle_id,
+                    'created_by_user_id' => $userId,
+                    'type' => WalletTransactionType::Reversal,
+                    'amount' => $original->amount,
+                    'payment_mode' => $original->payment_mode,
+                    'balance_before' => $balanceBefore,
+                    'balance_after' => (float) $wallet->balance,
                     'original_transaction_id' => $original->id,
-                    'reference_type'          => $original->reference_type ?? CustomerWallet::class,
-                    'reference_id'            => $original->reference_id ?? $original->customer_wallet_id,
-                    'invoice_id'              => $original->invoice_id,
-                    'payment_id'              => $original->payment_id,
-                    'idempotency_key'         => $idempotencyKey,
-                    'trace_id'                => $traceId,
-                    'note'                    => $noteText,
-                    'created_at'              => now(),
+                    'reference_type' => $original->reference_type ?? CustomerWallet::class,
+                    'reference_id' => $original->reference_id ?? $original->customer_wallet_id,
+                    'invoice_id' => $original->invoice_id,
+                    'payment_id' => $original->payment_id,
+                    'idempotency_key' => $idempotencyKey,
+                    'trace_id' => $traceId,
+                    'note' => $noteText,
+                    'created_at' => now(),
                 ]);
             } catch (UniqueConstraintViolationException $e) {
                 throw new \DomainException('Transaction already reversed.', 0, $e);
@@ -744,10 +744,10 @@ class WalletService
 
             Log::info('wallet.reversal', [
                 'financial_operation' => true,
-                'original_id'         => $original->id,
-                'reversal_id'         => $rev->id,
-                'trace_id'            => $traceId,
-                'company_id'          => $original->company_id,
+                'original_id' => $original->id,
+                'reversal_id' => $rev->id,
+                'trace_id' => $traceId,
+                'company_id' => $original->company_id,
             ]);
 
             return $rev;
@@ -767,13 +767,13 @@ class WalletService
             ->where('customer_id', $customerId)
             ->get();
 
-        return $wallets->map(fn($w) => [
-            'id'          => $w->id,
+        return $wallets->map(fn ($w) => [
+            'id' => $w->id,
             'wallet_type' => $w->wallet_type->value,
-            'vehicle_id'  => $w->vehicle_id,
-            'balance'     => (float) $w->balance,
-            'status'      => $w->status,
-            'currency'    => $w->currency,
+            'vehicle_id' => $w->vehicle_id,
+            'balance' => (float) $w->balance,
+            'status' => $w->status,
+            'currency' => $w->currency,
         ])->toArray();
     }
 
@@ -865,11 +865,11 @@ class WalletService
     }
 
     private function resolveOrCreateWallet(
-        int        $companyId,
-        int        $customerId,
-        ?int       $vehicleId,
+        int $companyId,
+        int $customerId,
+        ?int $vehicleId,
         WalletType $type,
-        ?int       $branchId,
+        ?int $branchId,
     ): CustomerWallet {
         // Use a SELECT ... FOR UPDATE to prevent race conditions when two concurrent
         // requests try to create the same wallet simultaneously.
@@ -889,18 +889,18 @@ class WalletService
 
         try {
             return CustomerWallet::create([
-                'uuid'        => (string) Str::uuid(),
-                'company_id'  => $companyId,
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $companyId,
                 'customer_id' => $customerId,
-                'vehicle_id'  => $vehicleId,
+                'vehicle_id' => $vehicleId,
                 'wallet_type' => $type->value,
-                'branch_id'   => $branchId,
-                'status'      => 'active',
-                'balance'     => 0,
-                'currency'    => 'SAR',
-                'version'     => 0,
+                'branch_id' => $branchId,
+                'status' => 'active',
+                'balance' => 0,
+                'currency' => 'SAR',
+                'version' => 0,
             ]);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+        } catch (UniqueConstraintViolationException) {
             // Another concurrent request created the wallet between our SELECT and INSERT.
             // Re-fetch and return the now-existing row.
             return CustomerWallet::where('company_id', $companyId)
@@ -909,7 +909,7 @@ class WalletService
                 ->where('wallet_type', $type->value)
                 ->lockForUpdate()
                 ->firstOrFail();
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if (str_contains($e->getMessage(), 'unique constraint') ||
                 str_contains($e->getMessage(), 'Unique violation') ||
                 $e->getCode() === '23505') {
@@ -925,19 +925,19 @@ class WalletService
     }
 
     private function creditWallet(
-        CustomerWallet        $wallet,
-        float                 $amount,
-        int                   $userId,
+        CustomerWallet $wallet,
+        float $amount,
+        int $userId,
         WalletTransactionType $type,
-        ?int                  $vehicleId,
-        ?string               $refType,
-        ?int                  $refId,
-        string                $traceId,
-        string                $idempotencyKey,
-        ?string               $paymentMode,
-        ?string               $notes,
-        ?int                  $invoiceId = null,
-        ?int                  $paymentId = null,
+        ?int $vehicleId,
+        ?string $refType,
+        ?int $refId,
+        string $traceId,
+        string $idempotencyKey,
+        ?string $paymentMode,
+        ?string $notes,
+        ?int $invoiceId = null,
+        ?int $paymentId = null,
     ): WalletTransaction {
         $this->assertFinancialTraceId($traceId);
         [$refType, $refId] = $this->resolveLedgerReference($wallet, $refType, $refId);
@@ -952,25 +952,25 @@ class WalletService
 
         try {
             $txn = WalletTransaction::create([
-                'uuid'               => (string) Str::uuid(),
-                'company_id'         => $wallet->company_id,
-                'branch_id'          => $wallet->branch_id,
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $wallet->company_id,
+                'branch_id' => $wallet->branch_id,
                 'customer_wallet_id' => $wallet->id,
-                'vehicle_id'         => $vehicleId,
+                'vehicle_id' => $vehicleId,
                 'created_by_user_id' => $userId,
-                'type'               => $type,
-                'amount'             => $amount,
-                'payment_mode'       => $paymentMode,
-                'balance_before'     => $balanceBefore,
-                'balance_after'      => (float) $wallet->balance,
-                'reference_type'     => $refType,
-                'reference_id'       => $refId,
-                'invoice_id'         => $invoiceId,
-                'payment_id'         => $paymentId,
-                'idempotency_key'    => $idempotencyKey,
-                'trace_id'           => $traceId,
-                'note'               => $notes,
-                'created_at'         => now(),
+                'type' => $type,
+                'amount' => $amount,
+                'payment_mode' => $paymentMode,
+                'balance_before' => $balanceBefore,
+                'balance_after' => (float) $wallet->balance,
+                'reference_type' => $refType,
+                'reference_id' => $refId,
+                'invoice_id' => $invoiceId,
+                'payment_id' => $paymentId,
+                'idempotency_key' => $idempotencyKey,
+                'trace_id' => $traceId,
+                'note' => $notes,
+                'created_at' => now(),
             ]);
         } catch (UniqueConstraintViolationException $e) {
             throw new \DomainException(
@@ -982,32 +982,32 @@ class WalletService
 
         Log::info('wallet.credit', [
             'financial_operation' => true,
-            'wallet_id'           => $wallet->id,
-            'type'                => $type->value,
-            'amount'              => $amount,
-            'balance_after'       => (float) $wallet->balance,
-            'trace_id'            => $traceId,
-            'company_id'          => $wallet->company_id,
+            'wallet_id' => $wallet->id,
+            'type' => $type->value,
+            'amount' => $amount,
+            'balance_after' => (float) $wallet->balance,
+            'trace_id' => $traceId,
+            'company_id' => $wallet->company_id,
         ]);
 
         return $txn;
     }
 
     private function debitWallet(
-        CustomerWallet        $wallet,
-        float                 $amount,
-        int                   $userId,
+        CustomerWallet $wallet,
+        float $amount,
+        int $userId,
         WalletTransactionType $type,
-        ?int                  $vehicleId,
-        ?string               $refType,
-        ?int                  $refId,
-        string                $traceId,
-        string                $idempotencyKey,
-        ?string               $paymentMode,
-        ?string               $notes,
-        ?int                  $invoiceId = null,
-        ?int                  $paymentId = null,
-        bool                  $allowNegativeBalance = false,
+        ?int $vehicleId,
+        ?string $refType,
+        ?int $refId,
+        string $traceId,
+        string $idempotencyKey,
+        ?string $paymentMode,
+        ?string $notes,
+        ?int $invoiceId = null,
+        ?int $paymentId = null,
+        bool $allowNegativeBalance = false,
     ): WalletTransaction {
         $this->assertFinancialTraceId($traceId);
         [$refType, $refId] = $this->resolveLedgerReference($wallet, $refType, $refId);
@@ -1026,25 +1026,25 @@ class WalletService
 
         try {
             $txn = WalletTransaction::create([
-                'uuid'               => (string) Str::uuid(),
-                'company_id'         => $wallet->company_id,
-                'branch_id'          => $wallet->branch_id,
+                'uuid' => (string) Str::uuid(),
+                'company_id' => $wallet->company_id,
+                'branch_id' => $wallet->branch_id,
                 'customer_wallet_id' => $wallet->id,
-                'vehicle_id'         => $vehicleId,
+                'vehicle_id' => $vehicleId,
                 'created_by_user_id' => $userId,
-                'type'               => $type,
-                'amount'             => $amount,
-                'payment_mode'       => $paymentMode,
-                'balance_before'     => $balanceBefore,
-                'balance_after'      => (float) $wallet->balance,
-                'reference_type'     => $refType,
-                'reference_id'       => $refId,
-                'invoice_id'         => $invoiceId,
-                'payment_id'         => $paymentId,
-                'idempotency_key'    => $idempotencyKey,
-                'trace_id'           => $traceId,
-                'note'               => $notes,
-                'created_at'         => now(),
+                'type' => $type,
+                'amount' => $amount,
+                'payment_mode' => $paymentMode,
+                'balance_before' => $balanceBefore,
+                'balance_after' => (float) $wallet->balance,
+                'reference_type' => $refType,
+                'reference_id' => $refId,
+                'invoice_id' => $invoiceId,
+                'payment_id' => $paymentId,
+                'idempotency_key' => $idempotencyKey,
+                'trace_id' => $traceId,
+                'note' => $notes,
+                'created_at' => now(),
             ]);
         } catch (UniqueConstraintViolationException $e) {
             throw new \DomainException(
@@ -1056,12 +1056,12 @@ class WalletService
 
         Log::info('wallet.debit', [
             'financial_operation' => true,
-            'wallet_id'           => $wallet->id,
-            'type'                => $type->value,
-            'amount'              => $amount,
-            'balance_after'       => (float) $wallet->balance,
-            'trace_id'            => $traceId,
-            'company_id'          => $wallet->company_id,
+            'wallet_id' => $wallet->id,
+            'type' => $type->value,
+            'amount' => $amount,
+            'balance_after' => (float) $wallet->balance,
+            'trace_id' => $traceId,
+            'company_id' => $wallet->company_id,
         ]);
 
         return $txn;
@@ -1131,11 +1131,12 @@ class WalletService
 
         if ($existing) {
             // If it has a response_snapshot, it was truly already processed
-            if (!empty($existing->response_snapshot)) {
+            if (! empty($existing->response_snapshot)) {
                 throw new \DomainException(
                     "Duplicate idempotency key [{$key}]. This operation was already processed."
                 );
             }
+
             // Key exists but no snapshot yet (inserted by IdempotencyMiddleware) — proceed
             return;
         }
@@ -1143,15 +1144,15 @@ class WalletService
         // Key doesn't exist — insert it
         try {
             DB::table('idempotency_keys')->insert([
-                'company_id'  => $companyId,
-                'key'         => $key,
-                'endpoint'    => 'wallet',
-                'trace_id'    => app()->bound('trace_id') ? app('trace_id') : null,
-                'request_hash'=> hash('sha256', $companyId . '|' . $key),
-                'expires_at'  => now()->addHours(24),
-                'created_at'  => now(),
+                'company_id' => $companyId,
+                'key' => $key,
+                'endpoint' => 'wallet',
+                'trace_id' => app()->bound('trace_id') ? app('trace_id') : null,
+                'request_hash' => hash('sha256', $companyId.'|'.$key),
+                'expires_at' => now()->addHours(24),
+                'created_at' => now(),
             ]);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+        } catch (UniqueConstraintViolationException $e) {
             // Race: another request reserved this key first — never run wallet logic twice.
             $fresh = DB::table('idempotency_keys')
                 ->where('company_id', $companyId)->where('key', $key)->first();
@@ -1163,7 +1164,7 @@ class WalletService
             throw new \DomainException(
                 "Idempotency key [{$key}] is already reserved (in progress or concurrent request). Retry shortly with the same key."
             );
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if (str_contains($e->getMessage(), 'Unique violation') ||
                 str_contains($e->getMessage(), 'unique constraint') ||
                 (string) $e->getCode() === '23505') {
@@ -1201,19 +1202,19 @@ class WalletService
      * Non-blocking: on failure, logs the error and continues.
      */
     private function postLedger(
-        int    $companyId,
-        ?int   $branchId,
-        ?int   $userId,
+        int $companyId,
+        ?int $branchId,
+        ?int $userId,
         string $traceId,
-        array  $data,
+        array $data,
     ): void {
         try {
             $this->ledger->post($companyId, array_merge($data, ['trace_id' => $traceId]), $branchId, $userId);
         } catch (\Throwable $e) {
             Log::error('wallet.ledger_post_failed', [
-                'error'      => $e->getMessage(),
+                'error' => $e->getMessage(),
                 'company_id' => $companyId,
-                'data'       => $data,
+                'data' => $data,
             ]);
         }
     }

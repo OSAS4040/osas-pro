@@ -3,7 +3,6 @@
 namespace Tests\Feature\Config;
 
 use App\Enums\UserRole;
-use App\Models\AuditLog;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\ConfigSetting;
@@ -156,4 +155,3 @@ class MultiVerticalGovernanceEnablementTest extends TestCase
         );
     }
 }
-

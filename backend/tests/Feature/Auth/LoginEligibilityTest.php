@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\PhoneOtp;
 use App\Models\User;
 use App\Support\Auth\LoginEligibilityResult;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
@@ -24,7 +26,7 @@ class LoginEligibilityTest extends TestCase
         $tenant = $this->createTenant('owner');
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'email'    => $tenant['user']->email,
+            'email' => $tenant['user']->email,
             'password' => 'Password123!',
         ]);
 
@@ -42,7 +44,7 @@ class LoginEligibilityTest extends TestCase
         $user->update(['status' => UserStatus::Blocked]);
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ]);
 
@@ -61,7 +63,7 @@ class LoginEligibilityTest extends TestCase
         $user->update(['status' => UserStatus::Suspended]);
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ])
             ->assertForbidden()
@@ -75,7 +77,7 @@ class LoginEligibilityTest extends TestCase
         $user->update(['status' => UserStatus::Inactive, 'is_active' => true]);
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ])
             ->assertForbidden()
@@ -89,7 +91,7 @@ class LoginEligibilityTest extends TestCase
         $user->update(['status' => UserStatus::Active, 'is_active' => false]);
 
         $this->postJson('/api/v1/auth/login', [
-            'email'    => $user->email,
+            'email' => $user->email,
             'password' => 'Password123!',
         ])
             ->assertForbidden()
@@ -99,31 +101,31 @@ class LoginEligibilityTest extends TestCase
     public function test_phone_verify_otp_blocked_user_does_not_issue_token(): void
     {
         User::withoutGlobalScopes()->create([
-            'uuid'               => \Illuminate\Support\Str::uuid(),
-            'company_id'         => null,
-            'branch_id'          => null,
-            'name'               => '966501112233',
-            'email'              => null,
-            'password'           => bcrypt('secret'),
-            'phone'              => '966501112233',
-            'phone_verified_at'  => now()->subDay(),
-            'role'               => \App\Enums\UserRole::PhoneOnboarding,
-            'status'             => UserStatus::Blocked,
-            'is_active'          => true,
+            'uuid' => Str::uuid(),
+            'company_id' => null,
+            'branch_id' => null,
+            'name' => '966501112233',
+            'email' => null,
+            'password' => bcrypt('secret'),
+            'phone' => '966501112233',
+            'phone_verified_at' => now()->subDay(),
+            'role' => UserRole::PhoneOnboarding,
+            'status' => UserStatus::Blocked,
+            'is_active' => true,
             'registration_stage' => 'phone_verified',
         ]);
 
         PhoneOtp::query()->create([
-            'phone'         => '966501112233',
+            'phone' => '966501112233',
             'otp_code_hash' => Hash::make('654321'),
-            'purpose'       => 'phone_register_login',
-            'expires_at'    => now()->addMinutes(5),
-            'max_attempts'  => 8,
+            'purpose' => 'phone_register_login',
+            'expires_at' => now()->addMinutes(5),
+            'max_attempts' => 8,
         ]);
 
         $response = $this->postJson('/api/v1/auth/phone/verify-otp', [
             'phone' => '0501112233',
-            'otp'   => '654321',
+            'otp' => '654321',
         ]);
 
         $response->assertForbidden()

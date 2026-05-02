@@ -400,4 +400,3 @@ final class WorkOrderPricingGovernanceTest extends TestCase
         $this->assertSame(WorkOrderPricingSource::GeneralServiceBase, $resolved->source);
     }
 }
-

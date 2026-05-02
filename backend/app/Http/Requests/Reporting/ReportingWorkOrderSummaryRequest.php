@@ -21,11 +21,11 @@ final class ReportingWorkOrderSummaryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'from'         => ['required', 'date_format:Y-m-d'],
-            'to'           => ['required', 'date_format:Y-m-d'],
-            'branch_id'    => ['nullable', 'integer', 'min:1'],
-            'customer_id'  => ['nullable', 'integer', 'min:1'],
-            'user_id'      => ['nullable', 'integer', 'min:1'],
+            'from' => ['required', 'date_format:Y-m-d'],
+            'to' => ['required', 'date_format:Y-m-d'],
+            'branch_id' => ['nullable', 'integer', 'min:1'],
+            'customer_id' => ['nullable', 'integer', 'min:1'],
+            'user_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 

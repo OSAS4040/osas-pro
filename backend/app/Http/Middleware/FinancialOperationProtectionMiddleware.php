@@ -29,14 +29,14 @@ class FinancialOperationProtectionMiddleware
     {
         if (! app()->has('tenant_company_id')) {
             return response()->json([
-                'message'  => 'Tenant context required.',
+                'message' => 'Tenant context required.',
                 'trace_id' => app('trace_id'),
             ], 403);
         }
 
         if ($this->requiresIdempotency($request) && ! $request->header('Idempotency-Key')) {
             return response()->json([
-                'message'  => 'Idempotency-Key header is required.',
+                'message' => 'Idempotency-Key header is required.',
                 'trace_id' => app('trace_id'),
             ], 422);
         }

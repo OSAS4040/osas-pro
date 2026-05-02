@@ -39,7 +39,7 @@ final class CompanyPulseSummaryReporter
             period: $period,
             appliedFilters: $context->toFilterSnapshot(),
             data: [
-                'summary'   => $payload['summary'],
+                'summary' => $payload['summary'],
                 'breakdown' => $payload['breakdown'],
             ],
             meta: array_merge($payload['meta'], [

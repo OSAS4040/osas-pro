@@ -89,4 +89,3 @@ class MultiVerticalConfigCoreBatch3Test extends TestCase
         );
     }
 }
-

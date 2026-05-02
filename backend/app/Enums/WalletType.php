@@ -4,15 +4,15 @@ namespace App\Enums;
 
 enum WalletType: string
 {
-    case CustomerMain  = 'customer_main';
-    case FleetMain     = 'fleet_main';
+    case CustomerMain = 'customer_main';
+    case FleetMain = 'fleet_main';
     case VehicleWallet = 'vehicle_wallet';
 
     public function label(): string
     {
-        return match($this) {
-            self::CustomerMain  => 'Individual Wallet',
-            self::FleetMain     => 'Fleet Main Wallet',
+        return match ($this) {
+            self::CustomerMain => 'Individual Wallet',
+            self::FleetMain => 'Fleet Main Wallet',
             self::VehicleWallet => 'Vehicle Wallet',
         };
     }

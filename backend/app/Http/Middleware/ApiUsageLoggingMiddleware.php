@@ -29,19 +29,19 @@ class ApiUsageLoggingMiddleware
 
             try {
                 ApiUsageLog::create([
-                    'company_id'       => $apiKey->company_id,
-                    'api_key_id'       => $apiKey->id,
-                    'method'           => $request->method(),
-                    'endpoint'         => $request->path(),
-                    'http_status'      => $response->getStatusCode(),
+                    'company_id' => $apiKey->company_id,
+                    'api_key_id' => $apiKey->id,
+                    'method' => $request->method(),
+                    'endpoint' => $request->path(),
+                    'http_status' => $response->getStatusCode(),
                     'response_time_ms' => $elapsed,
-                    'ip_address'       => $request->ip(),
-                    'trace_id'         => app('trace_id'),
-                    'created_at'       => now(),
+                    'ip_address' => $request->ip(),
+                    'trace_id' => app('trace_id'),
+                    'created_at' => now(),
                 ]);
             } catch (\Throwable $e) {
                 Log::warning('api_usage_log.failed', [
-                    'error'    => $e->getMessage(),
+                    'error' => $e->getMessage(),
                     'trace_id' => app('trace_id'),
                 ]);
             }

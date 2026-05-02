@@ -12,7 +12,7 @@ $before = [
         ->count('finding_id'),
     'status_changes_logged' => (int) DB::table('financial_reconciliation_finding_histories')->count(),
     'rejected_due_note_requirement' => 0,
-    'state_history_mismatches' => (int) DB::selectOne("
+    'state_history_mismatches' => (int) DB::selectOne('
         SELECT COUNT(*) c
         FROM financial_reconciliation_findings f
         JOIN (
@@ -22,7 +22,7 @@ $before = [
         ) hmax ON hmax.finding_id = f.id
         JOIN financial_reconciliation_finding_histories h ON h.id = hmax.max_id
         WHERE f.status <> h.new_status
-    ")->c,
+    ')->c,
 ];
 
 if (! is_dir(base_path('reports/financial-reliability'))) {
@@ -102,7 +102,7 @@ $after = [
     'status_changes_logged' => (int) DB::table('financial_reconciliation_finding_histories')->count(),
     'rejected_due_note_requirement' => $rejected,
     'acknowledged_without_note_http_status' => $ackStatus,
-    'state_history_mismatches' => (int) DB::selectOne("
+    'state_history_mismatches' => (int) DB::selectOne('
         SELECT COUNT(*) c
         FROM financial_reconciliation_findings f
         JOIN (
@@ -112,7 +112,7 @@ $after = [
         ) hmax ON hmax.finding_id = f.id
         JOIN financial_reconciliation_finding_histories h ON h.id = hmax.max_id
         WHERE f.status <> h.new_status
-    ")->c,
+    ')->c,
 ];
 
 file_put_contents(

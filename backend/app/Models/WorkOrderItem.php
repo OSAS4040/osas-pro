@@ -17,14 +17,14 @@ class WorkOrderItem extends Model
     ];
 
     protected $casts = [
-        'item_type'       => WorkOrderItemType::class,
-        'quantity'        => 'decimal:4',
-        'unit_price'      => 'decimal:4',
+        'item_type' => WorkOrderItemType::class,
+        'quantity' => 'decimal:4',
+        'unit_price' => 'decimal:4',
         'discount_amount' => 'decimal:4',
-        'tax_rate'        => 'decimal:2',
-        'tax_amount'      => 'decimal:4',
-        'subtotal'        => 'decimal:4',
-        'total'           => 'decimal:4',
+        'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:4',
+        'subtotal' => 'decimal:4',
+        'total' => 'decimal:4',
         'pricing_resolved_at' => 'datetime',
         'pricing_resolved_by_system' => 'boolean',
     ];

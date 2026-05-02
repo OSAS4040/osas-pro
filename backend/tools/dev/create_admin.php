@@ -1,10 +1,17 @@
 <?php
+
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Subscription;
+use App\Models\User;
+use Illuminate\Support\Str;
+
 require '/var/www/vendor/autoload.php';
 $app = require '/var/www/bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
 // Create super admin company if not exists (no slug column — use email as unique key)
-$company = App\Models\Company::firstOrCreate(
+$company = Company::firstOrCreate(
     ['email' => 'admin@osas.sa'],
     [
         'name' => 'إدارة المنصة — أسس برو',
@@ -19,32 +26,32 @@ $company = App\Models\Company::firstOrCreate(
 );
 
 // Create subscription for admin company
-App\Models\Subscription::firstOrCreate(
+Subscription::firstOrCreate(
     ['company_id' => $company->id],
     [
-        'uuid' => \Illuminate\Support\Str::uuid(),
+        'uuid' => Str::uuid(),
         'plan' => 'enterprise',
         'status' => 'active',
         'starts_at' => now(),
         'ends_at' => now()->addYears(10),
         'amount' => 0,
         'currency' => 'SAR',
-        'features' => json_encode(['pos'=>true,'invoices'=>true,'work_orders'=>true,'fleet'=>true,'reports'=>true,'api_access'=>true,'zatca'=>true,'plugins'=>true]),
+        'features' => json_encode(['pos' => true, 'invoices' => true, 'work_orders' => true, 'fleet' => true, 'reports' => true, 'api_access' => true, 'zatca' => true, 'plugins' => true]),
         'max_branches' => 999,
         'max_users' => 999,
     ]
 );
 
 // Create admin branch
-$branch = App\Models\Branch::firstOrCreate(
+$branch = Branch::firstOrCreate(
     ['company_id' => $company->id, 'code' => 'ADMIN-HQ'],
     ['name' => 'المقر الرئيسي', 'is_active' => true, 'is_main' => true]
 );
 
 // Create super admin user
-$existingUser = App\Models\User::where('email', 'superadmin@osas.sa')->first();
-if (!$existingUser) {
-    App\Models\User::create([
+$existingUser = User::where('email', 'superadmin@osas.sa')->first();
+if (! $existingUser) {
+    User::create([
         'name' => 'مدير المنصة',
         'email' => 'superadmin@osas.sa',
         'password' => bcrypt('SuperAdmin@2026!'),
@@ -60,7 +67,7 @@ if (!$existingUser) {
     echo "Updated super admin: superadmin@osas.sa / SuperAdmin@2026!\n";
 }
 
-echo "Company ID: " . $company->id . "\n";
+echo 'Company ID: '.$company->id."\n";
 echo "Login URL: http://localhost/admin\n";
 echo "Email: superadmin@osas.sa\n";
 echo "Password: SuperAdmin@2026!\n";

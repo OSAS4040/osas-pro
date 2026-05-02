@@ -22,10 +22,10 @@ class PlanAddon extends Model
     ];
 
     protected $casts = [
-        'price_monthly'       => 'decimal:2',
-        'price_yearly'        => 'decimal:2',
+        'price_monthly' => 'decimal:2',
+        'price_yearly' => 'decimal:2',
         'eligible_plan_slugs' => 'array',
-        'is_active'           => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function subscriptionAddons(): HasMany

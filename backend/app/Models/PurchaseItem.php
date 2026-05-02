@@ -12,12 +12,12 @@ class PurchaseItem extends Model
     ];
 
     protected $casts = [
-        'quantity'          => 'decimal:4',
+        'quantity' => 'decimal:4',
         'received_quantity' => 'decimal:4',
-        'unit_cost'         => 'decimal:4',
-        'tax_rate'          => 'decimal:2',
-        'tax_amount'        => 'decimal:4',
-        'total'             => 'decimal:4',
+        'unit_cost' => 'decimal:4',
+        'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:4',
+        'total' => 'decimal:4',
     ];
 
     public function product()

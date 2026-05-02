@@ -41,7 +41,7 @@ class ChartOfAccount extends Model
     ];
 
     protected $casts = [
-        'type'      => AccountType::class,
+        'type' => AccountType::class,
         'is_active' => 'boolean',
         'is_system' => 'boolean',
     ];
@@ -68,11 +68,11 @@ class ChartOfAccount extends Model
 
     public function getBalanceAttribute(): float
     {
-        $debits  = $this->journalLines()->where('type', 'debit')->sum('amount');
+        $debits = $this->journalLines()->where('type', 'debit')->sum('amount');
         $credits = $this->journalLines()->where('type', 'credit')->sum('amount');
 
         return $this->type->normalBalance() === 'debit'
-            ? (float)$debits - (float)$credits
-            : (float)$credits - (float)$debits;
+            ? (float) $debits - (float) $credits
+            : (float) $credits - (float) $debits;
     }
 }

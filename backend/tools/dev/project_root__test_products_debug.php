@@ -1,6 +1,8 @@
 <?php
+
 // Get a fresh token first via DB
 use App\Models\User;
+
 $user = User::find(1);
 $token = $user->createToken('test')->plainTextToken;
 
@@ -12,4 +14,4 @@ curl_setopt_array($ch, [
 $body = curl_exec($ch);
 $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 echo "HTTP: $status\n";
-echo substr($body, 0, 1000) . "\n";
+echo substr($body, 0, 1000)."\n";

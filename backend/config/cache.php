@@ -23,32 +23,32 @@ return [
 
         'database' => [
             'driver' => 'database',
-            'table'  => 'cache',
+            'table' => 'cache',
             'connection' => null,
         ],
 
         'file' => [
             'driver' => 'file',
-            'path'   => storage_path('framework/cache/data'),
+            'path' => storage_path('framework/cache/data'),
         ],
 
         // ── Primary Redis cache — fast, short-lived ────────────────────────
         'redis' => [
-            'driver'     => 'redis',
+            'driver' => 'redis',
             'connection' => 'cache',
             'lock_connection' => 'default',
         ],
 
         // ── KPI / Dashboard cache — longer TTL ────────────────────────────
         'kpi' => [
-            'driver'     => 'redis',
+            'driver' => 'redis',
             'connection' => 'kpi',
             'lock_connection' => 'default',
         ],
 
         // ── Rate-limiter cache ─────────────────────────────────────────────
         'ratelimit' => [
-            'driver'     => 'redis',
+            'driver' => 'redis',
             'connection' => 'ratelimit',
         ],
 

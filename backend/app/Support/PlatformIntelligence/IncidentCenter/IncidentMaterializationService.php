@@ -11,7 +11,6 @@ use App\Support\PlatformIntelligence\Contracts\PlatformIncidentContract;
 use App\Support\PlatformIntelligence\Enums\PlatformIncidentEscalationState;
 use App\Support\PlatformIntelligence\Enums\PlatformIncidentOwnershipState;
 use App\Support\PlatformIntelligence\Enums\PlatformIncidentStatus;
-use App\Support\PlatformIntelligence\Enums\PlatformIntelligenceSeverity;
 use App\Support\PlatformIntelligence\IncidentLifecycle\IncidentOperationalTraceWriter;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;

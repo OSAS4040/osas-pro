@@ -22,9 +22,9 @@ class UpdateUserRequest extends FormRequest
         $companyId = (int) $this->user()->company_id;
 
         return [
-            'name'      => ['sometimes', 'string', 'max:255'],
-            'phone'     => ['nullable', 'string', 'max:30'],
-            'role'      => ['sometimes', 'string', 'in:owner,manager,staff,cashier,accountant,technician,viewer'],
+            'name' => ['sometimes', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'role' => ['sometimes', 'string', 'in:owner,manager,staff,cashier,accountant,technician,viewer'],
             'branch_id' => ['nullable', 'integer', 'exists:branches,id'],
             'org_unit_id' => [
                 'nullable',
@@ -41,7 +41,7 @@ class UpdateUserRequest extends FormRequest
                 },
             ],
             'is_active' => ['nullable', 'boolean'],
-            'password'  => ['nullable', Password::min(8)->mixedCase()->numbers()],
+            'password' => ['nullable', Password::min(8)->mixedCase()->numbers()],
             'nav_visibility' => ['nullable', 'array'],
             'nav_visibility.sections' => ['required_with:nav_visibility', 'array'],
             'nav_visibility.groups' => ['required_with:nav_visibility', 'array'],

@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\WalletType;
+use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
-use App\Services\ApprovalWorkflowService;
 use App\Models\Company;
-use App\Models\Customer;
 use App\Models\CustomerWallet;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
-use App\Enums\WalletType;
-use App\Enums\WorkOrderStatus;
+use App\Services\ApprovalWorkflowService;
 use App\Services\Config\ConfigResolverService;
 use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
@@ -41,7 +40,7 @@ class FleetController extends Controller
         ]);
 
         $companyId = $this->companyId();
-        $plate     = strtoupper(trim($data['plate_number']));
+        $plate = strtoupper(trim($data['plate_number']));
 
         $vehicle = Vehicle::where('company_id', $companyId)
             ->where('plate_number', $plate)
@@ -50,13 +49,13 @@ class FleetController extends Controller
 
         if (! $vehicle) {
             return response()->json([
-                'vehicle'    => null,
+                'vehicle' => null,
                 'work_order' => null,
-                'wallet'     => null,
-                'verdict'    => [
-                    'can_proceed'    => false,
-                    'payment_mode'   => null,
-                    'denial_reason'  => 'vehicle_not_found',
+                'wallet' => null,
+                'verdict' => [
+                    'can_proceed' => false,
+                    'payment_mode' => null,
+                    'denial_reason' => 'vehicle_not_found',
                     'denial_message' => 'لا توجد مركبة مسجلة بهذه اللوحة.',
                 ],
             ]);
@@ -70,13 +69,13 @@ class FleetController extends Controller
 
         if (! $workOrder) {
             return response()->json([
-                'vehicle'    => $this->vehicleData($vehicle),
+                'vehicle' => $this->vehicleData($vehicle),
                 'work_order' => null,
-                'wallet'     => $this->walletData($companyId, $vehicle),
-                'verdict'    => [
-                    'can_proceed'    => false,
-                    'payment_mode'   => null,
-                    'denial_reason'  => 'no_active_work_order',
+                'wallet' => $this->walletData($companyId, $vehicle),
+                'verdict' => [
+                    'can_proceed' => false,
+                    'payment_mode' => null,
+                    'denial_reason' => 'no_active_work_order',
                     'denial_message' => 'لا يوجد أمر عمل نشط لهذه المركبة. يجب إنشاء أمر عمل أولاً.',
                 ],
             ]);
@@ -84,21 +83,21 @@ class FleetController extends Controller
 
         if ($this->approvalRequired($workOrder->company_id, $workOrder->branch_id) && $workOrder->approval_status !== 'approved') {
             return response()->json([
-                'vehicle'    => $this->vehicleData($vehicle),
+                'vehicle' => $this->vehicleData($vehicle),
                 'work_order' => $this->workOrderData($workOrder),
-                'wallet'     => $this->walletData($companyId, $vehicle),
-                'verdict'    => [
-                    'can_proceed'    => false,
-                    'payment_mode'   => null,
-                    'denial_reason'  => 'work_order_not_approved',
+                'wallet' => $this->walletData($companyId, $vehicle),
+                'verdict' => [
+                    'can_proceed' => false,
+                    'payment_mode' => null,
+                    'denial_reason' => 'work_order_not_approved',
                     'denial_message' => 'أمر العمل غير معتمد بعد. يجب اعتماده من المسؤول.',
                 ],
             ]);
         }
 
-        $wallet        = $this->getVehicleWallet($companyId, $vehicle);
-        $balance       = $wallet ? (float) $wallet->balance : 0.0;
-        $isCredit      = $workOrder->credit_authorized;
+        $wallet = $this->getVehicleWallet($companyId, $vehicle);
+        $balance = $wallet ? (float) $wallet->balance : 0.0;
+        $isCredit = $workOrder->credit_authorized;
 
         if ($balance > 0) {
             $verdict = ['can_proceed' => true, 'payment_mode' => 'prepaid', 'denial_reason' => null, 'denial_message' => null];
@@ -106,21 +105,21 @@ class FleetController extends Controller
             $verdict = ['can_proceed' => true, 'payment_mode' => 'credit', 'denial_reason' => null, 'denial_message' => null];
         } else {
             $verdict = [
-                'can_proceed'    => false,
-                'payment_mode'   => null,
-                'denial_reason'  => 'insufficient_balance',
+                'can_proceed' => false,
+                'payment_mode' => null,
+                'denial_reason' => 'insufficient_balance',
                 'denial_message' => 'رصيد المحفظة غير كافٍ وأمر العمل لا يتضمن تفويض ائتمان.',
             ];
         }
 
         return response()->json([
-            'vehicle'    => $this->vehicleData($vehicle),
+            'vehicle' => $this->vehicleData($vehicle),
             'work_order' => $this->workOrderData($workOrder),
-            'wallet'     => [
-                'id'       => $wallet?->id,
-                'balance'  => $balance,
+            'wallet' => [
+                'id' => $wallet?->id,
+                'balance' => $balance,
                 'currency' => $wallet?->currency ?? 'SAR',
-                'status'   => $wallet?->status ?? 'not_created',
+                'status' => $wallet?->status ?? 'not_created',
             ],
             'verdict' => $verdict,
         ]);
@@ -147,26 +146,26 @@ class FleetController extends Controller
                 ->get();
 
             return [
-                'customer'        => [
-                    'id'    => $wallet->customer?->id,
-                    'name'  => $wallet->customer?->name,
+                'customer' => [
+                    'id' => $wallet->customer?->id,
+                    'name' => $wallet->customer?->name,
                     'phone' => $wallet->customer?->phone,
                 ],
-                'fleet_wallet'    => [
-                    'id'       => $wallet->id,
-                    'balance'  => (float) $wallet->balance,
+                'fleet_wallet' => [
+                    'id' => $wallet->id,
+                    'balance' => (float) $wallet->balance,
                     'currency' => $wallet->currency,
-                    'status'   => $wallet->status,
+                    'status' => $wallet->status,
                 ],
-                'vehicle_wallets' => $vehicleWallets->map(fn($vw) => [
-                    'wallet_id'    => $vw->id,
-                    'vehicle_id'   => $vw->vehicle_id,
-                    'plate'        => $vw->vehicle?->plate_number,
-                    'balance'      => (float) $vw->balance,
-                    'currency'     => $vw->currency,
-                    'status'       => $vw->status,
+                'vehicle_wallets' => $vehicleWallets->map(fn ($vw) => [
+                    'wallet_id' => $vw->id,
+                    'vehicle_id' => $vw->vehicle_id,
+                    'plate' => $vw->vehicle?->plate_number,
+                    'balance' => (float) $vw->balance,
+                    'currency' => $vw->currency,
+                    'status' => $vw->status,
                 ]),
-                'total_balance'   => (float) $wallet->balance + $vehicleWallets->sum('balance'),
+                'total_balance' => (float) $wallet->balance + $vehicleWallets->sum('balance'),
             ];
         });
 
@@ -196,12 +195,12 @@ class FleetController extends Controller
 
         if ($workOrder->approval_status === 'approved') {
             return response()->json([
-                'message'    => 'Work order already approved.',
+                'message' => 'Work order already approved.',
                 'work_order' => [
-                    'id'                => $workOrder->id,
-                    'approval_status'   => $workOrder->approval_status,
+                    'id' => $workOrder->id,
+                    'approval_status' => $workOrder->approval_status,
                     'credit_authorized' => $workOrder->credit_authorized,
-                    'approved_at'       => $workOrder->approved_at,
+                    'approved_at' => $workOrder->approved_at,
                 ],
                 'trace_id' => app('trace_id'),
             ]);
@@ -217,10 +216,10 @@ class FleetController extends Controller
         }
 
         $workOrder->update([
-            'approval_status'    => 'approved',
-            'approved_by_user_id'=> Auth::id(),
-            'approved_at'        => now(),
-            'credit_authorized'  => $data['credit_authorized'] ?? false,
+            'approval_status' => 'approved',
+            'approved_by_user_id' => Auth::id(),
+            'approved_at' => now(),
+            'credit_authorized' => $data['credit_authorized'] ?? false,
         ]);
 
         $this->approvalWorkflowService->ensurePendingWorkflow(
@@ -248,12 +247,12 @@ class FleetController extends Controller
         }
 
         return response()->json([
-            'message'    => 'Work order approved successfully.',
+            'message' => 'Work order approved successfully.',
             'work_order' => [
-                'id'                => $workOrder->id,
-                'approval_status'   => $workOrder->approval_status,
+                'id' => $workOrder->id,
+                'approval_status' => $workOrder->approval_status,
                 'credit_authorized' => $workOrder->credit_authorized,
-                'approved_at'       => $workOrder->approved_at,
+                'approved_at' => $workOrder->approved_at,
             ],
             'trace_id' => app('trace_id'),
         ]);
@@ -275,36 +274,37 @@ class FleetController extends Controller
     private function vehicleData(Vehicle $vehicle): array
     {
         return [
-            'id'           => $vehicle->id,
+            'id' => $vehicle->id,
             'plate_number' => $vehicle->plate_number,
-            'make'         => $vehicle->make,
-            'model'        => $vehicle->model,
-            'year'         => $vehicle->year,
-            'customer_id'  => $vehicle->customer_id,
-            'customer_name'=> $vehicle->customer?->name,
+            'make' => $vehicle->make,
+            'model' => $vehicle->model,
+            'year' => $vehicle->year,
+            'customer_id' => $vehicle->customer_id,
+            'customer_name' => $vehicle->customer?->name,
         ];
     }
 
     private function workOrderData(WorkOrder $wo): array
     {
         return [
-            'id'                => $wo->id,
-            'order_number'      => $wo->order_number ?? $wo->work_order_number,
-            'status'            => $wo->status instanceof \BackedEnum ? $wo->status->value : $wo->status,
-            'approval_status'   => $wo->approval_status,
+            'id' => $wo->id,
+            'order_number' => $wo->order_number ?? $wo->work_order_number,
+            'status' => $wo->status instanceof \BackedEnum ? $wo->status->value : $wo->status,
+            'approval_status' => $wo->approval_status,
             'credit_authorized' => (bool) $wo->credit_authorized,
-            'approved_at'       => $wo->approved_at,
+            'approved_at' => $wo->approved_at,
         ];
     }
 
     private function walletData(int $companyId, Vehicle $vehicle): array
     {
         $wallet = $this->getVehicleWallet($companyId, $vehicle);
+
         return [
-            'id'       => $wallet?->id,
-            'balance'  => $wallet ? (float) $wallet->balance : 0.0,
+            'id' => $wallet?->id,
+            'balance' => $wallet ? (float) $wallet->balance : 0.0,
             'currency' => $wallet?->currency ?? 'SAR',
-            'status'   => $wallet?->status ?? 'not_created',
+            'status' => $wallet?->status ?? 'not_created',
         ];
     }
 

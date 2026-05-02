@@ -117,7 +117,7 @@ class VehicleIdentityPublicTest extends TestCase
             'year' => 2024,
         ]);
 
-        app(\App\Services\VehicleIdentityService::class)->ensureActiveToken($vehicle);
+        app(VehicleIdentityService::class)->ensureActiveToken($vehicle);
 
         $this->actingAs($user, 'sanctum')
             ->postJson("/api/v1/vehicles/{$vehicle->id}/identity/revoke")

@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\User;
 use Database\Seeders\DemoOperationsSeeder;
 use Database\Seeders\PlanSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -49,11 +50,11 @@ class DemoOperationsSimulationTest extends TestCase
         $this->assertSame(100, Invoice::withoutGlobalScope('tenant')->where('company_id', $cid)->count());
         $this->assertSame(100, Payment::withoutGlobalScope('tenant')->where('company_id', $cid)->count());
 
-        $user = \App\Models\User::where('email', DemoOperationsSeeder::OWNER_EMAIL)->first();
+        $user = User::where('email', DemoOperationsSeeder::OWNER_EMAIL)->first();
         $this->assertNotNull($user);
 
         $from = now()->subYear()->toDateString();
-        $to   = now()->addDay()->toDateString();
+        $to = now()->addDay()->toDateString();
 
         $this->actingAsUser($user)
             ->getJson('/api/v1/dashboard/summary?from='.$from.'&to='.$to)

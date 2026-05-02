@@ -48,16 +48,16 @@ final class PhoneOtpService
             ->delete();
 
         $code = (string) random_int(100000, 999999);
-        $ttl  = (int) config('saas.phone_otp_ttl_seconds', 300);
+        $ttl = (int) config('saas.phone_otp_ttl_seconds', 300);
 
         PhoneOtp::query()->create([
-            'phone'          => $phone,
-            'otp_code_hash'  => Hash::make($code),
-            'purpose'        => self::PURPOSE_REGISTER_LOGIN,
-            'expires_at'     => now()->addSeconds($ttl),
-            'max_attempts'   => (int) config('saas.phone_otp_max_attempts', 8),
-            'ip_address'     => $request->ip(),
-            'user_agent'     => substr((string) $request->userAgent(), 0, 2000),
+            'phone' => $phone,
+            'otp_code_hash' => Hash::make($code),
+            'purpose' => self::PURPOSE_REGISTER_LOGIN,
+            'expires_at' => now()->addSeconds($ttl),
+            'max_attempts' => (int) config('saas.phone_otp_max_attempts', 8),
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 2000),
         ]);
 
         $this->dispatchSms($phone, $code, $ttl);
@@ -65,7 +65,7 @@ final class PhoneOtpService
         if (config('app.debug')) {
             Log::info('phone_otp.issued', [
                 'phone_suffix' => substr($phone, -4),
-                'trace_id'     => app('trace_id'),
+                'trace_id' => app('trace_id'),
             ]);
         }
     }
@@ -129,7 +129,7 @@ final class PhoneOtpService
     {
         $ip = (string) $request->ip();
         $kPhone = 'phone_otp_send_count:'.$phone;
-        $kIp    = 'phone_otp_send_ip:'.$ip;
+        $kIp = 'phone_otp_send_ip:'.$ip;
 
         $phoneHits = (int) Cache::get($kPhone, 0);
         if ($phoneHits >= (int) config('saas.phone_otp_send_max_per_phone_window', 5)) {
@@ -151,22 +151,22 @@ final class PhoneOtpService
         if ($fake !== '' && ! app()->environment('production')) {
             Log::warning('phone_otp.fake_plaintext_enabled', [
                 'phone_suffix' => substr($phoneDigits, -4),
-                'code'         => $code,
-                'ttl'          => $ttlSeconds,
-                'trace_id'     => app('trace_id'),
+                'code' => $code,
+                'ttl' => $ttlSeconds,
+                'trace_id' => app('trace_id'),
             ]);
 
             return;
         }
 
-        $sid   = trim((string) config('saas.twilio_account_sid'));
+        $sid = trim((string) config('saas.twilio_account_sid'));
         $token = trim((string) config('saas.twilio_auth_token'));
-        $from  = trim((string) config('saas.twilio_sms_from'));
+        $from = trim((string) config('saas.twilio_sms_from'));
         if ($sid === '' || $token === '' || $from === '') {
             Log::warning('phone_otp.sms_skipped_no_twilio', [
                 'phone_suffix' => substr($phoneDigits, -4),
-                'code'         => app()->environment('production') ? '[redacted]' : $code,
-                'trace_id'     => app('trace_id'),
+                'code' => app()->environment('production') ? '[redacted]' : $code,
+                'trace_id' => app('trace_id'),
             ]);
 
             return;
@@ -182,13 +182,13 @@ final class PhoneOtpService
         try {
             $url = "https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json";
             Http::asForm()->withBasicAuth($sid, $token)->timeout(15)->post($url, [
-                'To'   => $to,
+                'To' => $to,
                 'From' => $from,
                 'Body' => $body,
             ]);
         } catch (\Throwable $e) {
             Log::warning('phone_otp.sms_failed', [
-                'error'    => $e->getMessage(),
+                'error' => $e->getMessage(),
                 'trace_id' => app('trace_id'),
             ]);
         }

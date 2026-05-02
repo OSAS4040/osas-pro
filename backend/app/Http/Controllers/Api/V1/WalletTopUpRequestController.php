@@ -54,7 +54,7 @@ class WalletTopUpRequestController extends Controller
                 $data,
                 $request->file('receipt'),
             );
-        } catch (\DomainException $e) {
+        } catch (DomainException $e) {
             return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
         }
 
@@ -121,7 +121,7 @@ class WalletTopUpRequestController extends Controller
 
         try {
             $row = $this->service->updateReturnedRequest($row, $data, $request->file('receipt'));
-        } catch (\DomainException $e) {
+        } catch (DomainException $e) {
             return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
         }
 
@@ -136,7 +136,7 @@ class WalletTopUpRequestController extends Controller
 
         try {
             $row = $this->service->resubmit($row);
-        } catch (\DomainException $e) {
+        } catch (DomainException $e) {
             return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
         }
 

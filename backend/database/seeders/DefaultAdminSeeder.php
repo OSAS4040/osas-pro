@@ -55,12 +55,12 @@ class DefaultAdminSeeder extends Seeder
         $company = $byEmail ?? $byName;
 
         $attrs = [
-            'email'     => 'hq@osas.sa',
-            'name'      => 'Osas Pro',
-            'name_ar'   => 'أسس برو',
-            'currency'  => 'SAR',
-            'timezone'  => 'Asia/Riyadh',
-            'status'    => 'active',
+            'email' => 'hq@osas.sa',
+            'name' => 'Osas Pro',
+            'name_ar' => 'أسس برو',
+            'currency' => 'SAR',
+            'timezone' => 'Asia/Riyadh',
+            'status' => 'active',
             'is_active' => true,
         ];
 
@@ -77,11 +77,11 @@ class DefaultAdminSeeder extends Seeder
         $branch = Branch::firstOrCreate(
             ['company_id' => $company->id, 'is_main' => true],
             [
-                'uuid'      => (string) Str::uuid(),
-                'name'      => 'Main Branch',
-                'name_ar'   => 'الفرع الرئيسي',
-                'code'      => 'MAIN',
-                'status'    => 'active',
+                'uuid' => (string) Str::uuid(),
+                'name' => 'Main Branch',
+                'name_ar' => 'الفرع الرئيسي',
+                'code' => 'MAIN',
+                'status' => 'active',
                 'is_active' => true,
             ]
         );
@@ -89,40 +89,40 @@ class DefaultAdminSeeder extends Seeder
         Subscription::firstOrCreate(
             ['company_id' => $company->id],
             [
-                'uuid'         => (string) Str::uuid(),
-                'plan'         => 'professional',
-                'status'       => 'active',
-                'starts_at'    => now(),
-                'ends_at'      => now()->addYear(),
-                'amount'       => 0,
-                'currency'     => 'SAR',
+                'uuid' => (string) Str::uuid(),
+                'plan' => 'professional',
+                'status' => 'active',
+                'starts_at' => now(),
+                'ends_at' => now()->addYear(),
+                'amount' => 0,
+                'currency' => 'SAR',
                 'max_branches' => 10,
-                'max_users'    => 50,
+                'max_users' => 50,
             ]
         );
 
         User::withoutGlobalScope('tenant')->updateOrCreate(
             [
                 'company_id' => $company->id,
-                'email'      => self::ADMIN_EMAIL,
+                'email' => self::ADMIN_EMAIL,
             ],
             [
-                'branch_id'            => $branch->id,
-                'name'                 => 'Osas Pro Admin',
-                'password'             => $password,
-                'phone'                => PhoneNormalizer::normalizeForStorage('966501000099'),
-                'phone_verified_at'    => now(),
-                'registration_stage'   => 'phone_verified',
-                'role'                 => UserRole::Owner,
-                'status'               => UserStatus::Active,
-                'is_active'            => true,
+                'branch_id' => $branch->id,
+                'name' => 'Osas Pro Admin',
+                'password' => $password,
+                'phone' => PhoneNormalizer::normalizeForStorage('966501000099'),
+                'phone_verified_at' => now(),
+                'registration_stage' => 'phone_verified',
+                'role' => UserRole::Owner,
+                'status' => UserStatus::Active,
+                'is_active' => true,
             ]
         );
 
         if (app()->environment(['local', 'testing'])) {
-            $this->command?->info('Default admin: ' . self::ADMIN_EMAIL . ' / ' . $password);
+            $this->command?->info('Default admin: '.self::ADMIN_EMAIL.' / '.$password);
         } else {
-            $this->command?->info('Default admin seeded: ' . self::ADMIN_EMAIL);
+            $this->command?->info('Default admin seeded: '.self::ADMIN_EMAIL);
         }
     }
 }

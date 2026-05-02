@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes, HasTenantScope;
+    use HasFactory, HasTenantScope, SoftDeletes;
 
     protected $fillable = [
         'uuid', 'company_id', 'created_by_user_id', 'category_id',
@@ -23,14 +23,14 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'sale_price'      => 'decimal:4',
-        'cost_price'      => 'decimal:4',
-        'tax_rate'        => 'decimal:2',
-        'is_taxable'      => 'boolean',
+        'sale_price' => 'decimal:4',
+        'cost_price' => 'decimal:4',
+        'tax_rate' => 'decimal:2',
+        'is_taxable' => 'boolean',
         'track_inventory' => 'boolean',
-        'is_active'       => 'boolean',
-        'meta'            => 'array',
-        'product_type'    => ProductType::class,
+        'is_active' => 'boolean',
+        'meta' => 'array',
+        'product_type' => ProductType::class,
     ];
 
     public function category(): BelongsTo
@@ -69,6 +69,7 @@ class Product extends Model
             return (bool) $this->track_inventory;
         }
         $type = $this->product_type instanceof ProductType ? $this->product_type : ProductType::from($this->product_type ?? 'physical');
+
         return $type->tracksInventory();
     }
 

@@ -27,17 +27,17 @@ class Invoice extends Model
     ];
 
     protected $casts = [
-        'status'          => InvoiceStatus::class,
-        'subtotal'        => 'decimal:4',
+        'status' => InvoiceStatus::class,
+        'subtotal' => 'decimal:4',
         'discount_amount' => 'decimal:4',
-        'tax_amount'      => 'decimal:4',
-        'total'           => 'decimal:4',
-        'paid_amount'     => 'decimal:4',
-        'due_amount'      => 'decimal:4',
-        'issued_at'       => 'datetime',
-        'due_at'          => 'datetime',
+        'tax_amount' => 'decimal:4',
+        'total' => 'decimal:4',
+        'paid_amount' => 'decimal:4',
+        'due_amount' => 'decimal:4',
+        'issued_at' => 'datetime',
+        'due_at' => 'datetime',
         'customer_visible' => 'boolean',
-        'media'           => 'array',
+        'media' => 'array',
     ];
 
     public function items()
