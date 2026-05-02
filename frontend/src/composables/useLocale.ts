@@ -115,13 +115,20 @@ document.documentElement.setAttribute('lang', _init.code)
 
 // ── Public API ────────────────────────────────────────────────────────────
 
-/** Translate a key using the active locale JSON. Falls back to Arabic then returns key. */
-export function t(key: string): string {
-  return (
+/** Translate a key using the active locale JSON. Falls back to Arabic then returns key.
+ * When `params` is set, replaces `{placeholders}` in the resolved string (e.g. `{name}`).
+ */
+export function t(key: string, params?: Record<string, string | number>): string {
+  let s =
     resolve(localeData[locale.value], key) ??
     resolve(localeData['ar'], key) ??
     key
-  )
+  if (params && typeof s === 'string') {
+    for (const [paramKey, val] of Object.entries(params)) {
+      s = s.split(`{${paramKey}}`).join(String(val))
+    }
+  }
+  return s
 }
 
 /** Switch the active locale */
