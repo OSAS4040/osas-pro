@@ -148,7 +148,7 @@
 
 ## ملحق — مسارات الراوتر المربوطة (تدقيق آلي)
 
-الكتل التالية يقرأها `frontend/scripts/check-tenant-nav-api-doc.mjs` ويقارنها باستخراج من `router/index.ts`. **سطر واحد = مسار كامل في الواجهة.**
+الكتل التالية يقرأها `frontend/scripts/check-tenant-nav-api-doc.mjs` ويقارنها باستخراج من `frontend/src/router/routes/{staffPortalRoutes,fleetPortalRoutes,customerPortalRoutes}.ts`. **سطر واحد = مسار كامل في الواجهة.**
 
 ### Staff (`AppLayout`, `portal: 'staff'`)
 
@@ -180,6 +180,7 @@
 /documents
 /documents/company
 /electronic-archive
+/execution-hub
 /financial-reconciliation
 /fixed-assets
 /fleet/transactions/:walletId
@@ -207,6 +208,8 @@
 /products/:id/edit
 /products/new
 /profile
+/provider/platform-purchases
+/provider/purchase-claims
 /purchases
 /purchases/:id
 /purchases/:id/receive
@@ -214,12 +217,18 @@
 /referrals
 /reports
 /services
+/services-products
+/services-products/products
+/services-products/services
 /settings
 /settings/api-keys
 /settings/integrations
 /settings/org-units
 /settings/team-users
 /subscription
+/subscription/invoices
+/subscription/payment
+/subscription/plans
 /suppliers
 /support
 /vehicles
@@ -262,13 +271,35 @@
 
 ```nav-doc-route-anchors-customer
 /customer
+/customer/activity
+/customer/api-keys
 /customer/bookings
+/customer/business-intelligence
+/customer/company-settings
+/customer/coverage-locations
 /customer/dashboard
 /customer/invoices
+/customer/invoices/:id
 /customer/notifications
+/customer/org-units
+/customer/plans
 /customer/pricing
+/customer/profile
+/customer/reports
+/customer/settings
+/customer/subscription
+/customer/subscription/invoices
+/customer/subscription/payment
+/customer/subscription/plans
+/customer/team-users
 /customer/vehicles
+/customer/vehicles/:id
+/customer/vehicles/:id/card
+/customer/vehicles/:id/passport
 /customer/wallet
+/customer/wallet/top-up-requests
+/customer/work-orders
+/customer/zatca
 ```
 
 ---

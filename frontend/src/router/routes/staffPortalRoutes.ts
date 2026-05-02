@@ -4,7 +4,7 @@ export const staffPortalRoutes: RouteRecordRaw[] = [
   /**
    * Staff portal — قائمة المسارات يجب أن تبقى متوافقة مع
    * `docs/Tenant_Navigation_API_Map.md` (كتل nav-doc-route-anchors*).
-   * تحقق: من `frontend` شغّل `npm run docs:nav-api-check`.
+   * تحقق: من `frontend` شغّل `npm run docs:nav-api-check` (يستخرج من هذا الملف).
    */
   // ── Staff portal (مسارات /workshop تقنية؛ العرض للمستخدم: مركز خدمة / منفذ بيع) ──
   {

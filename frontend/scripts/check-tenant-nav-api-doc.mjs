@@ -2,6 +2,9 @@
  * يتحقق من أن مسارات الراوتر (staff / fleet / customer) مذكورة في
  * docs/Tenant_Navigation_API_Map.md داخل كتل ```nav-doc-route-anchors*```.
  *
+ * المصدر: `src/router/routes/{staffPortalRoutes,fleetPortalRoutes,customerPortalRoutes}.ts`
+ * (استخراج نصّي مع دعم children المتداخلة).
+ *
  * تشغيل من مجلد frontend: npm run docs:nav-api-check
  */
 import fs from 'fs'
@@ -10,12 +13,14 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(__dirname, '..')
-const routerPath = path.join(root, 'src', 'router', 'index.ts')
+const routesDir = path.join(root, 'src', 'router', 'routes')
 const docPath = path.join(root, '..', 'docs', 'Tenant_Navigation_API_Map.md')
 
 function extractFirstChildrenArraySource(source, searchFrom) {
-  const i = source.indexOf('children: [', searchFrom)
-  if (i === -1) return null
+  const tail = source.slice(searchFrom)
+  const cm = tail.match(/children:\s*\[/)
+  if (!cm) return null
+  const i = searchFrom + tail.indexOf(cm[0])
   const start = source.indexOf('[', i)
   let depth = 0
   for (let p = start; p < source.length; p++) {
@@ -31,26 +36,91 @@ function extractFirstChildrenArraySource(source, searchFrom) {
   return null
 }
 
-function pathsFromInner(inner, basePrefix) {
-  const out = new Set()
-  if (!inner) return out
-  const base = basePrefix.replace(/\/$/, '') || '/'
-  const re = /path:\s*['"]([^'"]*)['"]/g
-  let m
-  while ((m = re.exec(inner)) !== null) {
-    const p = m[1]
-    if (p.startsWith('/')) {
-      out.add(p)
+/** يدمج مساراً أباً مع مقطعاً نسبياً كما في Vue Router (nested routes). */
+function joinPaths(parent, segment) {
+  if (segment && segment.startsWith('/')) {
+    return segment.replace(/\/+/g, '/')
+  }
+  if (!segment || segment === '') {
+    if (!parent || parent === '/') return '/'
+    return parent.replace(/\/+$/, '') || '/'
+  }
+  const base = !parent || parent === '/' ? '' : parent.replace(/\/+$/, '')
+  if (!base) return `/${segment}`.replace(/\/+/g, '/')
+  return `${base}/${segment}`.replace(/\/+/g, '/')
+}
+
+/** يقسم محتوى مصفوفة مسارات إلى كائنات `{ ... }` من المستوى الأعلى (مع تجاهل الأقواس داخل النصوص). */
+function splitTopLevelRouteObjects(inner) {
+  const out = []
+  let depth = 0
+  let start = -1
+  let inString = null
+  let escape = false
+  for (let i = 0; i < inner.length; i++) {
+    const ch = inner[i]
+    if (inString) {
+      if (escape) {
+        escape = false
+        continue
+      }
+      if (ch === '\\' && (inString === "'" || inString === '"')) {
+        escape = true
+        continue
+      }
+      if (ch === inString) {
+        inString = null
+      }
       continue
     }
-    if (p === '') {
-      out.add(base === '' ? '/' : base)
+    if (ch === "'" || ch === '"' || ch === '`') {
+      inString = ch
       continue
     }
-    const full = `${base}/${p}`.replace(/\/+/g, '/')
-    out.add(full)
+    if (ch === '{') {
+      if (depth === 0) start = i
+      depth++
+    } else if (ch === '}') {
+      depth--
+      if (depth === 0 && start >= 0) {
+        out.push(inner.slice(start, i + 1))
+        start = -1
+      }
+    }
   }
   return out
+}
+
+function collectAllPaths(arrayInner, parentFullPath) {
+  const paths = new Set()
+  if (!arrayInner) return paths
+  for (const block of splitTopLevelRouteObjects(arrayInner)) {
+    const pathMatch = block.match(/path:\s*['"]([^'"]*)['"]/)
+    const segment = pathMatch ? pathMatch[1] : ''
+    const full = joinPaths(parentFullPath, segment)
+    paths.add(full)
+    const ci = block.indexOf('children:')
+    if (ci !== -1) {
+      const childInner = extractFirstChildrenArraySource(block, ci)
+      if (childInner) {
+        for (const p of collectAllPaths(childInner, full)) {
+          paths.add(p)
+        }
+      }
+    }
+  }
+  return paths
+}
+
+function pathsFromPortalRouteFile(filePath, portalMarker, nestedParentPrefix) {
+  const src = fs.readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n')
+  const mark = src.indexOf(portalMarker)
+  if (mark === -1) {
+    console.error(`Marker not found in ${path.basename(filePath)}: ${portalMarker}`)
+    return new Set()
+  }
+  const inner = extractFirstChildrenArraySource(src, mark)
+  return collectAllPaths(inner, nestedParentPrefix)
 }
 
 function readAnchors(doc, fenceId) {
@@ -65,20 +135,25 @@ function readAnchors(doc, fenceId) {
   )
 }
 
-const router = fs.readFileSync(routerPath, 'utf8').replace(/\r\n/g, '\n')
+const staffPaths = pathsFromPortalRouteFile(
+  path.join(routesDir, 'staffPortalRoutes.ts'),
+  "portal: 'staff'",
+  '',
+)
+
+const fleetPaths = pathsFromPortalRouteFile(
+  path.join(routesDir, 'fleetPortalRoutes.ts'),
+  "portal: 'fleet'",
+  '/fleet-portal',
+)
+
+const customerPaths = pathsFromPortalRouteFile(
+  path.join(routesDir, 'customerPortalRoutes.ts'),
+  "portal: 'customer'",
+  '/customer',
+)
+
 const doc = fs.readFileSync(docPath, 'utf8').replace(/\r\n/g, '\n')
-
-const staffMark = router.indexOf("meta: { requiresAuth: true, portal: 'staff' }")
-const staffInner = extractFirstChildrenArraySource(router, staffMark)
-const staffPaths = pathsFromInner(staffInner, '/')
-
-const fleetMark = router.indexOf("meta: { requiresAuth: true, portal: 'fleet' }")
-const fleetInner = extractFirstChildrenArraySource(router, fleetMark)
-const fleetPaths = pathsFromInner(fleetInner, '/fleet-portal')
-
-const customerMark = router.indexOf("meta: { requiresAuth: true, portal: 'customer' }")
-const customerInner = extractFirstChildrenArraySource(router, customerMark)
-const customerPaths = pathsFromInner(customerInner, '/customer')
 
 const anchorsStaff = readAnchors(doc, 'nav-doc-route-anchors')
 const anchorsFleet = readAnchors(doc, 'nav-doc-route-anchors-fleet-portal')
