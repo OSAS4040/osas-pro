@@ -237,7 +237,7 @@ async function loadCompanies(): Promise<void> {
     if (selectedCompanyId.value > 0 && !companies.value.some((c) => c.id === selectedCompanyId.value)) {
       selectedCompanyId.value = 0
     }
-  } catch (e: unknown) {
+  } catch (_e: unknown) {
     errorMessage.value = 'تعذّر تحميل قائمة الشركات.'
     companies.value = []
   }
