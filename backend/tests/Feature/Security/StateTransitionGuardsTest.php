@@ -14,7 +14,6 @@ use App\Models\SupportTicket;
 use App\Models\Task;
 use App\Models\Unit;
 use App\Models\Vehicle;
-use App\Services\SensitivePreviewTokenService;
 use App\Services\WorkOrderService;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -461,21 +460,8 @@ class StateTransitionGuardsTest extends TestCase
             $tenant['user']->id,
         );
 
-        $token = $this->obtainSensitivePreviewToken(
-            $tenant['user'],
-            SensitivePreviewTokenService::OP_STATUS_TO_APPROVED,
-            [(int) $order->id],
-        );
-
-        $this->actingAsUser($tenant['user'])
-            ->patchJson("/api/v1/work-orders/{$order->id}/status", [
-                'status' => 'approved',
-                'version' => $order->version,
-                'sensitive_preview_token' => $token,
-            ])
-            ->assertOk();
-
         $order->refresh();
+        $this->assertSame('approved', $order->status->value);
 
         $ok = $this->actingAsUser($tenant['user'])
             ->patchJson("/api/v1/work-orders/{$order->id}/status", [

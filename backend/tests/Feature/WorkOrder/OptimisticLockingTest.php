@@ -9,7 +9,6 @@ use App\Models\Customer;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
-use App\Services\SensitivePreviewTokenService;
 use App\Services\WorkOrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -80,17 +79,52 @@ class OptimisticLockingTest extends TestCase
         $snapshot1 = clone $order;
         $snapshot2 = clone $order;
 
-        $this->service->transition($snapshot1, WorkOrderStatus::Approved);
-        $snapshot1->refresh();
         $this->service->transition($snapshot1, WorkOrderStatus::InProgress);
+        $snapshot1->refresh();
 
         $this->expectException(\RuntimeException::class);
-        $this->service->transition($snapshot2, WorkOrderStatus::Cancelled);
+        $this->service->transition($snapshot2, WorkOrderStatus::InProgress);
     }
 
     public function test_concurrent_update_with_stale_version_throws_runtime_exception(): void
     {
-        $order = $this->createOrder();
+        $retail = $this->createCompany([
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
+        ]);
+        $retailBranch = $this->createBranch($retail);
+        $retailUser = $this->createUser($retail, $retailBranch);
+        $this->createActiveSubscription($retail);
+
+        $customer = Customer::create([
+            'uuid'               => Str::uuid(),
+            'company_id'         => $retail->id,
+            'created_by_user_id' => $retailUser->id,
+            'name'               => 'Retail Optimistic',
+            'type'               => 'individual',
+            'is_active'          => true,
+        ]);
+        $vehicle = Vehicle::create([
+            'uuid'               => Str::uuid(),
+            'company_id'         => $retail->id,
+            'branch_id'          => $retailBranch->id,
+            'customer_id'        => $customer->id,
+            'created_by_user_id' => $retailUser->id,
+            'plate_number'       => 'RTL-OPT',
+            'make'               => 'Toyota',
+            'model'              => 'Camry',
+            'year'               => 2022,
+        ]);
+
+        $order = $this->service->create(
+            [
+                'customer_id' => $customer->id,
+                'vehicle_id' => $vehicle->id,
+                'items' => [$this->minimalWorkOrderLineItem()],
+            ],
+            $retail->id,
+            $retailBranch->id,
+            $retailUser->id,
+        );
 
         $snapshot = clone $order;
 
@@ -110,8 +144,6 @@ class OptimisticLockingTest extends TestCase
     {
         $order = $this->createOrder();
 
-        $this->service->transition($order, WorkOrderStatus::Approved);
-        $order->refresh();
         $this->service->transition($order, WorkOrderStatus::InProgress);
         $order->refresh();
 
@@ -147,22 +179,6 @@ class OptimisticLockingTest extends TestCase
     {
         $order = $this->createOrder();
 
-        $token = $this->obtainSensitivePreviewToken(
-            $this->user,
-            SensitivePreviewTokenService::OP_STATUS_TO_APPROVED,
-            [(int) $order->id],
-        );
-
-        $this->actingAs($this->user, 'sanctum')
-            ->patchJson("/api/v1/work-orders/{$order->id}/status", [
-                'status' => 'approved',
-                'version' => $order->version,
-                'sensitive_preview_token' => $token,
-            ])
-            ->assertOk();
-
-        $order->refresh();
-
         $response = $this->actingAs($this->user, 'sanctum')
             ->patchJson("/api/v1/work-orders/{$order->id}/status", [
                 'status'  => 'in_progress',
@@ -171,6 +187,6 @@ class OptimisticLockingTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.status', 'in_progress');
-        $response->assertJsonPath('data.version', 2);
+        $response->assertJsonPath('data.version', 1);
     }
 }

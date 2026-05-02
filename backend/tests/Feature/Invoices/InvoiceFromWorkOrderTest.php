@@ -62,6 +62,15 @@ class InvoiceFromWorkOrderTest extends TestCase
         $this->walletService    = app(WalletService::class);
     }
 
+    private function ensureApproved(\App\Models\WorkOrder $order): void
+    {
+        $order->refresh();
+        if ($order->status === WorkOrderStatus::PendingManagerApproval) {
+            $this->workOrderService->transition($order, WorkOrderStatus::Approved);
+            $order->refresh();
+        }
+    }
+
     /**
      * Completed work order → invoice via API must persist the same Idempotency-Key on the invoice row
      * so payment (especially wallet) can derive wallet_idempotency_key.
@@ -86,8 +95,7 @@ class InvoiceFromWorkOrderTest extends TestCase
             $this->user->id,
         );
 
-        $this->workOrderService->transition($order, WorkOrderStatus::Approved);
-        $order->refresh();
+        $this->ensureApproved($order);
         $this->workOrderService->transition($order, WorkOrderStatus::InProgress);
         $order->refresh();
         $this->prepareWorkOrderForCompletedTransition($order);
@@ -151,8 +159,7 @@ class InvoiceFromWorkOrderTest extends TestCase
             $this->user->id,
         );
 
-        $this->workOrderService->transition($order, WorkOrderStatus::Approved);
-        $order->refresh();
+        $this->ensureApproved($order);
         $this->workOrderService->transition($order, WorkOrderStatus::InProgress);
         $order->refresh();
         $this->prepareWorkOrderForCompletedTransition($order);
@@ -242,8 +249,7 @@ class InvoiceFromWorkOrderTest extends TestCase
             'pricing_source' => null,
         ]);
 
-        $this->workOrderService->transition($order, WorkOrderStatus::Approved);
-        $order->refresh();
+        $this->ensureApproved($order);
         $this->workOrderService->transition($order, WorkOrderStatus::InProgress);
         $order->refresh();
         $this->prepareWorkOrderForCompletedTransition($order, [

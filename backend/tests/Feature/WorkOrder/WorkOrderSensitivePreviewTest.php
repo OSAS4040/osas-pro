@@ -17,7 +17,9 @@ class WorkOrderSensitivePreviewTest extends TestCase
 
     public function test_api_rejects_approve_without_sensitive_preview_token(): void
     {
-        $company = $this->createCompany();
+        $company = $this->createCompany([
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
+        ]);
         $branch = $this->createBranch($company);
         $user = $this->createUser($company, $branch);
         $this->createActiveSubscription($company);
@@ -66,7 +68,9 @@ class WorkOrderSensitivePreviewTest extends TestCase
 
     public function test_api_approves_with_valid_preview_token(): void
     {
-        $company = $this->createCompany();
+        $company = $this->createCompany([
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
+        ]);
         $branch = $this->createBranch($company);
         $user = $this->createUser($company, $branch);
         $this->createActiveSubscription($company);

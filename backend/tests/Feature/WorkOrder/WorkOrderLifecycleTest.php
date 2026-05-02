@@ -70,18 +70,61 @@ class WorkOrderLifecycleTest extends TestCase
 
     private function pathToInProgress(WorkOrder $order): WorkOrder
     {
-        $this->service->transition($order, WorkOrderStatus::Approved);
         $order->refresh();
+        if ($order->status === WorkOrderStatus::PendingManagerApproval) {
+            $this->service->transition($order, WorkOrderStatus::Approved);
+            $order->refresh();
+        }
 
         return $this->service->transition($order, WorkOrderStatus::InProgress);
     }
 
-    public function test_create_work_order_defaults_to_pending_manager_approval(): void
+    public function test_create_work_order_defaults_to_approved_for_service_center(): void
     {
         $order = $this->createOrder();
 
-        $this->assertEquals(WorkOrderStatus::PendingManagerApproval, $order->status);
+        $this->assertEquals(WorkOrderStatus::Approved, $order->status);
         $this->assertNotEmpty($order->order_number);
+    }
+
+    public function test_create_work_order_retail_defaults_to_pending_manager_approval(): void
+    {
+        $retail = $this->createCompany([
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
+        ]);
+        $retailBranch = $this->createBranch($retail);
+        $retailUser = $this->createUser($retail, $retailBranch);
+        $retailCustomer = Customer::create([
+            'uuid'               => Str::uuid(),
+            'company_id'         => $retail->id,
+            'created_by_user_id' => $retailUser->id,
+            'name'               => 'Retail Customer',
+            'type'                 => 'individual',
+            'is_active'            => true,
+        ]);
+        $retailVehicle = Vehicle::create([
+            'uuid'                 => Str::uuid(),
+            'company_id'           => $retail->id,
+            'branch_id'            => $retailBranch->id,
+            'customer_id'          => $retailCustomer->id,
+            'created_by_user_id'   => $retailUser->id,
+            'plate_number'         => 'RTL-001',
+            'make'                 => 'Toyota',
+            'model'                => 'Camry',
+            'year'                 => 2022,
+        ]);
+        $order = $this->service->create(
+            [
+                'customer_id' => $retailCustomer->id,
+                'vehicle_id' => $retailVehicle->id,
+                'items' => [$this->minimalWorkOrderLineItem()],
+            ],
+            $retail->id,
+            $retailBranch->id,
+            $retailUser->id,
+        );
+
+        $this->assertEquals(WorkOrderStatus::PendingManagerApproval, $order->status);
     }
 
     public function test_pending_manager_can_transition_to_approved_then_in_progress(): void
@@ -156,7 +199,40 @@ class WorkOrderLifecycleTest extends TestCase
 
     public function test_can_cancel_pending_manager_approval_order(): void
     {
-        $order   = $this->createOrder();
+        $retail = $this->createCompany([
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
+        ]);
+        $retailBranch = $this->createBranch($retail);
+        $retailUser = $this->createUser($retail, $retailBranch);
+        $retailCustomer = Customer::create([
+            'uuid'               => Str::uuid(),
+            'company_id'         => $retail->id,
+            'created_by_user_id' => $retailUser->id,
+            'name'               => 'Retail Cancel',
+            'type'                 => 'individual',
+            'is_active'            => true,
+        ]);
+        $retailVehicle = Vehicle::create([
+            'uuid'                 => Str::uuid(),
+            'company_id'           => $retail->id,
+            'branch_id'            => $retailBranch->id,
+            'customer_id'          => $retailCustomer->id,
+            'created_by_user_id'   => $retailUser->id,
+            'plate_number'         => 'RTL-CXL',
+            'make'                 => 'Toyota',
+            'model'                => 'Camry',
+            'year'                 => 2022,
+        ]);
+        $order = $this->service->create(
+            [
+                'customer_id' => $retailCustomer->id,
+                'vehicle_id' => $retailVehicle->id,
+                'items' => [$this->minimalWorkOrderLineItem()],
+            ],
+            $retail->id,
+            $retailBranch->id,
+            $retailUser->id,
+        );
         $updated = $this->service->transition($order, WorkOrderStatus::Cancelled);
 
         $this->assertEquals(WorkOrderStatus::Cancelled, $updated->status);
@@ -180,24 +256,74 @@ class WorkOrderLifecycleTest extends TestCase
     {
         $this->createActiveSubscription($this->company);
 
-        $queued = $this->createOrder();
-        $this->actingAs($this->user, 'sanctum')
+        $retail = $this->createCompany([
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
+        ]);
+        $retailBranch = $this->createBranch($retail);
+        $retailUser = $this->createUser($retail, $retailBranch);
+        $this->createActiveSubscription($retail);
+        $retailCustomer = Customer::create([
+            'uuid'               => Str::uuid(),
+            'company_id'         => $retail->id,
+            'created_by_user_id' => $retailUser->id,
+            'name'               => 'Retail Del',
+            'type'                 => 'individual',
+            'is_active'            => true,
+        ]);
+        $retailVehicle = Vehicle::create([
+            'uuid'                 => Str::uuid(),
+            'company_id'           => $retail->id,
+            'branch_id'            => $retailBranch->id,
+            'customer_id'          => $retailCustomer->id,
+            'created_by_user_id'   => $retailUser->id,
+            'plate_number'         => 'RTL-DEL',
+            'make'                 => 'Toyota',
+            'model'                => 'Camry',
+            'year'                 => 2022,
+        ]);
+
+        $queued = $this->service->create(
+            [
+                'customer_id' => $retailCustomer->id,
+                'vehicle_id' => $retailVehicle->id,
+                'items' => [$this->minimalWorkOrderLineItem()],
+            ],
+            $retail->id,
+            $retailBranch->id,
+            $retailUser->id,
+        );
+        $this->actingAs($retailUser, 'sanctum')
             ->deleteJson("/api/v1/work-orders/{$queued->id}")
             ->assertStatus(200);
         // API uses soft-delete; order_number unique prevents reusing the same sequence slot in this company.
         $queued->forceDelete();
 
+        // إعادة سياق المستأجر لمستخدم الورشة قبل إنشاء أمر معتمد للشركة الأساسية.
+        $this->actingAs($this->user, 'sanctum');
+
         $approved = $this->createOrder();
-        $this->service->transition($approved, WorkOrderStatus::Approved);
-        $approved->refresh();
         $this->actingAs($this->user, 'sanctum')
             ->deleteJson("/api/v1/work-orders/{$approved->id}")
             ->assertStatus(422);
 
-        $cancelled = $this->createOrder();
-        $this->service->transition($cancelled, WorkOrderStatus::Cancelled);
+        $cancelled = $this->service->create(
+            [
+                'customer_id' => $retailCustomer->id,
+                'vehicle_id' => $retailVehicle->id,
+                'items' => [$this->minimalWorkOrderLineItem()],
+            ],
+            $retail->id,
+            $retailBranch->id,
+            $retailUser->id,
+        );
+        $this->actingAs($retailUser, 'sanctum')
+            ->patchJson("/api/v1/work-orders/{$cancelled->id}/status", [
+                'status' => 'cancelled',
+                'version' => $cancelled->version,
+            ])
+            ->assertOk();
         $cancelled->refresh();
-        $this->actingAs($this->user, 'sanctum')
+        $this->actingAs($retailUser, 'sanctum')
             ->deleteJson("/api/v1/work-orders/{$cancelled->id}")
             ->assertStatus(200);
     }
@@ -207,11 +333,11 @@ class WorkOrderLifecycleTest extends TestCase
         $order = $this->createOrder();
         $this->assertEquals(0, $order->version);
 
-        $this->service->transition($order, WorkOrderStatus::Approved);
+        $this->service->transition($order, WorkOrderStatus::InProgress);
         $order->refresh();
         $this->assertEquals(1, $order->version);
 
-        $this->service->transition($order, WorkOrderStatus::InProgress);
+        $this->service->transition($order, WorkOrderStatus::OnHold);
         $order->refresh();
         $this->assertEquals(2, $order->version);
     }

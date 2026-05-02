@@ -108,7 +108,6 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         Bus::fake([NotifyCustomerWorkOrderWhatsAppJob::class]);
 
         $order = $this->createOrder();
-        $order = $this->service->transition($order, WorkOrderStatus::Approved);
         $order = $this->service->transition($order, WorkOrderStatus::InProgress);
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'WhatsApp notification test',
@@ -149,7 +148,6 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         Bus::fake([NotifyCustomerWorkOrderWhatsAppJob::class]);
 
         $order = $this->createOrder();
-        $order = $this->service->transition($order, WorkOrderStatus::Approved);
         $order = $this->service->transition($order, WorkOrderStatus::InProgress);
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'WhatsApp notification test',
@@ -247,7 +245,6 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         Http::fake(fn () => Http::response(['sid' => 'SMtest'], 201));
 
         $order = $this->createOrder();
-        $order = $this->service->transition($order, WorkOrderStatus::Approved);
         $order = $this->service->transition($order, WorkOrderStatus::InProgress);
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'WhatsApp notification test',
@@ -280,7 +277,6 @@ class WorkOrderWhatsAppNotificationTest extends TestCase
         Http::fake();
 
         $order = $this->createOrder();
-        $order = $this->service->transition($order, WorkOrderStatus::Approved);
         $order = $this->service->transition($order, WorkOrderStatus::InProgress);
         $this->prepareWorkOrderForCompletedTransition($order, [
             'technician_notes' => 'WhatsApp notification test',

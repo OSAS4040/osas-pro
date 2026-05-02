@@ -3,15 +3,29 @@
 namespace Tests\Feature\Tenancy;
 
 use App\Enums\WorkOrderStatus;
+use App\Models\Company;
 use App\Models\Customer;
-use App\Models\Invoice;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WorkOrder;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class TenantIsolationTest extends TestCase
 {
+    private function enablePlatformExecutionPartner(Company $company): void
+    {
+        $settings = is_array($company->settings) ? $company->settings : [];
+        $profile = is_array($settings['business_profile'] ?? null) ? $settings['business_profile'] : [];
+        $matrix = is_array($profile['feature_matrix'] ?? null) ? $profile['feature_matrix'] : [];
+        $matrix['platform_execution_partner'] = true;
+        $profile['feature_matrix'] = $matrix;
+        $profile['business_type'] = $profile['business_type'] ?? 'service_center';
+        $settings['business_profile'] = $profile;
+        $company->update(['settings' => $settings]);
+    }
+
     public function test_user_cannot_see_other_companys_invoices(): void
     {
         $tenant1 = $this->createTenant('owner');
@@ -169,6 +183,116 @@ class TenantIsolationTest extends TestCase
 
         $this->actingAsUser($tenant2['user'])
             ->getJson('/api/v1/vehicles/'.$vehicle->id)
+            ->assertNotFound();
+    }
+
+    public function test_work_order_show_from_other_tenant_returns_404(): void
+    {
+        $tenant1 = $this->createTenant('owner');
+        $tenant2 = $this->createTenant('owner');
+
+        $customer = Customer::withoutGlobalScopes()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant1['company']->id,
+            'branch_id' => $tenant1['branch']->id,
+            'type' => 'b2c',
+            'name' => 'WO detail iso',
+            'is_active' => true,
+        ]);
+
+        $vehicle = Vehicle::create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant1['company']->id,
+            'branch_id' => $tenant1['branch']->id,
+            'customer_id' => $customer->id,
+            'created_by_user_id' => $tenant1['user']->id,
+            'plate_number' => 'WO-DTL-'.Str::upper(Str::random(4)),
+            'make' => 'Test',
+            'model' => 'Iso',
+            'year' => 2024,
+            'is_active' => true,
+        ]);
+
+        $wo = WorkOrder::create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $tenant1['company']->id,
+            'branch_id' => $tenant1['branch']->id,
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'created_by_user_id' => $tenant1['user']->id,
+            'order_number' => 'WO-DTL-'.Str::upper(Str::random(5)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
+        ]);
+
+        $this->actingAsUser($tenant2['user'])
+            ->getJson('/api/v1/work-orders/'.$wo->id)
+            ->assertNotFound();
+    }
+
+    public function test_platform_delegate_on_behalf_cannot_load_foreign_execution_partner_work_order(): void
+    {
+        Config::set('platform.admin_enabled', true);
+
+        $ta = $this->createTenant('owner');
+        $tb = $this->createTenant('owner');
+        $ta['subscription']->delete();
+        $tb['subscription']->delete();
+
+        $this->enablePlatformExecutionPartner($ta['company']->fresh());
+        $this->enablePlatformExecutionPartner($tb['company']->fresh());
+
+        $companyA = $ta['company']->fresh();
+        $companyB = $tb['company']->fresh();
+
+        $customerB = Customer::withoutGlobalScopes()->create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $companyB->id,
+            'branch_id' => $tb['branch']->id,
+            'type' => 'b2c',
+            'name' => 'Other EP cust',
+            'is_active' => true,
+        ]);
+
+        $vehicleB = Vehicle::create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $companyB->id,
+            'branch_id' => $tb['branch']->id,
+            'customer_id' => $customerB->id,
+            'created_by_user_id' => $tb['user']->id,
+            'plate_number' => 'EP-XISO-'.Str::upper(Str::random(4)),
+            'make' => 'Test',
+            'model' => 'Other',
+            'year' => 2024,
+            'is_active' => true,
+        ]);
+
+        $orderB = WorkOrder::create([
+            'uuid' => (string) Str::uuid(),
+            'company_id' => $companyB->id,
+            'branch_id' => $tb['branch']->id,
+            'customer_id' => $customerB->id,
+            'vehicle_id' => $vehicleB->id,
+            'created_by_user_id' => $tb['user']->id,
+            'order_number' => 'WO-EP-X-'.Str::upper(Str::random(5)),
+            'status' => WorkOrderStatus::Draft,
+            'priority' => 'normal',
+            'estimated_total' => 0,
+            'actual_total' => 0,
+            'version' => 0,
+        ]);
+
+        $this->createStandalonePlatformOperator('plat-wo-iso-xt@platform.test', [
+            'platform_role' => 'platform_admin',
+        ]);
+        $platformUser = User::where('email', 'plat-wo-iso-xt@platform.test')->firstOrFail();
+
+        $this->actingAsUser($platformUser)
+            ->withHeaders(['X-On-Behalf-Company-Id' => (string) $companyA->id])
+            ->getJson('/api/v1/work-orders/'.$orderB->id)
             ->assertNotFound();
     }
 }

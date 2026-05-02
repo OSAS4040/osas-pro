@@ -24,7 +24,9 @@ final class WorkOrderCancellationAndCreditFinancialTest extends TestCase
 {
     public function test_prepaid_cancellation_without_invoice_completes_and_second_approve_fails(): void
     {
-        $company = $this->createCompany();
+        $company = $this->createCompany([
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
+        ]);
         $branch = $this->createBranch($company);
         $user = $this->createUser($company, $branch);
         $this->createActiveSubscription($company);
@@ -115,7 +117,9 @@ final class WorkOrderCancellationAndCreditFinancialTest extends TestCase
 
     public function test_prepaid_cancellation_with_wallet_paid_invoice_reverses_debit_once(): void
     {
-        $company = $this->createCompany();
+        $company = $this->createCompany([
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
+        ]);
         $branch = $this->createBranch($company);
         $user = $this->createUser($company, $branch);
         $this->createActiveSubscription($company);
@@ -278,6 +282,7 @@ final class WorkOrderCancellationAndCreditFinancialTest extends TestCase
             'financial_model' => 'credit',
             'financial_model_status' => 'approved_credit',
             'credit_limit' => '500000',
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
         ]);
         $branch = $this->createBranch($company);
         $user = $this->createUser($company, $branch);
@@ -387,6 +392,7 @@ final class WorkOrderCancellationAndCreditFinancialTest extends TestCase
             'financial_model' => 'credit',
             'financial_model_status' => 'approved_credit',
             'credit_limit' => '1',
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
         ]);
         $branch = $this->createBranch($company);
         $user = $this->createUser($company, $branch);
@@ -440,7 +446,9 @@ final class WorkOrderCancellationAndCreditFinancialTest extends TestCase
 
     public function test_cancellation_submit_is_idempotent_against_duplicate_pending(): void
     {
-        $company = $this->createCompany();
+        $company = $this->createCompany([
+            'settings' => ['business_profile' => ['business_type' => 'retail']],
+        ]);
         $branch = $this->createBranch($company);
         $user = $this->createUser($company, $branch);
         $this->createActiveSubscription($company);

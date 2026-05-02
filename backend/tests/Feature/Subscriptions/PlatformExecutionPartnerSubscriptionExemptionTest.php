@@ -31,7 +31,28 @@ class PlatformExecutionPartnerSubscriptionExemptionTest extends TestCase
 
         $this->actingAsUser($t['user'])
             ->getJson('/api/v1/dashboard/summary')
-            ->assertOk();
+            ->assertOk()
+            ->assertJsonPath('data.sales.total_revenue', 0)
+            ->assertJsonPath('data.receivables.total_outstanding', 0)
+            ->assertJsonPath('data.customers.new_in_period', 0);
+    }
+
+    public function test_execution_partner_financial_reports_are_forbidden(): void
+    {
+        $t = $this->createTenant();
+        $t['subscription']->delete();
+        $this->enablePlatformExecutionPartner($t['company']->fresh());
+
+        $this->actingAsUser($t['user'])
+            ->getJson('/api/v1/reports/sales')
+            ->assertForbidden()
+            ->assertJsonPath('code', 'EXECUTION_PARTNER_FINANCIAL_REPORTS_DISABLED');
+
+        $this->actingAsUser($t['user'])
+            ->getJson('/api/v1/reports/kpi')
+            ->assertOk()
+            ->assertJsonPath('data.total_sales', 0)
+            ->assertJsonPath('data.invoice_count', 0);
     }
 
     public function test_execution_partner_can_create_user_without_subscription_quota(): void

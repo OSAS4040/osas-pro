@@ -11,7 +11,6 @@ use App\Models\Product;
 use App\Models\Unit;
 use App\Models\WorkOrder;
 use App\Services\InventoryService;
-use App\Services\SensitivePreviewTokenService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Group;
@@ -134,23 +133,9 @@ class RealWorkflowApiTest extends TestCase
             ],
         ]);
         $rWo->assertStatus(201)->assertJsonStructure(['data', 'trace_id']);
+        $rWo->assertJsonPath('data.status', 'approved');
         $woId    = (int) $rWo->json('data.id');
         $version = (int) $rWo->json('data.version');
-
-        $rPrev = $auth()->postJson('/api/v1/sensitive-operations/preview', [
-            'operation' => SensitivePreviewTokenService::OP_STATUS_TO_APPROVED,
-            'work_order_ids' => [$woId],
-        ]);
-        $rPrev->assertOk();
-        $prevTok = (string) $rPrev->json('data.sensitive_preview_token');
-
-        $rAp = $auth()->patchJson("/api/v1/work-orders/{$woId}/status", [
-            'status' => 'approved',
-            'version' => $version,
-            'sensitive_preview_token' => $prevTok,
-        ]);
-        $rAp->assertOk();
-        $version = (int) $rAp->json('data.version');
 
         $rIp = $auth()->patchJson("/api/v1/work-orders/{$woId}/status", [
             'status'  => 'in_progress',
@@ -307,8 +292,6 @@ class RealWorkflowApiTest extends TestCase
             $this->user->id,
         );
 
-        app(\App\Services\WorkOrderService::class)->transition($order, \App\Enums\WorkOrderStatus::Approved);
-        $order->refresh();
         app(\App\Services\WorkOrderService::class)->transition($order, \App\Enums\WorkOrderStatus::InProgress);
         $order->refresh();
         $this->prepareWorkOrderForCompletedTransition($order);
