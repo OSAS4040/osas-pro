@@ -23,6 +23,13 @@ export type PlatformIncidentOwnershipState = (typeof PLATFORM_INCIDENT_OWNERSHIP
 export const PLATFORM_INCIDENT_ESCALATION_STATE = ['none', 'pending', 'escalated', 'contained'] as const
 export type PlatformIncidentEscalationState = (typeof PLATFORM_INCIDENT_ESCALATION_STATE)[number]
 
+/** أنماط تمثيل مرشّحات الحوادث — يُستخدم في مرشّح نوع الحادث */
+export const PLATFORM_INCIDENT_TYPE_FILTER_OPTIONS = [
+  'candidate.shared_correlation',
+  'candidate.multi_signal_overlap',
+  'candidate.single_signal',
+] as const
+
 export const PLATFORM_DECISION_TYPE = [
   'observation',
   'escalation',

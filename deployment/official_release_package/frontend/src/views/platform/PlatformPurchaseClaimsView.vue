@@ -22,15 +22,14 @@
     <template v-else>
       <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/40">
         <div class="flex flex-wrap gap-3">
-          <input
+          <select
             v-model.number="filters.company_id"
-            type="number"
-            min="1"
-            placeholder="رقم الشركة"
-            class="min-w-[10rem] rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-            dir="ltr"
+            class="min-w-[14rem] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
             @change="fetchPage(1)"
-          />
+          >
+            <option :value="null">كل الشركات</option>
+            <option v-for="c in companiesPicklist" :key="c.id" :value="c.id">{{ c.name }} · #{{ c.id }}</option>
+          </select>
           <select
             v-model="filters.status"
             class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
@@ -175,6 +174,7 @@ import {
   reviewPlatformPurchaseClaim,
   type PlatformPurchaseClaimRow,
 } from '@/composables/platform-admin/usePlatformPurchaseClaimsApi'
+import { fetchPlatformCompaniesOptions, type PlatformCompanyOption } from '@/composables/platform-admin/usePlatformEntityPicklists'
 import { useToast } from '@/composables/useToast'
 
 const auth = useAuthStore()
@@ -185,6 +185,7 @@ const filters = ref<{ status: string; platform_review_status: string; company_id
   platform_review_status: '',
   company_id: null,
 })
+const companiesPicklist = ref<PlatformCompanyOption[]>([])
 const rows = ref<PlatformPurchaseClaimRow[]>([])
 const pagination = ref<{ current_page?: number; last_page?: number } | null>(null)
 const page = ref(1)
@@ -256,5 +257,14 @@ async function fetchPage(p: number): Promise<void> {
   }
 }
 
-onMounted(() => void fetchPage(1))
+onMounted(() => {
+  void fetchPlatformCompaniesOptions({ per_page: 100 })
+    .then((rows) => {
+      companiesPicklist.value = rows
+    })
+    .catch(() => {
+      companiesPicklist.value = []
+    })
+  void fetchPage(1)
+})
 </script>

@@ -280,9 +280,7 @@
         style="background-color: var(--bg-base);"
       >
         <router-view v-slot="{ Component }">
-          <Transition name="platform-route">
-            <component :is="Component" :key="routeKey" />
-          </Transition>
+          <component :is="Component" :key="routeKey" />
         </router-view>
       </main>
     </div>
@@ -612,14 +610,6 @@ const sidebarNavHasAnyMatch = computed(() => {
   )
 })
 
-watch(
-  () => route.fullPath,
-  () => {
-    if (isToolsRouteActive()) toolsSectionOpen.value = true
-  },
-  { immediate: true },
-)
-
 watch([commerceSectionOpen, staffSectionOpen, toolsSectionOpen], () => {
   if (typeof window === 'undefined') return
   try {
@@ -635,17 +625,6 @@ watch([commerceSectionOpen, staffSectionOpen, toolsSectionOpen], () => {
     /* quota / private mode */
   }
 })
-
-watch(
-  () => route.fullPath,
-  async () => {
-    await nextTick()
-    const nav = document.getElementById('platform-admin-sidebar')
-    if (!nav) return
-    const active = nav.querySelector<HTMLElement>('a.router-link-active')
-    active?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  },
-)
 
 provide(platformSubscriptionAttentionKey, {
   badgeCount: subscriptionAttention.badgeCount,
@@ -711,9 +690,17 @@ onMounted(() => {
 
 watch(
   () => route.fullPath,
-  () => {
+  async () => {
+    if (isToolsRouteActive()) toolsSectionOpen.value = true
     mobileDrawerOpen.value = false
+    await nextTick()
+    const mainEl = document.getElementById('platform-admin-main')
+    if (mainEl) mainEl.scrollTop = 0
+    const nav = document.getElementById('platform-admin-sidebar')
+    const active = nav?.querySelector<HTMLElement>('a.router-link-active')
+    active?.scrollIntoView({ block: 'nearest', behavior: 'auto' })
   },
+  { immediate: true },
 )
 
 watch(
@@ -766,7 +753,7 @@ function platformNavLinkClass(active: boolean, density: 'default' | 'compact' = 
     density === 'compact'
       ? 'px-2.5 py-1.5 text-xs'
       : 'px-3 py-2 text-sm'
-  const base = `flex w-full items-center gap-2.5 rounded-xl ${sizing} text-right font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900`
+  const base = `flex w-full items-center gap-2.5 rounded-xl ${sizing} text-right font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900`
   return [
     base,
     active
@@ -783,19 +770,3 @@ function isActiveStaffPath(path: string): boolean {
 }
 
 </script>
-
-<style scoped>
-/* انتقال مسارات المنصة — يتميّز بسلاسة دون إثقال */
-:deep(.platform-route-enter-active),
-:deep(.platform-route-leave-active) {
-  transition: opacity 0.2s ease, transform 0.22s ease;
-}
-:deep(.platform-route-enter-from) {
-  opacity: 0;
-  transform: translateY(6px);
-}
-:deep(.platform-route-leave-to) {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-</style>

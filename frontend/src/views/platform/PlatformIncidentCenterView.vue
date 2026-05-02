@@ -3,8 +3,13 @@ import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { usePlatformIntelligenceIncidents } from '@/composables/platform-admin/intelligence/usePlatformIntelligenceIncidents'
 import { usePlatformIncidentLifecycleActions } from '@/composables/platform-admin/intelligence/usePlatformIncidentLifecycleActions'
-import { PLATFORM_INTELLIGENCE_SEVERITY } from '@/types/platform-admin/platformIntelligenceEnums'
-import { PLATFORM_INCIDENT_STATUS } from '@/types/platform-admin/platformIntelligenceEnums'
+import {
+  PLATFORM_INCIDENT_STATUS,
+  PLATFORM_INCIDENT_TYPE_FILTER_OPTIONS,
+  PLATFORM_INTELLIGENCE_SEVERITY,
+} from '@/types/platform-admin/platformIntelligenceEnums'
+import { PLATFORM_INCIDENT_FRESH_HOURS_OPTIONS } from '@/constants/platformAdminPicklists'
+import { fetchPlatformCompaniesOptions, type PlatformCompanyOption } from '@/composables/platform-admin/usePlatformEntityPicklists'
 
 const {
   canView,
@@ -25,8 +30,17 @@ const {
 const { materialize } = usePlatformIncidentLifecycleActions()
 
 const materializeKey = ref('')
+const companyOptions = ref<PlatformCompanyOption[]>([])
+const companySelectId = ref(0)
+
+watch(companySelectId, (id) => {
+  companyFilter.value = id > 0 ? String(id) : ''
+})
 
 onMounted(() => {
+  void fetchPlatformCompaniesOptions({ per_page: 100 }).then((rows) => {
+    companyOptions.value = rows
+  })
   void fetchIncidents()
 })
 
@@ -114,19 +128,28 @@ async function onMaterialize(): Promise<void> {
         </label>
         <label class="flex flex-col gap-1 text-[11px] text-slate-600 dark:text-slate-300">
           <span>نوع الحادث</span>
-          <input v-model="typeFilter" type="text" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900" dir="ltr">
+          <select v-model="typeFilter" class="min-w-[10rem] rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900" dir="ltr">
+            <option value="">الكل</option>
+            <option v-for="t in PLATFORM_INCIDENT_TYPE_FILTER_OPTIONS" :key="t" :value="t">{{ t }}</option>
+          </select>
         </label>
         <label class="flex flex-col gap-1 text-[11px] text-slate-600 dark:text-slate-300">
           <span>مالك (جزئي)</span>
           <input v-model="ownerFilter" type="text" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900" dir="ltr">
         </label>
-        <label class="flex flex-col gap-1 text-[11px] text-slate-600 dark:text-slate-300">
+        <label class="flex min-w-[12rem] flex-col gap-1 text-[11px] text-slate-600 dark:text-slate-300">
           <span>شركة</span>
-          <input v-model="companyFilter" type="text" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900" dir="ltr">
+          <select v-model.number="companySelectId" class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900">
+            <option :value="0">كل الشركات</option>
+            <option v-for="c in companyOptions" :key="c.id" :value="c.id">{{ c.name }} · #{{ c.id }}</option>
+          </select>
         </label>
         <label class="flex flex-col gap-1 text-[11px] text-slate-600 dark:text-slate-300">
           <span>حداثة (ساعات)</span>
-          <input v-model="freshHours" type="number" min="1" class="w-24 rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900">
+          <select v-model="freshHours" class="w-28 rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900" dir="ltr">
+            <option value="">—</option>
+            <option v-for="h in PLATFORM_INCIDENT_FRESH_HOURS_OPTIONS" :key="h" :value="String(h)">{{ h }}س</option>
+          </select>
         </label>
       </div>
 

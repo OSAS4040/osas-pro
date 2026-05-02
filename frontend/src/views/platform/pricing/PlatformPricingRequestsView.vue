@@ -17,12 +17,26 @@
       <h2 class="mb-3 text-sm font-bold text-slate-800 dark:text-white">إنشاء طلب تسعير (مسودة)</h2>
       <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">
-          company_id
-          <input v-model.number="createForm.company_id" type="number" min="1" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white" dir="ltr" />
+          الشركة
+          <select
+            v-model.number="createForm.company_id"
+            class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            @change="onCreateCompanyChange"
+          >
+            <option :value="null">— اختر شركة —</option>
+            <option v-for="c in companiesPicklist" :key="c.id" :value="c.id">{{ c.name }} · #{{ c.id }}</option>
+          </select>
         </label>
         <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">
-          customer_id
-          <input v-model.number="createForm.customer_id" type="number" min="1" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white" dir="ltr" />
+          العميل
+          <select
+            v-model.number="createForm.customer_id"
+            class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            :disabled="!createForm.company_id"
+          >
+            <option :value="null">— اختر عميلاً —</option>
+            <option v-for="cu in customersForCreate" :key="cu.id" :value="cu.id">{{ cu.name }} · #{{ cu.id }}</option>
+          </select>
         </label>
         <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 md:col-span-2">
           عنوان (اختياري)
@@ -30,11 +44,23 @@
         </label>
         <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 md:col-span-2">
           كود الخدمة
-          <input v-model="createForm.service_code" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 font-mono text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white" dir="ltr" placeholder="oil_change" />
+          <select
+            v-model="createForm.service_code"
+            class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 font-mono text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            dir="ltr"
+          >
+            <option v-for="code in PLATFORM_SERVICE_CODE_OPTIONS" :key="code" :value="code">{{ code }}</option>
+          </select>
         </label>
         <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">
           الكمية
-          <input v-model.number="createForm.quantity" type="number" min="0.001" step="any" class="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white" dir="ltr" />
+          <select
+            v-model.number="createForm.quantity"
+            class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+            dir="ltr"
+          >
+            <option v-for="q in PLATFORM_PRICING_QUANTITY_PRESETS" :key="q" :value="q">{{ q }}</option>
+          </select>
         </label>
       </div>
       <div class="mt-3 flex flex-wrap gap-2">
@@ -58,15 +84,14 @@
           <option value="">{{ statusPlaceholder }}</option>
           <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
         </select>
-        <input
+        <select
           v-model.number="filters.company_id"
-          type="number"
-          min="1"
-          placeholder="فلتر company_id"
-          class="min-w-[8rem] rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-          dir="ltr"
+          class="min-w-[12rem] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
           @change="load(1)"
-        />
+        >
+          <option :value="null">كل الشركات</option>
+          <option v-for="c in companiesPicklist" :key="'f-' + c.id" :value="c.id">{{ c.name }} · #{{ c.id }}</option>
+        </select>
         <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600" @click="resetFilters">
           إزالة الفلاتر
         </button>
@@ -129,6 +154,13 @@ import {
   pricingApiErrorMessage,
   type PlatformPricingRequestRow,
 } from '@/composables/platform-admin/usePlatformPricingControlPlane'
+import {
+  fetchPlatformCompaniesOptions,
+  fetchPlatformCustomersOptions,
+  type PlatformCompanyOption,
+  type PlatformCustomerOption,
+} from '@/composables/platform-admin/usePlatformEntityPicklists'
+import { PLATFORM_PRICING_QUANTITY_PRESETS, PLATFORM_SERVICE_CODE_OPTIONS } from '@/constants/platformAdminPicklists'
 import apiClient from '@/lib/apiClient'
 import { useToast } from '@/composables/useToast'
 
@@ -166,6 +198,8 @@ const STATUS_ALL = ['draft', 'pending_review', 'under_review', 'reviewed_recomme
 const statusOptions = computed(() => STATUS_ALL)
 
 const filters = ref<{ status: string; company_id: number | null }>({ status: '', company_id: null })
+const companiesPicklist = ref<PlatformCompanyOption[]>([])
+const customersForCreate = ref<PlatformCustomerOption[]>([])
 const rows = ref<PlatformPricingRequestRow[]>([])
 const pagination = ref<{ current_page?: number; last_page?: number } | null>(null)
 const page = ref(1)
@@ -175,8 +209,8 @@ const createForm = ref({
   company_id: null as number | null,
   customer_id: null as number | null,
   title: '',
-  service_code: 'oil_change',
-  quantity: 1,
+  service_code: PLATFORM_SERVICE_CODE_OPTIONS[0],
+  quantity: 1 as number,
 })
 const creating = ref(false)
 
@@ -228,6 +262,31 @@ function resetFilters(): void {
   load(1)
 }
 
+async function loadCompaniesPicklist(): Promise<void> {
+  try {
+    companiesPicklist.value = await fetchPlatformCompaniesOptions({ per_page: 100 })
+  } catch {
+    companiesPicklist.value = []
+  }
+}
+
+async function refreshCustomersForCreate(companyId: number | null): Promise<void> {
+  createForm.value.customer_id = null
+  if (!companyId) {
+    customersForCreate.value = []
+    return
+  }
+  try {
+    customersForCreate.value = await fetchPlatformCustomersOptions({ company_id: companyId, per_page: 100 })
+  } catch {
+    customersForCreate.value = []
+  }
+}
+
+function onCreateCompanyChange(): void {
+  void refreshCustomersForCreate(createForm.value.company_id)
+}
+
 async function onCreateDraft(): Promise<void> {
   if (!auth.hasPermission('platform.pricing.create')) return
   const cid = createForm.value.company_id
@@ -255,6 +314,7 @@ async function onCreateDraft(): Promise<void> {
 
 onMounted(() => {
   applyModeDefaults()
-  load(1)
+  void loadCompaniesPicklist()
+  void load(1)
 })
 </script>

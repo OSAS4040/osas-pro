@@ -29,14 +29,14 @@
 
     <div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/40">
       <div class="flex flex-wrap gap-3">
-        <input
+        <select
           v-model.number="filters.company_id"
-          type="number"
-          min="1"
-          placeholder="رقم الشركة (اختياري)"
-          class="min-w-[10rem] flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+          class="min-w-[14rem] flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
           @change="fetchTickets(1)"
-        />
+        >
+          <option :value="null">كل الشركات</option>
+          <option v-for="c in companiesPicklist" :key="c.id" :value="c.id">{{ c.name }} · #{{ c.id }}</option>
+        </select>
         <input
           v-model="filters.search"
           placeholder="بحث بالموضوع أو رقم التذكرة..."
@@ -178,6 +178,7 @@
 import { ref, onMounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import apiClient from '@/lib/apiClient'
+import { fetchPlatformCompaniesOptions, type PlatformCompanyOption } from '@/composables/platform-admin/usePlatformEntityPicklists'
 import StatCard from '@/components/support/StatCard.vue'
 import PriorityBadge from '@/components/support/PriorityBadge.vue'
 import StatusBadge from '@/components/support/StatusBadge.vue'
@@ -202,6 +203,7 @@ const filters = ref({
   priority: '',
   overdue: false,
 })
+const companiesPicklist = ref<PlatformCompanyOption[]>([])
 
 async function fetchTickets(page = 1) {
   loading.value = true
@@ -285,6 +287,9 @@ function formatDate(d: string) {
 }
 
 onMounted(() => {
+  void fetchPlatformCompaniesOptions({ per_page: 100 }).then((rows) => {
+    companiesPicklist.value = rows
+  })
   void fetchTickets(1).then(() => openTicketFromQueryIfPresent())
   void fetchStats()
 })
