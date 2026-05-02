@@ -6,6 +6,7 @@ use App\Enums\PurchaseStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Purchase extends Model
@@ -45,6 +46,11 @@ class Purchase extends Model
     public function items()
     {
         return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function purchaseClaims(): BelongsToMany
+    {
+        return $this->belongsToMany(PurchaseClaim::class, 'purchase_claim_purchase')->withTimestamps();
     }
 
     /**

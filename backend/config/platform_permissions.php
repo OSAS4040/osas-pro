@@ -55,5 +55,8 @@ return [
         'platform.pricing.review',
         'platform.pricing.approve',
         'platform.providers.manage',
+        /** إشراف تشغيلي / مالي على مطالبات صرف المستحقات بين المستأجرين */
+        'platform.purchase_claims.read',
+        'platform.purchase_claims.review',
     ],
 ];

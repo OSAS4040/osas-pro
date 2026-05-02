@@ -56,6 +56,8 @@ return [
             'platform.pricing.review',
             'platform.pricing.approve',
             'platform.providers.manage',
+            'platform.purchase_claims.read',
+            'platform.purchase_claims.review',
         ],
         /** تسعير المنصة — إنشاء طلبات فقط */
         'platform_pricing_creator' => [
@@ -110,6 +112,8 @@ return [
             'platform.notifications.read',
             'platform.financial_model.manage',
             'platform.subscription.manage',
+            'platform.purchase_claims.read',
+            'platform.purchase_claims.review',
             'platform.reporting.read',
             'platform.reporting.export',
             'platform.intelligence.signals.read',
@@ -127,6 +131,7 @@ return [
             'platform.support.read',
             'platform.support.manage',
             'platform.notifications.read',
+            'platform.purchase_claims.read',
             'platform.reporting.read',
             'platform.intelligence.signals.read',
             'platform.intelligence.candidates.read',
