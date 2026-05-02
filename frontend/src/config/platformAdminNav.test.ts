@@ -53,6 +53,7 @@ describe('platformAdminNavItems', () => {
         'platform-ops',
         'platform-overview',
         'platform-plans',
+        'platform-purchase-claims',
         'platform-support',
       ].sort(),
     )

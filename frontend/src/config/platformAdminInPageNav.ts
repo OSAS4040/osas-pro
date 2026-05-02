@@ -46,4 +46,5 @@ export const platformInPageNavBySection: Record<PlatformAdminSectionId, Platform
   incidents: [],
   'command-surface': [],
   notifications: [],
+  'purchase-claims': [],
 }

@@ -14,7 +14,7 @@
           :template-columns="['plate_number', 'make', 'model', 'year', 'color', 'vin']"
           label="استيراد Excel"
           title="استيراد مركبات"
-          @imported="load"
+          @imported="() => void load()"
         />
         <button class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
                 @click="openAdd"

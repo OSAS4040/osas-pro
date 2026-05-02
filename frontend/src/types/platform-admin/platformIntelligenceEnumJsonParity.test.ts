@@ -1,5 +1,5 @@
 /** @vitest-environment node */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
@@ -12,9 +12,21 @@ import {
   PLATFORM_SIGNAL_TYPE,
 } from './platformIntelligenceEnums'
 
+function canonicalFixturePath(): string {
+  const name = 'platform_intelligence_canonical_enum_values.json'
+  const candidates = [
+    '/fixtures/backend-tests/' + name,
+    resolve(process.cwd(), '../backend/tests/fixtures/' + name),
+    resolve(process.cwd(), '../../backend/tests/fixtures/' + name),
+  ]
+  for (const p of candidates) {
+    if (existsSync(p)) return p
+  }
+  throw new Error(`Fixture not found (Vitest/Docker). Tried:\n${candidates.join('\n')}`)
+}
+
 function loadFixture(): Record<string, string[]> {
-  const p = resolve(process.cwd(), '../backend/tests/fixtures/platform_intelligence_canonical_enum_values.json')
-  const raw = readFileSync(p, 'utf8')
+  const raw = readFileSync(canonicalFixturePath(), 'utf8')
   return JSON.parse(raw) as Record<string, string[]>
 }
 

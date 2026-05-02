@@ -34,16 +34,32 @@ import urJson from '@/locales/ur.json'
 import bnJson from '@/locales/bn.json'
 import tlJson from '@/locales/tl.json'
 import hiJson from '@/locales/hi.json'
+import providerPortalAr from '@/locales/providerPortal/ar.json'
+import providerPortalEn from '@/locales/providerPortal/en.json'
+import providerPortalUr from '@/locales/providerPortal/ur.json'
+import providerPortalBn from '@/locales/providerPortal/bn.json'
+import providerPortalTl from '@/locales/providerPortal/tl.json'
+import providerPortalHi from '@/locales/providerPortal/hi.json'
 
 type LocaleJson = Record<string, any>
 
 const localeData: Record<LangCode, LocaleJson> = {
-  ar: arJson,
-  en: enJson,
-  ur: urJson,
-  bn: bnJson,
-  tl: tlJson,
-  hi: hiJson,
+  ar: { ...arJson, providerPortal: providerPortalAr },
+  en: { ...enJson, providerPortal: providerPortalEn },
+  ur: { ...urJson, providerPortal: providerPortalUr },
+  bn: { ...bnJson, providerPortal: providerPortalBn },
+  tl: { ...tlJson, providerPortal: providerPortalTl },
+  hi: { ...hiJson, providerPortal: providerPortalHi },
+}
+
+/** علامة BCP 47 لـ `Intl` (تاريخ/رقم) بما يتماشى مع اللغة المختارة */
+const ICU_LOCALE: Record<LangCode, string> = {
+  ar: 'ar-SA-u-ca-gregory',
+  en: 'en-GB',
+  ur: 'ur-PK',
+  bn: 'bn-BD',
+  tl: 'fil-PH',
+  hi: 'hi-IN',
 }
 
 // ── Resolve a dot-notation key like "nav.dashboard" or flat key "dashboard" ──
@@ -117,6 +133,8 @@ export function setLocale(lang: LangCode) {
 export function useLocale() {
   const langInfo = computed(() => LANGUAGES.find(l => l.code === locale.value)!)
 
+  const icuLocale = computed(() => ICU_LOCALE[locale.value] ?? 'en-GB')
+
   const greetingKey = computed(() => {
     const h = new Date().getHours()
     if (h >= 5 && h < 12) return 'greetings.morning'
@@ -128,6 +146,7 @@ export function useLocale() {
   return {
     lang: locale,
     langInfo,
+    icuLocale,
     t,
     greeting: computed(() => t(greetingKey.value)),
     LANGUAGES,

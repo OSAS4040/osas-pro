@@ -9,7 +9,7 @@
         <button class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50" @click="exportJSON">JSON</button>
         <button class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50" @click="exportCSV">CSV</button>
         <button class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50" @click="printInvoices">PDF</button>
-        <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary-600 text-white hover:bg-primary-700" @click="load">تحديث</button>
+        <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary-600 text-white hover:bg-primary-700" type="button" @click="() => load()">تحديث</button>
       </div>
     </div>
 
@@ -101,7 +101,7 @@
         <div class="no-print flex justify-center gap-2">
           <RouterLink to="/customer/work-orders" class="text-xs text-primary-600 hover:underline">إنشاء أمر عمل يولد فاتورة لاحقًا</RouterLink>
           <span class="text-gray-300">|</span>
-          <button class="text-xs text-primary-600 hover:underline" @click="load">تحديث القائمة</button>
+          <button type="button" class="text-xs text-primary-600 hover:underline" @click="() => load()">تحديث القائمة</button>
         </div>
       </div>
       <div v-else class="overflow-x-auto">

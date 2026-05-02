@@ -3,6 +3,15 @@
     <header class="rounded-xl border bg-white dark:bg-slate-900 p-5">
       <h1 class="text-xl font-bold">الاشتراك</h1>
       <p class="text-sm text-slate-500">متابعة الحالة، المحفظة، والاستخدام.</p>
+      <aside
+        class="mt-4 rounded-lg border border-sky-200/80 bg-sky-50/90 px-4 py-3 text-xs leading-relaxed text-sky-950 dark:border-sky-900/50 dark:bg-sky-950/25 dark:text-sky-100/95"
+        role="note"
+      >
+        <p class="font-semibold text-sky-900 dark:text-sky-100">سياسة الأدوار</p>
+        <p class="mt-1 text-sky-900/90 dark:text-sky-100/85">
+          إدارة شركتك تتابع الباقة والدفع من هذه البوابة. <strong class="font-semibold">تحديد الكتالوج الرسمي للباقات، سياسات الأسعار العامة، أو اعتماد اشتراك يتطلب تدخلاً خاصاً من المنصّة</strong> يتم من طرف مشغّلي المنصّة وليس من لوحة عملاء آخرين على النظام.
+        </p>
+      </aside>
     </header>
 
     <section class="grid md:grid-cols-3 gap-4">

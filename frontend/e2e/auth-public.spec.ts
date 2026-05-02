@@ -8,12 +8,10 @@ test.describe('صفحات الضيف (بدون خادم API)', () => {
     await expect(page.getByRole('button', { name: /دخول|Sign in|سائن/i })).toBeVisible()
   })
 
-  test('رابط الصفحة التعريفية من الدخول', async ({ page }) => {
-    await page.goto('/login')
-    const marketing = page.getByRole('link', { name: /تعريفية|Marketing|landing/i })
-    await expect(marketing.first()).toBeVisible()
-    await marketing.first().click()
+  test('صفحة تعريفية /landing تُحمَّل (لم يعد الرابط داخل بطاقة الدخول نفسها)', async ({ page }) => {
+    await page.goto('/landing')
     await expect(page).toHaveURL(/\/landing/)
+    await expect(page.locator('body')).toBeVisible()
   })
 
   test('دخول مشغّل المنصة يحمّل النموذج', async ({ page }) => {

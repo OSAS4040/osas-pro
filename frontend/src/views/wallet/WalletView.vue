@@ -1,5 +1,5 @@
 <template>
-  <div class="app-shell-page" dir="rtl">
+  <div class="app-shell-page" :dir="pageDir">
     <NavigationSourceHint />
     <!-- Header -->
     <div class="page-head">
@@ -9,14 +9,20 @@
           إدارة المحافظ
         </h1>
         <p class="page-subtitle">إدارة أرصدة ومحافظ العملاء</p>
-        <p class="text-[11px] text-gray-500 dark:text-slate-400 mt-1 max-w-xl">
+        <p
+          v-if="!providerFocusNavActive"
+          class="text-[11px] text-gray-500 dark:text-slate-400 mt-1 max-w-xl"
+        >
           «شحن رصيد» يفتح نافذة فوق الصفحة؛ إن لم تظهر، حرّك الصفحة للأعلى أو أغلق أي نافذة مفتوحة.
         </p>
         <RouterLink
           v-if="
-            auth.hasPermission('wallet.top_up_requests.create')
-              || auth.hasPermission('wallet.top_up_requests.view')
-              || auth.hasPermission('wallet.top_up_requests.review')
+            !providerFocusNavActive
+              && (
+                auth.hasPermission('wallet.top_up_requests.create')
+                || auth.hasPermission('wallet.top_up_requests.view')
+                || auth.hasPermission('wallet.top_up_requests.review')
+              )
           "
           to="/wallet/top-up-requests"
           class="inline-flex mt-2 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline"
@@ -24,9 +30,11 @@
           طلبات شحن الرصيد (مراجعة وإيصال)
         </RouterLink>
       </div>
-      <button type="button"
-              class="btn btn-primary relative z-10"
-              @click="openTopUpModal"
+      <button
+        v-if="!providerFocusNavActive"
+        type="button"
+        class="btn btn-primary relative z-10"
+        @click="openTopUpModal"
       >
         <PlusCircleIcon class="w-5 h-5" />
         شحن رصيد
@@ -111,8 +119,11 @@
           <CreditCardIcon class="w-8 h-8 text-gray-300 dark:text-slate-500" />
         </div>
         <p class="text-gray-600 dark:text-slate-300 text-sm font-medium">لا توجد محافظ مطابقة</p>
-        <p class="text-gray-400 dark:text-slate-500 text-xs mt-1 max-w-xs mx-auto">شحن رصيد لعميل أو تغيير عوامل البحث لعرض النتائج</p>
+        <p class="text-gray-400 dark:text-slate-500 text-xs mt-1 max-w-xs mx-auto">
+          {{ providerFocusNavActive ? 'جرّب تغيير عوامل البحث لعرض النتائج.' : 'شحن رصيد لعميل أو تغيير عوامل البحث لعرض النتائج' }}
+        </p>
         <button
+          v-if="!providerFocusNavActive"
           type="button"
           class="mt-4 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline relative z-10"
           @click="openTopUpModal"
@@ -176,8 +187,12 @@
                 >
                   <ClockIcon class="w-4 h-4" />
                 </button>
-                <button type="button" title="شحن" class="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors"
-                        @click="openTopUpFor(w)"
+                <button
+                  v-if="!providerFocusNavActive"
+                  type="button"
+                  title="شحن"
+                  class="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors"
+                  @click="openTopUpFor(w)"
                 >
                   <PlusCircleIcon class="w-4 h-4" />
                 </button>
@@ -191,7 +206,7 @@
     <!-- Top-Up Modal -->
     <Teleport to="body">
       <Transition name="modal-fade">
-        <div v-if="showTopUp" class="modal-overlay" dir="rtl" @click.self="showTopUp = false">
+        <div v-if="showTopUp" class="modal-overlay" :dir="pageDir" @click.self="showTopUp = false">
           <div class="modal-box max-w-md shadow-2xl">
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
               <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -258,7 +273,7 @@
     <!-- Transactions Modal -->
     <Teleport to="body">
       <Transition name="modal-fade">
-        <div v-if="showTxnModal" class="modal-overlay" dir="rtl" @click.self="showTxnModal = false">
+        <div v-if="showTxnModal" class="modal-overlay" :dir="pageDir" @click.self="showTxnModal = false">
           <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[80vh] flex flex-col">
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex-shrink-0">
               <h3 class="font-bold text-gray-900 dark:text-white">
@@ -309,7 +324,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -321,10 +336,18 @@ import apiClient, { withIdempotency } from '@/lib/apiClient'
 import { summarizeAxiosError } from '@/utils/apiErrorSummary'
 import { v4 as uuidv4 } from 'uuid'
 import { useToast } from '@/composables/useToast'
+import { useLocale } from '@/composables/useLocale'
 import NavigationSourceHint from '@/components/NavigationSourceHint.vue'
+import { useBusinessProfileStore } from '@/stores/businessProfile'
+import { isStaffProviderFocusNavEnabled } from '@/config/staffProviderFocusNav'
 
 const toast = useToast()
+const locale = useLocale()
+/** في القالب لا يُستخدم ref.langInfo.value — يُفكّ المرجع تلقائياً فينعطل :dir ويُفرّغ الصفحة */
+const pageDir = computed(() => locale.langInfo.value.dir)
 const auth = useAuthStore()
+const biz = useBusinessProfileStore()
+const providerFocusNavActive = computed(() => isStaffProviderFocusNavEnabled(biz.businessType, biz.loaded))
 const loading = ref(false)
 const customersLoading = ref(false)
 const submitting = ref(false)
@@ -363,8 +386,10 @@ const walletTypes = [
   { key: 'vehicle_wallet', label: 'محفظة مركبة', bg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600', icon: CreditCardIcon, badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
 ]
 
-const fmt = (n: any) => new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(parseFloat(n) || 0)
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('ar-SA', { day: 'numeric', month: 'short', year: 'numeric' })
+const fmt = (n: any) =>
+  new Intl.NumberFormat(locale.icuLocale.value, { style: 'currency', currency: 'SAR' }).format(parseFloat(n) || 0)
+const fmtDate = (d: string) =>
+  new Date(d).toLocaleDateString(locale.icuLocale.value, { day: 'numeric', month: 'short', year: 'numeric' })
 
 function typeLabel(t: string) {
   return {
@@ -434,6 +459,7 @@ async function loadCustomers() {
 }
 
 async function openTopUpModal() {
+  if (providerFocusNavActive.value) return
   topUpForm.customer_id = ''
   topUpForm.target = 'individual'
   topUpForm.vehicle_id = null
@@ -445,6 +471,7 @@ async function openTopUpModal() {
 }
 
 async function openTopUpFor(w: any) {
+  if (providerFocusNavActive.value) return
   topUpForm.customer_id = w.customer_id ?? ''
   topUpForm.target = 'individual'
   topUpForm.vehicle_id = null

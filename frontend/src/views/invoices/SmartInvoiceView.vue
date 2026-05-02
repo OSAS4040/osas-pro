@@ -508,7 +508,7 @@ async function generateQRs() {
       experienceQrRef.value.innerHTML = ''
       experienceQrRef.value.appendChild(canvas2)
     }
-  } catch (e) { /* qrcode not installed - silently skip */ }
+  } catch (_e) { /* qrcode not installed - silently skip */ }
 }
 
 async function submitNPS(score: number) {

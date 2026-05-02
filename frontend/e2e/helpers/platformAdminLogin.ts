@@ -14,7 +14,7 @@ export async function loginAsPlatformOperator(page: Page): Promise<void> {
   await page.goto('/platform/login')
   await page.locator('input[type="email"]').first().fill(PLATFORM_EMAIL)
   await page.locator('input[type="password"]').first().fill(PLATFORM_PASSWORD)
-  await page.getByRole('button', { name: /دخول لوحة المنصة/i }).click()
+  await page.getByRole('button', { name: /دخول لوحة منصة|دخول لوحة المنصة/i }).click()
   // بعض الحسابات قد تهبط أولاً على بوابة فريق العمل؛ نثبت الدخول على سياق المنصة صراحة.
   await page.waitForLoadState('networkidle')
   await page.goto('/platform/overview')

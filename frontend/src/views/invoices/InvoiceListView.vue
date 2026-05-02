@@ -42,17 +42,23 @@
           {{ l('تصدير Excel', 'Export Excel') }}
         </button>
         <RouterLink
-          v-if="!platformExecutionPartner"
+          v-if="allowManualInvoiceCreate"
           to="/invoices/create"
           class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-primary-600 text-white rounded-xl hover:bg-primary-700 shadow-sm transition-colors"
         >
           {{ l('+ فاتورة جديدة', '+ New Invoice') }}
         </RouterLink>
         <p
-          v-else
+          v-else-if="platformExecutionPartner"
           class="max-w-xs text-xs text-gray-500 dark:text-slate-400"
         >
           {{ l('الفواتير تُنشأ تلقائياً بعد إكمال أمر العمل.', 'Invoices are created automatically after work order completion.') }}
+        </p>
+        <p
+          v-else-if="providerFocusNav"
+          class="max-w-xs text-xs text-gray-500 dark:text-slate-400"
+        >
+          {{ l('إنشاء الفاتورة اليدوي غير متاح في وضع تركيز مزوّد الخدمة.', 'Manual invoice creation is not available in provider-focus mode.') }}
         </p>
       </div>
     </div>
@@ -156,7 +162,7 @@
                 <p class="text-sm font-medium text-gray-600 dark:text-slate-300">{{ l('لا توجد فواتير مطابقة', 'No matching invoices') }}</p>
                 <p class="text-xs text-gray-400 mt-1">{{ l('جرّب تغيير المرشحات أو إنشاء فاتورة جديدة', 'Try changing filters or create a new invoice') }}</p>
                 <RouterLink
-                  v-if="!platformExecutionPartner"
+                  v-if="allowManualInvoiceCreate"
                   to="/invoices/create"
                   class="mt-4 text-xs font-semibold text-primary-600 hover:underline"
                 >
@@ -190,9 +196,16 @@ import { logActivity } from '@/composables/useActivityLog'
 import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
 import { useLocale } from '@/composables/useLocale'
 import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
+import { useBusinessProfileStore } from '@/stores/businessProfile'
+import { isStaffProviderFocusNavEnabled } from '@/config/staffProviderFocusNav'
 import { PRINT_HTML_FONT_LINKS, PRINT_HTML_FONT_FAMILY } from '@/design/printHtml'
 
 const { active: platformExecutionPartner } = usePlatformExecutionPartner()
+const bizProfile = useBusinessProfileStore()
+const providerFocusNav = computed(() => isStaffProviderFocusNavEnabled(bizProfile.businessType, bizProfile.loaded))
+const allowManualInvoiceCreate = computed(
+  () => !platformExecutionPartner.value && !providerFocusNav.value,
+)
 
 const FILTERS_KEY = 'invoice_list_filters_v1'
 const toast = useToast()

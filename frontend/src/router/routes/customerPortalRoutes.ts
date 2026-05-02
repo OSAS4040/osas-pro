@@ -1,0 +1,42 @@
+import type { RouteRecordRaw } from 'vue-router'
+
+export const customerPortalRoutes: RouteRecordRaw[] = [
+  // ── Customer Portal ──
+  {
+    path: '/customer',
+    component: () => import('@/layouts/CustomerLayout.vue'),
+    meta: { requiresAuth: true, portal: 'customer' },
+    children: [
+      { path: '',          name: 'customer',           redirect: '/customer/dashboard' },
+      { path: 'dashboard', name: 'customer.dashboard', component: () => import('@/views/customer/CustomerDashboardView.vue') },
+      { path: 'bookings',  name: 'customer.bookings',  component: () => import('@/views/customer/CustomerBookingsView.vue') },
+      { path: 'coverage-locations', name: 'customer.coverage-locations', component: () => import('@/views/customer/CustomerCoverageLocationsView.vue') },
+      { path: 'work-orders', name: 'customer.work-orders', component: () => import('@/views/customer/CustomerWorkOrdersView.vue') },
+      { path: 'vehicles',  name: 'customer.vehicles',  component: () => import('@/views/customer/CustomerVehiclesView.vue') },
+      { path: 'vehicles/:id', name: 'customer.vehicles.show', component: () => import('@/views/vehicles/VehicleShowView.vue') },
+      { path: 'vehicles/:id/card', name: 'customer.vehicles.card', component: () => import('@/views/vehicles/VehicleDigitalCardView.vue') },
+      { path: 'vehicles/:id/passport', name: 'customer.vehicles.passport', component: () => import('@/views/vehicles/VehiclePassportView.vue') },
+      { path: 'invoices',  name: 'customer.invoices',  component: () => import('@/views/customer/CustomerInvoicesView.vue') },
+      { path: 'invoices/:id', name: 'customer.invoices.show', component: () => import('@/views/invoices/InvoiceShowView.vue') },
+      { path: 'reports',   name: 'customer.reports',   component: () => import('@/views/customer/CustomerReportsView.vue') },
+      { path: 'business-intelligence', name: 'customer.business-intelligence', component: () => import('@/views/customer/CustomerBusinessIntelligenceView.vue') },
+      { path: 'wallet',    name: 'customer.wallet',    component: () => import('@/views/customer/CustomerWalletView.vue') },
+      { path: 'wallet/top-up-requests', name: 'customer.wallet.top-up-requests', component: () => import('@/views/wallet/WalletTopUpRequestsView.vue') },
+      { path: 'pricing',   name: 'customer.pricing',   component: () => import('@/views/customer/CustomerPricingView.vue') },
+      { path: 'notifications', name: 'customer.notifications', component: () => import('@/views/customer/CustomerNotificationsView.vue') },
+      { path: 'settings', name: 'customer.settings', component: () => import('@/views/customer/CustomerSettingsView.vue') },
+      { path: 'profile', name: 'customer.profile', component: () => import('@/views/profile/ProfileView.vue') },
+      { path: 'company-settings', name: 'customer.company-settings', component: () => import('@/views/customer/CustomerSettingsView.vue') },
+      { path: 'team-users', name: 'customer.team-users', component: () => import('@/views/customer/CustomerTeamUsersView.vue') },
+      { path: 'org-units', name: 'customer.org-units', component: () => import('@/views/customer/CustomerOrgUnitsView.vue') },
+      { path: 'activity', name: 'customer.activity', component: () => import('@/views/ActivityLogView.vue') },
+      { path: 'plans', name: 'customer.plans', component: () => import('@/modules/subscriptions/pages/ClientPlansPage.vue') },
+      { path: 'subscription', name: 'customer.subscription', component: () => import('@/modules/subscriptions/pages/ClientSubscriptionOverviewPage.vue') },
+      { path: 'subscription/plans', name: 'customer.subscription.plans', component: () => import('@/modules/subscriptions/pages/ClientPlansPage.vue') },
+      { path: 'subscription/payment', name: 'customer.subscription.payment', component: () => import('@/modules/subscriptions/pages/ClientPaymentPage.vue') },
+      { path: 'subscription/invoices', name: 'customer.subscription.invoices', component: () => import('@/modules/subscriptions/pages/ClientInvoicesPage.vue') },
+      { path: 'zatca', name: 'customer.zatca', component: () => import('@/views/customer/CustomerZatcaView.vue') },
+      { path: 'api-keys', name: 'customer.api-keys', component: () => import('@/views/customer/CustomerApiKeysView.vue') },
+    ],
+  },
+]

@@ -1,5 +1,6 @@
 <template>
   <div class="space-y-6">
+    <PlatformOnBehalfCatalogBanner />
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -104,6 +105,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
+import PlatformOnBehalfCatalogBanner from '@/components/PlatformOnBehalfCatalogBanner.vue'
 import apiClient from '@/lib/apiClient'
 
 const route  = useRoute()

@@ -12,6 +12,9 @@
             <span class="font-semibold text-slate-800 dark:text-slate-200">طلباتك الأخيرة وحالتها</span>
             لمتابعة أي طلب قيد التنفيذ.
           </p>
+          <p class="mt-3 max-w-2xl rounded-lg border border-slate-200/90 bg-white/80 px-3 py-2 text-[11px] leading-relaxed text-slate-600 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-400">
+            الباقات المعروضة تأتي من كتالوج يحكمه مشغّلو المنصّة؛ طلبات الدفع أو التفعيل التي تحتاج مراجعة إضافية تظهر بحالة واضحة (مثل انتظار المراجعة) حتى يكتمل دور المنصّة، بينما تبقى إعدادات تشغيل شركتك اليومية ضمن صلاحيات فريقك.
+          </p>
         </div>
         <div class="flex flex-wrap gap-2">
           <RouterLink

@@ -32,7 +32,7 @@ const activeBanner = computed(() => {
 })
 
 const visible = computed(() => {
-  dismissBump.value
+  void dismissBump.value
   const p = activeBanner.value
   if (!p) return false
   if (!p.dismissible) return true

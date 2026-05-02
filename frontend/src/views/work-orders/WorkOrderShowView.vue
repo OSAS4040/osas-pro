@@ -348,7 +348,7 @@
             <h3 class="font-semibold text-gray-900 mb-4">{{ transitionModal.label }}</h3>
             <div class="space-y-3">
               <div v-if="transitionModal.value === 'completed'">
-                <label class="block text-sm font-medium text-gray-700 mb-1">ملاحظات الفني</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">ملاحظات الفني (اختياري)</label>
                 <textarea v-model="transitionForm.technician_notes" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"></textarea>
               </div>
               <div v-if="transitionModal.value === 'completed'">

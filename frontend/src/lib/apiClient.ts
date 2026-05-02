@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { v4 as uuidv4 } from 'uuid'
+import { PLATFORM_ON_BEHALF_STORAGE_KEY } from '@/composables/usePlatformOnBehalfCatalog'
 import { localizeApiErrorPayload, localizeBackendMessage, uiByLang } from '@/utils/runtimeLocale'
 import { friendlyFieldLabel } from '@/utils/friendlyFieldLabel'
 
@@ -35,6 +36,14 @@ function attachApiInterceptors(instance: AxiosInstance): void {
     const clientRequestId = uuidv4()
     config.headers['X-Client-Request-Id'] = clientRequestId
     config.headers['X-Request-Id'] = clientRequestId
+
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(PLATFORM_ON_BEHALF_STORAGE_KEY)
+      const n = raw ? parseInt(raw, 10) : 0
+      if (n > 0) {
+        config.headers['X-On-Behalf-Company-Id'] = String(n)
+      }
+    }
 
     return config
   })

@@ -67,12 +67,29 @@ export function isPathConsistentWithAccountContext(
   return path === '/'
 }
 
-function fallbackHome(ctx: LoginAccountContextPayload | null, portalHomeFromRole: string): string {
+/** الصفحة الافتراضية لمشغّل المنصة — أي تلميح مستأجر يُتجاهَل عند طلب هذه الوجهة */
+export const PLATFORM_OPERATOR_DEFAULT_HOME = '/platform/overview'
+
+function preferPlatformOperatorShell(portalHomeFromRole: string, platformAdminLogin?: boolean): boolean {
+  return (
+    platformAdminLogin === true ||
+    portalHomeFromRole === PLATFORM_OPERATOR_DEFAULT_HOME
+  )
+}
+
+function fallbackHome(
+  ctx: LoginAccountContextPayload | null,
+  portalHomeFromRole: string,
+  platformAdminLogin?: boolean,
+): string {
   if (!ctx) return portalHomeFromRole || '/'
   switch (ctx.principal_kind) {
     case 'platform_employee': {
       const cid = ctx.company_id
       if (typeof cid === 'number' && cid > 0) {
+        if (preferPlatformOperatorShell(portalHomeFromRole, platformAdminLogin)) {
+          return portalHomeFromRole || PLATFORM_OPERATOR_DEFAULT_HOME
+        }
         const h = sanitizeInternalPath(ctx.home_route_hint)
         if (h && isPathConsistentWithAccountContext(h, ctx)) {
           return h
@@ -81,7 +98,7 @@ function fallbackHome(ctx: LoginAccountContextPayload | null, portalHomeFromRole
         return portalHomeFromRole || '/'
       }
 
-      return '/platform/overview'
+      return PLATFORM_OPERATOR_DEFAULT_HOME
     }
     case 'customer_user':
       if (ctx.home_route_hint.startsWith('/fleet-portal')) return '/fleet-portal'
@@ -102,9 +119,18 @@ export function resolvePostLoginTarget(options: {
   accountType: string | null | undefined
   portalHomeFromRole: string
   redirectQuery: unknown
+  /** عند الدخول من `/platform/login` لا نستخدم `home_route_hint` الذي يوجّه إلى واجهة المستأجر (`/` …) */
+  platformAdminLogin?: boolean
 }): string {
-  const { accountContext, registrationFlow, registrationStage, accountType, portalHomeFromRole, redirectQuery } =
-    options
+  const {
+    accountContext,
+    registrationFlow,
+    registrationStage,
+    accountType,
+    portalHomeFromRole,
+    redirectQuery,
+    platformAdminLogin,
+  } = options
 
   const fromQuery = sanitizeInternalPath(redirectQuery)
   if (fromQuery && isPathConsistentWithAccountContext(fromQuery, accountContext)) {
@@ -116,9 +142,15 @@ export function resolvePostLoginTarget(options: {
   }
 
   const hint = sanitizeInternalPath(accountContext?.home_route_hint)
-  if (hint && isPathConsistentWithAccountContext(hint, accountContext)) {
-    return hint
+  if (hint) {
+    const allowHint =
+      !preferPlatformOperatorShell(portalHomeFromRole, platformAdminLogin) ||
+      hint.startsWith('/platform') ||
+      hint.startsWith('/admin')
+    if (allowHint && isPathConsistentWithAccountContext(hint, accountContext)) {
+      return hint
+    }
   }
 
-  return fallbackHome(accountContext, portalHomeFromRole)
+  return fallbackHome(accountContext, portalHomeFromRole, platformAdminLogin)
 }

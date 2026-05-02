@@ -10,7 +10,7 @@
         <button type="button" class="btn btn-secondary" @click="exportCSV">CSV</button>
         <button type="button" class="btn btn-secondary" @click="exportExcel">Excel</button>
         <button type="button" class="btn btn-secondary" @click="printList">PDF</button>
-        <button type="button" class="btn btn-primary" :disabled="loading" @click="loadOrders">
+        <button type="button" class="btn btn-primary" :disabled="loading" @click="() => loadOrders()">
           {{ loading ? 'جارٍ التحديث...' : 'تحديث' }}
         </button>
       </div>

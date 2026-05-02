@@ -767,10 +767,13 @@ import {
 import { Line, Bar } from 'vue-chartjs'
 import { useApi } from '@/composables/useApi'
 import { useToast } from '@/composables/useToast'
+import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
 import { useAuthStore } from '@/stores/auth'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { featureFlags } from '@/config/featureFlags'
 import { canAccessStaffBusinessIntelligence, tenantSectionOpen } from '@/config/staffFeatureGate'
+import { DEFAULT_NAV_VISIBILITY } from '@/config/navigationVisibility'
+import { isStaffProviderFocusNavEnabled } from '@/config/staffProviderFocusNav'
 import KpiCard from '@/components/KpiCard.vue'
 import SmartDatePicker from '@/components/ui/SmartDatePicker.vue'
 import { useLocale } from '@/composables/useLocale'
@@ -786,11 +789,47 @@ const api = useApi()
 const auth = useAuthStore()
 const biz = useBusinessProfileStore()
 const locale = useLocale()
+const { active: platformExecutionPartner } = usePlatformExecutionPartner()
+
+/** تبويبات تحوي أرقاماً مالية أو ذمماً — تُخفى لواجهة شريك تنفيذ المنصّة (يُكمّل الحظر من الـ API). */
+const EXECUTION_PARTNER_HIDDEN_TAB_KEYS = new Set([
+  'sales',
+  'by_customer',
+  'by_product',
+  'cashflow',
+  'purchases',
+  'aging',
+  'vat',
+  'overdue',
+  'intelligence',
+  'employees',
+])
+
+/** تبويبات لا تُعرض في «تركيز مزوّد الخدمة» (ورشة) — يتماشى مع إخفاء المالية/الموارد البشرية/الكتالوج الكامل في التنقل. */
+const PROVIDER_FOCUS_HIDDEN_TAB_KEYS = new Set([
+  'by_customer',
+  'cashflow',
+  'purchases',
+  'aging',
+  'vat',
+  'overdue',
+  'inventory',
+  'employees',
+  'intelligence',
+])
+
+function navSectionVisible(sectionKey: string): boolean {
+  const policy = auth.user?.navigation_visibility ?? DEFAULT_NAV_VISIBILITY
+  return policy.sections?.[sectionKey] !== false
+}
+
+const providerFocusNavActive = computed(() => isStaffProviderFocusNavEnabled(biz.businessType, biz.loaded))
 
 const showBiToolbarLink = computed(() => {
   void biz.loaded
   void biz.businessType
   void biz.effectiveFeatureMatrix
+  if (providerFocusNavActive.value) return false
   return canAccessStaffBusinessIntelligence({
     buildFlagOn: featureFlags.intelligenceCommandCenter,
     isOwner: auth.isOwner,
@@ -801,11 +840,13 @@ const showHeatmapToolbarLink = computed(() => {
   void biz.loaded
   void biz.businessType
   void biz.effectiveFeatureMatrix
+  if (providerFocusNavActive.value) return false
   return tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), 'operations')
 })
-const showGlobalOperationsFeedLink = computed(
-  () => auth.hasPermission('reports.view') && auth.hasPermission('reports.operations.view'),
-)
+const showGlobalOperationsFeedLink = computed(() => {
+  if (providerFocusNavActive.value) return false
+  return auth.hasPermission('reports.view') && auth.hasPermission('reports.operations.view')
+})
 const l = (ar: string, en: string) => (locale.lang.value === 'ar' ? ar : en)
 const REPORTS_FILTERS_KEY = 'reports_filters_v1'
 let filterDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -824,42 +865,53 @@ const supplierId = ref('')
 const branches = ref<any[]>([])
 const suppliers = ref<any[]>([])
 
-/** مفاتيح ملف النشاط (`feature_matrix`) المرتبطة بكل تبويب — تُخفى التبويبات المعطّلة للمستأجر (يُستثنى المالك). */
+/**
+ * مفاتيح ملف النشاط (`feature_matrix`) + قسم القائمة الجانبية (`navigation_visibility.sections`) لكل تبويب.
+ * يُستثنى المالك من تعطيل الميزات في المصفوفة فقط — سياسة ظهور الأقسام تُطبَّق على الجميع.
+ */
 const tabs = computed(() => [
-  { key: 'kpi', label: l('المؤشرات الرئيسية', 'Key metrics'), tenantFeature: 'reports' },
-  { key: 'sales', label: l('المبيعات', 'Sales'), tenantFeature: 'reports' },
-  { key: 'operations', label: l('تشغيلي', 'Operations'), permission: 'reports.operations.view', tenantFeature: 'operations' },
+  { key: 'kpi', label: l('المؤشرات الرئيسية', 'Key metrics'), tenantFeature: 'reports', navSection: 'analytics' },
+  { key: 'sales', label: l('المبيعات', 'Sales'), tenantFeature: 'reports', navSection: 'analytics' },
+  { key: 'operations', label: l('تشغيلي', 'Operations'), permission: 'reports.operations.view', tenantFeature: 'operations', navSection: 'operations' },
   {
     key: 'modern_ops',
     label: l('اتصالات + مهام ذكية', 'Communications + Smart Tasks'),
     permission: 'reports.operations.view',
     tenantFeature: 'operations',
+    navSection: 'operations',
   },
-  { key: 'employees', label: l('الموظفين', 'Employees'), permission: 'reports.employees.view', tenantFeature: 'hr' },
+  { key: 'employees', label: l('الموظفين', 'Employees'), permission: 'reports.employees.view', tenantFeature: 'hr', navSection: 'hr' },
   {
     key: 'intelligence',
     label: l('ذكاء الأعمال', 'Business intelligence'),
     permission: 'reports.intelligence.view',
     tenantFeature: 'intelligence',
+    navSection: 'analytics',
   },
-  { key: 'by_customer', label: l('حسب العميل', 'By customer'), tenantFeature: 'crm' },
-  { key: 'by_product', label: l('حسب المنتج', 'By product'), tenantFeature: 'reports' },
-  { key: 'cashflow', label: l('التدفق النقدي', 'Cashflow'), permission: 'reports.financial.view', tenantFeature: 'finance' },
-  { key: 'purchases', label: l('المشتريات', 'Purchases'), permission: 'reports.financial.view', tenantFeature: 'finance' },
-  { key: 'aging', label: l('أعمار الذمم', 'Receivables aging'), permission: 'reports.financial.view', tenantFeature: 'finance' },
-  { key: 'vat', label: l('الضريبة', 'VAT'), tenantFeature: 'accounting' },
-  { key: 'overdue', label: l('المتأخرات', 'Overdue'), tenantFeature: 'finance' },
-  { key: 'inventory', label: l('المخزون', 'Inventory'), tenantFeature: 'inventory' },
+  { key: 'by_customer', label: l('حسب العميل', 'By customer'), tenantFeature: 'crm', navSection: 'analytics' },
+  { key: 'by_product', label: l('حسب المنتج', 'By product'), tenantFeature: 'reports', navSection: 'analytics' },
+  { key: 'cashflow', label: l('التدفق النقدي', 'Cashflow'), permission: 'reports.financial.view', tenantFeature: 'finance', navSection: 'finance_accounting' },
+  { key: 'purchases', label: l('المشتريات', 'Purchases'), permission: 'reports.financial.view', tenantFeature: 'finance', navSection: 'finance_accounting' },
+  { key: 'aging', label: l('أعمار الذمم', 'Receivables aging'), permission: 'reports.financial.view', tenantFeature: 'finance', navSection: 'finance_accounting' },
+  { key: 'vat', label: l('الضريبة', 'VAT'), tenantFeature: 'accounting', navSection: 'finance_accounting' },
+  { key: 'overdue', label: l('المتأخرات', 'Overdue'), tenantFeature: 'finance', navSection: 'finance_accounting' },
+  { key: 'inventory', label: l('المخزون', 'Inventory'), tenantFeature: 'inventory', navSection: 'inventory' },
 ])
 const visibleTabs = computed(() => {
   void biz.loaded
   void biz.effectiveFeatureMatrix
+  void auth.user?.navigation_visibility
   return tabs.value.filter((t: any) => {
+    if (platformExecutionPartner.value && EXECUTION_PARTNER_HIDDEN_TAB_KEYS.has(t.key)) return false
+    if (providerFocusNavActive.value && PROVIDER_FOCUS_HIDDEN_TAB_KEYS.has(t.key)) return false
+    if (t.navSection && !navSectionVisible(t.navSection)) return false
     if (t.permission && !auth.hasPermission(t.permission)) return false
     if (t.tenantFeature && !tenantSectionOpen(auth.isOwner, (k) => biz.isEnabled(k), t.tenantFeature)) return false
     return true
   })
 })
+
+const visibleTabKeySet = computed(() => new Set(visibleTabs.value.map((t: any) => t.key)))
 
 const loading = ref(false)
 const kpiLoading = ref(false)
@@ -916,6 +968,8 @@ const kpiDisplay = computed(() => {
 type InsightTone = 'info' | 'warn' | 'danger' | 'ok'
 
 const smartInsights = computed((): { icon: string; title: string; body: string; tone: InsightTone }[] => {
+  void visibleTabKeySet.value
+  const tabsOn = visibleTabKeySet.value
   const out: { icon: string; title: string; body: string; tone: InsightTone }[] = []
   const k = kpiDisplay.value
   if (kpi.value) {
@@ -923,10 +977,15 @@ const smartInsights = computed((): { icon: string; title: string; body: string; 
       out.push({
         icon: '⚠️',
         title: l('تحصيل أقل من المستهدف', 'Collections below target'),
-        body: l(
-          `معدل التحصيل ${k.collection_rate}% مقارنةً بالإيراد — راجع تبويب «المتأخرات» وخطط المطالبة.`,
-          `Collection rate is ${k.collection_rate}% compared to revenue — review the Overdue tab and follow-up plan.`,
-        ),
+        body: tabsOn.has('overdue')
+          ? l(
+              `معدل التحصيل ${k.collection_rate}% مقارنةً بالإيراد — راجع تبويب «المتأخرات» وخطط المطالبة.`,
+              `Collection rate is ${k.collection_rate}% compared to revenue — review the Overdue tab and follow-up plan.`,
+            )
+          : l(
+              `معدل التحصيل ${k.collection_rate}% مقارنةً بالإيراد — راجع الفواتير المعلقة وخطط المطالبة.`,
+              `Collection rate is ${k.collection_rate}% compared to revenue — review pending invoices and your follow-up plan.`,
+            ),
         tone: 'warn',
       })
     }
@@ -964,7 +1023,7 @@ const smartInsights = computed((): { icon: string; title: string; body: string; 
       })
     }
   }
-  if (overdue.value.length > 3) {
+  if (overdue.value.length > 3 && tabsOn.has('overdue')) {
     out.push({
       icon: '📉',
       title: l('ضغط على التحصيل', 'Collections pressure'),
@@ -978,7 +1037,7 @@ const smartInsights = computed((): { icon: string; title: string; body: string; 
   const lowStock = inventory.value.filter(
     (r: any) => Number(r.available_quantity ?? r.quantity) <= Number(r.reorder_point ?? 0),
   ).length
-  if (lowStock > 0) {
+  if (lowStock > 0 && tabsOn.has('inventory')) {
     out.push({
       icon: '📦',
       title: l('مخزون يحتاج تعبئة', 'Inventory needs replenishment'),
@@ -989,7 +1048,7 @@ const smartInsights = computed((): { icon: string; title: string; body: string; 
       tone: 'warn',
     })
   }
-  if (byCustomer.value.length > 8) {
+  if (byCustomer.value.length > 8 && tabsOn.has('by_customer')) {
     out.push({
       icon: '📊',
       title: l('تنوع العملاء', 'Customer diversity'),
@@ -1193,23 +1252,29 @@ function pushQueryToUrl() {
 
 async function loadAll() {
   loading.value = true
-  await Promise.allSettled([
+  const ep = platformExecutionPartner.value
+  const tasks: Promise<void>[] = [
     loadKpi(),
-    loadSales(),
     loadOperations(),
-    loadEmployees(),
-    loadIntelligenceDigest(),
     loadModernReports(),
-    loadCustomer(),
-    loadProduct(),
-    loadOverdue(),
     loadInventory(),
-    loadVat(),
-    loadCashflow(),
-    loadPurchases(),
-    loadAging(),
     loadKpiDictionary(),
-  ])
+  ]
+  if (!ep) {
+    tasks.push(
+      loadSales(),
+      loadEmployees(),
+      loadIntelligenceDigest(),
+      loadCustomer(),
+      loadProduct(),
+      loadOverdue(),
+      loadVat(),
+      loadCashflow(),
+      loadPurchases(),
+      loadAging(),
+    )
+  }
+  await Promise.allSettled(tasks)
   loading.value = false
 }
 

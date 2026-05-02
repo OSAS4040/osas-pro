@@ -81,7 +81,7 @@ async function onPick(e: Event) {
       step.value = 'pick'
       file.value = null
     }
-  } catch (e: unknown) {
+  } catch (_e: unknown) {
     err.value = 'تعذّر قراءة الملف — جرّب صورة أوضح أو أدخل البيانات يدوياً من إعدادات الوقود/المستندات.'
     step.value = 'pick'
     file.value = null

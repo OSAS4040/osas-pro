@@ -1,5 +1,5 @@
 <template>
-  <div class="app-shell-page" dir="rtl">
+  <div class="app-shell-page" :dir="pageDir">
     <NavigationSourceHint />
     <div class="page-head">
       <div class="page-title-wrap">
@@ -45,6 +45,10 @@ import { computed, onMounted, ref } from 'vue'
 import { CreditCardIcon } from '@heroicons/vue/24/outline'
 import NavigationSourceHint from '@/components/NavigationSourceHint.vue'
 import { subscriptionsApi } from '@/modules/subscriptions/api'
+import { useLocale } from '@/composables/useLocale'
+
+const locale = useLocale()
+const pageDir = computed(() => locale.langInfo.value.dir)
 
 const loading = ref(true)
 const errorMsg = ref('')
@@ -62,7 +66,9 @@ const statusLabel = computed(() => {
 })
 
 function fmt(n: number) {
-  return new Intl.NumberFormat('ar-SA', { style: 'currency', currency: currency.value || 'SAR' }).format(n || 0)
+  return new Intl.NumberFormat(locale.icuLocale.value, { style: 'currency', currency: currency.value || 'SAR' }).format(
+    n || 0,
+  )
 }
 
 onMounted(async () => {

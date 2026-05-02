@@ -20,7 +20,8 @@
            class="absolute left-0 top-10 w-44 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50"
       >
         <button class="w-full text-right flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                @click="switchTo('/')"
+                type="button"
+                @click="goTeamStaffPortal"
         >
           <WrenchScrewdriverIcon class="w-4 h-4 text-blue-600" />
           بوابة فريق العمل
@@ -43,6 +44,7 @@ import { TruckIcon, WrenchScrewdriverIcon, ArrowsRightLeftIcon, ChevronDownIcon 
 import { useAuthStore } from '@/stores/auth'
 import { useSubscriptionStore } from '@/stores/subscription'
 import { enabledPortals } from '@/config/portalAccess'
+import { tenantStaffHomeRoute } from '@/config/platformOperationsHandoff'
 
 const auth   = useAuthStore()
 const sub    = useSubscriptionStore()
@@ -53,6 +55,12 @@ const container = ref<HTMLElement | null>(null)
 function switchTo(path: string) {
   open.value = false
   router.push(path)
+}
+
+/** يطابق «العودة لفريق العمل» في لوحة المنصة — يمرّر `shell=tenant` حتى لا يعيد حارس الراوتر مشغّل المنصة إلى `/platform/overview`. */
+function goTeamStaffPortal() {
+  open.value = false
+  router.push(tenantStaffHomeRoute())
 }
 
 function handleClickOutside(e: MouseEvent) {

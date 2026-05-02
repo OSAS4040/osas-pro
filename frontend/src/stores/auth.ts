@@ -5,6 +5,7 @@ import { useSubscriptionStore } from '@/stores/subscription'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { parseLoginAccountContext, type LoginAccountContextPayload } from '@/types/accountContext'
 import type { NavVisibilityPolicy } from '@/config/navigationVisibility'
+import { PLATFORM_OPERATOR_DEFAULT_HOME } from '@/utils/postLoginRedirect'
 
 export interface User {
   id: number
@@ -30,6 +31,8 @@ export interface User {
     max_branches?: number | null
     max_users?: number | null
   } | null
+  /** من الـ API — شريك تنفيذ منصّة (يُخفى الفواتير/التقارير المالية فوراً دون انتظار ملف النشاط) */
+  platform_execution_partner?: boolean
   /** من الـ API — مشغّل منصة مستقل */
   is_platform_user?: boolean
   /** Mirrored from account_context.principal_kind === platform_employee after login /me */
@@ -138,7 +141,7 @@ export const useAuthStore = defineStore('auth', () => {
     isPhoneOnboarding.value
       ? '/phone/onboarding'
       : isPlatform.value
-        ? (typeof user.value?.company_id === 'number' && user.value.company_id > 0 ? '/' : '/platform/overview')
+        ? PLATFORM_OPERATOR_DEFAULT_HOME
         : isFleet.value
           ? '/fleet-portal'
           : isCustomer.value

@@ -22,7 +22,12 @@
             {{
               isExecutionPartner
                 ? l('إعدادات المنشأة الأساسية والتشغيل — دون إعدادات الفواتير أو الهوية البصرية', 'Core business and operations settings — invoice and branding options are hidden')
-                : l('المعلومات والهوية البصرية — تظهر في الفواتير والوثائق الرسمية', 'Business profile and visual identity — shown on invoices and official documents')
+                : providerFocusNavActive
+                  ? l(
+                    'ملف النشاط والهوية ومعلومات الشركة — بدون سياسة إظهار الأقسام أو إعدادات الفاتورة التفصيلية.',
+                    'Business profile, branding, and company info — section visibility policy and invoice detail settings are hidden for workshop mode.',
+                  )
+                  : l('المعلومات والهوية البصرية — تظهر في الفواتير والوثائق الرسمية', 'Business profile and visual identity — shown on invoices and official documents')
             }}
           </p>
           <RouterLink
@@ -32,7 +37,7 @@
           >
             {{ l('مركز تشغيل الشركة', 'Company operational hub') }} →
           </RouterLink>
-          <p v-if="!isExecutionPartner" class="text-[11px] text-primary-700 dark:text-primary-300 mt-2 font-medium">
+          <p v-if="!isExecutionPartner && !providerFocusNavActive" class="text-[11px] text-primary-700 dark:text-primary-300 mt-2 font-medium">
             {{ l('تبويب «إعدادات الفاتورة» يتضمّن نسبة VAT الافتراضية وطرق الدفع المقبولة (تُحفظ مع خيارات الفاتورة).', 'The invoice tab includes default VAT and accepted payment methods (saved with invoice options).') }}
           </p>
         </div>
@@ -642,6 +647,7 @@ import {
   NAV_SECTION_LABELS,
   type NavVisibilityPolicy,
 } from '@/config/navigationVisibility'
+import { isStaffProviderFocusNavEnabled } from '@/config/staffProviderFocusNav'
 
 const { currentTheme, currentPreset, setTheme, setThemePreset, saveCompanyTheme, loadCompanyTheme } = useTheme()
 
@@ -654,6 +660,9 @@ const l = (ar: string, en: string) => (locale.lang.value === 'ar' ? ar : en)
 
 const { active: executionPartnerActive } = usePlatformExecutionPartner()
 const isExecutionPartner = computed(() => executionPartnerActive.value)
+
+/** وضع ورشة / تركيز مزوّد الخدمة — يخفى تبويب سياسة القائمة وإعدادات الفاتورة كما في تجربة التشغيل المختصرة */
+const providerFocusNavActive = computed(() => isStaffProviderFocusNavEnabled(biz.businessType, biz.loaded))
 
 const { checklistHidden, revealChecklistFromSettings } = useSetupOnboarding()
 const i18nStore = useI18nStore()
@@ -691,7 +700,12 @@ watch(() => route.query.tab, applyTabQuery)
 
 const EXECUTION_PARTNER_HIDDEN_SETTING_TABS = ['navigation', 'identity', 'invoice'] as const
 
+/** تحت تركيز المزوّد يُخفى ضبط سياسة القائمة وإعدادات الفاتورة فقط (الهوية البصرية تبقى). */
+const PROVIDER_FOCUS_HIDDEN_SETTING_TABS = ['navigation', 'invoice'] as const
+
 const tabs = computed(() => {
+  void biz.loaded
+  void biz.businessType
   const rows = [
     { id: 'profile', label: l('نشاط المنشأة', 'Business profile'), icon: Cog6ToothIcon },
     { id: 'navigation', label: l('إظهار الأقسام', 'Navigation visibility'), icon: Cog6ToothIcon },
@@ -701,11 +715,15 @@ const tabs = computed(() => {
     { id: 'theme', label: l('تخصيص الألوان', 'Color theme'), icon: Cog6ToothIcon },
     { id: 'guide', label: l('دليل المستخدم الذكي', 'Smart user guide'), icon: DocumentTextIcon },
   ]
+  const hide = new Set<string>()
   if (isExecutionPartner.value) {
-    const hide = new Set<string>([...EXECUTION_PARTNER_HIDDEN_SETTING_TABS])
-    return rows.filter((t) => !hide.has(t.id))
+    for (const id of EXECUTION_PARTNER_HIDDEN_SETTING_TABS) hide.add(id)
   }
-  return rows
+  if (providerFocusNavActive.value) {
+    for (const id of PROVIDER_FOCUS_HIDDEN_SETTING_TABS) hide.add(id)
+  }
+  if (hide.size === 0) return rows
+  return rows.filter((t) => !hide.has(t.id))
 })
 
 watch(
@@ -720,7 +738,9 @@ watch(
 )
 
 const businessType = ref<BusinessType>('service_center')
-const featureMatrix = reactive<Record<string, boolean>>({ ...featureMatrixForBusinessType('service_center') })
+const featureMatrix = reactive<Record<string, boolean>>({
+  ...(featureMatrixForBusinessType('service_center') as Record<string, boolean>),
+})
 const savingBusinessProfile = ref(false)
 const savingTheme = ref(false)
 const themeSaved = ref(false)

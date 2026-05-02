@@ -1,5 +1,6 @@
 import { computed, unref } from 'vue'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
+import { useAuthStore } from '@/stores/auth'
 
 /**
  * وضع «شريك تنفيذ المنصة»: لا سجل عملاء/مركبات مستقل، وفواتير يدوية معطّلة،
@@ -8,6 +9,7 @@ import { useBusinessProfileStore } from '@/stores/businessProfile'
  */
 export function usePlatformExecutionPartner() {
   const biz = useBusinessProfileStore()
+  const auth = useAuthStore()
 
   const envForced = (): boolean => {
     const v = String(import.meta.env.VITE_PLATFORM_EXECUTION_PARTNER ?? '').trim().toLowerCase()
@@ -16,6 +18,7 @@ export function usePlatformExecutionPartner() {
 
   const active = computed(() => {
     if (envForced()) return true
+    if (unref(auth.user)?.platform_execution_partner === true) return true
     const ef = unref(biz.effectiveFeatureMatrix) as Record<string, boolean | undefined>
     return unref(biz.loaded) && ef.platform_execution_partner === true
   })
@@ -27,6 +30,8 @@ export function usePlatformExecutionPartner() {
 export function platformExecutionPartnerActiveFromStore(): boolean {
   const v = String(import.meta.env.VITE_PLATFORM_EXECUTION_PARTNER ?? '').trim().toLowerCase()
   if (v === 'true' || v === '1' || v === 'on') return true
+  const auth = useAuthStore()
+  if (unref(auth.user)?.platform_execution_partner === true) return true
   const biz = useBusinessProfileStore()
   const ef = unref(biz.effectiveFeatureMatrix) as Record<string, boolean | undefined>
   return unref(biz.loaded) && ef.platform_execution_partner === true

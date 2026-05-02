@@ -146,4 +146,39 @@ describe('resolvePostLoginTarget', () => {
     })
     expect(path).toBe('/platform/overview')
   })
+
+  it('platform admin login ignores tenant home_route_hint even for hybrid platform employee', () => {
+    const path = resolvePostLoginTarget({
+      accountContext: ctx({
+        principal_kind: 'platform_employee',
+        home_route_hint: '/work-orders',
+        guard_hint: 'staff',
+        company_id: 9,
+      }),
+      registrationFlow: null,
+      registrationStage: null,
+      accountType: null,
+      portalHomeFromRole: '/platform/overview',
+      redirectQuery: undefined,
+      platformAdminLogin: true,
+    })
+    expect(path).toBe('/platform/overview')
+  })
+
+  it('ignores tenant hint when portalHomeFromRole is platform shell (e.g. after /login)', () => {
+    const path = resolvePostLoginTarget({
+      accountContext: ctx({
+        principal_kind: 'platform_employee',
+        home_route_hint: '/work-orders',
+        guard_hint: 'staff',
+        company_id: 9,
+      }),
+      registrationFlow: null,
+      registrationStage: null,
+      accountType: null,
+      portalHomeFromRole: '/platform/overview',
+      redirectQuery: undefined,
+    })
+    expect(path).toBe('/platform/overview')
+  })
 })
