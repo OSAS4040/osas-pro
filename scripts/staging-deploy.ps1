@@ -66,9 +66,9 @@ Write-Host "== Wait for app /up =="
 Wait-ForUrl -Url "http://127.0.0.1/up" -Label "Laravel /up" -TimeoutSecs $HealthWaitSecs
 
 Write-Host "== Apply backend release steps =="
-docker compose exec -T app php artisan migrate --force
+docker compose exec -T app php -d memory_limit=512M artisan migrate --force
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-docker compose exec -T app php artisan optimize:clear
+docker compose exec -T app php -d memory_limit=512M artisan optimize:clear
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # opcache.validate_timestamps=0 => must recycle php-fpm to load new code/routes.
 Write-Host "== Reload app runtime (php-fpm/opcache) ==" 

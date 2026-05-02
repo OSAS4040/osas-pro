@@ -16,15 +16,21 @@ $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
 Write-Host "== Staging gate: Vitest (frontend) =="
-docker compose exec -T frontend sh -lc "cd /app && npm ci && npm test"
+docker compose exec -T frontend sh -lc "cd /app && export NODE_OPTIONS='--max-old-space-size=6144' && npm ci && npm run test -- --maxWorkers=2"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "== Staging gate: PHPUnit phases 0-7 (includes Auth in phase0) =="
-docker compose exec -T app sh -lc 'cd /var/www && php artisan config:clear && for g in phase0 phase1 phase2 phase3 phase4 phase5 phase6 phase7; do echo "== PHPUnit --group=$g ==" && ./vendor/bin/phpunit --group="$g" || exit 1; done'
+docker compose exec -T app sh -lc "cd /var/www && php -d memory_limit=512M artisan config:clear"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$phpunitPhases = @('phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase7')
+foreach ($g in $phpunitPhases) {
+  Write-Host "== PHPUnit --group=$g =="
+  docker compose exec -T app sh -lc "cd /var/www && php -d memory_limit=512M ./vendor/bin/phpunit --group=$g"
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 
 Write-Host "== Staging gate: OCR (Tesseract eng+ara in app container) =="
-docker compose exec -T app sh -lc "cd /var/www && php artisan ocr:verify --fail"
+docker compose exec -T app sh -lc "cd /var/www && php -d memory_limit=512M artisan ocr:verify --fail"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "== Staging gate: OK =="

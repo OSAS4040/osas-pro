@@ -49,8 +49,8 @@ echo "== Wait for app /up =="
 wait_for_url "http://127.0.0.1/up" "Laravel /up"
 
 echo "== Apply backend release steps =="
-docker compose exec -T app php artisan migrate --force
-docker compose exec -T app php artisan optimize:clear
+docker compose exec -T app php -d memory_limit=512M artisan migrate --force
+docker compose exec -T app php -d memory_limit=512M artisan optimize:clear
 # opcache.validate_timestamps=0 => must recycle php-fpm to load new code/routes.
 echo "== Reload app runtime (php-fpm/opcache) =="
 docker compose restart app nginx
