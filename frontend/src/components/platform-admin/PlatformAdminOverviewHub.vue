@@ -1,18 +1,11 @@
 <template>
   <section
-    class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-slate-50/80 to-primary-50/30 p-4 shadow-sm ring-1 ring-slate-100/80 dark:border-slate-700/80 dark:from-slate-900 dark:via-slate-900 dark:to-primary-950/20 dark:ring-slate-800/60 md:p-5"
+    class="rounded-2xl border border-slate-200/90 bg-white/95 p-4 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/90 md:p-5"
     aria-labelledby="platform-overview-hub-title"
   >
-    <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h2 id="platform-overview-hub-title" class="text-sm font-bold text-slate-900 dark:text-white">
-          الوصول السريع
-        </h2>
-        <p class="mt-0.5 max-w-2xl text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
-          اختر وجهتك مباشرة — التفاصيل الكاملة في كل قسم. التسعير والمزودون يظهران حسب صلاحياتك.
-        </p>
-      </div>
-    </div>
+    <h2 id="platform-overview-hub-title" class="mb-3 text-sm font-bold text-slate-900 dark:text-white">
+      الوصول السريع
+    </h2>
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       <RouterLink
         v-for="card in visibleCards"
@@ -26,15 +19,9 @@
           >
             <component :is="card.icon" class="h-5 w-5" aria-hidden="true" />
           </span>
-          <span
-            class="rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-500 opacity-0 transition-opacity group-hover:opacity-100 dark:bg-slate-800 dark:text-slate-400"
-            dir="ltr"
-          >
-            →
-          </span>
         </div>
         <p class="text-sm font-bold text-slate-900 dark:text-white">{{ card.title }}</p>
-        <p class="mt-1 line-clamp-2 text-[11px] leading-snug text-slate-600 dark:text-slate-400">{{ card.description }}</p>
+        <p class="mt-1 line-clamp-2 text-[11px] leading-snug text-slate-500 dark:text-slate-400">{{ card.description }}</p>
       </RouterLink>
       <RouterLink
         v-if="auth.hasPermission('platform.subscription.manage')"
@@ -49,9 +36,7 @@
           </span>
         </div>
         <p class="text-sm font-bold text-rose-950 dark:text-rose-100">طلبات الاشتراكات</p>
-        <p class="mt-1 text-[11px] leading-snug text-rose-900/80 dark:text-rose-200/90">
-          مراجعة الطابور والفواتير — يفتح في واجهة التشغيل.
-        </p>
+        <p class="mt-1 text-[11px] leading-snug text-rose-800/90 dark:text-rose-200/85">واجهة التشغيل</p>
       </RouterLink>
     </div>
   </section>

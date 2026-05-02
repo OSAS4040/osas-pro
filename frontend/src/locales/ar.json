@@ -1,5 +1,18 @@
 {
   "app": { "name": "أسس برو", "tagline": "منصة متكاملة للتشغيل والمالية والموارد والمخزون وعلاقات العملاء", "sidebarTitle": "أسس برو — منصة إدارة التشغيل والأعمال" },
+  "platformAdmin": {
+    "sidebarTitle": "إدارة المنصّة",
+    "sectionCommerce": "التجارة والتسعير والعقود",
+    "sectionStaff": "بوابة فريق العمل",
+    "sectionTools": "مراجعات وأدوات",
+    "searchPlaceholder": "بحث في القائمة…",
+    "clearSearch": "مسح البحث",
+    "noNavResults": "لا نتائج مطابقة — جرّب كلمات أخرى أو امسح البحث.",
+    "footerLinkStaff": "العودة لفريق العمل",
+    "breadcrumbRoot": "إدارة المنصّة",
+    "skipToContent": "تخطي إلى المحتوى الرئيسي",
+    "searchShortcutsHint": "Esc لمسح البحث — / للتركيز على البحث في القائمة"
+  },
   "nav": { "dashboard": "لوحة التحكم", "pos": "نقطة البيع", "invoices": "الفواتير", "work_orders": "العمليات", "customers": "العملاء", "vehicles": "المركبات", "inventory": "المخزون", "reports": "التقارير", "settings": "الإعدادات", "logout": "تسجيل الخروج" },
   "auth": { "email": "البريد الإلكتروني", "password": "كلمة المرور", "login": "تسجيل الدخول", "staff_portal": "بوابة فريق العمل", "fleet_portal": "بوابة إدارة الأسطول", "customer_portal": "بوابة العميل" },
   "pages": { "accessDenied": "لا صلاحية", "capabilities": "قدرات النظام", "taxonomy": "مسرد المنصة والمستأجر" },

@@ -2,7 +2,7 @@
   <div
     data-testid="platform-admin-root"
     class="flex min-h-screen text-slate-900 transition-colors dark:text-white"
-    dir="rtl"
+    :dir="locale.langInfo.value.dir"
   >
     <!-- خلفية شفافة للموبايل عند فتح القائمة الجانبية -->
     <button
@@ -14,53 +14,52 @@
     />
 
     <aside
-      class="flex w-[17.5rem] shrink-0 flex-col overflow-hidden border-l border-[color:var(--border-color)] bg-[color:var(--bg-sidebar)] shadow-2xl transition-[transform] duration-200 ease-out dark:shadow-none lg:relative lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-sm xl:w-72 max-lg:fixed max-lg:inset-y-0 max-lg:right-0 max-lg:z-[45] max-lg:max-w-[min(100vw,17.5rem)]"
-      :class="mobileAsideTransformClass"
       id="platform-admin-sidebar"
+      class="flex w-64 shrink-0 flex-col overflow-hidden border-l border-[color:var(--border-color)] bg-[color:var(--bg-sidebar)] shadow-[0_0_0_1px_rgba(13,148,136,0.06)] transition-[transform] duration-200 ease-out dark:shadow-none lg:relative lg:z-auto lg:max-w-none lg:translate-x-0 max-lg:fixed max-lg:inset-y-0 max-lg:right-0 max-lg:z-[45] max-lg:max-w-[min(100vw,16rem)] xl:w-[17rem]"
+      :class="mobileAsideTransformClass"
       :inert="sidebarInert"
       aria-label="قائمة إدارة المنصة"
     >
-      <div class="border-b border-[color:var(--border-color)] bg-[color:var(--bg-header)] px-4 py-4 dark:border-slate-700/80">
-        <div class="flex items-center gap-2.5">
-          <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-primary-800 text-[10px] font-extrabold leading-tight text-white shadow-md ring-1 ring-primary-400/35 dark:from-primary-500 dark:to-primary-700"
-            aria-hidden="true"
-          >
-            أسس
-          </div>
-          <div class="min-w-0">
-            <p class="text-[11px] font-semibold tracking-wide text-primary-600 dark:text-primary-400">إدارة المنصة</p>
-            <p class="truncate text-sm font-bold text-[color:var(--text-primary)] dark:text-white">مركز التحكم</p>
-          </div>
+      <div
+        class="sticky top-0 z-[1] flex min-h-[3.25rem] shrink-0 items-center gap-2.5 border-b border-[color:var(--border-color)] bg-[color:var(--bg-header)] px-3 py-2.5 dark:border-slate-700/80"
+      >
+        <div
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 text-center text-[9px] font-extrabold leading-tight text-white shadow-sm ring-1 ring-primary-400/40"
+          aria-hidden="true"
+        >
+          {{ locale.t('app.name') }}
         </div>
-        <p class="mt-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-          ابدأ من <RouterLink :to="{ name: 'platform-overview' }" class="font-semibold text-primary-700 underline-offset-2 hover:underline dark:text-primary-400">الملخص</RouterLink>
-          ثم القائمة أو «الوصول السريع» في الصفحة الرئيسية.
+        <p class="min-w-0 flex-1 text-sm font-bold leading-snug text-[color:var(--text-primary)] dark:text-slate-100">
+          {{ locale.t('platformAdmin.sidebarTitle') }}
         </p>
       </div>
-      <nav class="flex flex-1 flex-col gap-0 overflow-y-auto p-2">
+      <nav class="flex flex-1 flex-col gap-2 overflow-y-auto p-2.5 pb-4">
         <div
-          class="sticky top-0 z-[1] -mx-0.5 mb-2 border-b border-slate-200/80 bg-[color:var(--bg-sidebar)] px-0.5 pb-2 dark:border-slate-800"
+          class="sticky top-0 z-[1] -mx-0.5 mb-1 border-b border-[color:var(--border-color)] bg-[color:var(--bg-sidebar)]/95 px-0.5 pb-2 backdrop-blur-sm dark:border-slate-700/80"
         >
           <div class="relative">
             <MagnifyingGlassIcon
-              class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+              class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-500"
               aria-hidden="true"
             />
             <input
+              ref="sidebarSearchInputRef"
               v-model="sidebarNavQuery"
               type="search"
               autocomplete="off"
-              class="w-full rounded-lg border border-slate-300/90 bg-white py-2 pr-9 pl-9 text-xs text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500"
-              placeholder="بحث في القائمة…"
-              aria-label="بحث في قائمة إدارة المنصة"
-              dir="rtl"
+              enterkeyhint="search"
+              class="w-full rounded-xl border border-gray-200 bg-gray-50/90 py-2 pr-9 pl-9 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/25 dark:border-slate-600 dark:bg-slate-900/50 dark:text-slate-100 dark:placeholder:text-slate-500"
+              :placeholder="locale.t('platformAdmin.searchPlaceholder')"
+              :aria-label="locale.t('platformAdmin.searchPlaceholder')"
+              :title="locale.t('platformAdmin.searchShortcutsHint')"
+              :dir="locale.langInfo.value.dir"
+              @keydown.escape="sidebarNavQuery = ''"
             />
             <button
               v-if="sidebarNavQuery.trim().length > 0"
               type="button"
-              class="absolute left-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-              aria-label="مسح البحث"
+              class="absolute left-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              :aria-label="locale.t('platformAdmin.clearSearch')"
               @click="sidebarNavQuery = ''"
             >
               <XMarkIcon class="h-4 w-4" aria-hidden="true" />
@@ -68,51 +67,44 @@
           </div>
         </div>
 
-        <div v-for="group in visibleSidebarGroups" :key="'grp-' + group.id" class="mb-1.5">
-          <button
-            type="button"
-            class="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-200/70 bg-white/60 px-2.5 py-2 text-right text-[11px] font-bold text-slate-800 shadow-sm transition-colors hover:bg-white dark:border-slate-700/80 dark:bg-slate-900/50 dark:text-slate-100 dark:hover:bg-slate-800/80"
-            :aria-expanded="isSidebarGroupExpanded(group.id)"
-            @click="toggleSidebarGroup(group.id)"
+        <PlatformAdminNavSection
+          v-for="group in visibleSidebarGroups"
+          :key="'grp-' + group.id"
+          :label="group.title"
+          :expanded="isSidebarGroupExpanded(group.id)"
+          :force-expand="sidebarNavQueryActive"
+          @toggle="() => toggleSidebarGroup(group.id)"
+        >
+          <RouterLink
+            v-for="item in filteredNavItemsForGroup(group)"
+            :key="item.id"
+            :to="{ name: item.routeName }"
+            :class="platformNavLinkClass(isActiveRoute(item.routeName))"
           >
-            <span class="min-w-0 flex-1 leading-snug">{{ group.title }}</span>
-            <ChevronDownIcon
-              class="h-4 w-4 shrink-0 text-slate-500 transition-transform dark:text-slate-400"
-              :class="isSidebarGroupExpanded(group.id) ? '-rotate-180' : ''"
-              aria-hidden="true"
-            />
-          </button>
-          <div v-show="isSidebarGroupExpanded(group.id)" class="mt-1 space-y-0">
-            <PlatformAdminNavCard
-              v-for="item in filteredNavItemsForGroup(group)"
-              :key="item.id"
-              :eyebrow="item.navEyebrow"
-              :hint="item.navHint"
-            >
-              <RouterLink
-                :to="{ name: item.routeName }"
-                :class="platformNavLinkClass(isActiveRoute(item.routeName))"
-              >
-                <component :is="item.icon" class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
-                <span class="flex-1 leading-snug">{{ item.label }}</span>
-              </RouterLink>
-            </PlatformAdminNavCard>
-          </div>
-        </div>
+            <component :is="item.icon" class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
+            <span class="flex-1 leading-snug">{{ item.label }}</span>
+          </RouterLink>
+        </PlatformAdminNavSection>
 
         <p
           v-if="sidebarNavQueryActive && !sidebarNavHasAnyMatch"
-          class="rounded-lg border border-dashed border-slate-300/90 px-2 py-3 text-center text-[11px] text-slate-500 dark:border-slate-600 dark:text-slate-400"
+          class="rounded-xl border border-dashed border-gray-200 px-2 py-3 text-center text-[11px] text-gray-500 dark:border-slate-600 dark:text-slate-400"
         >
-          لا نتائج مطابقة — جرّب كلمات أخرى أو امسح البحث.
+          {{ locale.t('platformAdmin.noNavResults') }}
         </p>
 
-        <PlatformAdminNavCard
-          v-if="subscriptionCardVisible"
-          eyebrow="تشغيل الاشتراكات"
-          hint="طابور المراجعة، التفاصيل، الفواتير، والمؤشرات — مباشرة دون مسار يدوي."
+        <PlatformAdminNavSection
+          v-if="commerceSidebarSectionVisible"
+          :label="locale.t('platformAdmin.sectionCommerce')"
+          :expanded="commerceSectionOpen"
+          :force-expand="sidebarNavQueryActive"
+          @toggle="toggleCommerceSection"
         >
-          <RouterLink to="/admin/subscriptions" :class="platformNavLinkClass(isSubscriptionOpsRoute)">
+          <RouterLink
+            v-if="subscriptionCardVisible"
+            to="/admin/subscriptions"
+            :class="platformNavLinkClass(isSubscriptionOpsRoute)"
+          >
             <ClipboardDocumentCheckIcon class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
             <span class="flex-1 leading-snug">طلبات الاشتراكات</span>
             <span
@@ -123,105 +115,75 @@
               {{ subscriptionBadgeCount > 99 ? '99+' : subscriptionBadgeCount }}
             </span>
           </RouterLink>
-        </PlatformAdminNavCard>
-
-        <PlatformAdminNavCard
-          v-if="providerCardVisible"
-          eyebrow="مزودو الخدمة"
-          hint="التكلفة لا تظهر للعميل — تُستخدم في التسعير والتحليل فقط."
-        >
-          <div class="flex flex-col gap-0.5 divide-y divide-primary-100/70 dark:divide-primary-900/40" role="list">
+          <template v-if="providerCardVisible">
             <RouterLink
               v-for="link in providerLinksFiltered"
               :key="'pv-' + link.routeName"
-              role="listitem"
               :to="{ name: link.routeName }"
               :class="platformNavLinkClass(isActiveRoute(link.routeName))"
             >
               <TruckIcon class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
               <span class="flex-1 leading-snug">{{ link.label }}</span>
             </RouterLink>
-          </div>
-        </PlatformAdminNavCard>
-
-        <PlatformAdminNavCard
-          v-if="commercialCardVisible"
-          eyebrow="الإدارة التجارية والتسعير"
-          hint="إنشاء → مراجعة → اعتماد → تفعيل نسخة سعر — بدون تعديل مباشر للمعتمد."
-        >
-          <div class="flex flex-col gap-0.5 divide-y divide-primary-100/70 dark:divide-primary-900/40" role="list">
+          </template>
+          <template v-if="commercialCardVisible">
             <RouterLink
               v-for="link in commercialLinksFiltered"
               :key="'cp-' + link.routeName"
-              role="listitem"
               :to="{ name: link.routeName }"
               :class="platformNavLinkClass(isActiveRoute(link.routeName))"
             >
               <CurrencyDollarIcon class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
               <span class="flex-1 leading-snug">{{ link.label }}</span>
             </RouterLink>
-          </div>
-        </PlatformAdminNavCard>
-
-        <PlatformAdminNavCard
-          v-if="contractsCardVisible"
-          eyebrow="العقود"
-          hint="العقود المرتبطة بالتسعير والعملاء — واجهة أولية حتى اكتمال التكامل."
-        >
+          </template>
           <RouterLink
+            v-if="contractsCardVisible"
             :to="{ name: 'platform-contracts' }"
             :class="platformNavLinkClass(isActiveRoute('platform-contracts'))"
           >
             <DocumentTextIcon class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
             <span class="flex-1 leading-snug">العقود</span>
           </RouterLink>
-        </PlatformAdminNavCard>
-
-        <PlatformAdminNavCard
-          v-if="reportsCardVisible"
-          eyebrow="التقارير"
-          hint="تقارير تجارية وتسعير على مستوى المنصة — واجهة أولية."
-        >
           <RouterLink
+            v-if="reportsCardVisible"
             :to="{ name: 'platform-reports' }"
             :class="platformNavLinkClass(isActiveRoute('platform-reports'))"
           >
             <ChartBarIcon class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
             <span class="flex-1 leading-snug">التقارير</span>
           </RouterLink>
-        </PlatformAdminNavCard>
+        </PlatformAdminNavSection>
 
-        <div class="my-2 border-t border-slate-100 dark:border-slate-800" aria-hidden="true" />
-
-        <PlatformAdminNavCard
+        <PlatformAdminNavSection
           v-if="staffPortalCardVisible"
-          eyebrow="بوابة فريق العمل"
-          hint="اختصارات إلى واجهة المستأجر (فواتير، محاسبة، تقارير، …). كل رابط يخرجك من سياق إدارة المنصة إلى فريق العمل."
-        >
-          <div class="flex flex-col gap-0.5 divide-y divide-primary-100/70 dark:divide-primary-900/40" role="list">
-            <RouterLink
-              v-for="link in staffPortalLinksFiltered"
-              :key="'sp-' + link.to"
-              :to="link.to"
-              role="listitem"
-              :title="PLATFORM_OPERATIONS_EXIT_TOOLTIP"
-              :aria-label="platformOperationsExitAriaLabel(link.label)"
-              :class="platformNavLinkClass(isActiveStaffPath(link.to), 'compact')"
-            >
-              <component :is="link.icon" class="h-3.5 w-3.5 shrink-0 opacity-95" aria-hidden="true" />
-              <span class="flex-1 leading-snug">{{ link.label }}</span>
-            </RouterLink>
-          </div>
-        </PlatformAdminNavCard>
-
-        <div class="my-2 border-t border-slate-100 dark:border-slate-800" aria-hidden="true" />
-
-        <PlatformAdminNavCard
-          v-if="registrationCardVisible"
-          eyebrow="مراجعات وتجربة"
-          hint="أدوات خارج مسار /platform/* مع الانتقال إلى واجهة التشغيل عند الحاجة."
+          :label="locale.t('platformAdmin.sectionStaff')"
+          :expanded="staffSectionOpen"
+          :force-expand="sidebarNavQueryActive"
+          @toggle="toggleStaffSection"
         >
           <RouterLink
+            v-for="link in staffPortalLinksFiltered"
+            :key="'sp-' + link.to"
+            :to="link.to"
+            :title="PLATFORM_OPERATIONS_EXIT_TOOLTIP"
+            :aria-label="platformOperationsExitAriaLabel(link.label)"
+            :class="platformNavLinkClass(isActiveStaffPath(link.to), 'compact')"
+          >
+            <component :is="link.icon" class="h-3.5 w-3.5 shrink-0 opacity-95" aria-hidden="true" />
+            <span class="flex-1 leading-snug">{{ link.label }}</span>
+          </RouterLink>
+        </PlatformAdminNavSection>
+
+        <PlatformAdminNavSection
+          v-if="toolsSidebarSectionVisible"
+          :label="locale.t('platformAdmin.sectionTools')"
+          :expanded="toolsSectionOpen"
+          :force-expand="sidebarNavQueryActive"
+          @toggle="toggleToolsSection"
+        >
+          <RouterLink
+            v-if="registrationCardVisible"
             to="/admin/registration-profiles"
             :title="PLATFORM_OPERATIONS_EXIT_TOOLTIP"
             :aria-label="platformOperationsExitAriaLabel('طلبات التسجيل (مراجعات)')"
@@ -229,14 +191,8 @@
           >
             <span class="flex-1 leading-snug">طلبات التسجيل (مراجعات)</span>
           </RouterLink>
-        </PlatformAdminNavCard>
-
-        <PlatformAdminNavCard
-          v-if="qaCardVisible"
-          eyebrow="جودة النظام"
-          hint="بيئة اختبار وضمان جودة — خارج لوحة المنصة الرئيسية."
-        >
           <RouterLink
+            v-if="qaCardVisible"
             to="/admin/qa"
             :title="PLATFORM_OPERATIONS_EXIT_TOOLTIP"
             :aria-label="platformOperationsExitAriaLabel('اختبار النظام وضمان الجودة')"
@@ -245,10 +201,8 @@
             <BeakerIcon class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
             <span class="flex-1 leading-snug">اختبار النظام (ضمان الجودة)</span>
           </RouterLink>
-        </PlatformAdminNavCard>
-
-        <PlatformAdminNavCard v-if="taxonomyCardVisible" eyebrow="المعرفة" hint="مسرد مفاهيم موحّد للفريق والمشغّلين.">
           <RouterLink
+            v-if="taxonomyCardVisible"
             to="/about/taxonomy"
             :title="PLATFORM_OPERATIONS_EXIT_TOOLTIP"
             :aria-label="platformOperationsExitAriaLabel('مسرد المفاهيم')"
@@ -256,24 +210,28 @@
           >
             <span class="flex-1 leading-snug">مسرد المفاهيم</span>
           </RouterLink>
-        </PlatformAdminNavCard>
+        </PlatformAdminNavSection>
       </nav>
-      <div class="border-t border-slate-100 p-2 dark:border-slate-800">
-        <PlatformAdminNavCard eyebrow="الخروج من إدارة المنصة" :hint="PLATFORM_OPERATIONS_EXIT_VISIBLE">
-          <RouterLink
-            :to="tenantStaffHomeRoute()"
-            :title="PLATFORM_OPERATIONS_EXIT_TOOLTIP"
-            :aria-label="platformOperationsExitAriaLabel('العودة لفريق العمل')"
-            :class="platformNavLinkClass(isActiveStaffPath('/'))"
-          >
-            <HomeIcon class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
-            <span class="flex-1 leading-snug">العودة لفريق العمل</span>
-          </RouterLink>
-        </PlatformAdminNavCard>
+      <div class="shrink-0 border-t border-[color:var(--border-color)] bg-[color:var(--bg-sidebar)] p-2 dark:border-slate-800">
+        <RouterLink
+          :to="tenantStaffHomeRoute()"
+          :title="PLATFORM_OPERATIONS_EXIT_TOOLTIP"
+          :aria-label="platformOperationsExitAriaLabel(locale.t('platformAdmin.footerLinkStaff'))"
+          :class="platformNavLinkClass(isActiveStaffPath('/'))"
+        >
+          <HomeIcon class="h-4 w-4 shrink-0 opacity-95" aria-hidden="true" />
+          <span class="flex-1 leading-snug">{{ locale.t('platformAdmin.footerLinkStaff') }}</span>
+        </RouterLink>
       </div>
     </aside>
 
-    <div class="flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden">
+    <div class="relative flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden">
+      <a
+        href="#platform-admin-main"
+        class="sr-only start-4 top-20 z-[60] rounded-lg border border-primary-300 bg-white px-3 py-2 text-sm font-semibold text-primary-800 shadow-lg outline-none ring-2 ring-primary-500/30 focus:not-sr-only focus:absolute dark:border-primary-700 dark:bg-slate-900 dark:text-primary-100"
+      >
+        {{ locale.t('platformAdmin.skipToContent') }}
+      </a>
       <header
         class="sticky top-0 h-16 border-b border-[color:var(--border-color)] bg-white/90 px-4 backdrop-blur-md dark:border-slate-700 dark:bg-[color:var(--bg-header)]/95 lg:px-6"
         :class="mobileDrawerOpen && !isLgUp ? 'z-[50]' : 'z-10'"
@@ -292,17 +250,17 @@
               <Bars3Icon class="h-6 w-6" aria-hidden="true" />
             </button>
             <nav class="min-w-0 flex-1 text-[11px] text-slate-500 dark:text-slate-400" aria-label="مسار التنقّل">
-            <ol class="flex flex-wrap items-center gap-1">
-              <li>
-                <RouterLink :to="{ name: 'platform-overview' }" class="font-semibold text-primary-700 hover:underline dark:text-primary-400">
-                  إدارة المنصة
-                </RouterLink>
-              </li>
-              <li v-if="breadcrumbCurrent" class="flex items-center gap-1">
-                <span aria-hidden="true" class="px-0.5 text-slate-400" dir="ltr">/</span>
-                <span class="font-medium text-slate-800 dark:text-slate-200">{{ breadcrumbCurrent }}</span>
-              </li>
-            </ol>
+              <ol class="flex flex-wrap items-center gap-1">
+                <li>
+                  <RouterLink :to="{ name: 'platform-overview' }" class="font-semibold text-primary-700 hover:underline dark:text-primary-400">
+                    {{ locale.t('platformAdmin.breadcrumbRoot') }}
+                  </RouterLink>
+                </li>
+                <li v-if="breadcrumbCurrent" class="flex items-center gap-1">
+                  <span aria-hidden="true" class="px-0.5 text-slate-400" dir="ltr">/</span>
+                  <span class="font-medium text-slate-800 dark:text-slate-200">{{ breadcrumbCurrent }}</span>
+                </li>
+              </ol>
             </nav>
           </div>
           <div class="flex shrink-0 items-center gap-2">
@@ -315,8 +273,10 @@
       </header>
 
       <main
+        id="platform-admin-main"
         data-testid="platform-admin-main"
-        class="flex-1 overflow-auto p-4 transition-colors md:p-6"
+        tabindex="-1"
+        class="flex-1 scroll-mt-16 overflow-auto p-4 outline-none transition-colors md:p-6"
         style="background-color: var(--bg-base);"
       >
         <router-view v-slot="{ Component }">
@@ -330,7 +290,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import {
   BeakerIcon,
@@ -347,7 +307,6 @@ import {
   CurrencyDollarIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
-  ChevronDownIcon,
   MagnifyingGlassCircleIcon,
   Bars3Icon,
 } from '@heroicons/vue/24/outline'
@@ -364,26 +323,98 @@ import {
 import { canAccessPlatformSection } from '@/config/platformSectionGate'
 import {
   PLATFORM_OPERATIONS_EXIT_TOOLTIP,
-  PLATFORM_OPERATIONS_EXIT_VISIBLE,
   platformOperationsExitAriaLabel,
   tenantStaffHomeRoute,
 } from '@/config/platformOperationsHandoff'
-import PlatformAdminNavCard from '@/components/platform-admin/PlatformAdminNavCard.vue'
+import PlatformAdminNavSection from '@/components/platform-admin/PlatformAdminNavSection.vue'
 import PlatformOperationsExitLink from '@/components/platform-admin/PlatformOperationsExitLink.vue'
 import PlatformNotificationsBell from '@/components/platform-admin/PlatformNotificationsBell.vue'
+import { useLocale } from '@/composables/useLocale'
 import { useAuthStore } from '@/stores/auth'
 import { usePlatformSubscriptionAttention } from '@/composables/platform-admin/usePlatformSubscriptionAttention'
 import { platformSubscriptionAttentionKey } from '@/components/platform-admin/PlatformSubscriptionAttentionInjectKey'
 
 const SIDEBAR_COLLAPSE_LS = 'platform_admin_sidebar_collapsed_groups'
+const SECTION_EXPAND_LS = 'platform_admin_extra_sections_v1'
+
+function readInitialExtraSections(): { c: boolean; s: boolean; t: boolean } {
+  const defaults = { c: true, s: true, t: false }
+  if (typeof window === 'undefined') return defaults
+  try {
+    const raw = localStorage.getItem(SECTION_EXPAND_LS)
+    if (!raw) return defaults
+    const o = JSON.parse(raw) as { c?: boolean; s?: boolean; t?: boolean }
+    return {
+      c: typeof o.c === 'boolean' ? o.c : defaults.c,
+      s: typeof o.s === 'boolean' ? o.s : defaults.s,
+      t: typeof o.t === 'boolean' ? o.t : defaults.t,
+    }
+  } catch {
+    return defaults
+  }
+}
 
 function readIsLgUp(): boolean {
   if (typeof window === 'undefined') return true
   return window.matchMedia('(min-width: 1024px)').matches
 }
 
+const locale = useLocale()
 const route = useRoute()
 const auth = useAuthStore()
+
+const _extraInit = readInitialExtraSections()
+const commerceSectionOpen = ref(_extraInit.c)
+const staffSectionOpen = ref(_extraInit.s)
+const toolsSectionOpen = ref(_extraInit.t)
+
+function isToolsRouteActive(): boolean {
+  const p = route.path
+  return (
+    p.startsWith('/admin/registration-profiles')
+    || p.startsWith('/admin/qa')
+    || p.startsWith('/about/taxonomy')
+  )
+}
+
+function toggleCommerceSection(): void {
+  if (sidebarNavQueryActive.value) return
+  commerceSectionOpen.value = !commerceSectionOpen.value
+}
+
+function toggleStaffSection(): void {
+  if (sidebarNavQueryActive.value) return
+  staffSectionOpen.value = !staffSectionOpen.value
+}
+
+function toggleToolsSection(): void {
+  if (sidebarNavQueryActive.value) return
+  toolsSectionOpen.value = !toolsSectionOpen.value
+}
+
+const commerceSidebarSectionVisible = computed(() => {
+  if (!sidebarNavQueryActive.value) {
+    return (
+      subscriptionCardVisible.value
+      || providerCardVisible.value
+      || commercialCardVisible.value
+      || contractsCardVisible.value
+      || reportsCardVisible.value
+    )
+  }
+  return (
+    subscriptionCardVisible.value
+    || providerLinksFiltered.value.length > 0
+    || commercialLinksFiltered.value.length > 0
+    || contractsCardVisible.value
+    || reportsCardVisible.value
+  )
+})
+
+const toolsSidebarSectionVisible = computed(() => {
+  if (!sidebarNavQueryActive.value) return true
+  return registrationCardVisible.value || qaCardVisible.value || taxonomyCardVisible.value
+})
 
 /** درج القائمة على الشاشات الصغيرة — لا يؤثر على md+ حيث يبقى الشريط في التدفق */
 const mobileDrawerOpen = ref(false)
@@ -430,6 +461,7 @@ const commercialPricingSidebarLinksFiltered = computed(() =>
 )
 
 const sidebarNavQuery = ref('')
+const sidebarSearchInputRef = ref<HTMLInputElement | null>(null)
 const collapsedSidebarGroupIds = ref<string[]>([])
 
 const sidebarNavQueryActive = computed(() => sidebarNavQuery.value.trim().length > 0)
@@ -580,6 +612,41 @@ const sidebarNavHasAnyMatch = computed(() => {
   )
 })
 
+watch(
+  () => route.fullPath,
+  () => {
+    if (isToolsRouteActive()) toolsSectionOpen.value = true
+  },
+  { immediate: true },
+)
+
+watch([commerceSectionOpen, staffSectionOpen, toolsSectionOpen], () => {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(
+      SECTION_EXPAND_LS,
+      JSON.stringify({
+        c: commerceSectionOpen.value,
+        s: staffSectionOpen.value,
+        t: toolsSectionOpen.value,
+      }),
+    )
+  } catch {
+    /* quota / private mode */
+  }
+})
+
+watch(
+  () => route.fullPath,
+  async () => {
+    await nextTick()
+    const nav = document.getElementById('platform-admin-sidebar')
+    if (!nav) return
+    const active = nav.querySelector<HTMLElement>('a.router-link-active')
+    active?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  },
+)
+
 provide(platformSubscriptionAttentionKey, {
   badgeCount: subscriptionAttention.badgeCount,
   summary: subscriptionAttention.summary,
@@ -591,10 +658,31 @@ function onMqChange(ev: MediaQueryListEvent): void {
   if (ev.matches) mobileDrawerOpen.value = false
 }
 
+function isTypingInField(target: EventTarget | null): boolean {
+  if (!target || !(target instanceof HTMLElement)) return false
+  const tag = target.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
+  if (target.isContentEditable) return true
+  if (target.closest('[role="dialog"]') || target.closest('[data-command-palette]')) return true
+  return false
+}
+
 function onGlobalKeydown(ev: KeyboardEvent): void {
-  if (ev.key !== 'Escape') return
-  if (!mobileDrawerOpen.value || isLgUp.value) return
-  mobileDrawerOpen.value = false
+  if (ev.key === 'Escape') {
+    if (sidebarNavQuery.value.trim().length > 0) {
+      sidebarNavQuery.value = ''
+      ev.preventDefault()
+      return
+    }
+    if (!mobileDrawerOpen.value || isLgUp.value) return
+    mobileDrawerOpen.value = false
+    return
+  }
+  if (ev.key === '/' || ev.code === 'NumpadDivide') {
+    if (isTypingInField(ev.target)) return
+    ev.preventDefault()
+    sidebarSearchInputRef.value?.focus()
+  }
 }
 
 let layoutMq: MediaQueryList | null = null
@@ -676,14 +764,14 @@ function isActiveRoute(routeName: string): boolean {
 function platformNavLinkClass(active: boolean, density: 'default' | 'compact' = 'default'): string[] {
   const sizing =
     density === 'compact'
-      ? 'px-2 py-1.5 text-xs'
-      : 'px-2.5 py-2 text-sm'
-  const base = `flex w-full items-center gap-2 rounded-lg ${sizing} text-right font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900`
+      ? 'px-2.5 py-1.5 text-xs'
+      : 'px-3 py-2 text-sm'
+  const base = `flex w-full items-center gap-2.5 rounded-xl ${sizing} text-right font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900`
   return [
     base,
     active
-      ? 'bg-primary-600 text-white shadow-md ring-1 ring-primary-500/40 dark:bg-primary-500'
-      : 'text-primary-950 hover:bg-primary-100/90 dark:text-primary-50 dark:hover:bg-primary-900/35',
+      ? 'bg-primary-600 text-white shadow-md ring-1 ring-primary-500/30 hover:bg-primary-600 hover:text-white dark:bg-primary-500 dark:ring-primary-400/25'
+      : 'text-gray-700 hover:bg-primary-50/90 hover:text-primary-800 dark:text-slate-300 dark:hover:bg-primary-950/35 dark:hover:text-primary-200',
   ]
 }
 
