@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
+use App\Models\Company;
 use App\Models\CustomerWallet;
 use App\Models\Invoice;
 use App\Models\User;
@@ -19,6 +21,7 @@ use App\Services\WorkOrderPdfService;
 use App\Services\WorkOrderPricingResolverService;
 use App\Services\WorkOrderService;
 use App\Support\Media\TenantUploadDisk;
+use App\Support\TenantBusinessFeatures;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -159,6 +162,7 @@ class WorkOrderController extends Controller
         $data = $request->validate([
             'order_number' => ['nullable', 'string', 'max:80'],
             'plate_number' => ['nullable', 'string', 'max:40'],
+            'on_behalf_company_id' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $orderNumber = trim((string) ($data['order_number'] ?? ''));
@@ -170,12 +174,21 @@ class WorkOrderController extends Controller
             ], 422);
         }
 
+        $resolved = $this->tryResolveIntakeTenantCompany($request, $user);
+        if ($resolved instanceof JsonResponse) {
+            return $resolved;
+        }
+
+        $branchConstraint = $resolved['delegated_by_platform'] ? null : $this->workOrderBranchConstraint($request);
+
         return response()->json(
             $this->buildIntakeLookupPayload(
                 $user,
                 $orderNumber !== '' ? $orderNumber : null,
                 $plateNumber !== '' ? $plateNumber : null,
-                $this->workOrderBranchConstraint($request)
+                $branchConstraint,
+                $resolved['company_id'],
+                $resolved['delegated_by_platform'],
             )
         );
     }
@@ -187,6 +200,7 @@ class WorkOrderController extends Controller
             'image' => ['nullable', 'string'],
             'plate_number' => ['nullable', 'string', 'max:40'],
             'order_number' => ['nullable', 'string', 'max:80'],
+            'on_behalf_company_id' => ['nullable', 'integer', 'min:1'],
         ]);
         $orderNumber = trim((string) ($data['order_number'] ?? ''));
         $plateFallback = trim((string) ($data['plate_number'] ?? ''));
@@ -274,11 +288,19 @@ class WorkOrderController extends Controller
             $ocrMeta['source'] = 'manual_plate';
         }
 
+        $resolvedContext = $this->tryResolveIntakeTenantCompany($request, $user);
+        if ($resolvedContext instanceof JsonResponse) {
+            return $resolvedContext;
+        }
+        $cameraBranchConstraint = $resolvedContext['delegated_by_platform'] ? null : $this->workOrderBranchConstraint($request);
+
         $payload = $this->buildIntakeLookupPayload(
             $user,
             $orderNumber !== '' ? $orderNumber : null,
             $resolvedPlate,
-            $this->workOrderBranchConstraint($request)
+            $cameraBranchConstraint,
+            $resolvedContext['company_id'],
+            $resolvedContext['delegated_by_platform'],
         );
         $payload['data']['camera_lookup'] = $ocrMeta;
         $payload['data']['arrival'] = [
@@ -361,11 +383,90 @@ class WorkOrderController extends Controller
     }
 
     /**
+     * @return array{company_id: int, delegated_by_platform: true}|array{company_id: int, delegated_by_platform: false}|JsonResponse
+     */
+    private function tryResolveIntakeTenantCompany(Request $request, User $user)
+    {
+        $raw = $request->input('on_behalf_company_id');
+        $hasOnBehalf = $raw !== null && $raw !== '' && (int) $raw > 0;
+        if (! $hasOnBehalf) {
+            if (! $user->company_id) {
+                return response()->json([
+                    'message'  => 'يجب اختيار مزوّد (شريك تنفيذ) من القائمة أعلاه — البحث يتم في سياق شركاء التنفيذ فقط عند العمل نيابةً عنهم.',
+                    'trace_id' => app('trace_id'),
+                ], 422);
+            }
+
+            return [
+                'company_id'            => (int) $user->company_id,
+                'delegated_by_platform' => false,
+            ];
+        }
+        if (! (bool) $user->is_platform_user) {
+            return response()->json([
+                'message'  => 'تنفيذ البحث بالنيابة عن شركة محدّدة مخصّص لمشغّلي المنصّة فقط.',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+        if (! $user->hasPermission('platform.companies.read') && ! $user->hasPermission('platform.ops.read')) {
+            return response()->json([
+                'message'  => 'لا تملك صلاحية التحكّم في سياق مزوّد آخر (مطلوب: قراءة المشتركين أو عمليات المنصّة).',
+                'trace_id' => app('trace_id'),
+            ], 403);
+        }
+        $cid = (int) $raw;
+        $company = Company::query()->find($cid);
+        if ($company === null) {
+            return response()->json([
+                'message'  => 'الشركة المحدّدة غير موجودة.',
+                'trace_id' => app('trace_id'),
+            ], 404);
+        }
+        if (! TenantBusinessFeatures::isPlatformExecutionPartnerTenant($cid)) {
+            return response()->json([
+                'message'  => 'الشركة المختارة ليست مُسجّلة كشريك تنفيذ منصّة. اختر مزوّداً مُفعّلاً في إعدادات المنصّة.',
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
+
+        return [
+            'company_id'            => $cid,
+            'delegated_by_platform' => true,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
-    private function buildIntakeLookupPayload(User $user, ?string $orderNumber, ?string $plateNumber, ?int $restrictToBranchId = null): array
-    {
-        $companyId = (int) $user->company_id;
+    private function buildIntakeLookupPayload(
+        User $user,
+        ?string $orderNumber,
+        ?string $plateNumber,
+        ?int $restrictToBranchId,
+        int $targetCompanyId,
+        bool $delegatedByPlatform,
+    ): array {
+        $companyId = $targetCompanyId;
+        $tenantCompany = Company::query()->find($companyId);
+        if ($tenantCompany === null) {
+            return [
+                'data'     => [
+                    'lookup'          => [
+                        'order_number' => ($orderNumber ?? '') !== '' ? $orderNumber : null,
+                        'plate_number'   => ($plateNumber ?? '') !== '' ? $plateNumber : null,
+                    ],
+                    'work_order'      => null,
+                    'vehicle'         => null,
+                    'show_service_lines' => false,
+                    'service_lines'   => [],
+                    'prepaid'         => [],
+                    'execution'       => [],
+                    'arrival'         => [],
+                    'delegation'      => ['by_platform' => $delegatedByPlatform, 'company_id' => null, 'company_name' => null],
+                ],
+                'trace_id' => app('trace_id'),
+            ];
+        }
         $query = WorkOrder::query()
             ->where('company_id', $companyId)
             ->whereNull('deleted_at')
@@ -433,7 +534,7 @@ class WorkOrderController extends Controller
             }
         }
 
-        $financialModel = $user->company->financial_model ?? null;
+        $financialModel = $tenantCompany->financial_model ?? null;
         $financialModelValue = $financialModel instanceof \BackedEnum ? $financialModel->value : (string) $financialModel;
         $isPrepaid = $financialModelValue === 'prepaid';
         $hasPositivePrepaidBalance = ($fleetMainBalance + $vehicleWalletBalance) > 0.0001;
@@ -460,6 +561,11 @@ class WorkOrderController extends Controller
                 ];
             })->values()->all();
         }
+
+        $platformOpsDelegate = $delegatedByPlatform && (bool) $user->is_platform_user && $user->hasPermission('platform.ops.read');
+        $workshopSide = $user->role->isWorkshopSide();
+        $providerCanExecute = $platformOpsDelegate || $workshopSide;
+        $canExecuteNow = $providerCanExecute && ($isActiveOrder || $hasPositivePrepaidBalance);
 
         return [
             'data' => [
@@ -491,16 +597,21 @@ class WorkOrderController extends Controller
                     'has_any_wallet_balance' => $hasAnyWalletCredit,
                 ],
                 'execution' => [
-                    'provider_can_execute_service' => $user->role->isWorkshopSide(),
-                    'can_execute_now' => $user->role->isWorkshopSide() && ($isActiveOrder || $hasPositivePrepaidBalance),
+                    'provider_can_execute_service' => $providerCanExecute,
+                    'can_execute_now' => $canExecuteNow,
                 ],
                 'arrival' => [
                     'lookup_key' => ($orderNumber ?? '') !== '' ? 'order_number' : 'plate_number',
                     'lookup_value' => ($orderNumber ?? '') !== '' ? $orderNumber : (($plateNumber ?? '') !== '' ? $plateNumber : null),
                     'has_active_work_order' => $isActiveOrder,
-                    'provider_can_execute_service' => $user->role->isWorkshopSide(),
-                    'can_execute_now' => $user->role->isWorkshopSide() && ($isActiveOrder || $hasPositivePrepaidBalance),
+                    'provider_can_execute_service' => $providerCanExecute,
+                    'can_execute_now' => $canExecuteNow,
                     'prepaid_balance_ok' => $hasPositivePrepaidBalance,
+                ],
+                'delegation' => [
+                    'by_platform' => $delegatedByPlatform,
+                    'company_id' => $delegatedByPlatform ? $companyId : null,
+                    'company_name' => $delegatedByPlatform ? (string) ($tenantCompany->name ?? '') : null,
                 ],
             ],
             'trace_id' => app('trace_id'),
@@ -536,7 +647,9 @@ class WorkOrderController extends Controller
     {
         $user = $request->user();
         $catalogOnlyPricingActor = $user->role->isFleetSide() || $user->role->isCustomer();
-        $behavior = $this->behaviorResolver->resolve((int) $user->company_id, $user->branch_id ? (int) $user->branch_id : null);
+        $effectiveCompanyId = (int) app('tenant_company_id');
+        $effectiveBranchId = app()->has('tenant_branch_id') && app('tenant_branch_id') !== null ? (int) app('tenant_branch_id') : null;
+        $behavior = $this->behaviorResolver->resolve($effectiveCompanyId, $effectiveBranchId);
 
         if (($behavior['flags']['require_vehicle_plate'] ?? false) && ! $request->filled('vehicle_plate')) {
             return response()->json([
@@ -553,7 +666,7 @@ class WorkOrderController extends Controller
             ], 422);
         }
 
-        $companyId = (int) $user->company_id;
+        $companyId = (int) app('tenant_company_id');
 
         $data = $request->validate([
             'customer_id'            => 'required|integer|exists:customers,id',
@@ -612,8 +725,22 @@ class WorkOrderController extends Controller
             }
         }
 
+        $resolvedBranchId = $effectiveBranchId ?? ($user->branch_id ? (int) $user->branch_id : null);
+        if ($resolvedBranchId === null || $resolvedBranchId < 1) {
+            $resolvedBranchId = (int) (Branch::query()
+                ->where('company_id', $companyId)
+                ->orderBy('id')
+                ->value('id') ?? 0);
+        }
+        if ($resolvedBranchId < 1) {
+            return response()->json([
+                'message' => 'لا يوجد فرع صالح لربط أمر العمل.',
+                'trace_id' => app('trace_id'),
+            ], 422);
+        }
+
         try {
-            $order = $this->workOrderService->create($data, $user->company_id, $user->branch_id, $user->id);
+            $order = $this->workOrderService->create($data, $companyId, $resolvedBranchId, $user->id);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage(), 'trace_id' => app('trace_id')], 422);
         }
@@ -639,6 +766,7 @@ class WorkOrderController extends Controller
     {
         /** @var User $viewer */
         $viewer = request()->user();
+        // Tenant isolation: global scope on WorkOrder (trait HasTenantScope) filters by tenant_company_id from middleware.
         $order = WorkOrder::with([
             'customer', 'vehicle', 'branch',
             'assignedTechnician', 'createdBy',
@@ -783,7 +911,7 @@ class WorkOrderController extends Controller
         }
 
         $order = WorkOrder::query()
-            ->where('company_id', (int) $user->company_id)
+            ->where('company_id', (int) app('tenant_company_id'))
             ->whereNull('deleted_at')
             ->findOrFail($id);
 
@@ -877,7 +1005,7 @@ class WorkOrderController extends Controller
         }
 
         $order = WorkOrder::query()
-            ->where('company_id', (int) $user->company_id)
+            ->where('company_id', (int) app('tenant_company_id'))
             ->whereNull('deleted_at')
             ->findOrFail($id);
 
@@ -922,7 +1050,7 @@ class WorkOrderController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        $companyId = (int) $user->company_id;
+        $companyId = (int) app('tenant_company_id');
         $catalogOnlyPricingActor = $user->role->isFleetSide() || $user->role->isCustomer();
 
         $data = $request->validate([
@@ -1060,7 +1188,7 @@ class WorkOrderController extends Controller
             try {
                 $this->previewTokens->assertValid(
                     $token,
-                    (int) $user->company_id,
+                    (int) app('tenant_company_id'),
                     (int) $user->id,
                     SensitivePreviewTokenService::OP_STATUS_TO_APPROVED,
                     [(int) $order->id],
@@ -1130,7 +1258,7 @@ class WorkOrderController extends Controller
     public function linePricingPreview(Request $request): JsonResponse
     {
         $user = $request->user();
-        $companyId = (int) $user->company_id;
+        $companyId = (int) app('tenant_company_id');
 
         $data = $request->validate([
             'customer_id' => [
@@ -1175,7 +1303,9 @@ class WorkOrderController extends Controller
             }
         }
 
-        $branchId = $user->branch_id ? (int) $user->branch_id : null;
+        $branchId = app()->has('tenant_branch_id') && app('tenant_branch_id') !== null
+            ? (int) app('tenant_branch_id')
+            : ($user->branch_id ? (int) $user->branch_id : null);
         $qty = isset($data['quantity']) ? (float) $data['quantity'] : 1.0;
 
         try {
@@ -1210,7 +1340,11 @@ class WorkOrderController extends Controller
     private function requireBayAssignment(Request $request): bool
     {
         $user = $request->user();
-        $behavior = $this->behaviorResolver->resolve((int) $user->company_id, $user->branch_id ? (int) $user->branch_id : null);
+        $cid = (int) app('tenant_company_id');
+        $bid = app()->has('tenant_branch_id') && app('tenant_branch_id') !== null
+            ? (int) app('tenant_branch_id')
+            : ($user->branch_id ? (int) $user->branch_id : null);
+        $behavior = $this->behaviorResolver->resolve($cid, $bid);
 
         return (bool) ($behavior['rules']['work_orders.require_bay_assignment'] ?? false);
     }

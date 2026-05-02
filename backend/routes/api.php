@@ -86,6 +86,12 @@ Route::prefix('v1')->group(function () {
         Route::middleware(['platform.permission:platform.companies.read'])->group(function () {
             Route::get('/platform/companies/{id}', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'showCompany']);
             Route::get('/platform/companies/{id}/entity-snapshot', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companyEntitySnapshot']);
+            Route::get('/platform/companies/{id}/contracts-bridge', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companyContractsBridge'])
+                ->whereNumber('id')
+                ->middleware('throttle:60,1');
+            Route::get('/platform/companies/{id}/services-bridge', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companyServicesBridge'])
+                ->whereNumber('id')
+                ->middleware('throttle:60,1');
             Route::get('/platform/companies', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'companies']);
             Route::get('/platform/provider-invoice-attachments', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'providerInvoiceAttachments']);
             Route::get('/platform/search', [\App\Http\Controllers\Api\V1\PlatformAdminController::class, 'globalSearch']);
@@ -359,6 +365,17 @@ Route::prefix('v1')->group(function () {
                 ->whereNumber('id')
                 ->middleware('throttle:60,1');
             Route::post('/{id}/costs', [\App\Http\Controllers\Api\V1\Platform\PlatformServiceProviderController::class, 'storeCost'])
+                ->whereNumber('id')
+                ->middleware('throttle:30,1');
+        });
+
+        Route::middleware(['platform.permission:platform.purchase_claims.read'])->group(function () {
+            Route::get('/platform/purchase-claims', [\App\Http\Controllers\Api\V1\Platform\PlatformPurchaseClaimsController::class, 'index'])
+                ->middleware('throttle:60,1');
+        });
+
+        Route::middleware(['platform.permission:platform.purchase_claims.review'])->group(function () {
+            Route::patch('/platform/purchase-claims/{id}/review', [\App\Http\Controllers\Api\V1\Platform\PlatformPurchaseClaimsController::class, 'review'])
                 ->whereNumber('id')
                 ->middleware('throttle:30,1');
         });

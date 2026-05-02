@@ -2,13 +2,16 @@
 
 namespace App\Services;
 
+use App\Enums\PlatformPricingRequestStatus;
 use App\Enums\ServicePricingPolicyType;
 use App\Enums\SubscriptionStatus;
 use App\Enums\WorkOrderPricingSource;
 use App\Models\Contract;
 use App\Models\ContractServiceItem;
 use App\Models\Customer;
+use App\Models\PlatformCustomerPriceVersion;
 use App\Models\Plan;
+use App\Models\Service;
 use App\Models\ServicePricingPolicy;
 use App\Models\Subscription;
 use App\Models\WorkOrderItem;
@@ -19,8 +22,9 @@ use Illuminate\Support\Collection;
 /**
  * نقطة الحسم الوحيدة لتسعير بنود أمر العمل المرتبطة بخدمة (service_id).
  *
- * الأولوية الرسمية بعد اعتماد كتالوج العقد:
+ * الأولوية الرسمية:
  * بند عقد (contract_service_items) عند ارتباط العميل بعقد فعّال ومطابقة نطاق الفرع/المركبة
+ * ← ثم نسخة أسعار المنصّة المعتمدة (sell_snapshot يطابق service.code) عند التفعيل في config/pricing.php
  * ← ثم سياسات التسعير: عميل محدد → مجموعة → عقد (service_pricing_policies) → عام
  * ← ثم سعر الخدمة الأساسي (إن وُجدت سياسة عامة أو تسعير متقدّم مفعّل أو مسار غير أسطول)
  *
@@ -46,7 +50,7 @@ class WorkOrderPricingResolverService
         $on = $onDate ?? Carbon::now();
         $onDateStr = $on->toDateString();
 
-        $service = \App\Models\Service::query()
+        $service = Service::query()
             ->where('company_id', $companyId)
             ->where('id', $serviceId)
             ->where('is_active', true)
@@ -95,6 +99,10 @@ class WorkOrderPricingResolverService
                     throw new \DomainException(self::FLEET_CONTRACT_SCOPE_MESSAGE);
                 }
             }
+        }
+
+        if ($resolved === null) {
+            $resolved = $this->resolveFromPlatformApprovedCatalog($companyId, $customerId, $service);
         }
 
         if ($resolved === null && $advanced) {
@@ -339,5 +347,89 @@ class WorkOrderPricingResolverService
 
             return strcmp($bd, $ad);
         })->first();
+    }
+
+    private function resolveFromPlatformApprovedCatalog(
+        int $companyId,
+        int $customerId,
+        Service $service,
+    ): ?ResolvedWorkOrderLinePrice {
+        if (! config('pricing.platform_catalog_resolver.enabled', true)) {
+            return null;
+        }
+
+        $code = trim((string) ($service->code ?? ''));
+        if ($code === '') {
+            return null;
+        }
+
+        $version = PlatformCustomerPriceVersion::query()
+            ->where('company_id', $companyId)
+            ->where('customer_id', $customerId)
+            ->where('is_reference', true)
+            ->whereNotNull('activated_at')
+            ->where(static function ($q): void {
+                $q->whereNull('platform_pricing_request_id')
+                    ->orWhereHas('pricingRequest', static function ($rq): void {
+                        $rq->where('status', PlatformPricingRequestStatus::Approved)
+                            ->whereNotNull('approved_at');
+                    });
+            })
+            ->orderByDesc('version_no')
+            ->first();
+
+        if ($version === null) {
+            return null;
+        }
+
+        $line = $this->pickSellSnapshotLine($version->sell_snapshot ?? [], $code);
+        if ($line === null) {
+            return null;
+        }
+
+        $unit = (float) ($line['unit_price'] ?? $line['price'] ?? 0);
+        if ($unit <= 0.0) {
+            return null;
+        }
+
+        $tax = array_key_exists('tax_rate', $line) && $line['tax_rate'] !== null && $line['tax_rate'] !== ''
+            ? (float) $line['tax_rate']
+            : (float) $service->tax_rate;
+
+        return new ResolvedWorkOrderLinePrice(
+            unitPrice: $unit,
+            taxRate: $tax,
+            source: WorkOrderPricingSource::PlatformApprovedCatalog,
+            policyId: null,
+            resolutionLevel: 'platform_approved_catalog',
+            notes: isset($line['label']) ? (string) $line['label'] : null,
+            contractServiceItemId: null,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $snapshot
+     */
+    private function pickSellSnapshotLine(array $snapshot, string $serviceCode): ?array
+    {
+        $rows = $snapshot;
+        if (isset($snapshot['lines']) && is_array($snapshot['lines'])) {
+            $rows = $snapshot['lines'];
+        }
+        if (! is_array($rows)) {
+            return null;
+        }
+
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $sc = isset($row['service_code']) ? trim((string) $row['service_code']) : '';
+            if ($sc !== '' && strcasecmp($sc, $serviceCode) === 0) {
+                return $row;
+            }
+        }
+
+        return null;
     }
 }

@@ -27,6 +27,7 @@ use App\Models\UserPushDevice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Support\Auth\LoginContextResolution;
+use App\Support\TenantBusinessFeatures;
 use App\Support\PlatformIntelligence\PlatformRolePermissionResolver;
 use App\Support\SubscriptionAccessEvaluator;
 use Database\Seeders\DemoPlatformAdminSeeder;
@@ -460,6 +461,7 @@ class AuthController extends Controller
                 'users_in_db'    => $count,
                 'vite_proxy_tip' => 'Vite on :5173 + Docker API on port 80 → frontend/.env: VITE_DEV_PROXY_TARGET=http://127.0.0.1',
                 'seed_command'   => 'docker compose exec app php artisan workshop:seed-demo',
+                'portal_journey_resync' => 'docker compose exec app php artisan dev:seed-portal-journeys (local only; idempotent)',
             ];
 
             $emailNorm = $request !== null ? $this->resolveEmailNormFromRequest($request) : null;
@@ -997,6 +999,9 @@ class AuthController extends Controller
             'navigation_visibility' => $this->navigationVisibility->effectiveForUser($user),
             'hidden_staff_nav_keys' => $this->staffNavHideResolver->hiddenKeysForStaffUser($user),
             'hidden_customer_nav_keys' => $this->staffNavHideResolver->hiddenKeysForCustomerUser($user),
+            'platform_execution_partner' => $user->company_id
+                ? TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) $user->company_id)
+                : false,
         ];
     }
 

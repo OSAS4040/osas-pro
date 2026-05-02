@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
+use App\Models\Branch;
 use App\Models\Inventory;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
@@ -80,21 +81,38 @@ class ProductController extends Controller
             $validated['track_inventory'] = $request->boolean('track_stock');
         }
 
+        $tenantCompanyId = (int) app('tenant_company_id');
+        $inventoryBranchId = app()->has('tenant_branch_id') && app('tenant_branch_id') !== null
+            ? (int) app('tenant_branch_id')
+            : ($request->user()->branch_id ? (int) $request->user()->branch_id : null);
+        if ($inventoryBranchId === null || $inventoryBranchId < 1) {
+            $inventoryBranchId = (int) (Branch::query()
+                ->where('company_id', $tenantCompanyId)
+                ->orderBy('id')
+                ->value('id') ?? 0);
+        }
+
         $product = Product::create(array_merge(
             $validated,
             [
                 'uuid'               => Str::uuid(),
-                'company_id'         => $request->user()->company_id,
+                'company_id'         => $tenantCompanyId,
                 'created_by_user_id' => $request->user()->id,
             ]
         ));
 
         if ($product->track_inventory) {
+            if ($inventoryBranchId < 1) {
+                return response()->json([
+                    'message' => 'لا يوجد فرع صالح لتسجيل مخزون المنتج.',
+                    'trace_id' => app('trace_id'),
+                ], 422);
+            }
             $initialQty = (float) ($request->input('stock_quantity', $request->input('quantity', 0)));
             Inventory::firstOrCreate(
                 ['company_id' => $product->company_id, 'product_id' => $product->id],
                 [
-                    'branch_id'         => $request->user()->branch_id,
+                    'branch_id'         => $inventoryBranchId,
                     'quantity'          => $initialQty,
                     'reserved_quantity' => 0,
                     'reorder_point'     => $request->input('reorder_point', 0),

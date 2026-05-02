@@ -64,7 +64,11 @@ class ServiceController extends Controller
     public function store(StoreServiceRequest $request): JsonResponse
     {
         $user = $request->user();
-        $behavior = $this->behaviorResolver->resolve((int) $user->company_id, $user->branch_id ? (int) $user->branch_id : null);
+        $cid = (int) app('tenant_company_id');
+        $bid = app()->has('tenant_branch_id') && app('tenant_branch_id') !== null
+            ? (int) app('tenant_branch_id')
+            : ($user->branch_id ? (int) $user->branch_id : null);
+        $behavior = $this->behaviorResolver->resolve($cid, $bid);
         if (($behavior['rules']['services.require_estimated_minutes'] ?? false) && ! $request->filled('estimated_minutes')) {
             return response()->json([
                 'message' => 'estimated_minutes is required for this vertical profile.',
@@ -76,7 +80,7 @@ class ServiceController extends Controller
         $service = Service::create(array_merge(
             $request->validated(),
             [
-                'company_id'         => $user->company_id,
+                'company_id'         => $cid,
                 'created_by_user_id' => $user->id,
             ]
         ));

@@ -14,7 +14,7 @@ class StoreServiceRequest extends FormRequest
 
     public function rules(): array
     {
-        $companyId = $this->user()->company_id;
+        $companyId = (int) app('tenant_company_id');
 
         return [
             'name'               => ['required', 'string', 'max:200'],
@@ -28,7 +28,11 @@ class StoreServiceRequest extends FormRequest
             'tax_rate'           => ['nullable', 'numeric', 'min:0', 'max:100'],
             'estimated_minutes'  => ['nullable', 'integer', 'min:1'],
             'is_active'          => ['nullable', 'boolean'],
-            'branch_id'          => ['nullable', 'integer', 'exists:branches,id'],
+            'branch_id'          => [
+                'nullable',
+                'integer',
+                Rule::exists('branches', 'id')->where(fn ($q) => $q->where('company_id', $companyId)),
+            ],
         ];
     }
 }

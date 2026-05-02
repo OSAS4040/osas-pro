@@ -14,8 +14,9 @@ class UpdateServiceRequest extends FormRequest
 
     public function rules(): array
     {
-        $companyId = $this->user()->company_id;
-        $id        = $this->route('id');
+        $companyId = (int) app('tenant_company_id');
+        $routeKey = $this->route('service') ?? $this->route('id');
+        $id        = is_object($routeKey) ? $routeKey->id : $routeKey;
 
         return [
             'name'              => ['sometimes', 'string', 'max:200'],

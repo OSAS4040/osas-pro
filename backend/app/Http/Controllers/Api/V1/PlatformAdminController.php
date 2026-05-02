@@ -7,9 +7,12 @@ use App\Enums\CompanyFinancialModelStatus;
 use App\Enums\CompanyStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Support\TenantBusinessFeatures;
 use App\Models\AuditLog;
+use App\Models\Contract;
 use App\Models\Company;
 use App\Models\Customer;
+use App\Models\Service;
 use App\Models\Plan;
 use App\Models\PlanAddon;
 use App\Models\Subscription;
@@ -49,8 +52,14 @@ class PlatformAdminController extends Controller
     {
         $paginator = Company::query()
             ->withCount('users')
+            ->when($request->filled('search'), static function ($q) use ($request): void {
+                $s = trim((string) $request->query('search'));
+                if ($s !== '') {
+                    $q->where('name', 'ilike', '%'.$s.'%');
+                }
+            })
             ->orderByDesc('id')
-            ->paginate(50);
+            ->paginate(min(100, max(10, (int) $request->query('per_page', 50))));
 
         $paginator->getCollection()->transform(function (Company $c) {
             $sub = Subscription::withoutGlobalScopes()
@@ -94,6 +103,7 @@ class PlatformAdminController extends Controller
                 'users_count'           => $c->users_count,
                 'monthly_revenue'       => $monthly,
                 'subscription_status' => $status,
+                'platform_execution_partner' => TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) $c->id),
             ];
         });
 
@@ -534,6 +544,88 @@ class PlatformAdminController extends Controller
                 'vehicles' => $vehicles,
                 'invoices' => $invoices,
                 'work_orders' => $workOrders,
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    /**
+     * لوحة «العقود على مستوى المنصّة»: قائمة عقود مستأجر مع فلاتر دون سياق tenant.
+     */
+    public function companyContractsBridge(Request $request, int $id): JsonResponse
+    {
+        Company::query()->findOrFail($id);
+
+        $perPage = min(100, max(10, (int) $request->query('per_page', 25)));
+
+        $query = Contract::withoutGlobalScopes()
+            ->where('company_id', $id)
+            ->withCount('serviceItems');
+
+        if ($request->filled('status')) {
+            $query->where('status', (string) $request->query('status'));
+        }
+        if ($request->filled('search')) {
+            $s = '%'.trim((string) $request->query('search')).'%';
+            $query->where(static function ($q) use ($s): void {
+                $q->where('title', 'ilike', $s)->orWhere('party_name', 'ilike', $s);
+            });
+        }
+        if ($request->filled('service_id')) {
+            $sid = (int) $request->query('service_id');
+            if ($sid > 0) {
+                $query->whereHas('serviceItems', static fn ($q) => $q->where('service_id', $sid));
+            }
+        }
+
+        $paginator = $query->orderByDesc('id')->paginate($perPage);
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+            'trace_id' => app('trace_id'),
+        ]);
+    }
+
+    /**
+     * خدمات كتالوج المستأجر لعرضها في لوحة العقود (اختيار خدمة + فلترة العقود).
+     */
+    public function companyServicesBridge(Request $request, int $id): JsonResponse
+    {
+        Company::query()->findOrFail($id);
+
+        $perPage = min(200, max(10, (int) $request->query('per_page', 80)));
+
+        $query = Service::withoutGlobalScopes()
+            ->where('company_id', $id);
+
+        if ($request->boolean('active_only', true)) {
+            $query->where('is_active', true);
+        }
+
+        if ($request->filled('search')) {
+            $s = '%'.trim((string) $request->query('search')).'%';
+            $query->where(static function ($q) use ($s): void {
+                $q->where('name', 'ilike', $s)
+                    ->orWhere('name_ar', 'ilike', $s)
+                    ->orWhere('code', 'ilike', $s);
+            });
+        }
+
+        $paginator = $query->orderBy('name')->paginate($perPage);
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
             ],
             'trace_id' => app('trace_id'),
         ]);

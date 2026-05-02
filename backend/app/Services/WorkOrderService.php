@@ -6,11 +6,13 @@ use App\Enums\WorkOrderStatus;
 use App\Intelligence\Events\WorkOrderCreated;
 use App\Intelligence\Events\WorkOrderStatusChanged;
 use App\Jobs\NotifyCustomerWorkOrderWhatsAppJob;
+use App\Models\Company;
 use App\Models\OrgUnit;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderItem;
 use App\Services\WorkOrderPricing\ResolvedWorkOrderLinePrice;
+use App\Support\TenantBusinessFeatures;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -82,7 +84,7 @@ class WorkOrderService
                 'assigned_technician_id'  => $data['assigned_technician_id'] ?? null,
                 'order_number'            => $orderNumber,
                 'work_order_number'       => $data['work_order_number'] ?? null,
-                'status'                  => WorkOrderStatus::PendingManagerApproval,
+                'status'                  => $this->resolveInitialWorkOrderStatus($companyId),
                 'priority'                => $data['priority'] ?? 'normal',
                 'customer_complaint'      => $data['customer_complaint'] ?? null,
                 'mileage_in'              => $data['mileage_in'] ?? null,
@@ -115,6 +117,10 @@ class WorkOrderService
 
             return $order;
         });
+
+        if ($order->status === WorkOrderStatus::Approved) {
+            $this->approvedCreditBridge->onApproved($order->fresh(), $userId);
+        }
 
         $warnMs = (int) config('observability.work_order_create_warn_ms', 0);
         if ($warnMs > 0) {
@@ -204,6 +210,28 @@ class WorkOrderService
         }
 
         return (int) $row->last_allocated;
+    }
+
+    /**
+     * ورش الخدمة (service_center) تبدأ أمر العمل معتمداً حتى يتابع الفني التنفيذ مباشرة.
+     * أنشطة أخرى (مثل retail / fleet_operator) تبقي الطلب في قائمة انتظار اعتماد المدير.
+     * شريك تنفيذ المنصة يعمل كمزوّد خدمة — يُسمح بالتنفيذ دون طابور اعتماد مدير حتى لو كان نوع النشاط retail/fleet_operator.
+     */
+    private function resolveInitialWorkOrderStatus(int $companyId): WorkOrderStatus
+    {
+        if (TenantBusinessFeatures::isPlatformExecutionPartnerTenant($companyId)) {
+            return WorkOrderStatus::Approved;
+        }
+
+        $company = Company::query()->find($companyId);
+        $settings = $company && is_array($company->settings) ? $company->settings : [];
+        $profile = is_array($settings['business_profile'] ?? null) ? $settings['business_profile'] : [];
+        $businessType = (string) ($profile['business_type'] ?? 'service_center');
+
+        return match ($businessType) {
+            'retail', 'fleet_operator' => WorkOrderStatus::PendingManagerApproval,
+            default => WorkOrderStatus::Approved,
+        };
     }
 
     private function resolveCreatorOrgUnitId(int $userId, int $companyId): int
@@ -299,17 +327,11 @@ class WorkOrderService
             }
 
             if ($newStatus === WorkOrderStatus::Completed) {
-                $nextTechnicianNotes = array_key_exists('technician_notes', $meta)
-                    ? trim((string) $meta['technician_notes'])
-                    : trim((string) ($fresh->technician_notes ?? ''));
                 $nextMileageOut = array_key_exists('mileage_out', $meta)
                     ? (int) $meta['mileage_out']
                     : ($fresh->mileage_out !== null ? (int) $fresh->mileage_out : null);
                 $afterImages = is_array($fresh->after_service_images) ? $fresh->after_service_images : [];
 
-                if ($nextTechnicianNotes === '') {
-                    throw new \DomainException('لا يمكن إكمال أمر العمل بدون تقرير فني (technician_notes).');
-                }
                 if ($nextMileageOut === null || $nextMileageOut < 0) {
                     throw new \DomainException('لا يمكن إكمال أمر العمل بدون العداد النهائي (mileage_out).');
                 }
