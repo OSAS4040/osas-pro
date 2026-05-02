@@ -36,6 +36,14 @@ class WorkshopSeedDemoCommand extends Command
             $admin->__invoke();
         });
 
+        $journeyCode = $this->call('db:seed', [
+            '--class' => \Database\Seeders\DemoIntegratedPortalJourneySeeder::class,
+            '--force' => true,
+        ]);
+        if ($journeyCode !== self::SUCCESS) {
+            $this->warn('DemoIntegratedPortalJourneySeeder exited with code '.$journeyCode.' — demo accounts remain usable.');
+        }
+
         $this->info('Demo seeders finished. Try: owner@demo.sa / password or admin@osas.sa / 12345678');
 
         return self::SUCCESS;

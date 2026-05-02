@@ -190,7 +190,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import { ShieldCheckIcon, CpuChipIcon, EyeIcon, EyeSlashIcon, ExclamationCircleIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
@@ -210,6 +210,7 @@ const FALLBACK_401_PLATFORM_SEED_HINT =
 const appVersion = __APP_VERSION__
 
 const auth = useAuthStore()
+const route = useRoute()
 const router = useRouter()
 const i18n = useI18nStore()
 
@@ -314,7 +315,8 @@ async function handleLogin() {
       registrationStage: undefined,
       accountType: undefined,
       portalHomeFromRole: '/platform/overview',
-      redirectQuery: undefined,
+      redirectQuery: route.query.redirect,
+      platformAdminLogin: true,
     })
     await router.push(target)
   } catch (e: unknown) {

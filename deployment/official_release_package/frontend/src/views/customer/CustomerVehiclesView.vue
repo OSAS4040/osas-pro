@@ -14,7 +14,7 @@
           :template-columns="['plate_number', 'make', 'model', 'year', 'color', 'vin']"
           label="استيراد Excel"
           title="استيراد مركبات"
-          @imported="load"
+          @imported="() => void load()"
         />
         <button class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
                 @click="openAdd"
@@ -199,7 +199,7 @@
             </div>
             <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
               <button class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors" @click="showAdd = false">إلغاء</button>
-                <button :disabled="saving" class="px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors" @click="submit">
+              <button :disabled="saving" class="px-5 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors" @click="submit">
                 {{ saving ? 'جارٍ الحفظ...' : (editingVehicleId ? 'حفظ التعديلات' : 'إضافة المركبة') }}
               </button>
             </div>
@@ -250,8 +250,8 @@ function fuelLabel(t: string) { return fuelMap[t] || '—' }
 function filterDemoVehicles(): typeof demoCustomerVehicles {
   const q = String(filters.search || '').trim().toLowerCase()
   return demoCustomerVehicles.filter((v) => {
-    if (filters.status === 'active' && !Boolean(v?.is_active)) return false
-    if (filters.status === 'inactive' && Boolean(v?.is_active)) return false
+    if (filters.status === 'active' && !v?.is_active) return false
+    if (filters.status === 'inactive' && v?.is_active) return false
     if (!q) return true
     const hay = `${v?.plate_number ?? ''} ${v?.make ?? ''} ${v?.model ?? ''} ${v?.vin ?? ''}`.toLowerCase()
     return hay.includes(q)
@@ -411,7 +411,7 @@ async function toggleVehicleState(v: any): Promise<void> {
       fuel_type: v?.fuel_type ?? null,
       vin: v?.vin ?? null,
       notes: v?.notes ?? null,
-      is_active: !Boolean(v?.is_active),
+      is_active: !v?.is_active,
     })
     toast.success('تم التحديث', `تم ${v?.is_active ? 'تعطيل' : 'تنشيط'} المركبة بنجاح.`)
     await load()

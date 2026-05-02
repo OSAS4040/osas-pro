@@ -75,6 +75,10 @@ import {
   UsersIcon,
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
+import {
+  PLATFORM_ROUTE_EXTRA_ANY_PERMISSIONS,
+  canAccessWithAnyPermission,
+} from '@/config/platformSectionGate'
 
 const auth = useAuthStore()
 
@@ -146,8 +150,8 @@ const allCards: HubCard[] = [
   },
   {
     routeName: 'platform-contracts',
-    title: 'العقود',
-    description: 'ربط العقود بالتسعير والعملاء.',
+    title: 'العقود والمستأجرين',
+    description: 'اختيار شركة، تصفية الخدمات والعقود، وربط السياق بالتسعير.',
     icon: DocumentTextIcon,
   },
   {
@@ -159,6 +163,18 @@ const allCards: HubCard[] = [
 ]
 
 const visibleCards = computed(() =>
-  allCards.filter((c) => (c.requires ? auth.hasPermission(c.requires) : true)),
+  allCards.filter((c) => {
+    if (c.requires && !auth.hasPermission(c.requires)) {
+      return false
+    }
+    const extraKeys = PLATFORM_ROUTE_EXTRA_ANY_PERMISSIONS[c.routeName as keyof typeof PLATFORM_ROUTE_EXTRA_ANY_PERMISSIONS]
+    if (
+      extraKeys
+      && !canAccessWithAnyPermission((p: string) => auth.hasPermission(p), extraKeys)
+    ) {
+      return false
+    }
+    return true
+  }),
 )
 </script>

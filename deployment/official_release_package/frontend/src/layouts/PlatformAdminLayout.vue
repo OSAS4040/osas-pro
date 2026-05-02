@@ -4,8 +4,20 @@
     class="flex min-h-screen text-slate-900 transition-colors dark:text-white"
     dir="rtl"
   >
+    <!-- خلفية شفافة للموبايل عند فتح القائمة الجانبية -->
+    <button
+      v-if="mobileDrawerOpen && !isLgUp"
+      type="button"
+      class="fixed inset-0 z-40 cursor-default border-0 bg-black/45 backdrop-blur-[1px] lg:hidden"
+      aria-label="إغلاق القائمة"
+      @click="mobileDrawerOpen = false"
+    />
+
     <aside
-      class="hidden w-[17.5rem] shrink-0 flex-col border-l border-[color:var(--border-color)] bg-[color:var(--bg-sidebar)] shadow-sm transition-colors dark:shadow-none lg:flex xl:w-72"
+      class="flex w-[17.5rem] shrink-0 flex-col overflow-hidden border-l border-[color:var(--border-color)] bg-[color:var(--bg-sidebar)] shadow-2xl transition-[transform] duration-200 ease-out dark:shadow-none lg:relative lg:z-auto lg:max-w-none lg:translate-x-0 lg:shadow-sm xl:w-72 max-lg:fixed max-lg:inset-y-0 max-lg:right-0 max-lg:z-[45] max-lg:max-w-[min(100vw,17.5rem)]"
+      :class="mobileAsideTransformClass"
+      id="platform-admin-sidebar"
+      :inert="sidebarInert"
       aria-label="قائمة إدارة المنصة"
     >
       <div class="border-b border-[color:var(--border-color)] bg-[color:var(--bg-header)] px-4 py-4 dark:border-slate-700/80">
@@ -249,7 +261,7 @@
       <div class="border-t border-slate-100 p-2 dark:border-slate-800">
         <PlatformAdminNavCard eyebrow="الخروج من إدارة المنصة" :hint="PLATFORM_OPERATIONS_EXIT_VISIBLE">
           <RouterLink
-            to="/"
+            :to="tenantStaffHomeRoute()"
             :title="PLATFORM_OPERATIONS_EXIT_TOOLTIP"
             :aria-label="platformOperationsExitAriaLabel('العودة لفريق العمل')"
             :class="platformNavLinkClass(isActiveStaffPath('/'))"
@@ -263,10 +275,23 @@
 
     <div class="flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden">
       <header
-        class="sticky top-0 z-10 h-16 border-b border-[color:var(--border-color)] bg-white/90 px-4 backdrop-blur-md dark:border-slate-700 dark:bg-[color:var(--bg-header)]/95 lg:px-6"
+        class="sticky top-0 h-16 border-b border-[color:var(--border-color)] bg-white/90 px-4 backdrop-blur-md dark:border-slate-700 dark:bg-[color:var(--bg-header)]/95 lg:px-6"
+        :class="mobileDrawerOpen && !isLgUp ? 'z-[50]' : 'z-10'"
       >
         <div class="mx-auto flex h-full max-w-[1600px] items-center justify-between gap-3">
-          <nav class="min-w-0 text-[11px] text-slate-500 dark:text-slate-400" aria-label="مسار التنقّل">
+          <div class="flex min-w-0 flex-1 items-center gap-2">
+            <button
+              id="platform-admin-mobile-menu-trigger"
+              type="button"
+              class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 lg:hidden"
+              :aria-expanded="mobileDrawerOpen"
+              aria-controls="platform-admin-sidebar"
+              aria-label="فتح قائمة إدارة المنصة أو إغلاقها"
+              @click="mobileDrawerOpen = !mobileDrawerOpen"
+            >
+              <Bars3Icon class="h-6 w-6" aria-hidden="true" />
+            </button>
+            <nav class="min-w-0 flex-1 text-[11px] text-slate-500 dark:text-slate-400" aria-label="مسار التنقّل">
             <ol class="flex flex-wrap items-center gap-1">
               <li>
                 <RouterLink :to="{ name: 'platform-overview' }" class="font-semibold text-primary-700 hover:underline dark:text-primary-400">
@@ -278,37 +303,14 @@
                 <span class="font-medium text-slate-800 dark:text-slate-200">{{ breadcrumbCurrent }}</span>
               </li>
             </ol>
-          </nav>
-          <div class="flex items-center gap-2">
+            </nav>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
             <PlatformNotificationsBell />
-            <PlatformOperationsExitLink to="/" v-bind="{ ariaName: 'فريق العمل' }" variant="toolbar" class="lg:hidden">
+            <PlatformOperationsExitLink :to="tenantStaffHomeRoute()" v-bind="{ ariaName: 'فريق العمل' }" variant="toolbar" class="lg:hidden">
               فريق العمل
             </PlatformOperationsExitLink>
           </div>
-        </div>
-        <div class="mx-auto mt-3 max-w-[1600px] lg:hidden">
-          <label class="mb-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">الانتقال إلى قسم</label>
-          <select
-            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-white"
-            :value="mobileNavSelectValue"
-            @change="onMobileNavSelect"
-          >
-            <option v-for="item in platformAdminNavItems" :key="'m-' + item.id" :value="item.routeName">{{ item.label }}</option>
-            <option v-if="auth.hasPermission('platform.subscription.manage')" value="__admin:/admin/subscriptions">طلبات الاشتراكات</option>
-            <template v-if="auth.hasPermission('platform.providers.manage')">
-              <option v-for="link in platformProviderSidebarLinks" :key="'m-pv-' + link.routeName" :value="link.routeName">
-                مزودو الخدمة: {{ link.label }}
-              </option>
-            </template>
-            <template v-if="commercialPricingSidebarLinksFiltered.length > 0">
-              <option v-for="link in commercialPricingSidebarLinksFiltered" :key="'m-cp-' + link.routeName" :value="link.routeName">
-                التسعير: {{ link.label }}
-              </option>
-            </template>
-            <option v-for="link in platformContractsAndReportsSidebarLinks" :key="'m-cr-' + link.routeName" :value="link.routeName">
-              {{ link.label }}
-            </option>
-          </select>
         </div>
       </header>
 
@@ -328,8 +330,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import {
   BeakerIcon,
   HomeIcon,
@@ -346,6 +348,8 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
   ChevronDownIcon,
+  MagnifyingGlassCircleIcon,
+  Bars3Icon,
 } from '@heroicons/vue/24/outline'
 import {
   platformAdminNavItems,
@@ -355,11 +359,14 @@ import {
   platformContractsAndReportsSidebarLinks,
   type PlatformAdminNavItem,
   type PlatformAdminSidebarGroup,
+  type PlatformAdminSectionId,
 } from '@/config/platformAdminNav'
+import { canAccessPlatformSection } from '@/config/platformSectionGate'
 import {
   PLATFORM_OPERATIONS_EXIT_TOOLTIP,
   PLATFORM_OPERATIONS_EXIT_VISIBLE,
   platformOperationsExitAriaLabel,
+  tenantStaffHomeRoute,
 } from '@/config/platformOperationsHandoff'
 import PlatformAdminNavCard from '@/components/platform-admin/PlatformAdminNavCard.vue'
 import PlatformOperationsExitLink from '@/components/platform-admin/PlatformOperationsExitLink.vue'
@@ -370,14 +377,32 @@ import { platformSubscriptionAttentionKey } from '@/components/platform-admin/Pl
 
 const SIDEBAR_COLLAPSE_LS = 'platform_admin_sidebar_collapsed_groups'
 
+function readIsLgUp(): boolean {
+  if (typeof window === 'undefined') return true
+  return window.matchMedia('(min-width: 1024px)').matches
+}
+
 const route = useRoute()
-const useRouterInstance = useRouter()
 const auth = useAuthStore()
+
+/** درج القائمة على الشاشات الصغيرة — لا يؤثر على md+ حيث يبقى الشريط في التدفق */
+const mobileDrawerOpen = ref(false)
+const isLgUp = ref(readIsLgUp())
+
+const mobileAsideTransformClass = computed(() =>
+  isLgUp.value ? '' : mobileDrawerOpen.value ? 'max-lg:translate-x-0' : 'max-lg:translate-x-full',
+)
+
+const sidebarInert = computed(() => !isLgUp.value && !mobileDrawerOpen.value)
 const subscriptionAttention = usePlatformSubscriptionAttention({})
 const subscriptionBadgeCount = subscriptionAttention.badgeCount
 
+/** يُستبدَل مسار الرئيسية لمشغّل المنصّة في computed أدناه بـ `/?shell=tenant`. */
 const staffPortalLinks = [
   { to: '/', label: 'لوحة التحكم', icon: HomeIcon },
+  { to: '/execution-hub', label: 'تنفيذ العمليات', icon: MagnifyingGlassCircleIcon },
+  { to: '/provider/platform-purchases', label: 'مشتريات المنصّة', icon: TruckIcon },
+  { to: '/provider/purchase-claims', label: 'صرف المستحقات', icon: CurrencyDollarIcon },
   { to: '/invoices', label: 'الفواتير', icon: DocumentTextIcon },
   { to: '/ledger', label: 'دفتر الأستاذ', icon: BanknotesIcon },
   { to: '/chart-of-accounts', label: 'دليل الحسابات', icon: ClipboardDocumentListIcon },
@@ -428,7 +453,9 @@ function filteredNavItemsForGroup(group: PlatformAdminSidebarGroup): PlatformAdm
   const out: PlatformAdminNavItem[] = []
   for (const id of group.sectionIds) {
     const item = platformAdminNavItems.find((i) => i.id === id)
-    if (item && itemMatchesNavQuery(item, q)) out.push(item)
+    if (!item || !itemMatchesNavQuery(item, q)) continue
+    if (!canAccessPlatformSection(auth.hasPermission, id as PlatformAdminSectionId)) continue
+    out.push(item)
   }
   return out
 }
@@ -488,24 +515,32 @@ const subscriptionCardVisible = computed(() => {
 })
 
 const contractsCardVisible = computed(() => {
+  if (!auth.hasPermission('platform.pricing.view') && !auth.hasPermission('platform.providers.manage')) return false
   const q = sidebarNavQuery.value.trim()
   if (!q) return true
   return textMatchesNavQuery('العقود عقد', q)
 })
 
 const reportsCardVisible = computed(() => {
+  if (!auth.hasPermission('platform.reporting.read') && !auth.hasPermission('platform.pricing.view')) return false
   const q = sidebarNavQuery.value.trim()
   if (!q) return true
   return textMatchesNavQuery('التقارير تقرير', q)
 })
 
+const staffPortalHomePath = computed(() => (auth.isPlatform ? '/?shell=tenant' : '/'))
+
 const staffPortalLinksFiltered = computed(() => {
   const q = sidebarNavQuery.value.trim()
-  if (!q) return staffPortalLinks
-  return staffPortalLinks.filter((link) => textMatchesNavQuery(link.label, q))
+  const base = staffPortalLinks.map((link) =>
+    link.to === '/' ? { ...link, to: staffPortalHomePath.value } : link,
+  )
+  if (!q) return base
+  return base.filter((link) => textMatchesNavQuery(link.label, q))
 })
 
 const staffPortalCardVisible = computed(() => {
+  if (typeof auth.user?.company_id !== 'number' || auth.user.company_id <= 0) return false
   const q = sidebarNavQuery.value.trim()
   if (!q) return true
   return staffPortalLinksFiltered.value.length > 0
@@ -551,6 +586,19 @@ provide(platformSubscriptionAttentionKey, {
   refresh: subscriptionAttention.refresh,
 })
 
+function onMqChange(ev: MediaQueryListEvent): void {
+  isLgUp.value = ev.matches
+  if (ev.matches) mobileDrawerOpen.value = false
+}
+
+function onGlobalKeydown(ev: KeyboardEvent): void {
+  if (ev.key !== 'Escape') return
+  if (!mobileDrawerOpen.value || isLgUp.value) return
+  mobileDrawerOpen.value = false
+}
+
+let layoutMq: MediaQueryList | null = null
+
 onMounted(() => {
   try {
     const raw = localStorage.getItem(SIDEBAR_COLLAPSE_LS)
@@ -566,18 +614,37 @@ onMounted(() => {
   if (auth.hasPermission('platform.subscription.manage')) {
     subscriptionAttention.startPolling()
   }
+
+  layoutMq = window.matchMedia('(min-width: 1024px)')
+  isLgUp.value = layoutMq.matches
+  layoutMq.addEventListener('change', onMqChange)
+  window.addEventListener('keydown', onGlobalKeydown)
 })
+
+watch(
+  () => route.fullPath,
+  () => {
+    mobileDrawerOpen.value = false
+  },
+)
+
+watch(
+  [mobileDrawerOpen, isLgUp],
+  () => {
+    const lock = mobileDrawerOpen.value && !isLgUp.value
+    document.documentElement.classList.toggle('overflow-hidden', lock)
+  },
+  { immediate: true },
+)
+
 onUnmounted(() => {
   subscriptionAttention.stopPolling()
+  layoutMq?.removeEventListener('change', onMqChange)
+  window.removeEventListener('keydown', onGlobalKeydown)
+  document.documentElement.classList.remove('overflow-hidden')
 })
 
 const isSubscriptionOpsRoute = computed(() => route.path.startsWith('/admin/subscriptions'))
-
-const mobileNavSelectValue = computed(() => {
-  if (route.path.startsWith('/admin/subscriptions')) return '__admin:/admin/subscriptions'
-  const n = route.name
-  return typeof n === 'string' || typeof n === 'symbol' ? String(n) : ''
-})
 
 /** مفتاح ثابت للانتقال حتى لا يُعاد إنشاء الصفحة عند تغيّر الاستعلام فقط */
 const routeKey = computed(() => {
@@ -627,15 +694,6 @@ function isActiveStaffPath(path: string): boolean {
   return route.path === path || route.path.startsWith(`${path}/`)
 }
 
-function onMobileNavSelect(ev: Event): void {
-  const v = (ev.target as HTMLSelectElement | null)?.value
-  if (!v) return
-  if (v.startsWith('__admin:')) {
-    void useRouterInstance.push(v.slice(8))
-    return
-  }
-  void useRouterInstance.push({ name: v })
-}
 </script>
 
 <style scoped>

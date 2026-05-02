@@ -509,9 +509,17 @@ const portalDemos = computed((): { label: string; email: string; password: strin
     if (!enabledPortals.customer) return []
     return CUSTOMER_DEMO_ACCOUNTS.map((d) => ({ label: d.label, email: d.email, password: d.password }))
   }
-  const rows = [...STAFF_DEMO_ACCOUNTS]
-  if (enabledPortals.fleet) rows.push(...FLEET_DEMO_ACCOUNTS)
-  return rows.map((d) => ({ label: d.label, email: d.email, password: d.password }))
+  const rows: { label: string; email: string; password: string }[] = STAFF_DEMO_ACCOUNTS.map((d) => ({
+    label: d.label,
+    email: d.email,
+    password: d.password,
+  }))
+  if (enabledPortals.fleet) {
+    rows.push(
+      ...FLEET_DEMO_ACCOUNTS.map((d) => ({ label: d.label, email: d.email, password: d.password })),
+    )
+  }
+  return rows
 })
 
 const showLoginDemo = computed(

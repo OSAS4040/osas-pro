@@ -15,6 +15,7 @@ import {
   BoltIcon,
   Squares2X2Icon,
   BellAlertIcon,
+  InboxStackIcon,
 } from '@heroicons/vue/24/outline'
 
 /** معرف القسم الداخلي لـ PlatformAdminDashboardPage (sectionKey) والتنقل */
@@ -34,6 +35,7 @@ export type PlatformAdminSectionId =
   | 'incidents'
   | 'command-surface'
   | 'notifications'
+  | 'purchase-claims'
 
 export interface PlatformAdminNavItem {
   id: PlatformAdminSectionId
@@ -56,22 +58,27 @@ export interface PlatformAdminSidebarGroup {
 export const platformAdminSidebarGroups: PlatformAdminSidebarGroup[] = [
   {
     id: 'run',
-    title: 'الملخص والتشغيل',
+    title: 'التشغيل والرصد',
     sectionIds: ['overview', 'ops', 'incidents', 'notifications', 'command-surface'],
   },
   {
-    id: 'tenancy',
-    title: 'المشتركون والخدمات',
-    sectionIds: ['tenants', 'customers', 'plans', 'support', 'banner'],
+    id: 'administration',
+    title: 'الإدارة والمشتركون',
+    sectionIds: ['tenants', 'customers', 'plans'],
+  },
+  {
+    id: 'experience',
+    title: 'الدعم والتجربة',
+    sectionIds: ['support', 'banner'],
   },
   {
     id: 'money',
-    title: 'المال والالتزام',
-    sectionIds: ['finance', 'cancellations', 'audit'],
+    title: 'المالية والالتزام',
+    sectionIds: ['finance', 'cancellations', 'audit', 'purchase-claims'],
   },
   {
     id: 'gov',
-    title: 'الحوكمة والمشغّل',
+    title: 'الحوكمة والإعدادات التشغيلية',
     sectionIds: ['governance', 'operator-commands'],
   },
 ]
@@ -197,6 +204,14 @@ export const platformAdminNavItems: PlatformAdminNavItem[] = [
     navEyebrow: 'الإعلانات',
     navHint: 'شريط الإعلان على مستوى المنصة والرسائل العامة.',
   },
+  {
+    id: 'purchase-claims',
+    label: 'مطالبات الصرف (إشراف)',
+    routeName: 'platform-purchase-claims',
+    icon: InboxStackIcon,
+    navEyebrow: 'شريك التنفيذ',
+    navHint: 'إشراف قراءة فقط على مطالبات المستأجرين المرتبطة بمشتريات المنصّة.',
+  },
 ]
 
 /** روابط شريط جانبي: مزودو الخدمة + التسعير + عقود/تقارير — تُختبر أن المسارات مسجلة في Vue Router */
@@ -216,7 +231,7 @@ export const platformCommercialPricingSidebarLinks = [
 ] as const satisfies readonly { routeName: string; label: string }[]
 
 export const platformContractsAndReportsSidebarLinks = [
-  { routeName: 'platform-contracts', label: 'العقود' },
+  { routeName: 'platform-contracts', label: 'العقود (شركة + خدمة)' },
   { routeName: 'platform-reports', label: 'التقارير' },
 ] as const satisfies readonly { routeName: string; label: string }[]
 

@@ -12,6 +12,8 @@ enum WorkOrderPricingSource: string
     case Contract = 'contract';
     case GeneralPolicy = 'general_policy';
     case GeneralServiceBase = 'general_service_base';
+    /** نسخة أسعار معتمدة من إدارة المنصّة (sell_snapshot لكل عميل) */
+    case PlatformApprovedCatalog = 'platform_approved_catalog';
 
     public function labelAr(): string
     {
@@ -21,6 +23,7 @@ enum WorkOrderPricingSource: string
             self::Contract => 'سعر عقد / اتفاقية',
             self::GeneralPolicy => 'سعر عام (سياسة)',
             self::GeneralServiceBase => 'السعر العام للخدمة',
+            self::PlatformApprovedCatalog => 'كتالوج معتمد من المنصّة',
         };
     }
 }

@@ -118,7 +118,13 @@
       <div v-if="showRecentInvoicesPanel" class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
         <div class="px-5 py-3.5 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
           <h2 class="text-sm font-semibold text-gray-800 dark:text-slate-100">أحدث الفواتير</h2>
-          <RouterLink to="/invoices" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">عرض الكل ←</RouterLink>
+          <RouterLink
+            v-if="!platformExecutionPartner"
+            to="/invoices"
+            class="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+          >
+            عرض الكل ←
+          </RouterLink>
         </div>
         <div v-if="loading">
           <SkeletonTable :rows="4" />
@@ -128,9 +134,11 @@
             <DocumentTextIcon class="w-7 h-7 text-gray-300 dark:text-slate-500" />
           </div>
           <p class="text-sm font-medium text-gray-600 dark:text-slate-300">لا توجد فواتير في القائمة</p>
-          <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">ابدأ بإصدار فاتورة أو استيراد من أمر عمل</p>
+          <p v-if="quickInvoiceCreate" class="text-xs text-gray-400 dark:text-slate-500 mt-1">
+            ابدأ بإصدار فاتورة أو استيراد من أمر عمل
+          </p>
           <RouterLink
-            v-if="!platformExecutionPartner"
+            v-if="quickInvoiceCreate"
             to="/invoices/create"
             class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400"
           >
@@ -196,11 +204,17 @@
       <p class="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide mb-3">وصول سريع</p>
       <div class="flex flex-wrap gap-2">
         <QuickBtn v-if="quickInvoiceCreate" :icon="DocumentTextIcon" label="فاتورة جديدة" to="/invoices/create" color="blue" />
-        <QuickBtn :icon="MagnifyingGlassCircleIcon" label="تنفيذ العمليات" to="/execution-hub" color="blue" />
+        <QuickBtn
+          v-if="tenantOpen('operations')"
+          :icon="MagnifyingGlassCircleIcon"
+          label="تنفيذ العمليات"
+          to="/execution-hub"
+          color="blue"
+        />
         <QuickBtn v-if="quickWorkOrders" :icon="ClipboardDocumentIcon" label="العمليات" to="/work-orders" color="purple" />
         <QuickBtn v-if="quickNewCustomer" :icon="UsersIcon" label="عميل جديد" to="/customers" color="green" />
         <RouterLink
-          v-if="auth.isPlatform"
+          v-if="auth.isPlatform && !platformExecutionPartner"
           :to="{ name: 'vehicles', query: { add: '1' } }"
           class="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-medium rounded-lg transition-all shadow-sm hover:shadow active:scale-[0.97] bg-primary-600 hover:bg-primary-700"
         >
@@ -223,8 +237,20 @@
         />
         <QuickBtn v-if="quickReports" :icon="ChartBarIcon" label="التقارير" to="/reports" color="gray" />
         <QuickBtn v-if="quickZatca" :icon="ScaleIcon" label="ZATCA" to="/zatca" color="orange" />
-        <QuickBtn v-if="auth.isStaff" :icon="MapPinIcon" label="خريطة الفروع" to="/branches/map" color="indigo" />
-        <QuickBtn v-if="auth.isManager" :icon="BuildingLibraryIcon" label="الفروع" to="/branches" color="green" />
+        <QuickBtn
+          v-if="auth.isStaff && !platformExecutionPartner && tenantOpen('operations')"
+          :icon="MapPinIcon"
+          label="خريطة الفروع"
+          to="/branches/map"
+          color="indigo"
+        />
+        <QuickBtn
+          v-if="auth.isManager && !platformExecutionPartner"
+          :icon="BuildingLibraryIcon"
+          label="الفروع"
+          to="/branches"
+          color="green"
+        />
       </div>
     </div>
   </div>
@@ -237,7 +263,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import {
   CheckCircleIcon, CurrencyDollarIcon, UsersIcon,
   DocumentTextIcon, ScaleIcon, ChartBarIcon,
-  ClipboardDocumentIcon, ArrowPathIcon,
+  ClipboardDocumentIcon, ArrowPathIcon, XCircleIcon,
   ArrowTrendingUpIcon, ArrowTrendingDownIcon, PresentationChartLineIcon, TruckIcon,
   BuildingLibraryIcon, MapPinIcon, FireIcon, BanknotesIcon, UserPlusIcon, ChartPieIcon,
   ReceiptPercentIcon,
@@ -259,17 +285,20 @@ import { featureFlags } from '@/config/featureFlags'
 import { useBusinessProfileStore } from '@/stores/businessProfile'
 import { canAccessStaffBusinessIntelligence, tenantSectionOpen } from '@/config/staffFeatureGate'
 import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
+import { isStaffProviderFocusNavEnabled } from '@/config/staffProviderFocusNav'
 
 const $router = useRouter()
 const auth = useAuthStore()
 const biz = useBusinessProfileStore()
 const { active: platformExecutionPartner } = usePlatformExecutionPartner()
 
+const providerFocusNavActive = computed(() => isStaffProviderFocusNavEnabled(biz.businessType, biz.loaded))
+
 const showBiShortcuts = computed(() => {
   void biz.loaded
   void biz.businessType
   void biz.effectiveFeatureMatrix
-  if (platformExecutionPartner.value) return false
+  if (platformExecutionPartner.value || providerFocusNavActive.value) return false
   return canAccessStaffBusinessIntelligence({
     buildFlagOn: featureFlags.intelligenceCommandCenter,
     isOwner: auth.isOwner,
@@ -277,6 +306,7 @@ const showBiShortcuts = computed(() => {
   })
 })
 const showHeatmapShortcut = computed(() => {
+  if (platformExecutionPartner.value || providerFocusNavActive.value) return false
   void biz.loaded
   void biz.businessType
   void biz.effectiveFeatureMatrix
@@ -342,6 +372,9 @@ const kpi = ref({
   woCreated: 0,
   woCompleted: 0,
   woCompletionRate: 0,
+  woInProgress: 0,
+  woDelivered: 0,
+  woCancelled: 0,
 })
 const recentInvoices = ref<any[]>([])
 const chartRevenue = ref<{ date: string; revenue: number }[]>([])
@@ -534,30 +567,62 @@ const middleRowGridClass = computed(() => {
   return 'grid grid-cols-1 gap-4'
 })
 
-const quickInvoiceCreate = computed(() => tenantOpen('finance') && !platformExecutionPartner)
+const quickInvoiceCreate = computed(
+  () => tenantOpen('finance') && !platformExecutionPartner.value && !providerFocusNavActive.value,
+)
 const quickWorkOrders = computed(() => tenantOpen('operations'))
-const quickNewCustomer = computed(() => tenantOpen('crm') && !platformExecutionPartner)
+const quickNewCustomer = computed(() => tenantOpen('crm') && !platformExecutionPartner.value)
 const quickReports = computed(() => tenantOpen('reports') && !platformExecutionPartner.value)
 const quickZatca = computed(() => tenantOpen('accounting') && !platformExecutionPartner.value)
 
-const woStats = computed(() => [
-  {
-    label: 'أوامر عمل جديدة',
-    hint: 'آخر 7 أيام (نفس نطاق الرسم البياني)',
-    value: kpi.value.woCreated,
-    icon: ClipboardDocumentIcon,
-    color: 'text-blue-600 dark:text-blue-400',
-    bg: 'bg-blue-50 dark:bg-blue-950/35',
-  },
-  {
-    label: 'مكتملة',
-    hint: `${kpi.value.woCompletionRate}% من أوامر آخر 7 أيام`,
-    value: kpi.value.woCompleted,
-    icon: CheckCircleIcon,
-    color: 'text-primary-600 dark:text-primary-400',
-    bg: 'bg-primary-50 dark:bg-primary-950/35',
-  },
-])
+const woStats = computed(() => {
+  if (platformExecutionPartner.value) {
+    return [
+      {
+        label: 'قيد التنفيذ',
+        hint: 'أُنشئت ضمن فترة التقرير الحالية',
+        value: kpi.value.woInProgress,
+        icon: ClipboardDocumentIcon,
+        color: 'text-blue-600 dark:text-blue-400',
+        bg: 'bg-blue-50 dark:bg-blue-950/35',
+      },
+      {
+        label: 'مسلّم',
+        hint: 'انتقلت إلى «مسلّم» ضمن فترة التقرير',
+        value: kpi.value.woDelivered,
+        icon: CheckCircleIcon,
+        color: 'text-primary-600 dark:text-primary-400',
+        bg: 'bg-primary-50 dark:bg-primary-950/35',
+      },
+      {
+        label: 'ملغاة',
+        hint: 'أُلغيت ضمن فترة التقرير',
+        value: kpi.value.woCancelled,
+        icon: XCircleIcon,
+        color: 'text-red-600 dark:text-red-400',
+        bg: 'bg-red-50 dark:bg-red-950/30',
+      },
+    ]
+  }
+  return [
+    {
+      label: 'أوامر عمل جديدة',
+      hint: 'آخر 7 أيام (نفس نطاق الرسم البياني)',
+      value: kpi.value.woCreated,
+      icon: ClipboardDocumentIcon,
+      color: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-blue-50 dark:bg-blue-950/35',
+    },
+    {
+      label: 'مكتملة',
+      hint: `${kpi.value.woCompletionRate}% من أوامر آخر 7 أيام`,
+      value: kpi.value.woCompleted,
+      icon: CheckCircleIcon,
+      color: 'text-primary-600 dark:text-primary-400',
+      bg: 'bg-primary-50 dark:bg-primary-950/35',
+    },
+  ]
+})
 
 function fillChartsFromApi(d: Record<string, unknown> | null) {
   const revIn = Array.isArray(d?.charts && (d.charts as any).revenue_last_7_days)
@@ -614,6 +679,9 @@ async function loadData(opts?: { refresh?: boolean }) {
         kpi.value.woCompletionRate = Number(
           d.work_orders?.completion_rate_last_7_days ?? d.work_orders?.completion_rate ?? 0,
         )
+        kpi.value.woInProgress = Number(d.work_orders?.in_progress_in_period ?? 0)
+        kpi.value.woDelivered = Number(d.work_orders?.delivered_in_period ?? 0)
+        kpi.value.woCancelled = Number(d.work_orders?.cancelled_in_period ?? 0)
         fillChartsFromApi(d as Record<string, unknown>)
       } else {
         fillChartsFromApi(null)
@@ -622,9 +690,17 @@ async function loadData(opts?: { refresh?: boolean }) {
       fillChartsFromApi(null)
     }
     if (!platformExecutionPartner.value && invRes.status === 'fulfilled') {
-      const raw = invRes.value.data?.data
-      const items = Array.isArray(raw) ? raw : raw?.data ?? []
-      recentInvoices.value = items.slice(0, 5)
+      const payload = invRes.value as { data?: unknown }
+      const root = payload.data
+      const itemsUnknown: unknown[] = Array.isArray(root)
+        ? root
+        : root !== null &&
+            typeof root === 'object' &&
+            'data' in root &&
+            Array.isArray((root as { data?: unknown }).data)
+          ? ((root as { data: unknown[] }).data)
+          : []
+      recentInvoices.value = itemsUnknown.slice(0, 5) as typeof recentInvoices.value
     } else if (platformExecutionPartner.value) {
       recentInvoices.value = []
     }

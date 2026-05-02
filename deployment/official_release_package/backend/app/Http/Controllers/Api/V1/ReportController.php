@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Task;
 use App\Models\WorkOrder;
+use App\Support\TenantBusinessFeatures;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,8 +22,38 @@ use Illuminate\Support\Facades\Schema;
 
 class ReportController extends Controller
 {
+    private function executionPartnerTenantBlocksFinancialReporting(): bool
+    {
+        return TenantBusinessFeatures::isPlatformExecutionPartnerTenant((int) app('tenant_company_id'));
+    }
+
+    private function forbiddenFinancialReportResponse(): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Financial reports are not available for platform execution partner tenants.',
+            'code' => 'EXECUTION_PARTNER_FINANCIAL_REPORTS_DISABLED',
+            'trace_id' => app('trace_id'),
+        ], 403);
+    }
+
     public function kpiDictionary(): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return response()->json([
+                'data' => [
+                    'operational' => [
+                        ['key' => 'work_orders_completion_rate', 'label' => 'معدل إكمال أوامر العمل', 'formula' => 'completed_work_orders / total_work_orders * 100'],
+                        ['key' => 'tasks_overdue', 'label' => 'المهام المتأخرة', 'formula' => 'COUNT(open_tasks where due_at < now)'],
+                        ['key' => 'bookings_total', 'label' => 'إجمالي الحجوزات', 'formula' => 'SUM(bookings by status in period)'],
+                    ],
+                    'employees' => [],
+                    'financial' => [],
+                    'intelligence' => [],
+                ],
+                'trace_id' => app('trace_id'),
+            ]);
+        }
+
         return response()->json([
             'data' => [
                 'operational' => [
@@ -56,6 +87,10 @@ class ReportController extends Controller
 
     public function sales(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to   = $request->input('to',   now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
@@ -98,6 +133,10 @@ class ReportController extends Controller
 
     public function salesByCustomer(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to   = $request->input('to',   now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
@@ -123,6 +162,10 @@ class ReportController extends Controller
 
     public function salesByProduct(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to   = $request->input('to',   now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
@@ -160,6 +203,10 @@ class ReportController extends Controller
 
     public function overdueReceivables(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $companyId = app('tenant_company_id');
 
         $data = Invoice::where('company_id', $companyId)
@@ -214,7 +261,8 @@ class ReportController extends Controller
         $fromEnd = $request->from.' 00:00:00';
         $toEnd   = $request->to.' 23:59:59';
 
-        $cacheKey = "kpi:{$companyId}:{$request->from}:{$request->to}:v3";
+        $epKpi = $this->executionPartnerTenantBlocksFinancialReporting();
+        $cacheKey = "kpi:{$companyId}:{$request->from}:{$request->to}:v4".($epKpi ? ':ep' : '');
         $ttl = now()->diffInHours(now()->endOfDay()) < 2 ? 300 : 1800;
         $data = \Illuminate\Support\Facades\Cache::get($cacheKey);
         if ($data === null) {
@@ -223,19 +271,23 @@ class ReportController extends Controller
             $computed = null;
 
             try {
-                $lock->block(5, function () use (&$computed, $cacheKey, $ttl, $companyId, $fromEnd, $toEnd, $request) {
+                $lock->block(5, function () use (&$computed, $cacheKey, $ttl, $companyId, $fromEnd, $toEnd, $request, $epKpi) {
                     $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
                     if ($cached !== null) {
                         $computed = $cached;
                         return;
                     }
 
-                    $computed = $this->buildKpiPayload($companyId, $fromEnd, $toEnd, $request);
+                    $computed = $epKpi
+                        ? $this->buildExecutionPartnerKpiPayload($companyId, $fromEnd, $toEnd, $request)
+                        : $this->buildKpiPayload($companyId, $fromEnd, $toEnd, $request);
                     \Illuminate\Support\Facades\Cache::put($cacheKey, $computed, $ttl);
                 });
             } catch (\Throwable) {
                 $computed = \Illuminate\Support\Facades\Cache::get($cacheKey)
-                    ?? $this->buildKpiPayload($companyId, $fromEnd, $toEnd, $request);
+                    ?? ($epKpi
+                        ? $this->buildExecutionPartnerKpiPayload($companyId, $fromEnd, $toEnd, $request)
+                        : $this->buildKpiPayload($companyId, $fromEnd, $toEnd, $request));
             } finally {
                 try {
                     $lock->release();
@@ -320,8 +372,48 @@ class ReportController extends Controller
         ];
     }
 
+    /**
+     * KPI لشركاء التنفيذ: أوامر عمل فقط، بدون استعلام فواتير/عملاء/مدفوعات.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildExecutionPartnerKpiPayload(int $companyId, string $fromEnd, string $toEnd, Request $request): array
+    {
+        $woCompleted = WorkOrder::where('company_id', $companyId)
+            ->whereBetween('updated_at', [$fromEnd, $toEnd])
+            ->where('status', 'completed')
+            ->count();
+
+        $woTotal = WorkOrder::where('company_id', $companyId)
+            ->whereBetween('created_at', [$fromEnd, $toEnd])
+            ->count();
+
+        return [
+            'total_revenue' => 0.0,
+            'total_sales' => 0.0,
+            'total_collected' => 0.0,
+            'total_paid' => 0.0,
+            'collection_rate' => 0.0,
+            'invoice_count' => 0,
+            'total_vat' => 0.0,
+            'total_due' => 0.0,
+            'new_customers' => 0,
+            'wo_completed' => $woCompleted,
+            'wo_total' => $woTotal,
+            'work_order_count' => $woTotal,
+            'wo_completion_rate' => $woTotal > 0 ? round(($woCompleted / $woTotal) * 100, 1) : 0,
+            'avg_invoice_value' => 0.0,
+            'daily_revenue' => [],
+            'period' => ['from' => $request->from, 'to' => $request->to],
+        ];
+    }
+
     public function vatReport(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to   = $request->input('to',   now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
@@ -412,6 +504,10 @@ class ReportController extends Controller
 
     public function financial(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to   = $request->input('to',   now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
@@ -435,6 +531,10 @@ class ReportController extends Controller
 
     public function cashFlow(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to = $request->input('to', now()->endOfMonth()->toDateString());
         $companyId = app('tenant_company_id');
@@ -496,6 +596,10 @@ class ReportController extends Controller
 
     public function purchasesReport(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to = $request->input('to', now()->endOfMonth()->toDateString());
         $companyId = app('tenant_company_id');
@@ -553,6 +657,10 @@ class ReportController extends Controller
 
     public function receivablesAging(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $companyId = app('tenant_company_id');
 
         $rows = Invoice::where('company_id', $companyId)
@@ -610,6 +718,10 @@ class ReportController extends Controller
      */
     public function businessAnalytics(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to   = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
@@ -774,6 +886,10 @@ class ReportController extends Controller
 
     public function employeeReport(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);
@@ -939,6 +1055,10 @@ class ReportController extends Controller
 
     public function intelligenceDigest(Request $request): JsonResponse
     {
+        if ($this->executionPartnerTenantBlocksFinancialReporting()) {
+            return $this->forbiddenFinancialReportResponse();
+        }
+
         $from = $request->input('from', now()->startOfMonth()->toDateString());
         $to = $request->input('to', now()->endOfMonth()->toDateString());
         $request->merge(['from' => $from, 'to' => $to]);

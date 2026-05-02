@@ -129,7 +129,7 @@
               section-key="operations"
               :label="providerFocusNavActive ? l('تنفيذ مزوّد الخدمة', 'Provider operations') : l('تشغيلي', 'Operations')"
             >
-              <NavItem to="/" :icon="HomeIcon" :label="locale.t('nav.dashboard')" :exact="true" />
+              <NavItem :to="staffDashboardPath" :icon="HomeIcon" :label="locale.t('nav.dashboard')" :exact="true" />
               <!-- بتركيز المزوّد: قائمة التنفيذ أولاً ثم مركز البحث/الكاميرا -->
               <template v-if="providerFocusNavActive">
                 <NavItem to="/work-orders" :icon="ClipboardDocumentIcon" :label="locale.t('nav.work_orders')" />
@@ -137,6 +137,11 @@
                   to="/execution-hub"
                   :icon="MagnifyingGlassCircleIcon"
                   :label="l('تنفيذ العمليات', 'Operations execution')"
+                />
+                <NavItem
+                  to="/services-products"
+                  :icon="RectangleStackIcon"
+                  :label="l('الخدمات والمنتجات', 'Services & products')"
                 />
               </template>
               <template v-else>
@@ -202,6 +207,7 @@
               :label="providerFocusNavActive ? l('المحفظة والمشتريات', 'Wallet & purchases') : l('المالية والمحاسبة', 'Finance & Accounting')"
             >
               <template v-if="sectionEnabled('finance') && providerFocusNavActive">
+                <NavItem to="/invoices" :icon="DocumentTextIcon" :label="locale.t('nav.invoices')" />
                 <NavItem to="/wallet" :icon="CreditCardIcon" label="المحفظة" />
                 <NavItem
                   v-if="auth.hasPermission('purchases.platform_settlement.view')"
@@ -233,11 +239,11 @@
                 <NavItem
                   v-if="
                     !platformExecutionPartnerActive
-                    && (
-                      auth.hasPermission('wallet.top_up_requests.create')
-                      || auth.hasPermission('wallet.top_up_requests.view')
-                      || auth.hasPermission('wallet.top_up_requests.review')
-                    )
+                      && (
+                        auth.hasPermission('wallet.top_up_requests.create')
+                        || auth.hasPermission('wallet.top_up_requests.view')
+                        || auth.hasPermission('wallet.top_up_requests.review')
+                      )
                   "
                   to="/wallet/top-up-requests"
                   :icon="QueueListIcon"
@@ -375,6 +381,42 @@
               <NavSubGroup v-if="navGroupVisible('platform-center')" group-key="platform-center" label="مركز إدارة المنصة">
                 <NavItem to="/platform/overview" :icon="CpuChipIcon" label="مركز المنصة" />
                 <NavItem to="/admin/qa" :icon="BeakerIcon" label="فحص الجودة (QA)" />
+              </NavSubGroup>
+              <NavSubGroup
+                v-if="navGroupVisible('platform-shortcuts')"
+                group-key="platform-shortcuts"
+                :label="l('إدارة المنصّة — وصول سريع', 'Platform admin — quick links')"
+              >
+                <NavItem
+                  v-if="canAccessPlatformSection(auth.hasPermission, 'tenants')"
+                  to="/platform/companies"
+                  :icon="BuildingOffice2Icon"
+                  :label="l('المشتركون (شركات)', 'Tenant companies')"
+                />
+                <NavItem
+                  v-if="canAccessPlatformSection(auth.hasPermission, 'finance')"
+                  to="/platform/finance"
+                  :icon="BanknotesIcon"
+                  :label="l('النموذج المالي', 'Financial model')"
+                />
+                <NavItem
+                  v-if="canAccessPlatformSection(auth.hasPermission, 'governance')"
+                  to="/platform/governance"
+                  :icon="ShieldCheckIcon"
+                  :label="l('الحوكمة والسياق', 'Governance')"
+                />
+                <NavItem
+                  v-if="canAccessPlatformSection(auth.hasPermission, 'support')"
+                  to="/platform/support"
+                  :icon="LifebuoyIcon"
+                  :label="l('الدعم (كل المشتركين)', 'Support (all tenants)')"
+                />
+                <NavItem
+                  v-if="canAccessPlatformSection(auth.hasPermission, 'purchase-claims')"
+                  to="/platform/purchase-claims"
+                  :icon="ClipboardDocumentListIcon"
+                  :label="l('مطالبات الصرف (إشراف)', 'Purchase claims')"
+                />
               </NavSubGroup>
             </NavSection>
           </template>
@@ -708,12 +750,28 @@ import { useToast } from '@/composables/useToast'
 import { useNavigationContext } from '@/composables/useNavigationContext'
 import apiClient from '@/lib/apiClient'
 import { DEFAULT_NAV_VISIBILITY } from '@/config/navigationVisibility'
-import { isStaffProviderFocusNavEnabled, mergeStaffHiddenNavKeys } from '@/config/staffProviderFocusNav'
+import {
+  applyWalletTopUpReviewerNavOverride,
+  isStaffProviderFocusNavEnabled,
+  mergeStaffHiddenNavKeys,
+} from '@/config/staffProviderFocusNav'
 import { mergeExecutionPartnerNavKeys } from '@/config/executionPartnerNav'
+import { canAccessPlatformSection } from '@/config/platformSectionGate'
 import { usePlatformExecutionPartner } from '@/composables/usePlatformExecutionPartner'
-import { isStaffNavHidden, splitStaffNavHref } from '@/lib/staffNavKey'
+import { isStaffNavHidden, pathToStaffNavKey, splitStaffNavHref } from '@/lib/staffNavKey'
+
+/** يُزال من مجموعة إخفاء القائمة تحت تركيز المزوّد حتى يظهر NavItem رغم سياسات الخادم/المستخدم */
+const PROVIDER_FOCUS_CATALOG_PATHS_SHOWN: readonly string[] = [
+  '/services-products',
+  '/services-products/products',
+  '/services-products/services',
+  '/products',
+  '/products/new',
+]
 
 const auth = useAuthStore()
+/** رئيسية فريق العمل — لِمشغّل المنصة يجب تمرير `?shell=tenant` وإلا يحوّل الحارس `/` إلى لوحة المنصة (انظر `router/index.ts`). */
+const staffDashboardPath = computed(() => (auth.isPlatform ? '/?shell=tenant' : '/'))
 const { staffShellReady } = useNavigationContext()
 const staffUi = useStaffUiStore()
 const biz = useBusinessProfileStore()
@@ -860,16 +918,28 @@ function navGroupVisible(key: string): boolean {
   return policy.groups?.[key] !== false
 }
 
-const providerFocusNavActive = computed(() => isStaffProviderFocusNavEnabled(biz.businessType, biz.loaded))
+/** تركيز واجهة «مزوّد الخدمة» لا ينطبق على حسابات مشغّل المنصّة — يبقى تقسيم التشغيل/المالية/الموارد/الإعدادات كاملاً. */
+const providerFocusNavActive = computed(
+  () => !auth.isPlatform && isStaffProviderFocusNavEnabled(biz.businessType, biz.loaded),
+)
 
-const mergedStaffHiddenNavSet = computed(() =>
-  new Set(
+const mergedStaffHiddenNavSet = computed(() => {
+  const arr = applyWalletTopUpReviewerNavOverride(
     mergeExecutionPartnerNavKeys(
-      mergeStaffHiddenNavKeys(auth.user?.hidden_staff_nav_keys, biz.businessType, biz.loaded),
+      mergeStaffHiddenNavKeys(auth.user?.hidden_staff_nav_keys, biz.businessType, biz.loaded, auth.isPlatform),
       platformExecutionPartnerActive.value,
     ),
-  ),
-)
+    auth.user?.hidden_staff_nav_keys,
+    (p) => auth.hasPermission(p),
+  )
+  const set = new Set(arr)
+  if (providerFocusNavActive.value) {
+    for (const p of PROVIDER_FOCUS_CATALOG_PATHS_SHOWN) {
+      set.delete(pathToStaffNavKey(p))
+    }
+  }
+  return set
+})
 
 /** بيارات / حجوزات / اجتماعات / خريطة حرارية — فقط عند تفعيل بوابة «operations» في ملف النشاط */
 const opsNavOpen = computed(() =>
@@ -906,7 +976,9 @@ watch(
       openNavSection.value = sectionEnabled('finance') ? 'finance_accounting' : 'operations'
     } else if (p.startsWith('/suppliers')) {
       openNavSection.value = sectionEnabled('finance') ? 'finance_accounting' : 'inventory'
-    } else if (p.startsWith('/services-products') || p.startsWith('/products') || p.startsWith('/inventory')) {
+    } else if (p.startsWith('/services-products') || p.startsWith('/products')) {
+      openNavSection.value = providerFocusNavActive.value ? 'operations' : 'inventory'
+    } else if (p.startsWith('/inventory')) {
       openNavSection.value = 'inventory'
     } else if (
       p.startsWith('/reports')
@@ -1145,11 +1217,23 @@ const flatItems = computed(() => {
 
   if (compactMobileStaffNav) {
     const rows: { to: string; icon: object; label: string; locked: boolean }[] = [
-      { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
+      { to: staffDashboardPath.value, icon: HomeIcon, label: 'الرئيسية', locked: false },
       { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات', locked: false },
       { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'تنفيذ العمليات', locked: false },
+      ...(pfa
+        ? [{ to: '/services-products', icon: RectangleStackIcon, label: 'الخدمات والمنتجات', locked: false }]
+        : []),
+      { to: '/invoices', icon: DocumentTextIcon, label: 'الفواتير', locked: false },
       { to: '/wallet', icon: CreditCardIcon, label: 'المحفظة', locked: false },
     ]
+    if (
+      !platformExecutionPartnerActive.value
+      && (auth.hasPermission('wallet.top_up_requests.create')
+        || auth.hasPermission('wallet.top_up_requests.view')
+        || auth.hasPermission('wallet.top_up_requests.review'))
+    ) {
+      rows.push({ to: '/wallet/top-up-requests', icon: QueueListIcon, label: 'طلبات شحن الرصيد', locked: false })
+    }
     if (platformExecutionPartnerActive.value) {
       rows.push({ to: '/contracts', icon: DocumentCheckIcon, label: 'عقود المنصّة', locked: false })
       if (auth.isManager) {
@@ -1171,7 +1255,7 @@ const flatItems = computed(() => {
   }
 
   const items: { to: string; icon: object; label: string; locked: boolean }[] = [
-    { to: '/', icon: HomeIcon, label: 'الرئيسية', locked: false },
+    { to: staffDashboardPath.value, icon: HomeIcon, label: 'الرئيسية', locked: false },
     { to: '/execution-hub', icon: MagnifyingGlassCircleIcon, label: 'تنفيذ العمليات', locked: false },
     { to: '/work-orders', icon: ClipboardDocumentIcon, label: 'العمليات', locked: false },
     { to: '/vehicles', icon: TruckIcon, label: 'المركبات', locked: false },

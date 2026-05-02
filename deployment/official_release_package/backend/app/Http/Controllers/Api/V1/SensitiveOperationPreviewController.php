@@ -35,8 +35,10 @@ class SensitiveOperationPreviewController extends Controller
             'lines.*.items' => 'nullable|array',
         ]);
 
-        $companyId = (int) $request->user()->company_id;
-        $branchId = $request->user()->branch_id ? (int) $request->user()->branch_id : null;
+        $companyId = (int) app('tenant_company_id');
+        $branchId = app()->has('tenant_branch_id') && app('tenant_branch_id') !== null
+            ? (int) app('tenant_branch_id')
+            : null;
         $userId = (int) $request->user()->id;
 
         $billing = $this->billingModelPolicy->snapshotForCompany($companyId);

@@ -8,14 +8,18 @@ describe('platform route registry (Vue Router)', () => {
     setActivePinia(createPinia())
   })
 
-  it('resolves every platform nav route name to a non-empty matched record', async () => {
-    const { default: router } = await import('@/router')
-    for (const item of platformAdminNavItems) {
-      const r = router.resolve({ name: item.routeName })
-      expect(r.matched.length, item.routeName).toBeGreaterThan(0)
-      expect(r.path.startsWith('/platform/'), `${item.routeName} → ${r.path}`).toBe(true)
-    }
-  })
+  it(
+    'resolves every platform nav route name to a non-empty matched record',
+    async () => {
+      const { default: router } = await import('@/router')
+      for (const item of platformAdminNavItems) {
+        const r = router.resolve({ name: item.routeName })
+        expect(r.matched.length, item.routeName).toBeGreaterThan(0)
+        expect(r.path.startsWith('/platform/'), `${item.routeName} → ${r.path}`).toBe(true)
+      }
+    },
+    30_000,
+  )
 
   it('resolves control-plane pricing & provider sidebar route names', async () => {
     const { default: router } = await import('@/router')

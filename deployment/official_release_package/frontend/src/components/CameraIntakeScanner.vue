@@ -6,7 +6,7 @@
       @click="open"
     >
       <CameraIcon class="h-4 w-4 shrink-0" />
-      {{ l('كاميرا: باركود أو QR (أمر عمل / مركبة) أو صورة لوحة', 'Camera: barcode/QR (WO or vehicle) or plate photo') }}
+      {{ t('providerPortal.camera.button') }}
     </button>
 
     <Teleport to="body">
@@ -14,11 +14,11 @@
         <div
           v-if="visible"
           class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/80 p-4"
-          dir="rtl"
+          :dir="langInfo.dir"
         >
           <div class="mb-3 flex w-full max-w-md items-center justify-between">
             <h3 class="text-lg font-semibold text-white">
-              {{ l('مسح باركود أو QR — أو التقاط اللوحة', 'Scan barcode/QR — or snap plate') }}
+              {{ t('providerPortal.camera.modalTitle') }}
             </h3>
             <button type="button" class="text-white/70 hover:text-white" @click="close">
               <XMarkIcon class="h-6 w-6" />
@@ -41,16 +41,11 @@
             </div>
             <div v-if="processingOcr" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60">
               <div class="h-10 w-10 animate-spin rounded-full border-3 border-teal-400 border-t-transparent" />
-              <p class="text-sm font-medium text-teal-200">{{ l('جاري تحليل اللوحة…', 'Reading plate…') }}</p>
+              <p class="text-sm font-medium text-teal-200">{{ t('providerPortal.camera.readingPlate') }}</p>
             </div>
             <div class="absolute inset-x-0 bottom-2 flex justify-center px-2">
               <span class="rounded-full bg-black/55 px-3 py-1 text-center text-[11px] leading-snug text-teal-50">
-                {{
-                  l(
-                    'يوجّه نحو باركود أمر العمل أو مركبة أو QR — أو زر التقاط للوحة',
-                    'Point at WO/vehicle barcode or QR — or shutter for plate',
-                  )
-                }}
+                {{ t('providerPortal.camera.viewfinderHint') }}
               </span>
             </div>
           </div>
@@ -65,7 +60,7 @@
               class="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
               @click="startBarcodeLoop"
             >
-              {{ l('استئناف مسح الباركود', 'Resume barcode scan') }}
+              {{ t('providerPortal.camera.resumeBarcode') }}
             </button>
             <button
               v-if="scanningBarcode"
@@ -73,13 +68,13 @@
               class="rounded-xl bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
               @click="stopBarcodeLoop"
             >
-              {{ l('إيقاف مسح الباركود', 'Stop barcode scan') }}
+              {{ t('providerPortal.camera.stopBarcode') }}
             </button>
             <button
               v-if="stream && !processingOcr"
               type="button"
               class="flex h-14 w-14 items-center justify-center rounded-full border-4 border-teal-400 bg-white shadow-lg transition-colors hover:bg-teal-50"
-              :title="l('التقاط صورة للوحة', 'Snap plate photo')"
+              :title="t('providerPortal.camera.snapPlateTitle')"
               @click="capturePlateOcr"
             >
               <CameraIcon class="h-7 w-7 text-teal-600" />
@@ -88,7 +83,7 @@
               class="flex cursor-pointer items-center gap-1.5 rounded-xl border border-white/25 px-4 py-2 text-xs text-white/80 hover:bg-white/10"
             >
               <ArrowUpTrayIcon class="h-4 w-4" />
-              {{ l('صورة من المعرض', 'Gallery') }}
+              {{ t('providerPortal.camera.gallery') }}
               <input type="file" accept="image/*" class="hidden" @change="onGalleryFile" />
             </label>
           </div>
@@ -113,8 +108,7 @@ const emit = defineEmits<{
   (e: 'intake', payload: Record<string, unknown>): void
 }>()
 
-const locale = useLocale()
-const l = (ar: string, en: string) => (locale.lang.value === 'ar' ? ar : en)
+const { t, langInfo } = useLocale()
 
 const visible = ref(false)
 const scanningBarcode = ref(false)
@@ -207,7 +201,7 @@ async function startCamera(): Promise<boolean> {
     }
     return true
   } catch {
-    error.value = l('تعذّر فتح الكاميرا.', 'Could not open camera.')
+    error.value = t('providerPortal.camera.openCameraError')
     return false
   }
 }
@@ -312,15 +306,12 @@ async function processPlateImage(canvas: HTMLCanvasElement) {
     }
 
     if (ocrUsed && !ocrOk) {
-      error.value = l(
-        'لم تُستخرج لوحة واضحة من الصورة — أعد المحاولة أو أدخل اللوحة يدوياً.',
-        'Could not read a plate from the photo — retry or enter the plate manually.',
-      )
+      error.value = t('providerPortal.camera.plateFromPhotoRetry')
       return
     }
-    error.value = l('لم تُستخرج لوحة واضحة من الصورة.', 'Could not read plate from image.')
+    error.value = t('providerPortal.camera.plateFromImageError')
   } catch {
-    error.value = l('تعذّر تحليل صورة اللوحة.', 'Plate OCR failed.')
+    error.value = t('providerPortal.camera.plateOcrFailed')
   } finally {
     processingOcr.value = false
     if (visible.value && detector && stream && !scanningBarcode.value) {
@@ -333,7 +324,7 @@ async function capturePlateOcr() {
   const v = videoRef.value
   const proc = processCanvasRef.value
   if (!v || !proc || v.videoWidth === 0) {
-    error.value = l('الكاميرا غير جاهزة.', 'Camera not ready.')
+    error.value = t('providerPortal.camera.cameraNotReady')
     return
   }
   stopBarcodeLoop()
@@ -378,7 +369,7 @@ async function onGalleryFile(ev: Event) {
     await processPlateImage(proc)
   } catch {
     bmp.close()
-    error.value = l('تعذّر فتح الصورة.', 'Could not open image.')
+    error.value = t('providerPortal.camera.openImageError')
   }
 }
 
@@ -393,15 +384,9 @@ async function open() {
   await new Promise((r) => setTimeout(r, 120))
   const detOk = await ensureDetector()
   if (!detOk) {
-    hint.value = l(
-      'مسح الباركود التلقائي يحتاج Chrome أو Edge — يمكنك التقاط صورة للوحة أو اختيار صورة من المعرض.',
-      'Live barcode needs Chrome/Edge — use shutter or gallery for plate.',
-    )
+    hint.value = t('providerPortal.camera.hintBarcode')
   }
-  const ocrTip = l(
-    'لقراءة اللوحة: إضاءة جيدة، صورة ثابتة، وتفضيل HTTPS. إن فشل التعرف أعد المحاولة أو أدخل اللوحة يدوياً.',
-    'For plate OCR: good light, steady shot, HTTPS preferred. If recognition fails, retry or enter the plate manually.',
-  )
+  const ocrTip = t('providerPortal.camera.hintOcr')
   hint.value = hint.value ? `${hint.value} ${ocrTip}` : ocrTip
   const camOk = await startCamera()
   if (camOk && detOk) {

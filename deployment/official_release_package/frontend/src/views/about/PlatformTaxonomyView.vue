@@ -39,12 +39,28 @@
     </section>
 
     <section class="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 space-y-3">
-      <h2 class="text-sm font-bold text-gray-900 dark:text-slate-100">البوابات في الواجهة</h2>
+      <h2 class="text-sm font-bold text-gray-900 dark:text-slate-100">البوابات المعتمدة</h2>
+      <p class="text-xs text-gray-500 dark:text-slate-400 leading-relaxed">
+        النموذج الرسمي للمنتج: <strong class="text-gray-700 dark:text-slate-300">ثلاث بوابات فقط</strong> — دون اعتماد مسارات أخرى في الوصف التسويقي أو التعاقدي.
+      </p>
       <ul class="text-sm text-gray-600 dark:text-slate-300 space-y-2 list-disc pr-5">
-        <li><strong class="text-gray-800 dark:text-slate-200">فريق العمل (Staff):</strong> التشغيل اليومي لمركز الخدمة أو منفذ البيع — الافتراضي للمستخدمين الداخليين.</li>
-        <li><strong class="text-gray-800 dark:text-slate-200">الأسطول (Fleet):</strong> لمسؤولي أساطيل خارجية — تفعيل اختياري عند البناء (<code class="text-xs bg-gray-100 dark:bg-slate-900 px-1 rounded" dir="ltr">VITE_ENABLED_PORTALS</code>).</li>
-        <li><strong class="text-gray-800 dark:text-slate-200">العملاء (Customer):</strong> بوابة العميل النهائي — تفعيل اختياري بنفس الآلية.</li>
-        <li><strong class="text-gray-800 dark:text-slate-200">لوحة المنصة (/admin):</strong> حد أدنى تشغيلي لمشغّلي المنصة (بيانات وباقات) — تفعيل اختياري في الواجهة؛ الصلاحية الحقيقية على الخادم.</li>
+        <li>
+          <strong class="text-gray-800 dark:text-slate-200">إدارة المنصّة:</strong>
+          تشغيل المنصّة والاشتراكات والسياسات عبر المستأجرين ومزوّدي الخدمة المرتبطين بالمنصّة — الدخول من
+          <code class="text-xs bg-gray-100 dark:bg-slate-900 px-1 rounded" dir="ltr">/platform/login</code>
+          ؛ الصلاحية على الخادم.
+        </li>
+        <li>
+          <strong class="text-gray-800 dark:text-slate-200">بوابة مزوّد الخدمة (مقدّم الخدمة):</strong>
+          التشغيل اليومي لمركز الخدمة أو الورشة — ما كان يُعرَض تاريخياً تحت «فريق العمل / Staff» والدخول من
+          <code class="text-xs bg-gray-100 dark:bg-slate-900 px-1 rounded" dir="ltr">/login</code>.
+        </li>
+        <li>
+          <strong class="text-gray-800 dark:text-slate-200">بوابة العميل (طالب الخدمة):</strong>
+          طلب الخدمة والمتابعة من جهة العميل النهائي — مسارات
+          <code class="text-xs bg-gray-100 dark:bg-slate-900 px-1 rounded" dir="ltr">/customer/*</code>
+          ؛ تفعيل الواجهة يخضع لإعداد البناء عند الحاجة.
+        </li>
       </ul>
     </section>
 

@@ -9,7 +9,7 @@
         <button class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50" @click="exportJSON">JSON</button>
         <button class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50" @click="exportCSV">CSV</button>
         <button class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-700 hover:bg-gray-50" @click="printInvoices">PDF</button>
-        <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary-600 text-white hover:bg-primary-700" @click="load">تحديث</button>
+        <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary-600 text-white hover:bg-primary-700" type="button" @click="() => load()">تحديث</button>
       </div>
     </div>
 
@@ -101,7 +101,7 @@
         <div class="no-print flex justify-center gap-2">
           <RouterLink to="/customer/work-orders" class="text-xs text-primary-600 hover:underline">إنشاء أمر عمل يولد فاتورة لاحقًا</RouterLink>
           <span class="text-gray-300">|</span>
-          <button class="text-xs text-primary-600 hover:underline" @click="load">تحديث القائمة</button>
+          <button type="button" class="text-xs text-primary-600 hover:underline" @click="() => load()">تحديث القائمة</button>
         </div>
       </div>
       <div v-else class="overflow-x-auto">
@@ -323,7 +323,8 @@ async function fetchAllInvoicesForExport(): Promise<any[]> {
   const out: any[] = []
   let page = 1
   const perPage = 100
-  while (true) {
+  // حد عملي لتفادي while(true) في قواعد ESLint
+  while (page <= 10000) {
     const params: Record<string, unknown> = { per_page: perPage, page, include_portal_counts: 0 }
     if (auth.user?.customer_id != null) params.customer_id = auth.user.customer_id
     if (searchText.value.trim()) params.search = searchText.value.trim()

@@ -1,5 +1,6 @@
 <template>
   <div class="space-y-4" :dir="locale.langInfo.value.dir">
+    <PlatformOnBehalfCatalogBanner />
     <div class="no-print border-b border-gray-200 dark:border-slate-700">
       <nav class="flex gap-1 overflow-x-auto" role="tablist">
         <RouterLink
@@ -20,6 +21,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
+import PlatformOnBehalfCatalogBanner from '@/components/PlatformOnBehalfCatalogBanner.vue'
 import { useLocale } from '@/composables/useLocale'
 
 const route = useRoute()

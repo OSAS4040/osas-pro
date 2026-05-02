@@ -116,7 +116,7 @@ import { NAV_SEARCH_ITEMS } from '@/config/navSearchItems'
 import { useLocale } from '@/composables/useLocale'
 import { foldSearchText, textMatchScore, routeContextBoost } from '@/utils/commandPaletteSearch'
 import apiClient from '@/lib/apiClient'
-import { mergeStaffHiddenNavKeys } from '@/config/staffProviderFocusNav'
+import { applyWalletTopUpReviewerNavOverride, mergeStaffHiddenNavKeys } from '@/config/staffProviderFocusNav'
 import { mergeExecutionPartnerNavKeys } from '@/config/executionPartnerNav'
 import { platformExecutionPartnerActiveFromStore } from '@/composables/usePlatformExecutionPartner'
 import { isStaffNavHidden, splitStaffNavHref } from '@/lib/staffNavKey'
@@ -125,7 +125,6 @@ import {
   ArrowUpLeftIcon,
   HomeIcon,
   DocumentTextIcon,
-  CubeIcon,
   RectangleStackIcon,
   UsersIcon,
   ChartBarIcon,
@@ -145,7 +144,6 @@ import {
   ArchiveBoxIcon,
   ShoppingBagIcon,
   ShieldCheckIcon,
-  StarIcon,
   MagnifyingGlassCircleIcon,
   WrenchScrewdriverIcon,
   PresentationChartLineIcon,
@@ -154,7 +152,6 @@ import {
   CpuChipIcon,
   BuildingLibraryIcon,
   MapPinIcon,
-  SparklesIcon,
   GiftIcon,
   HeartIcon,
   ScaleIcon,
@@ -398,9 +395,13 @@ function roleAllowed(item: PaletteNavItem): boolean {
     return false
   }
   if (item.to === '/branches/map' && !auth.isStaff) return false
-  const hiddenStaff = mergeExecutionPartnerNavKeys(
-    mergeStaffHiddenNavKeys(auth.user?.hidden_staff_nav_keys, biz.businessType, biz.loaded),
-    platformExecutionPartnerActiveFromStore(),
+  const hiddenStaff = applyWalletTopUpReviewerNavOverride(
+    mergeExecutionPartnerNavKeys(
+      mergeStaffHiddenNavKeys(auth.user?.hidden_staff_nav_keys, biz.businessType, biz.loaded, auth.isPlatform),
+      platformExecutionPartnerActiveFromStore(),
+    ),
+    auth.user?.hidden_staff_nav_keys,
+    (p) => auth.hasPermission(p),
   )
   if (hiddenStaff.length > 0) {
     const { path: hp, hash: hh } = splitStaffNavHref(item.to)

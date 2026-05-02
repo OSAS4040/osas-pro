@@ -10,7 +10,7 @@
         <button type="button" class="btn btn-secondary" @click="exportCSV">CSV</button>
         <button type="button" class="btn btn-secondary" @click="exportExcel">Excel</button>
         <button type="button" class="btn btn-secondary" @click="printList">PDF</button>
-        <button type="button" class="btn btn-primary" :disabled="loading" @click="loadOrders">
+        <button type="button" class="btn btn-primary" :disabled="loading" @click="() => loadOrders()">
           {{ loading ? 'جارٍ التحديث...' : 'تحديث' }}
         </button>
       </div>
@@ -74,7 +74,7 @@
         <div class="rounded-xl border border-gray-200 p-3 space-y-2">
           <div class="flex items-center justify-between">
             <label class="text-xs font-semibold text-gray-700">الخدمات المختارة</label>
-            <button type="button" class="text-[11px] text-violet-700 hover:underline" @click="toggleAllServices" :disabled="servicesLoading || !allowedServices.length">
+            <button type="button" class="text-[11px] text-violet-700 hover:underline" :disabled="servicesLoading || !allowedServices.length" @click="toggleAllServices">
               {{ allServicesSelected ? 'إلغاء الكل' : 'تحديد كل الخدمات المتاحة' }}
             </button>
           </div>
@@ -623,7 +623,7 @@ async function fetchAllOrdersForExport(): Promise<any[]> {
   const out: any[] = []
   let page = 1
   const perPage = 100
-  while (true) {
+  while (page <= 10000) {
     const params: Record<string, unknown> = { per_page: perPage, page, include_status_counts: 0 }
     if (auth.user?.customer_id != null) params.customer_id = auth.user.customer_id
     const q = filters.search.trim()
@@ -833,7 +833,6 @@ async function printOrder(order: any): Promise<void> {
     || companyAny.commercial_registration
     || companyAny.cr_number
     || 'غير متوفر'
-  const serviceType = order?.service_type || order?.type || 'خدمة صيانة وتشغيل مركبات'
   const serviceDescription = order?.description || order?.notes || 'تنفيذ أعمال الصيانة/التشغيل المعتمدة حسب العقد.'
   const issuedBy = userAny.name || 'مستخدم المنصة'
   const issuerEntity = `${platformName} - بوابة العميل`
@@ -1215,9 +1214,6 @@ async function loadAllowedServices(): Promise<void> {
     if (!validSingleSet.has(String(form.value.service_id || ''))) form.value.service_id = ''
     servicesLoading.value = false
   }
-}
-async function onVehicleChanged(): Promise<void> {
-  await loadAllowedServices()
 }
 async function createOrder(): Promise<void> {
   if (!selectedVehicleIds.value.length || !selectedServiceIds.value.length) {

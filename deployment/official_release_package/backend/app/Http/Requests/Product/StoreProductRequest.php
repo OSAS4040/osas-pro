@@ -25,13 +25,17 @@ class StoreProductRequest extends FormRequest
 
     public function rules(): array
     {
-        $companyId = $this->user()->company_id;
+        $companyId = (int) app('tenant_company_id');
 
         return [
             'name'             => ['required', 'string', 'max:255'],
             'name_ar'          => ['nullable', 'string', 'max:255'],
             'product_type'     => ['nullable', Rule::enum(ProductType::class)],
-            'category_id'      => ['nullable', 'integer', 'exists:product_categories,id'],
+            'category_id'      => [
+                'nullable',
+                'integer',
+                Rule::exists('product_categories', 'id')->where(fn ($q) => $q->where('company_id', $companyId)),
+            ],
             'unit_id'          => ['nullable', 'integer', 'exists:units,id'],
             'purchase_unit_id' => ['nullable', 'integer', 'exists:units,id'],
             'barcode'          => [

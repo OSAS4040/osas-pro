@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Branch;
+use App\Http\Middleware\GlobalTenantGuardMiddleware as TenantGuard;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,11 +22,15 @@ class BranchScopeMiddleware
             ?? $request->query('branch_id')
             ?? $user->branch_id;
 
-        if ($requestedBranchId && $user->company_id) {
+        $effectiveTenantCompanyId = app()->has('tenant_company_id')
+            ? (int) app('tenant_company_id')
+            : (($user->company_id !== null && (int) $user->company_id > 0) ? (int) $user->company_id : null);
+
+        if ($requestedBranchId && $effectiveTenantCompanyId !== null) {
             $branchOk = Branch::query()
                 ->withoutGlobalScope('tenant')
                 ->where('id', (int) $requestedBranchId)
-                ->where('company_id', (int) $user->company_id)
+                ->where('company_id', $effectiveTenantCompanyId)
                 ->whereNull('deleted_at')
                 ->exists();
             if (! $branchOk) {
@@ -36,7 +41,12 @@ class BranchScopeMiddleware
             }
         }
 
-        if ($requestedBranchId && $user->branch_id && (int) $requestedBranchId !== (int) $user->branch_id) {
+        $delegateAcrossBranches = (bool) $request->attributes->get(TenantGuard::ON_BEHALF_ATTR);
+
+        if (
+            $requestedBranchId && $user->branch_id && (int) $requestedBranchId !== (int) $user->branch_id
+            && ! $delegateAcrossBranches
+        ) {
             $hasCrossBranchAccess = $user->hasPermission('cross_branch_access');
 
             if (! $hasCrossBranchAccess) {

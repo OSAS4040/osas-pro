@@ -5,7 +5,7 @@
         <h2 class="page-title-xl" :class="{ '!text-xl': staffUi.compactMode }">العمليات</h2>
         <p v-if="!staffUi.compactMode" class="page-subtitle">
           <template v-if="isExecutionPartner">
-            متابعة العمليات المنفذة وقيد التنفيذ والملغاة — بحث وتصفية حسب الحالة.
+            متابعة العمليات قيد التنفيذ والمسلّمة والملغاة — بحث وتصفية حسب الحالة.
           </template>
           <template v-else>
             مراجعة أوامر العمل وتسجيلها في النظام — تتبّع الحالة والأولويات والفني عند التوفر.
@@ -117,9 +117,9 @@ const statusFilterValues = [
 ] as const
 
 const executionPartnerStatusChips = [
-  { value: 'executed', label: 'المنفذة' },
   { value: 'in_progress', label: 'قيد التنفيذ' },
-  { value: 'cancelled', label: 'الملغاة' },
+  { value: 'delivered', label: 'مسلّم' },
+  { value: 'cancelled', label: 'ملغى' },
 ] as const
 
 const statusChips = computed(() => {
@@ -134,11 +134,11 @@ function statusQueryForApi(): string | undefined {
     return filterStatus.value || undefined
   }
   const v = filterStatus.value
-  if (v === 'executed') return 'completed,delivered'
   if (v === 'in_progress') return 'in_progress'
+  if (v === 'delivered') return 'delivered'
   if (v === 'cancelled') return 'cancelled'
-  /* بدون شريط محدد: نعرض فقط العمليات ذات الصلة بتجربة المزوّد */
-  return 'completed,delivered,in_progress,cancelled'
+  /* بدون شريط محدد: ثلاث حالات المزوّد فقط */
+  return 'in_progress,delivered,cancelled'
 }
 
 function syncCustomerFilterFromRoute(): void {
