@@ -258,6 +258,12 @@ export function platformPathFromAdminHash(hash: string): string {
     '#admin-section-finance': '/platform/finance',
     '#admin-section-cancellations': '/platform/cancellations',
     '#admin-section-banner': '/platform/announcements',
+    '#admin-section-support': '/platform/support',
+    '#admin-section-incidents': '/platform/intelligence/incidents',
+    '#admin-section-notifications': '/platform/notifications',
+    '#admin-section-command-surface': '/platform/intelligence/command',
+    '#admin-section-intelligence-command': '/platform/intelligence/command',
+    '#admin-section-purchase-claims': '/platform/purchase-claims',
   }
   return map[h] ?? '/platform/overview'
 }

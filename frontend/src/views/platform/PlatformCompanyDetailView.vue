@@ -18,11 +18,12 @@
       :risk-label="riskLabel"
       :risk-class="riskClass"
       :quick-indicator="quickIndicator"
+      :company-id="String(route.params.id ?? '')"
     />
 
     <CompanyKpiStrip :items="kpiStripItems" />
 
-    <CompanyTabs :tabs="tabs" :active-tab="activeTab" @update:active-tab="activeTab = $event" />
+    <CompanyTabs :tabs="tabs" :active-tab="activeTab" @update:active-tab="onCompanyTabChange" />
 
     <PlatformAdminInPageNav
       v-if="company && !loading && !error && detailInPageNavItems.length > 0"
@@ -133,7 +134,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import apiClient from '@/lib/apiClient'
 import PlatformAdminInPageNav from '@/components/platform-admin/PlatformAdminInPageNav.vue'
 import CompanyHeader from '@/components/platform-admin/company-detail/CompanyHeader.vue'
@@ -147,10 +148,10 @@ import {
 } from '@/config/platformCompanyDetailInPageNav'
 
 const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const error = ref('')
 const company = ref<any | null>(null)
-const activeTab = ref('overview')
 const customersLoading = ref(false)
 const vehiclesLoading = ref(false)
 const financeLoading = ref(false)
@@ -165,6 +166,32 @@ const tabs = [
   { id: 'vehicles', label: 'Vehicles' },
   { id: 'invoices', label: 'Invoices' },
 ]
+const tabIds = new Set(tabs.map((t) => t.id))
+
+function normalizeCompanyTab(tab: unknown): string {
+  const t = typeof tab === 'string' ? tab : ''
+  return tabIds.has(t) ? t : 'overview'
+}
+
+const activeTab = ref(normalizeCompanyTab(route.query.tab))
+
+watch(
+  () => route.query.tab,
+  (q) => {
+    activeTab.value = normalizeCompanyTab(q)
+  },
+)
+
+function onCompanyTabChange(tab: string): void {
+  const t = normalizeCompanyTab(tab)
+  activeTab.value = t
+  if (t === 'overview') {
+    void router.replace({ query: {} })
+  } else {
+    void router.replace({ query: { ...route.query, tab: t } })
+  }
+}
+
 const activeTabLabel = computed(() => tabs.find((t) => t.id === activeTab.value)?.label ?? 'Overview')
 
 const detailInPageNavItems = computed(() => {
@@ -366,5 +393,12 @@ async function loadAll(): Promise<void> {
 }
 
 onMounted(() => { void loadAll() })
-watch(() => route.params.id, () => { activeTab.value = 'overview'; void loadAll() })
+watch(
+  () => route.params.id,
+  () => {
+    activeTab.value = 'overview'
+    void router.replace({ query: {} })
+    void loadAll()
+  },
+)
 </script>

@@ -14,8 +14,20 @@
 
       <div class="flex flex-wrap gap-2">
         <RouterLink to="/platform/companies" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800/60">العودة إلى الشركات</RouterLink>
-        <RouterLink to="/platform/finance" class="rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/30">المالية</RouterLink>
-        <RouterLink to="/platform/customers" class="rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/30">العملاء</RouterLink>
+        <RouterLink
+          v-if="companyId !== ''"
+          :to="{ name: 'platform-company-detail', params: { id: companyId }, query: { tab: 'finance' } }"
+          class="rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/30"
+        >
+          المالية
+        </RouterLink>
+        <RouterLink
+          v-if="companyId !== ''"
+          :to="{ name: 'platform-company-detail', params: { id: companyId }, query: { tab: 'customers' } }"
+          class="rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-bold text-primary-700 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:border-primary-700 dark:text-primary-300 dark:hover:bg-primary-900/30"
+        >
+          العملاء
+        </RouterLink>
         <PlatformOperationsExitLink to="/vehicles" v-bind="{ ariaName: 'المركبات في بوابة فريق العمل' }" dense>المركبات</PlatformOperationsExitLink>
         <PlatformOperationsExitLink to="/invoices" v-bind="{ ariaName: 'الفواتير في بوابة فريق العمل' }" dense>الفواتير</PlatformOperationsExitLink>
       </div>
@@ -27,13 +39,18 @@
 import { RouterLink } from 'vue-router'
 import PlatformOperationsExitLink from '@/components/platform-admin/PlatformOperationsExitLink.vue'
 
-defineProps<{
-  name: string
-  statusLabel: string
-  statusClass: string
-  planLabel: string
-  riskLabel: string
-  riskClass: string
-  quickIndicator: string
-}>()
+withDefaults(
+  defineProps<{
+    name: string
+    statusLabel: string
+    statusClass: string
+    planLabel: string
+    riskLabel: string
+    riskClass: string
+    quickIndicator: string
+    /** معرف الشركة في مسار `/platform/companies/:id` — لربط اختصارات التبويب بنفس الصفحة */
+    companyId?: string
+  }>(),
+  { companyId: '' },
+)
 </script>
